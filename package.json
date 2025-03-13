@@ -5,7 +5,7 @@
   "main": "build/NetKitty.js",
   "types": "build/NetKitty.d.ts",
   "scripts": {
-    "clean": "shx rm -rf ./build",
+    "clean": "shx rm -rf ./build ./bindings",
     "build:js": "tsc",
     "build:cpp": "node-gyp-build",
     "rebuild": "npm run clean && npm run build:js && npm run build:cpp",
