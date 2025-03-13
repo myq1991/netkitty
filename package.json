@@ -1,0 +1,43 @@
+{
+  "name": "netkitty",
+  "version": "0.0.1",
+  "description": "todo",
+  "main": "build/NetKitty.js",
+  "types": "build/NetKitty.d.ts",
+  "scripts": {
+    "clean": "shx rm -rf ./build",
+    "build:js": "tsc",
+    "build:cpp": "node-gyp-build",
+    "rebuild": "npm run clean && npm run build:js && npm run build:cpp",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/myq1991/netkitty.git"
+  },
+  "keywords": [
+    "netkitty",
+    "net-analysis",
+    "capture-net-packets"
+  ],
+  "author": "alex.ma",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/myq1991/netkitty/issues"
+  },
+  "homepage": "https://github.com/myq1991/netkitty#readme",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
+    "eslint": "^9.22.0",
+    "reflect-metadata": "^0.2.2",
+    "shx": "^0.3.4",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.3.1",
+    "node-gyp-build": "^4.8.4"
+  }
+}
