@@ -204,7 +204,9 @@ void Capture::Start(const Napi::CallbackInfo &info)
                       &this->async,
                       (uv_async_cb)Capture::cb_packets);
     // assert(r == 0);
-    return;
+    if(r!=0){
+        Napi::Error::New(env,"uv_async_init error").ThrowAsJavaScriptException();
+        return;
     }
     this->async.data = this;
     r = RegisterWaitForSingleObject(
@@ -232,6 +234,10 @@ void Capture::Start(const Napi::CallbackInfo &info)
     this->fd = pcap_get_selectable_fd(this->pcap_handle);
     r = uv_poll_init(uv_default_loop(), &this->poll_handle, this->fd);
 //     assert(r == 0);
+    if(r!=0){
+        Napi::Error::New(env,"uv_async_init error").ThrowAsJavaScriptException();
+        return;
+    }
     r = uv_poll_start(&this->poll_handle, UV_READABLE, Capture::cb_packets);
     this->poll_handle.data = this;
 #endif
