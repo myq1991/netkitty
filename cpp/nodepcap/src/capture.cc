@@ -204,8 +204,6 @@ void Capture::Start(const Napi::CallbackInfo &info)
                       &this->async,
                       (uv_async_cb)Capture::cb_packets);
     // assert(r == 0);
-    if(r!=0){
-    Napi::ThrowAsJavaScriptException();
     return;
     }
     this->async.data = this;
