@@ -5,11 +5,13 @@
   "main": "build/NetKitty.js",
   "types": "build/NetKitty.d.ts",
   "scripts": {
-    "clean": "shx rm -rf ./build ./bindings",
-    "build:js": "tsc",
-    "build:cpp": "node-gyp-build",
-    "rebuild": "npm run clean && npm run build:js && npm run build:cpp",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "npm run clean:js && npm run clean:cpp",
+    "clean:js": "shx rm -rf ./build",
+    "clean:cpp": "shx rm -rf ./bindings",
+    "build:js": "npm run clean:js && tsc",
+    "build:cpp": "npm run clean:cpp && node-gyp-build",
+    "rebuild": "npm run clean && npm run build:cpp && npm run build:js",
+    "test": "npm run rebuild && node build/tests/Test.spec.js"
   },
   "repository": {
     "type": "git",
