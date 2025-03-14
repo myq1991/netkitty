@@ -1,9 +1,16 @@
 import {GetNetworkInterfaces} from './lib/GetNetworkInterfaces'
 import {INetworkInterface} from './interfaces/INetworkInterface'
+import {ICaptureOptions} from './interfaces/ICaptureOptions'
+import {existsSync, rmSync} from 'node:fs'
+import {GetDeviceCaptureTemporaryFilename} from '../GetDeviceCaptureTemporaryFilename'
 
 export class Capture {
 
     protected readonly device: string
+
+    protected readonly cacheFilename: string
+
+    protected filter: string = ''
 
     /**
      * Get available network devices
@@ -12,8 +19,54 @@ export class Capture {
         return GetNetworkInterfaces()
     }
 
-    constructor(device: string) {
-        if (!Capture.availableDevices.filter((availableDevice: INetworkInterface): boolean => availableDevice.name === device).length) throw new Error(`Device ${device} not found`)
-        this.device = device
+    constructor(options: ICaptureOptions) {
+        this.device = options.device
+        this.filter = options.filter ? options.filter : ''
+        if (!Capture.availableDevices.filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new Error(`Device ${this.device} not found`)
+        this.cacheFilename = GetDeviceCaptureTemporaryFilename(this.device)
+    }
+
+    /**
+     * Clean cache data
+     * @protected
+     */
+    protected cleanCache(): void {
+        if (existsSync(this.cacheFilename)) rmSync(this.cacheFilename, {recursive: true, force: true})
+    }
+
+    /**
+     * Start capture packets
+     */
+    public start(): void {
+        this.cleanCache()
+        //TODO
+    }
+
+    /**
+     * Stop capture packets
+     */
+    public stop(): void {
+        //TODO
+    }
+
+    /**
+     * Pause capture packets
+     */
+    public pause() {
+        //TODO
+    }
+
+    /**
+     * Resume capture packets
+     */
+    public resume() {
+        //TODO
+    }
+
+    /**
+     * Set capture filter
+     */
+    public setFilter(filter: string): void {
+        //TODO 不确定是否需要，也许可以通过setter和getter完成
     }
 }
