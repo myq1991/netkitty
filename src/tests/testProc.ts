@@ -13,10 +13,11 @@ const client = new PipeClient({
     }
 })
 client.once('ready', () => {
-    setInterval(() => {
+    setInterval(async () => {
         client.notify('testData', 'Now:', Date.now(), 'Random:', Math.random())
-    }, 1)
+        console.log(await client.invoke('foo'))
+    }, 0)
     setTimeout(() => {
         process.exit()
     }, 60000)
-})
+}).on('testData1', console.log)

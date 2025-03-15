@@ -30,7 +30,11 @@ export class PipeServer extends EventEmitter {
             connection.once('message', (message: MessageEvent) => {
                 const base64Id: string = message.data.toString()
                 const clientId: string = Buffer.from(base64Id, 'base64').toString()
-                const clientSocket: PipeClientSocket = new PipeClientSocket(clientId, connection)
+                const clientSocket: PipeClientSocket = new PipeClientSocket({
+                    id: clientId,
+                    connection: connection,
+                    actions: this.actions
+                })
                 this.#clientSocketMap.set(clientId, clientSocket)
                 clientSocket.once('disconnect', (): void => {
                     this.#clientSocketMap.delete(clientSocket.id)

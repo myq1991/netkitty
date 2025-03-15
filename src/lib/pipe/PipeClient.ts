@@ -1,5 +1,5 @@
 import EventEmitter from 'events'
-import {MessageClient, MessageEvent} from 'socket-ipc'
+import {MessageClient} from 'socket-ipc'
 import {PipeMessage, PipeMessageType} from './PipeMessage'
 import {PipeMessageHandler} from './PipeMessageHandler'
 
@@ -11,6 +11,8 @@ export interface IPipeClientOptions {
 
 export class PipeClient extends EventEmitter {
 
+    #connected: boolean
+
     protected readonly id: string
 
     protected readonly socketPath: string
@@ -21,13 +23,19 @@ export class PipeClient extends EventEmitter {
 
     public readonly actions: Record<string, (...args: any[]) => Promise<any>> = {}
 
+    public get connected(): boolean {
+        return this.#connected
+    }
+
     constructor(options: IPipeClientOptions) {
         super()
         this.id = options.id
         this.socketPath = options.socketPath
         this.actions = options.actions
+        this.#connected = true
         this.client = new MessageClient({path: this.socketPath})
         this.pipeMessageHandler = new PipeMessageHandler(this, this.client)
+        this.client.on('close', (): boolean => this.#connected = false)
         this.client.start().then((): void => {
             this.client.send(Buffer.from(this.id).toString('base64'))
             this.emit('ready')
@@ -58,7 +66,7 @@ export class PipeClient extends EventEmitter {
         const pipeMessage: PipeMessage = new PipeMessage()
         pipeMessage.type = PipeMessageType.EVENT
         pipeMessage.payload = [event, ...args]
-        this.client.send(pipeMessage.serialize())
+        if (this.connected) this.client.send(pipeMessage.serialize())
     }
 
     public on(eventName: 'ready', listener: () => void): this

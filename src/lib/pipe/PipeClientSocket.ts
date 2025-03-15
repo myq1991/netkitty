@@ -1,7 +1,13 @@
 import EventEmitter from 'events'
-import {MessageConnection, MessageEvent} from 'socket-ipc'
+import {MessageConnection} from 'socket-ipc'
 import {PipeMessage, PipeMessageType} from './PipeMessage'
 import {PipeMessageHandler} from './PipeMessageHandler'
+
+export interface IPipeClientSocketOptions {
+    id: string
+    connection: MessageConnection
+    actions: Record<string, (...args: any[]) => Promise<any>>
+}
 
 export class PipeClientSocket extends EventEmitter {
 
@@ -29,10 +35,11 @@ export class PipeClientSocket extends EventEmitter {
         return this.#connected
     }
 
-    constructor(id: string, connection: MessageConnection) {
+    constructor(options: IPipeClientSocketOptions) {
         super()
-        this.#id = id
-        this.#connection = connection
+        this.#id = options.id
+        this.#connection = options.connection
+        this.actions = options.actions ? options.actions : {}
         this.#connected = true
         this.#connection
             .on('error', (err: Error): boolean => this.emit('error', err))
@@ -56,6 +63,18 @@ export class PipeClientSocket extends EventEmitter {
             this.once(pipeMessage.messageId, (resultOrError: any | Error): void => resultOrError instanceof Error ? reject(resultOrError) : resolve(resultOrError))
             this.#connection.send(pipeMessage.serialize())
         })
+    }
+
+    /**
+     * Notify event to pipe client
+     * @param event
+     * @param args
+     */
+    public notify(event: string, ...args: any[]): void {
+        const pipeMessage: PipeMessage = new PipeMessage()
+        pipeMessage.type = PipeMessageType.EVENT
+        pipeMessage.payload = [event, ...args]
+        if (this.connected) this.#connection.send(pipeMessage.serialize())
     }
 
     public on(eventName: 'disconnect', listener: () => void): this

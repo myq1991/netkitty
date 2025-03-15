@@ -3,8 +3,6 @@ import {INetworkInterface} from './interfaces/INetworkInterface'
 import {ICaptureOptions} from './interfaces/ICaptureOptions'
 import {existsSync, rmSync} from 'node:fs'
 import {GetDeviceCaptureTemporaryFilename} from '../GetDeviceCaptureTemporaryFilename'
-import {createServer} from 'node:net'
-import {GeneratePipeAddress} from '../GeneratePipeAddress'
 
 export class Capture {
 
@@ -30,12 +28,6 @@ export class Capture {
         this.filter = options.filter ? options.filter : ''
         if (!Capture.availableDevices.filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new Error(`Device ${this.device} not found`)
         this.cacheFilename = GetDeviceCaptureTemporaryFilename(this.device)
-        // const server1 = createServer((socket) => {
-        //
-        // })
-        // const sockPath: string = GeneratePipeAddress()
-        // console.log('sockPath:', sockPath)
-        // server1.listen(sockPath)
     }
 
     /**
