@@ -61,6 +61,10 @@ export class PipeClientSocket extends EventEmitter {
             pipeMessage.type = PipeMessageType.REQUEST
             pipeMessage.payload = [act, ...args]
             this.once(pipeMessage.messageId, (resultOrError: any | Error): void => resultOrError instanceof Error ? reject(resultOrError) : resolve(resultOrError))
+            if (!this.connected) {
+                this.removeAllListeners(pipeMessage.messageId)
+                return reject(new Error('Socket is down'))
+            }
             this.#connection.send(pipeMessage.serialize())
         })
     }
