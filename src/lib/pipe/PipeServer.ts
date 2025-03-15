@@ -51,6 +51,7 @@ export class PipeServer extends EventEmitter {
      */
     public dispose(): void {
         this.#server.stop()
+        this.#clientSocketMap.clear()
     }
 
     public on(eventName: 'ready', listener: () => void): this
