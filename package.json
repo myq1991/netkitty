@@ -43,6 +43,8 @@
     "bignumber.js": "^9.1.2",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4",
-    "sort-array": "^5.0.0"
+    "socket-ipc": "^4.0.2",
+    "sort-array": "^5.0.0",
+    "xpipe": "^1.0.8"
   }
 }

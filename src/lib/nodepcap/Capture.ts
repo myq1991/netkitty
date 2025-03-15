@@ -3,6 +3,8 @@ import {INetworkInterface} from './interfaces/INetworkInterface'
 import {ICaptureOptions} from './interfaces/ICaptureOptions'
 import {existsSync, rmSync} from 'node:fs'
 import {GetDeviceCaptureTemporaryFilename} from '../GetDeviceCaptureTemporaryFilename'
+import {createServer} from 'node:net'
+import {GeneratePipeAddress} from '../GeneratePipeAddress'
 
 export class Capture {
 
@@ -19,11 +21,21 @@ export class Capture {
         return GetNetworkInterfaces()
     }
 
+    /**
+     * Constructor
+     * @param options
+     */
     constructor(options: ICaptureOptions) {
         this.device = options.device
         this.filter = options.filter ? options.filter : ''
         if (!Capture.availableDevices.filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new Error(`Device ${this.device} not found`)
         this.cacheFilename = GetDeviceCaptureTemporaryFilename(this.device)
+        // const server1 = createServer((socket) => {
+        //
+        // })
+        // const sockPath: string = GeneratePipeAddress()
+        // console.log('sockPath:', sockPath)
+        // server1.listen(sockPath)
     }
 
     /**
@@ -37,7 +49,7 @@ export class Capture {
     /**
      * Start capture packets
      */
-    public start(): void {
+    public async start(): Promise<void> {
         this.cleanCache()
         //TODO
     }
@@ -45,21 +57,21 @@ export class Capture {
     /**
      * Stop capture packets
      */
-    public stop(): void {
+    public async stop(): Promise<void> {
         //TODO
     }
 
     /**
      * Pause capture packets
      */
-    public pause() {
+    public async pause(): Promise<void> {
         //TODO
     }
 
     /**
      * Resume capture packets
      */
-    public resume() {
+    public async resume(): Promise<void> {
         //TODO
     }
 
