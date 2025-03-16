@@ -2,6 +2,7 @@ import EventEmitter from 'events'
 import {MessageClient} from 'socket-ipc'
 import {PipeMessage, PipeMessageType} from './PipeMessage'
 import {PipeMessageHandler} from './PipeMessageHandler'
+import {SocketDownError} from '../../errors/SocketDownError'
 
 export interface IPipeClientOptions {
     id: string
@@ -55,7 +56,7 @@ export class PipeClient extends EventEmitter {
             this.once(pipeMessage.messageId, (resultOrError: any | Error): void => resultOrError instanceof Error ? reject(resultOrError) : resolve(resultOrError))
             if (!this.connected) {
                 this.removeAllListeners(pipeMessage.messageId)
-                return reject(new Error('Socket is down'))
+                return reject(new SocketDownError('Socket is down'))
             }
             this.client.send(pipeMessage.serialize())
         })

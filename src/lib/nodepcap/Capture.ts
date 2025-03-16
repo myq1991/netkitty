@@ -13,6 +13,7 @@ import {PipeClientSocket} from '../pipe/PipeClientSocket'
 import {randomInt} from 'crypto'
 import {rm} from 'node:fs/promises'
 import EventEmitter from 'events'
+import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 
 export class Capture extends EventEmitter {
 
@@ -47,13 +48,6 @@ export class Capture extends EventEmitter {
     }
 
     /**
-     * Get available network devices
-     */
-    public static get availableDevices(): INetworkInterface[] {
-        return GetNetworkInterfaces()
-    }
-
-    /**
      * Constructor
      * @param options
      */
@@ -62,7 +56,10 @@ export class Capture extends EventEmitter {
         this.workerModule = options.workerModule ? options.workerModule : this.workerModule
         this.device = options.device
         this.#filter = options.filter ? options.filter : ''
-        if (!Capture.availableDevices.filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new Error(`Device ${this.device} not found`)
+        if (!options.workerModule) {
+            //Use origin worker module, check capture device is available
+            if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new DeviceNotFoundError(`Device ${this.device} not found`)
+        }
         this.cacheFilename = GetDeviceCaptureTemporaryFilename(this.device)
         this.pipeServer = new PipeServer()
     }
@@ -82,7 +79,7 @@ export class Capture extends EventEmitter {
         }
         this.getWorkerSocket().then((clientSocket: PipeClientSocket): void => {
             clientSocket.on('packet', (packetData: { data: number[] }, sec: number, usec: number): void => {
-                //TODO 写入临时文件中
+                //TODO 写入临时文件中，或由worker进程写入
                 this.emit('packet', Buffer.from(packetData.data), sec, usec)
             })
         })

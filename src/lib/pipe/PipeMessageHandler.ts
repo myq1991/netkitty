@@ -3,6 +3,8 @@ import {PipeMessage, PipeMessageType} from './PipeMessage'
 import EventEmitter from 'events'
 import {PipeClient} from './PipeClient'
 import {PipeClientSocket} from './PipeClientSocket'
+import {UnknownPipeMessageTypeError} from '../../errors/UnknownPipeMessageTypeError'
+import {ActionNotFoundError} from '../../errors/ActionNotFoundError'
 
 export class PipeMessageHandler extends EventEmitter {
 
@@ -48,14 +50,23 @@ export class PipeMessageHandler extends EventEmitter {
                             pipeMessage.payload = response
                             this.#socket.send(pipeMessage.serialize())
                         })
-                        .catch(error => {
+                        .catch((error: NodeJS.ErrnoException): void => {
                             pipeMessage.type = PipeMessageType.RESPONSE_ERR
-                            pipeMessage.payload = error.message
+                            pipeMessage.payload = {
+                                message: error.message,
+                                errno: error.errno,
+                                code: error.code
+                            }
                             this.#socket.send(pipeMessage.serialize())
                         })
                 } else {
                     pipeMessage.type = PipeMessageType.RESPONSE_ERR
-                    pipeMessage.payload = `Action ${actionName} not found`
+                    const actionNotFoundError = new ActionNotFoundError(`Action ${actionName} not found`)
+                    pipeMessage.payload = {
+                        message: actionNotFoundError.message,
+                        errno: actionNotFoundError.errno,
+                        code: actionNotFoundError.code
+                    }
                     this.#socket.send(pipeMessage.serialize())
                 }
             }
@@ -65,11 +76,15 @@ export class PipeMessageHandler extends EventEmitter {
             }
                 break
             case PipeMessageType.RESPONSE_ERR: {
-                this.#owner.emit(pipeMessage.messageId, new Error(pipeMessage.payload))
+                const responseError: NodeJS.ErrnoException = new Error()
+                responseError.message = pipeMessage.payload.message
+                responseError.errno = pipeMessage.payload.errno
+                responseError.code = pipeMessage.payload.code
+                this.#owner.emit(pipeMessage.messageId, responseError)
             }
                 break
             default: {
-                this.#owner.emit('error', new Error(`Unknown pipe message type ${pipeMessage.type}`))
+                this.#owner.emit('error', new UnknownPipeMessageTypeError(`Unknown pipe message type ${pipeMessage.type}`))
             }
         }
     }

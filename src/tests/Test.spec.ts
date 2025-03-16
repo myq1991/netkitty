@@ -4,6 +4,7 @@ import {fork} from 'node:child_process'
 import path from 'node:path'
 import {Capture} from '../lib/nodepcap/Capture'
 import {BindingCapture} from '../lib/nodepcap/lib/BindingCapture'
+import {ErrorCode} from '../errors/common/ErrorCode'
 
 // const bc = new BindingCapture({iface: 'en0'})
 // bc.on('data', console.log)
@@ -14,6 +15,7 @@ import {BindingCapture} from '../lib/nodepcap/lib/BindingCapture'
 // new Capture({
 //     device:'en0'
 // })
+
 
 const capture = new Capture({device: 'en0'})
 capture.on('packet', console.log)
