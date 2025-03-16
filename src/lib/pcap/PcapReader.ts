@@ -4,6 +4,7 @@ import {read, ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './lib/PcapParser'
 import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
+import {Key} from 'node:readline'
 
 export interface IPcapReaderOptions {
     filename: string
@@ -140,22 +141,21 @@ export class PcapReader extends EventEmitter {
     }
 
     /**
-     * Read packet by offset and length
+     * Read packet data by record's offset and record's length
      * @param offset
      * @param length
      */
-    public async readPacket(offset: number, length: number) {
+    public async readPacket(offset: number, length: number): Promise<Buffer> {
         await this.initReadPacketFileHandle()
-        const buffer: Buffer = await new Promise<Buffer>((resolve, reject) => {
+        return await new Promise<Buffer>((resolve, reject) => {
             read(this.readPacketFd, Buffer.alloc(length), 0, length, offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
                 if (err) return reject(err)
                 if (!bytesRead) return reject(new Error('No data to read'))
-                const data: Buffer = Buffer.alloc(bytesRead)
-                buffer.copy(data, 0, 0, bytesRead)
+                const data: Buffer = Buffer.alloc(length - 16)
+                buffer.copy(data, 0, 16, bytesRead)
                 return resolve(data)
             })
         })
-        console.log(buffer)
     }
 
     /**
@@ -187,5 +187,23 @@ export class PcapReader extends EventEmitter {
         await this.readPacketFileHandle?.close()
         this.readPacketFileHandle = null
         this.emit('close')
+    }
+
+    public on(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
+    public on(eventName: 'done', listener: (...args: any[]) => void): this
+    public on(eventName: 'stop', listener: (...args: any[]) => void): this
+    public on(eventName: 'close', listener: (...args: any[]) => void): this
+    public on(eventName: string, listener: (...args: any[]) => void): this {
+        super.on(eventName, listener)
+        return this
+    }
+
+    public once(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
+    public once(eventName: 'done', listener: (...args: any[]) => void): this
+    public once(eventName: 'stop', listener: (...args: any[]) => void): this
+    public once(eventName: 'close', listener: (...args: any[]) => void): this
+    public once(eventName: string, listener: (...args: any[]) => void): this {
+        super.once(eventName, listener)
+        return this
     }
 }

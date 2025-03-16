@@ -25,7 +25,11 @@ capture.start().then(() => {
     // PcapParser.parse(capture.temporaryFilename).on('packet', console.log)
     setTimeout(() => {
         const pr = new PcapReader({filename: capture.temporaryFilename, watch: true}).on('packet', async info => {
-            await pr.readPacket(info.offset, info.length)
+            console.log(
+                info.index,
+                info.packet,
+                (await pr.readPacket(info.offset, info.length)).toString('base64')
+            )
         })
         setTimeout(() => {
             pr.close()
