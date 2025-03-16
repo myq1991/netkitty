@@ -94,14 +94,11 @@ export class Capture extends EventEmitter {
             captureDevice: this.#device,
             captureFilter: this.#filter,
             captureTemporaryFilename: this.#temporaryFilename,
-            socketPath: this.#pipeServer.socketPath
+            socketPath: this.#pipeServer.socketPath,
+            //Getting packets from pcap reader events, worker does not need to emit events
+            doNotEmitPacket: String(true)
         }
-        this.getWorkerSocket().then((clientSocket: PipeClientSocket): void => {
-            // clientSocket.on('packet', (wrotePacketInfo: IPcapPacketInfo): void => {
-            //     this.#count = wrotePacketInfo.index
-            //     this.emit('rawPacket', wrotePacketInfo.index, wrotePacketInfo.packet, wrotePacketInfo.seconds, wrotePacketInfo.microseconds)
-            //     this.emit('packet', wrotePacketInfo)
-            // })
+        this.getWorkerSocket().then((): void => {
             this.#reader = new PcapReader({filename: this.temporaryFilename, watch: true})
             this.#reader.on('packet', (packetInfo: IPcapPacketInfo): void => {
                 this.emit('rawPacket', packetInfo.index, packetInfo.packet, packetInfo.seconds, packetInfo.microseconds)
@@ -187,9 +184,12 @@ export class Capture extends EventEmitter {
     /**
      * Start capture packets
      */
-    public async start(): Promise<void> {
-        if (this.#paused) return await this.resume()
-        if (this.#started) return
+    public async start(): Promise<PcapReader> {
+        if (this.#paused) {
+            await this.resume()
+            return this.#reader!
+        }
+        if (this.#started) return this.#reader!
         await this.waitOperationDone()
         this.#operating = true
         try {
@@ -200,8 +200,11 @@ export class Capture extends EventEmitter {
             await workerSocket.invoke('start')
         } catch (e) {
             this.#started = false
+            this.#operating = false
+            throw e
         }
         this.#operating = false
+        return this.#reader!
     }
 
     /**
@@ -264,6 +267,14 @@ export class Capture extends EventEmitter {
         await workerSocket.invoke('setFilter', filter)
         this.#filter = filter
         this.#operating = false
+    }
+
+    /**
+     * Dispose capture
+     */
+    public async dispose(): Promise<void> {
+        await this.stop()
+        await this.cleanResources()
     }
 
     public on(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this

@@ -25,8 +25,11 @@ capture.on('packet', async (info) => {
     )
 })
 let pr: PcapReader
-capture.start().then(() => {
+capture.start().then((_pr) => {
     console.log('start!')
-    pr = new PcapReader({filename: capture.temporaryFilename, watch: false})
+    pr = _pr
+    setTimeout(async () => {
+        await capture.stop()
+    }, 60000)
 })
 

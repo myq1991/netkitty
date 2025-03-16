@@ -5,6 +5,8 @@ import {IPcapPacketInfo} from '../../pcap/interfaces/IPcapPacketInfo'
 
 const captureTemporaryFilename: string = process.env.captureTemporaryFilename!
 
+const doNotEmitPacket: boolean = process.env.doNotEmitPacket === 'true'
+
 const pcapWrite: PcapWriter = new PcapWriter({
     filename: captureTemporaryFilename
 })
@@ -24,6 +26,8 @@ const pipeClient: PipeClient = new PipeClient({
     }
 }).once('exit', (): Promise<void> => pcapWrite.close().finally((): void => process.exit(0)))
 
-pcapWrite.on('packet', (wrotePacketInfo: IPcapPacketInfo): void => pipeClient.notify('packet', wrotePacketInfo))
+pcapWrite.on('packet', (wrotePacketInfo: IPcapPacketInfo): void => {
+    if (!doNotEmitPacket) pipeClient.notify('packet', wrotePacketInfo)
+})
 
 bindingCapture.on('data', (data: Buffer, sec: number, usec: number): void => pcapWrite.write(data, sec, usec))
