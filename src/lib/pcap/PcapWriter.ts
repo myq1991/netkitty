@@ -50,13 +50,13 @@ export class PcapWriter extends EventEmitter {
         this.writeStream.write(pcapData)
         this.offset += pcapData.length
         const packetOffset: number = this.offset - packetLength
-        const timestampLength: number = packetOffset - startOffset
+        const recordHeaderLength: number = packetOffset - startOffset
         const wrotePacketInfo: IPcapPacketInfo = {
             index: this.index,
             offset: startOffset,
             length: pcapData.length,
-            timestampOffset: startOffset,
-            timestampLength: timestampLength,
+            recordHeaderOffset: startOffset,
+            recordHeaderLength: recordHeaderLength,
             packetOffset: packetOffset,
             packetLength: packetLength,
             seconds: seconds,

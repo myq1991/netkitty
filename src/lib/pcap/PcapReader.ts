@@ -147,11 +147,12 @@ export class PcapReader extends EventEmitter {
     public async readPacket(offset: number, length: number): Promise<Buffer> {
         await this.initReadPacketFileHandle()
         return await new Promise<Buffer>((resolve, reject) => {
+            const recordHeaderLength: number = 16
             read(this.readPacketFd, Buffer.alloc(length), 0, length, offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
                 if (err) return reject(err)
                 if (!bytesRead) return reject(new Error('No data to read'))
-                const data: Buffer = Buffer.alloc(length - 16)
-                buffer.copy(data, 0, 16, bytesRead)
+                const data: Buffer = Buffer.alloc(length - recordHeaderLength)
+                buffer.copy(data, 0, recordHeaderLength, bytesRead)
                 return resolve(data)
             })
         })
@@ -186,6 +187,7 @@ export class PcapReader extends EventEmitter {
         await this.readPacketFileHandle?.close()
         this.readPacketFileHandle = null
         this.emit('close')
+        this.removeAllListeners()
     }
 
     public on(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this

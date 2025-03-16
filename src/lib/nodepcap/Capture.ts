@@ -16,6 +16,7 @@ import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 import {tmpdir} from 'node:os'
 import {IPcapPacketInfo} from '../pcap/interfaces/IPcapPacketInfo'
+import {PcapReader} from '../pcap/PcapReader'
 
 export class Capture extends EventEmitter {
 
@@ -28,6 +29,8 @@ export class Capture extends EventEmitter {
     readonly #temporaryFilename: string
 
     readonly #pipeServer: PipeServer
+
+    #reader: PcapReader | null = null
 
     #hasWorker: boolean = false
 
@@ -94,13 +97,20 @@ export class Capture extends EventEmitter {
             socketPath: this.#pipeServer.socketPath
         }
         this.getWorkerSocket().then((clientSocket: PipeClientSocket): void => {
-            clientSocket.on('packet', (wrotePacketInfo: IPcapPacketInfo): void => {
-                this.#count = wrotePacketInfo.index
-                this.emit('rawPacket', wrotePacketInfo.packet, wrotePacketInfo.seconds, wrotePacketInfo.microseconds)
-                this.emit('packet', wrotePacketInfo)
+            // clientSocket.on('packet', (wrotePacketInfo: IPcapPacketInfo): void => {
+            //     this.#count = wrotePacketInfo.index
+            //     this.emit('rawPacket', wrotePacketInfo.index, wrotePacketInfo.packet, wrotePacketInfo.seconds, wrotePacketInfo.microseconds)
+            //     this.emit('packet', wrotePacketInfo)
+            // })
+            this.#reader = new PcapReader({filename: this.temporaryFilename, watch: true})
+            this.#reader.on('packet', (packetInfo: IPcapPacketInfo): void => {
+                this.emit('rawPacket', packetInfo.index, packetInfo.packet, packetInfo.seconds, packetInfo.microseconds)
+                this.emit('packet', packetInfo)
             })
         })
         this.#worker = isElectron() ? utilityProcess.fork(this.#workerModule, [], {env: env}) : childProcess.fork(this.#workerModule, [], {env: env})
+
+
     }
 
     /**
@@ -162,6 +172,8 @@ export class Capture extends EventEmitter {
         if (existsSync(this.#temporaryFilename)) await rm(this.#temporaryFilename, {recursive: true, force: true})
         //Clean old worker resources
         if (this.#worker && this.#workerSocket) await this.destroyCaptureWorker()
+        await this.#reader?.close()
+        this.#reader = null
     }
 
     /**
@@ -203,6 +215,7 @@ export class Capture extends EventEmitter {
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
         await this.destroyCaptureWorker()
+        await this.#reader?.stop()
         this.#started = false
         this.#operating = false
     }
@@ -251,5 +264,19 @@ export class Capture extends EventEmitter {
         await workerSocket.invoke('setFilter', filter)
         this.#filter = filter
         this.#operating = false
+    }
+
+    public on(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
+    public on(eventName: 'rawPacket', listener: (index: number, packet: string, seconds: number, microseconds: number) => void): this
+    public on(eventName: string, listener: (...args: any[]) => void): this {
+        super.on(eventName, listener)
+        return this
+    }
+
+    public once(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
+    public once(eventName: 'rawPacket', listener: (index: number, packet: string, seconds: number, microseconds: number) => void): this
+    public once(eventName: string, listener: (...args: any[]) => void): this {
+        super.once(eventName, listener)
+        return this
     }
 }

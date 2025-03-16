@@ -2,8 +2,8 @@ export interface IPcapPacketInfo {
     index: number
     offset: number
     length: number
-    timestampOffset: number
-    timestampLength: number
+    recordHeaderOffset:number
+    recordHeaderLength:number
     packetOffset: number
     packetLength: number
     seconds: number

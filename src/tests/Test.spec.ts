@@ -19,21 +19,14 @@ import {PcapReader} from '../lib/pcap/PcapReader'
 // })
 
 const capture = new Capture({device: 'en0'})
-// capture.on('packet', console.log)
+capture.on('packet', async (info) => {
+    console.log(
+        await pr.readPacket(info.offset, info.length)
+    )
+})
+let pr: PcapReader
 capture.start().then(() => {
     console.log('start!')
-    // PcapParser.parse(capture.temporaryFilename).on('packet', console.log)
-    setTimeout(() => {
-        const pr = new PcapReader({filename: capture.temporaryFilename, watch: true}).on('packet', async info => {
-            console.log(
-                info.index,
-                info.packet,
-                (await pr.readPacket(info.offset, info.length)).toString('base64')
-            )
-        })
-        setTimeout(() => {
-            pr.close()
-        }, 20000)
-    }, 3000)
+    pr = new PcapReader({filename: capture.temporaryFilename, watch: false})
 })
 
