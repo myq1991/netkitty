@@ -4,11 +4,8 @@ import {IWrotePacketInfo, PcapWriter} from '../../pcap/PcapWriter'
 
 const captureTemporaryFilename: string = process.env.captureTemporaryFilename!
 
-const bypassFilesystem: boolean = process.env.bypassFilesystem === 'true'
-
 const pcapWrite: PcapWriter = new PcapWriter({
-    filename: captureTemporaryFilename,
-    bypassFilesystem: bypassFilesystem
+    filename: captureTemporaryFilename
 })
 
 const bindingCapture: BindingCapture = new BindingCapture({

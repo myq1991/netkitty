@@ -13,11 +13,6 @@ export interface ICaptureOptions {
     workerModule?: string
 
     /**
-     * Whether to avoid writing captured packets to temporary pcap file
-     */
-    bypassFilesystem?: boolean
-
-    /**
      * The temporary folder path for storing captured pcap files
      */
     tmpDir?: string

@@ -4,7 +4,6 @@ import {GeneratePCAPData, GeneratePCAPHeader} from './PCAPGenerator'
 
 export interface IPcapWriterOptions {
     filename: string
-    bypassFilesystem?: boolean
 }
 
 export interface IWrotePacketInfo {
@@ -25,8 +24,6 @@ export class PcapWriter extends EventEmitter {
 
     protected readonly writeStream: WriteStream
 
-    protected readonly bypassFilesystem: boolean
-
     protected closed: boolean = false
 
     protected index: number = 0
@@ -36,8 +33,6 @@ export class PcapWriter extends EventEmitter {
     constructor(options: IPcapWriterOptions) {
         super()
         this.filename = options.filename
-        this.bypassFilesystem = !!options.bypassFilesystem
-        if (this.bypassFilesystem) return
         this.writeStream = createWriteStream(this.filename, {autoClose: false, flags: 'w'})
         const header: Buffer = GeneratePCAPHeader()
         this.writeStream.write(header)
@@ -52,7 +47,6 @@ export class PcapWriter extends EventEmitter {
      */
     public write(packet: Buffer, seconds: number, microseconds: number): void {
         if (this.closed) return
-        if (this.bypassFilesystem) this.offset = 0
         this.index += 1
         const startOffset: number = this.offset
         const packetLength: number = packet.length
@@ -64,7 +58,7 @@ export class PcapWriter extends EventEmitter {
                 microseconds: microseconds
             }
         })
-        if (!this.bypassFilesystem) this.writeStream.write(pcapData)
+        this.writeStream.write(pcapData)
         this.offset += pcapData.length
         const packetOffset: number = this.offset - packetLength
         const timestampLength: number = packetOffset - startOffset

@@ -29,8 +29,6 @@ export class Capture extends EventEmitter {
 
     protected readonly pipeServer: PipeServer
 
-    protected readonly bypassFilesystem: boolean = false
-
     protected hasWorker: boolean = false
 
     protected worker: ChildProcess | UtilityProcess | undefined
@@ -67,7 +65,6 @@ export class Capture extends EventEmitter {
             //Use origin worker module, check capture device is available
             if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new DeviceNotFoundError(`Device ${this.device} not found`)
         }
-        this.bypassFilesystem = !!options.bypassFilesystem
         this.temporaryFilename = GetDeviceCaptureTemporaryFilename(this.device, this.tmpDir)
         this.pipeServer = new PipeServer()
     }
@@ -84,7 +81,6 @@ export class Capture extends EventEmitter {
             captureDevice: this.device,
             captureFilter: this.#filter,
             captureTemporaryFilename: this.temporaryFilename,
-            bypassFilesystem: String(this.bypassFilesystem),
             socketPath: this.pipeServer.socketPath
         }
         this.getWorkerSocket().then((clientSocket: PipeClientSocket): void => {
