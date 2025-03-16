@@ -14,41 +14,51 @@ import {randomInt} from 'crypto'
 import {rm} from 'node:fs/promises'
 import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
-import {IWrotePacketInfo} from '../pcap/PcapWriter'
 import {tmpdir} from 'node:os'
+import {IPcapPacketInfo} from '../pcap/interfaces/IPcapPacketInfo'
 
 export class Capture extends EventEmitter {
 
-    protected readonly workerModule: string = path.resolve(__dirname, './workers/CaptureWorker.js')
+    readonly #workerModule: string = path.resolve(__dirname, './workers/CaptureWorker.js')
 
-    protected readonly device: string
+    readonly #device: string
 
-    protected readonly tmpDir: string
+    readonly #tmpDir: string
 
-    protected readonly temporaryFilename: string
+    readonly #temporaryFilename: string
 
-    protected readonly pipeServer: PipeServer
+    readonly #pipeServer: PipeServer
 
-    protected hasWorker: boolean = false
+    #hasWorker: boolean = false
 
-    protected worker: ChildProcess | UtilityProcess | undefined
+    #worker: ChildProcess | UtilityProcess | undefined
 
-    protected workerId: string | undefined
+    #workerId: string | undefined
 
-    protected workerSocket: PipeClientSocket | undefined
+    #workerSocket: PipeClientSocket | undefined
 
-    protected workerDestroying: boolean = false
+    #workerDestroying: boolean = false
 
-    protected started: boolean = false
+    #started: boolean = false
 
-    protected paused: boolean = false
+    #paused: boolean = false
 
-    protected operating: boolean = false
+    #operating: boolean = false
 
     #filter: string = ''
 
+    #count: number = 0
+
     public get filter(): string {
         return this.#filter
+    }
+
+    public get temporaryFilename(): string {
+        return this.#temporaryFilename
+    }
+
+    public get count(): number {
+        return this.#count
     }
 
     /**
@@ -57,16 +67,16 @@ export class Capture extends EventEmitter {
      */
     constructor(options: ICaptureOptions) {
         super()
-        this.workerModule = options.workerModule ? options.workerModule : this.workerModule
-        this.device = options.device
+        this.#workerModule = options.workerModule ? options.workerModule : this.#workerModule
+        this.#device = options.device
         this.#filter = options.filter ? options.filter : ''
-        this.tmpDir = options.tmpDir ? options.tmpDir : path.resolve(tmpdir(), 'netkitty-tmp')
+        this.#tmpDir = options.tmpDir ? options.tmpDir : path.resolve(tmpdir(), 'netkitty-tmp')
         if (!options.workerModule) {
             //Use origin worker module, check capture device is available
-            if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new DeviceNotFoundError(`Device ${this.device} not found`)
+            if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.#device).length) throw new DeviceNotFoundError(`Device ${this.#device} not found`)
         }
-        this.temporaryFilename = GetDeviceCaptureTemporaryFilename(this.device, this.tmpDir)
-        this.pipeServer = new PipeServer()
+        this.#temporaryFilename = GetDeviceCaptureTemporaryFilename(this.#device, this.#tmpDir)
+        this.#pipeServer = new PipeServer()
     }
 
     /**
@@ -74,22 +84,23 @@ export class Capture extends EventEmitter {
      * @protected
      */
     protected createCaptureWorker(): void {
-        this.hasWorker = true
-        this.workerId = `CW_${Date.now().toString(16)}${randomInt(32).toString(16)}`
+        this.#hasWorker = true
+        this.#workerId = `CW_${Date.now().toString(16)}${randomInt(32).toString(16)}`
         const env: Record<string, string> = {
-            captureWorkerId: this.workerId,
-            captureDevice: this.device,
+            captureWorkerId: this.#workerId,
+            captureDevice: this.#device,
             captureFilter: this.#filter,
-            captureTemporaryFilename: this.temporaryFilename,
-            socketPath: this.pipeServer.socketPath
+            captureTemporaryFilename: this.#temporaryFilename,
+            socketPath: this.#pipeServer.socketPath
         }
         this.getWorkerSocket().then((clientSocket: PipeClientSocket): void => {
-            clientSocket.on('packet', (wrotePacketInfo: IWrotePacketInfo): void => {
+            clientSocket.on('packet', (wrotePacketInfo: IPcapPacketInfo): void => {
+                this.#count = wrotePacketInfo.index
                 this.emit('rawPacket', wrotePacketInfo.packet, wrotePacketInfo.seconds, wrotePacketInfo.microseconds)
                 this.emit('packet', wrotePacketInfo)
             })
         })
-        this.worker = isElectron() ? utilityProcess.fork(this.workerModule, [], {env: env}) : childProcess.fork(this.workerModule, [], {env: env})
+        this.#worker = isElectron() ? utilityProcess.fork(this.#workerModule, [], {env: env}) : childProcess.fork(this.#workerModule, [], {env: env})
     }
 
     /**
@@ -97,32 +108,32 @@ export class Capture extends EventEmitter {
      * @protected
      */
     protected async destroyCaptureWorker(): Promise<void> {
-        if (!this.hasWorker) return
-        if (this.workerDestroying) {
-            while (this.workerDestroying) await new Promise(resolve => setTimeout(resolve, 10))
+        if (!this.#hasWorker) return
+        if (this.#workerDestroying) {
+            while (this.#workerDestroying) await new Promise(resolve => setTimeout(resolve, 10))
             return
         }
-        this.workerDestroying = true
+        this.#workerDestroying = true
         await new Promise<void>(resolve => {
-            if (this.workerSocket && this.worker) {
+            if (this.#workerSocket && this.#worker) {
                 const disconnectHandler: () => void = (): void => {
                     clearTimeout(notifyExitTimeout)
                     return resolve()
                 }
-                this.workerSocket.once('disconnect', disconnectHandler)
-                this.workerSocket.notify('exit')
+                this.#workerSocket.once('disconnect', disconnectHandler)
+                this.#workerSocket.notify('exit')
                 const notifyExitTimeout: NodeJS.Timeout = setTimeout((): void => {
-                    this.workerSocket?.off('disconnect', disconnectHandler)
-                    this.worker?.kill('SIGINT')
+                    this.#workerSocket?.off('disconnect', disconnectHandler)
+                    this.#worker?.kill('SIGINT')
                     return resolve()
                 }, 10000)
             }
         })
-        this.workerSocket = undefined
-        this.worker = undefined
-        this.workerId = undefined
-        this.workerDestroying = false
-        this.hasWorker = false
+        this.#workerSocket = undefined
+        this.#worker = undefined
+        this.#workerId = undefined
+        this.#workerDestroying = false
+        this.#hasWorker = false
     }
 
     /**
@@ -131,13 +142,13 @@ export class Capture extends EventEmitter {
      */
     protected async getWorkerSocket(): Promise<PipeClientSocket> {
         return new Promise(resolve => {
-            if (!this.workerSocket) {
-                this.pipeServer.once('connect', (clientSocket: PipeClientSocket): void => {
-                    this.workerSocket = clientSocket
-                    return resolve(this.workerSocket)
+            if (!this.#workerSocket) {
+                this.#pipeServer.once('connect', (clientSocket: PipeClientSocket): void => {
+                    this.#workerSocket = clientSocket
+                    return resolve(this.#workerSocket)
                 })
             } else {
-                return resolve(this.workerSocket)
+                return resolve(this.#workerSocket)
             }
         })
     }
@@ -148,9 +159,9 @@ export class Capture extends EventEmitter {
      */
     protected async cleanResources(): Promise<void> {
         //Clean cached capture data
-        if (existsSync(this.temporaryFilename)) await rm(this.temporaryFilename, {recursive: true, force: true})
+        if (existsSync(this.#temporaryFilename)) await rm(this.#temporaryFilename, {recursive: true, force: true})
         //Clean old worker resources
-        if (this.worker && this.workerSocket) await this.destroyCaptureWorker()
+        if (this.#worker && this.#workerSocket) await this.destroyCaptureWorker()
     }
 
     /**
@@ -158,72 +169,72 @@ export class Capture extends EventEmitter {
      * @protected
      */
     protected async waitOperationDone(): Promise<void> {
-        while (this.operating) await new Promise(resolve => setTimeout(resolve, 10))
+        while (this.#operating) await new Promise(resolve => setTimeout(resolve, 10))
     }
 
     /**
      * Start capture packets
      */
     public async start(): Promise<void> {
-        if (this.paused) return await this.resume()
-        if (this.started) return
+        if (this.#paused) return await this.resume()
+        if (this.#started) return
         await this.waitOperationDone()
-        this.operating = true
+        this.#operating = true
         try {
-            this.started = true
+            this.#started = true
             await this.cleanResources()
             this.createCaptureWorker()
             const workerSocket: PipeClientSocket = await this.getWorkerSocket()
             await workerSocket.invoke('start')
         } catch (e) {
-            this.started = false
+            this.#started = false
         }
-        this.operating = false
+        this.#operating = false
     }
 
     /**
      * Stop capture packets
      */
     public async stop(): Promise<void> {
-        if (!this.started) return
-        if (this.workerDestroying) return
+        if (!this.#started) return
+        if (this.#workerDestroying) return
         await this.waitOperationDone()
-        this.operating = true
+        this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
         await this.destroyCaptureWorker()
-        this.started = false
-        this.operating = false
+        this.#started = false
+        this.#operating = false
     }
 
     /**
      * Pause capture packets
      */
     public async pause(): Promise<void> {
-        if (!this.started) return
-        if (this.hasWorker) return
-        if (this.workerDestroying) return
+        if (!this.#started) return
+        if (this.#hasWorker) return
+        if (this.#workerDestroying) return
         await this.waitOperationDone()
-        this.operating = true
+        this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
-        this.paused = true
-        this.operating = false
+        this.#paused = true
+        this.#operating = false
     }
 
     /**
      * Resume capture packets
      */
     public async resume(): Promise<void> {
-        if (!this.started) return
-        if (this.hasWorker) return
-        if (this.workerDestroying) return
+        if (!this.#started) return
+        if (this.#hasWorker) return
+        if (this.#workerDestroying) return
         await this.waitOperationDone()
-        this.operating = true
+        this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('start')
-        this.paused = false
-        this.operating = false
+        this.#paused = false
+        this.#operating = false
     }
 
     /**
@@ -231,14 +242,14 @@ export class Capture extends EventEmitter {
      * @param filter
      */
     public async setFilter(filter: string): Promise<void> {
-        if (!this.started) return
-        if (this.hasWorker) return
-        if (this.workerDestroying) return
+        if (!this.#started) return
+        if (this.#hasWorker) return
+        if (this.#workerDestroying) return
         await this.waitOperationDone()
-        this.operating = true
+        this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('setFilter', filter)
         this.#filter = filter
-        this.operating = false
+        this.#operating = false
     }
 }

@@ -1,6 +1,7 @@
 import {BindingCapture} from '../lib/BindingCapture'
 import {PipeClient} from '../../pipe/PipeClient'
-import {IWrotePacketInfo, PcapWriter} from '../../pcap/PcapWriter'
+import {PcapWriter} from '../../pcap/PcapWriter'
+import {IPcapPacketInfo} from '../../pcap/interfaces/IPcapPacketInfo'
 
 const captureTemporaryFilename: string = process.env.captureTemporaryFilename!
 
@@ -23,6 +24,6 @@ const pipeClient: PipeClient = new PipeClient({
     }
 }).once('exit', (): Promise<void> => pcapWrite.close().finally((): void => process.exit(0)))
 
-pcapWrite.on('packet', (wrotePacketInfo: IWrotePacketInfo): void => pipeClient.notify('packet', wrotePacketInfo))
+pcapWrite.on('packet', (wrotePacketInfo: IPcapPacketInfo): void => pipeClient.notify('packet', wrotePacketInfo))
 
 bindingCapture.on('data', (data: Buffer, sec: number, usec: number): void => pcapWrite.write(data, sec, usec))

@@ -5,6 +5,7 @@ import path from 'node:path'
 import {Capture} from '../lib/nodepcap/Capture'
 import {BindingCapture} from '../lib/nodepcap/lib/BindingCapture'
 import {ErrorCode} from '../errors/common/ErrorCode'
+import {PcapParser} from '../lib/pcap/lib/PcapParser'
 
 // const bc = new BindingCapture({iface: 'en0'})
 // bc.on('data', console.log)
@@ -18,9 +19,16 @@ import {ErrorCode} from '../errors/common/ErrorCode'
 
 
 const capture = new Capture({device: 'en0'})
-let count: number = 0
 capture.on('packet', console.log)
 capture.start().then(() => {
     console.log('start!')
+    setTimeout(() => {
+        capture.stop().then(() => {
+            console.log('total captured:', capture.count)
+            setTimeout(() => {
+                PcapParser.parse(capture.temporaryFilename).on('packet', console.log)
+            }, 1000)
+        })
+    }, 5000)
 })
 

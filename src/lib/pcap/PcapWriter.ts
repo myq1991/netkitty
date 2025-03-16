@@ -1,21 +1,10 @@
 import EventEmitter from 'events'
 import {createWriteStream, WriteStream} from 'node:fs'
 import {GeneratePCAPData, GeneratePCAPHeader} from './PCAPGenerator'
+import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
 
 export interface IPcapWriterOptions {
     filename: string
-}
-
-export interface IWrotePacketInfo {
-    index: number
-    offset: number
-    timestampOffset: number
-    timestampLength: number
-    packetOffset: number
-    packetLength: number
-    seconds: number
-    microseconds: number
-    packet: string
 }
 
 export class PcapWriter extends EventEmitter {
@@ -62,7 +51,7 @@ export class PcapWriter extends EventEmitter {
         this.offset += pcapData.length
         const packetOffset: number = this.offset - packetLength
         const timestampLength: number = packetOffset - startOffset
-        const wrotePacketInfo: IWrotePacketInfo = {
+        const wrotePacketInfo: IPcapPacketInfo = {
             index: this.index,
             offset: startOffset,
             timestampOffset: startOffset,
@@ -86,13 +75,13 @@ export class PcapWriter extends EventEmitter {
         })
     }
 
-    public on(eventName: 'packet', listener: (wrotePacketInfo: IWrotePacketInfo) => void): this
+    public on(eventName: 'packet', listener: (wrotePacketInfo: IPcapPacketInfo) => void): this
     public on(eventName: string, listener: (...args: any[]) => void): this {
         super.on(eventName, listener)
         return this
     }
 
-    public once(eventName: 'packet', listener: (wrotePacketInfo: IWrotePacketInfo) => void): this
+    public once(eventName: 'packet', listener: (wrotePacketInfo: IPcapPacketInfo) => void): this
     public once(eventName: string, listener: (...args: any[]) => void): this {
         super.once(eventName, listener)
         return this
