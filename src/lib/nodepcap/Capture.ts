@@ -14,6 +14,7 @@ import {randomInt} from 'crypto'
 import {rm} from 'node:fs/promises'
 import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
+import {IWrotePacketInfo} from '../pcap/PcapWriter'
 
 export class Capture extends EventEmitter {
 
@@ -21,9 +22,11 @@ export class Capture extends EventEmitter {
 
     protected readonly device: string
 
-    protected readonly cacheFilename: string
+    protected readonly temporaryFilename: string
 
     protected readonly pipeServer: PipeServer
+
+    protected readonly bypassFilesystem: boolean = false
 
     protected hasWorker: boolean = false
 
@@ -60,7 +63,8 @@ export class Capture extends EventEmitter {
             //Use origin worker module, check capture device is available
             if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new DeviceNotFoundError(`Device ${this.device} not found`)
         }
-        this.cacheFilename = GetDeviceCaptureTemporaryFilename(this.device)
+        this.bypassFilesystem = !!options.bypassFilesystem
+        this.temporaryFilename = GetDeviceCaptureTemporaryFilename(this.device)
         this.pipeServer = new PipeServer()
     }
 
@@ -75,12 +79,14 @@ export class Capture extends EventEmitter {
             captureWorkerId: this.workerId,
             captureDevice: this.device,
             captureFilter: this.#filter,
+            captureTemporaryFilename: this.temporaryFilename,
+            bypassFilesystem: String(this.bypassFilesystem),
             socketPath: this.pipeServer.socketPath
         }
         this.getWorkerSocket().then((clientSocket: PipeClientSocket): void => {
-            clientSocket.on('packet', (packetData: { data: number[] }, sec: number, usec: number): void => {
-                //TODO 写入临时文件中，或由worker进程写入
-                this.emit('packet', Buffer.from(packetData.data), sec, usec)
+            clientSocket.on('packet', (wrotePacketInfo: IWrotePacketInfo): void => {
+                this.emit('rawPacket', wrotePacketInfo.packet, wrotePacketInfo.seconds, wrotePacketInfo.microseconds)
+                this.emit('packet', wrotePacketInfo)
             })
         })
         this.worker = isElectron() ? utilityProcess.fork(this.workerModule, [], {env: env}) : childProcess.fork(this.workerModule, [], {env: env})
@@ -142,7 +148,7 @@ export class Capture extends EventEmitter {
      */
     protected async cleanResources(): Promise<void> {
         //Clean cached capture data
-        if (existsSync(this.cacheFilename)) await rm(this.cacheFilename, {recursive: true, force: true})
+        if (existsSync(this.temporaryFilename)) await rm(this.temporaryFilename, {recursive: true, force: true})
         //Clean old worker resources
         if (this.worker && this.workerSocket) await this.destroyCaptureWorker()
     }

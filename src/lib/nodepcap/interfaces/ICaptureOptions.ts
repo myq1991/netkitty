@@ -11,4 +11,9 @@ export interface ICaptureOptions {
      * Custom capture worker module path
      */
     workerModule?: string
+
+    /**
+     * Whether to avoid writing captured packets to temporary pcap file
+     */
+    bypassFilesystem?: boolean
 }
