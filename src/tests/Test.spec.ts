@@ -6,6 +6,7 @@ import {Capture} from '../lib/nodepcap/Capture'
 import {BindingCapture} from '../lib/nodepcap/lib/BindingCapture'
 import {ErrorCode} from '../errors/common/ErrorCode'
 import {PcapParser} from '../lib/pcap/lib/PcapParser'
+import {PcapReader} from '../lib/pcap/PcapReader'
 
 // const bc = new BindingCapture({iface: 'en0'})
 // bc.on('data', console.log)
@@ -17,18 +18,18 @@ import {PcapParser} from '../lib/pcap/lib/PcapParser'
 //     device:'en0'
 // })
 
-
 const capture = new Capture({device: 'en0'})
-capture.on('packet', console.log)
+// capture.on('packet', console.log)
 capture.start().then(() => {
     console.log('start!')
+    // PcapParser.parse(capture.temporaryFilename).on('packet', console.log)
     setTimeout(() => {
-        capture.stop().then(() => {
-            console.log('total captured:', capture.count)
-            setTimeout(() => {
-                PcapParser.parse(capture.temporaryFilename).on('packet', console.log)
-            }, 1000)
+        const pr = new PcapReader({filename: capture.temporaryFilename, watch: true}).on('packet', async info => {
+            await pr.readPacket(info.offset, info.length)
         })
-    }, 5000)
+        setTimeout(() => {
+            pr.close()
+        }, 20000)
+    }, 3000)
 })
 

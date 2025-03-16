@@ -54,6 +54,7 @@ export class PcapWriter extends EventEmitter {
         const wrotePacketInfo: IPcapPacketInfo = {
             index: this.index,
             offset: startOffset,
+            length: pcapData.length,
             timestampOffset: startOffset,
             timestampLength: timestampLength,
             packetOffset: packetOffset,

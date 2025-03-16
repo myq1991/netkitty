@@ -130,9 +130,11 @@ export class PcapParser extends EventEmitter {
         if (buffer.length >= this.currentPacketHeader.capturedLength) {
             const data: Buffer = buffer.subarray(0, this.currentPacketHeader!.capturedLength)
             const packetLength: number = data.length
+            const recordLength: number = PACKET_HEADER_LENGTH + packetLength
             const pcapPacketInfo: IPcapPacketInfo = {
                 index: this.index,
                 offset: this.offset,
+                length: recordLength,
                 timestampOffset: this.offset,
                 timestampLength: 16,
                 packetOffset: this.offset + PACKET_HEADER_LENGTH,
@@ -145,7 +147,7 @@ export class PcapParser extends EventEmitter {
             this.emit('packet', pcapPacketInfo)
             this.buffer = buffer.subarray(this.currentPacketHeader.capturedLength)
             this.state = (): boolean => this.parsePacketHeader()
-            this.offset += (PACKET_HEADER_LENGTH + packetLength)
+            this.offset += recordLength
             return true
         }
         return false
