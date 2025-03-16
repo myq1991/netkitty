@@ -46,6 +46,7 @@ export class PipeClientSocket extends EventEmitter {
             .once('close', (): void => {
                 this.#connected = false
                 this.emit('disconnect')
+                this.removeAllListeners()
             })
         this.pipeMessageHandler = new PipeMessageHandler(this, this.#connection)
     }

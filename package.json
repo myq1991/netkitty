@@ -33,6 +33,7 @@
     "@types/sort-array": "^4.1.2",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
+    "electron": "^35.0.1",
     "eslint": "^8.56.0",
     "reflect-metadata": "^0.2.2",
     "shx": "^0.3.4",
@@ -41,6 +42,7 @@
   },
   "dependencies": {
     "bignumber.js": "^9.1.2",
+    "is-electron": "^2.2.2",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4",
     "socket-ipc": "^4.0.2",
