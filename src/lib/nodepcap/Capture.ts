@@ -228,7 +228,7 @@ export class Capture extends EventEmitter {
      */
     public async pause(): Promise<void> {
         if (!this.#started) return
-        if (this.#hasWorker) return
+        if (!this.#hasWorker) return
         if (this.#workerDestroying) return
         await this.waitOperationDone()
         this.#operating = true
@@ -243,7 +243,7 @@ export class Capture extends EventEmitter {
      */
     public async resume(): Promise<void> {
         if (!this.#started) return
-        if (this.#hasWorker) return
+        if (!this.#hasWorker) return
         if (this.#workerDestroying) return
         await this.waitOperationDone()
         this.#operating = true
@@ -259,7 +259,7 @@ export class Capture extends EventEmitter {
      */
     public async setFilter(filter: string): Promise<void> {
         if (!this.#started) return
-        if (this.#hasWorker) return
+        if (!this.#hasWorker) return
         if (this.#workerDestroying) return
         await this.waitOperationDone()
         this.#operating = true

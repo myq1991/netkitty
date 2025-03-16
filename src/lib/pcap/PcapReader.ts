@@ -25,18 +25,14 @@ export class PcapReader extends EventEmitter {
 
     protected readBufferFileHandle: FileHandle | null
 
-    protected readPacketFileHandle: FileHandle | null
-
     protected index: number = 0
 
     protected offset: number = 0
 
+    protected readDone: boolean = false
+
     protected get readBufferFd(): number {
         return this.readBufferFileHandle ? this.readBufferFileHandle.fd : -1
-    }
-
-    protected get readPacketFd(): number {
-        return this.readPacketFileHandle ? this.readPacketFileHandle.fd : -1
     }
 
     protected get readStream(): ReadStream {
@@ -68,8 +64,8 @@ export class PcapReader extends EventEmitter {
      * Initialize read packet file handle
      * @protected
      */
-    protected async initReadPacketFileHandle(): Promise<void> {
-        if (!this.readPacketFileHandle) this.readPacketFileHandle = await open(this.filename, 'r')
+    protected async initReadPacketFileHandle(): Promise<FileHandle> {
+        return await open(this.filename, 'r')
     }
 
     /**
@@ -112,12 +108,16 @@ export class PcapReader extends EventEmitter {
             let read: boolean = true
             this.once('stop', (): boolean => read = false)
             let waitUntil: number = 0
-            while (read) {
+            let isReachEnd: boolean = false
+            while (read || !isReachEnd) {
                 if (waitUntil && Date.now() >= waitUntil) continue
                 waitUntil = 0
-                let isReachEnd: boolean = await this.readBuffer()
-                if (isReachEnd) waitUntil = Date.now() + 100
+                isReachEnd = await this.readBuffer()
+                if (isReachEnd) {
+                    waitUntil = Date.now() + 100
+                }
             }
+            this.readDone = true
             this.emit('done')
         })
     }
@@ -135,6 +135,7 @@ export class PcapReader extends EventEmitter {
                 isReachEnd = await this.readBuffer()
             }
             if (!stopped) await this.stop()
+            this.readDone = true
             this.emit('done')
         })
     }
@@ -145,14 +146,15 @@ export class PcapReader extends EventEmitter {
      * @param length
      */
     public async readPacket(offset: number, length: number): Promise<Buffer> {
-        await this.initReadPacketFileHandle()
+        const fileHandle: FileHandle = await this.initReadPacketFileHandle()
         return await new Promise<Buffer>((resolve, reject) => {
             const recordHeaderLength: number = 16
-            read(this.readPacketFd, Buffer.alloc(length), 0, length, offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
+            read(fileHandle.fd, Buffer.alloc(length), 0, length, offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
                 if (err) return reject(err)
                 if (!bytesRead) return reject(new Error('No data to read'))
                 const data: Buffer = Buffer.alloc(length - recordHeaderLength)
                 buffer.copy(data, 0, recordHeaderLength, bytesRead)
+                fileHandle.close()
                 return resolve(data)
             })
         })
@@ -174,9 +176,10 @@ export class PcapReader extends EventEmitter {
             this.readStream.once('error', err => !!err)
             this.readStream.destroy()
         })
+        this.emit('stop')
+        if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
         await this.readBufferFileHandle?.close()
         this.readBufferFileHandle = null
-        this.emit('stop')
     }
 
     /**
@@ -184,8 +187,6 @@ export class PcapReader extends EventEmitter {
      */
     public async close(): Promise<void> {
         await this.stop()
-        await this.readPacketFileHandle?.close()
-        this.readPacketFileHandle = null
         this.emit('close')
         this.removeAllListeners()
     }
