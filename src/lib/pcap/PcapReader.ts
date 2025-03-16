@@ -4,7 +4,6 @@ import {read, ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './lib/PcapParser'
 import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
-import {Key} from 'node:readline'
 
 export interface IPcapReaderOptions {
     filename: string
