@@ -5,7 +5,7 @@ import path from 'node:path'
 import {Capture} from '../lib/nodepcap/Capture'
 import {BindingCapture} from '../lib/nodepcap/lib/BindingCapture'
 import {ErrorCode} from '../errors/common/ErrorCode'
-import {PcapParser} from '../lib/pcap/lib/PcapParser'
+import {PcapParser} from '../lib/pcap/PcapParser'
 import {PcapReader} from '../lib/pcap/PcapReader'
 
 // const bc = new BindingCapture({iface: 'en0'})

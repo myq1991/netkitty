@@ -1,7 +1,7 @@
 import EventEmitter from 'events'
 import {createReadStream, ReadStream} from 'node:fs'
 import {format} from 'node:util'
-import {IPcapPacketInfo} from '../interfaces/IPcapPacketInfo'
+import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
 
 const GLOBAL_HEADER_LENGTH = 24 //bytes
 const PACKET_HEADER_LENGTH = 16 //bytes

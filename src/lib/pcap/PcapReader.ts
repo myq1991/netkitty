@@ -2,7 +2,7 @@ import EventEmitter from 'events'
 import {FileHandle, open} from 'node:fs/promises'
 import {read, ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
-import {PcapParser} from './lib/PcapParser'
+import {PcapParser} from './PcapParser'
 import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
 
 export interface IPcapReaderOptions {
