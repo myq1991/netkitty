@@ -16,4 +16,9 @@ export interface ICaptureOptions {
      * Whether to avoid writing captured packets to temporary pcap file
      */
     bypassFilesystem?: boolean
+
+    /**
+     * The temporary folder path for storing captured pcap files
+     */
+    tmpDir?: string
 }

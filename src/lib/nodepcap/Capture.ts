@@ -15,12 +15,15 @@ import {rm} from 'node:fs/promises'
 import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 import {IWrotePacketInfo} from '../pcap/PcapWriter'
+import {tmpdir} from 'node:os'
 
 export class Capture extends EventEmitter {
 
     protected readonly workerModule: string = path.resolve(__dirname, './workers/CaptureWorker.js')
 
     protected readonly device: string
+
+    protected readonly tmpDir: string
 
     protected readonly temporaryFilename: string
 
@@ -59,12 +62,13 @@ export class Capture extends EventEmitter {
         this.workerModule = options.workerModule ? options.workerModule : this.workerModule
         this.device = options.device
         this.#filter = options.filter ? options.filter : ''
+        this.tmpDir = options.tmpDir ? options.tmpDir : path.resolve(tmpdir(), 'netkitty-tmp')
         if (!options.workerModule) {
             //Use origin worker module, check capture device is available
             if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.device).length) throw new DeviceNotFoundError(`Device ${this.device} not found`)
         }
         this.bypassFilesystem = !!options.bypassFilesystem
-        this.temporaryFilename = GetDeviceCaptureTemporaryFilename(this.device)
+        this.temporaryFilename = GetDeviceCaptureTemporaryFilename(this.device, this.tmpDir)
         this.pipeServer = new PipeServer()
     }
 

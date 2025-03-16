@@ -17,7 +17,7 @@ import {ErrorCode} from '../errors/common/ErrorCode'
 // })
 
 
-const capture = new Capture({device: 'en0', bypassFilesystem: false})
+const capture = new Capture({device: 'en0'})
 let count: number = 0
 capture.on('packet', console.log)
 capture.start().then(() => {
