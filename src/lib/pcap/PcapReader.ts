@@ -188,8 +188,6 @@ export class PcapReader extends EventEmitter {
             this.readStream.once('error', err => !!err)
             this.readStream.destroy()
         })
-        // this.emit('stop')
-        // if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
         await this.readBufferFileHandle?.close()
         this.readBufferFileHandle = null
     }
