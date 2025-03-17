@@ -11,7 +11,7 @@ import {utilityProcess, UtilityProcess} from 'electron'
 import {PipeServer} from '../pipe/PipeServer'
 import {PipeClientSocket} from '../pipe/PipeClientSocket'
 import {randomInt} from 'crypto'
-import {rm} from 'node:fs/promises'
+import {cp, rm} from 'node:fs/promises'
 import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 import {tmpdir} from 'node:os'
@@ -257,6 +257,14 @@ export class Capture extends EventEmitter {
         await workerSocket.invoke('setFilter', filter)
         this.#filter = filter
         this.#operating = false
+    }
+
+    /**
+     * Save captured pcap to destination
+     * @param destination
+     */
+    public async saveTo(destination: string): Promise<void> {
+        await cp(this.temporaryFilename, destination)
     }
 
     /**
