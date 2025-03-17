@@ -1,4 +1,4 @@
-import {GetNetworkInterfaces} from './lib/GetNetworkInterfaces'
+import {GetNetworkInterfaces} from './GetNetworkInterfaces'
 import {INetworkInterface} from './interfaces/INetworkInterface'
 import {ICaptureOptions} from './interfaces/ICaptureOptions'
 import {existsSync} from 'node:fs'

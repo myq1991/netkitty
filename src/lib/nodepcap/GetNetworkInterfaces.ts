@@ -1,5 +1,5 @@
-import {INetworkInterface} from '../interfaces/INetworkInterface'
-import {GetNodePcapBinding} from './GetNodePcapBinding'
+import {INetworkInterface} from './interfaces/INetworkInterface'
+import {GetNodePcapBinding} from './lib/GetNodePcapBinding'
 import sortArray from 'sort-array'
 
 /**
