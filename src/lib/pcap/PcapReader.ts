@@ -19,11 +19,14 @@ export class PcapReader extends EventEmitter {
 
     protected readonly watch: boolean
 
-    protected readonly chunkSize: number = 64 * 1024
+    // protected readonly chunkSize: number = 64 * 1024
+    protected readonly chunkSize: number = 1518
 
     protected readonly parser: PcapParser
 
     protected readBufferFileHandle: FileHandle | null
+
+    protected started: boolean = false
 
     protected index: number = 0
 
@@ -53,11 +56,6 @@ export class PcapReader extends EventEmitter {
             this.index = pcapPacketInfo.index
             this.emit('packet', pcapPacketInfo)
         })
-        if (this.watch) {
-            this.continualRead()
-        } else {
-            this.straightRead()
-        }
     }
 
     /**
@@ -161,9 +159,24 @@ export class PcapReader extends EventEmitter {
     }
 
     /**
+     * Start reading pcap
+     */
+    public async start(): Promise<void> {
+        if (this.started) return
+        if (this.watch) {
+            this.continualRead()
+        } else {
+            this.straightRead()
+        }
+        this.started = true
+    }
+
+    /**
      * Stop reading pcap
      */
     public async stop(): Promise<void> {
+        this.emit('stop')
+        if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
         await new Promise<void>(resolve => {
             if (this.writeStream.closed) return resolve()
             this.writeStream.once('close', () => resolve())
@@ -176,8 +189,8 @@ export class PcapReader extends EventEmitter {
             this.readStream.once('error', err => !!err)
             this.readStream.destroy()
         })
-        this.emit('stop')
-        if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
+        // this.emit('stop')
+        // if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
         await this.readBufferFileHandle?.close()
         this.readBufferFileHandle = null
     }

@@ -15,5 +15,4 @@ export function GetNetworkInterfaces(): INetworkInterface[] {
         by: 'name',
         order: 'asc'
     })
-
 }

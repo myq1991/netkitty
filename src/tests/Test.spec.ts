@@ -27,9 +27,10 @@ capture.on('packet', async (info) => {
 })
 console.log(capture.temporaryFilename)
 let pr: PcapReader
-capture.start().then((_pr) => {
+capture.start().then(() => {
     console.log('start!')
-    pr = _pr
+    // pr = _pr
+    pr = new PcapReader({filename: capture.temporaryFilename, watch: true})
     setTimeout(async () => {
         await capture.pause()
         console.log('paused!')
@@ -37,8 +38,9 @@ capture.start().then((_pr) => {
             await capture.resume()
             console.log('resumed!')
             setTimeout(async () => {
+                console.time('stopped!')
                 await capture.stop()
-                console.log('stopped!')
+                console.timeEnd('stopped!')
             }, 60000)
         }, 10000)
     }, 10000)

@@ -16,7 +16,6 @@ import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 import {tmpdir} from 'node:os'
 import {IPcapPacketInfo} from '../pcap/interfaces/IPcapPacketInfo'
-import {PcapReader} from '../pcap/PcapReader'
 
 export class Capture extends EventEmitter {
 
@@ -29,8 +28,6 @@ export class Capture extends EventEmitter {
     readonly #temporaryFilename: string
 
     readonly #pipeServer: PipeServer
-
-    #reader: PcapReader | null = null
 
     #hasWorker: boolean = false
 
@@ -94,13 +91,11 @@ export class Capture extends EventEmitter {
             captureDevice: this.#device,
             captureFilter: this.#filter,
             captureTemporaryFilename: this.#temporaryFilename,
-            socketPath: this.#pipeServer.socketPath,
-            //Getting packets from pcap reader events, worker does not need to emit events
-            doNotEmitPacket: String(true)
+            socketPath: this.#pipeServer.socketPath
         }
-        this.getWorkerSocket().then((): void => {
-            this.#reader = new PcapReader({filename: this.temporaryFilename, watch: true})
-            this.#reader.on('packet', (packetInfo: IPcapPacketInfo): void => {
+        this.getWorkerSocket().then((socket: PipeClientSocket): void => {
+            socket.on('packet', (packetInfo: IPcapPacketInfo): void => {
+                this.#count += 1
                 this.emit('rawPacket', packetInfo.index, packetInfo.packet, packetInfo.seconds, packetInfo.microseconds)
                 this.emit('packet', packetInfo)
             })
@@ -169,8 +164,6 @@ export class Capture extends EventEmitter {
         if (existsSync(this.#temporaryFilename)) await rm(this.#temporaryFilename, {recursive: true, force: true})
         //Clean old worker resources
         if (this.#worker && this.#workerSocket) await this.destroyCaptureWorker()
-        await this.#reader?.close()
-        this.#reader = null
     }
 
     /**
@@ -184,12 +177,9 @@ export class Capture extends EventEmitter {
     /**
      * Start capture packets
      */
-    public async start(): Promise<PcapReader> {
-        if (this.#paused) {
-            await this.resume()
-            return this.#reader!
-        }
-        if (this.#started) return this.#reader!
+    public async start(): Promise<void> {
+        if (this.#paused) return await this.resume()
+        if (this.#started) return
         await this.waitOperationDone()
         this.#operating = true
         try {
@@ -204,7 +194,6 @@ export class Capture extends EventEmitter {
             throw e
         }
         this.#operating = false
-        return this.#reader!
     }
 
     /**
@@ -218,7 +207,6 @@ export class Capture extends EventEmitter {
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
         await this.destroyCaptureWorker()
-        await this.#reader?.stop()
         this.#started = false
         this.#operating = false
     }

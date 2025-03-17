@@ -47,7 +47,6 @@ export class PcapWriter extends EventEmitter {
                 microseconds: microseconds
             }
         })
-        this.writeStream.write(pcapData)
         this.offset += pcapData.length
         const packetOffset: number = this.offset - packetLength
         const recordHeaderLength: number = packetOffset - startOffset
@@ -63,7 +62,7 @@ export class PcapWriter extends EventEmitter {
             microseconds: microseconds,
             packet: packet.toString('base64')
         }
-        this.emit('packet', wrotePacketInfo)
+        this.writeStream.write(pcapData, (): boolean => this.emit('packet', wrotePacketInfo))
     }
 
     /**
