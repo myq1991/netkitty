@@ -18,12 +18,16 @@ import {PcapReader} from '../lib/pcap/PcapReader'
 //     device:'en0'
 // })
 
+let paused: boolean = false
+
 const capture = new Capture({device: 'en0'})
 capture.on('packet', async (info) => {
-    console.log(
-        info.index,
-        await pr.readPacket(info.offset, info.length)
-    )
+    const buf = await pr.readPacket(info.offset, info.length)
+    console.log(info.index, buf.length)
+    // console.log(
+    //     info.index,
+    //     buf
+    // )
 })
 console.log(capture.temporaryFilename)
 let pr: PcapReader
@@ -34,10 +38,13 @@ capture.start().then(() => {
     setTimeout(async () => {
         await capture.pause()
         console.log('paused!')
+        paused = true
         setTimeout(async () => {
             await capture.resume()
             console.log('resumed!')
+            paused = false
             setTimeout(async () => {
+                console.log('about to stop!!!!!')
                 console.time('stopped!')
                 await capture.stop()
                 console.timeEnd('stopped!')

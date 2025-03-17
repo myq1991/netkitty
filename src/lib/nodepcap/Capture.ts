@@ -95,9 +95,9 @@ export class Capture extends EventEmitter {
         }
         this.getWorkerSocket().then((socket: PipeClientSocket): void => {
             socket.on('packet', (packetInfo: IPcapPacketInfo): void => {
-                this.#count += 1
                 this.emit('rawPacket', packetInfo.index, packetInfo.packet, packetInfo.seconds, packetInfo.microseconds)
                 this.emit('packet', packetInfo)
+                this.#count += 1
             })
         })
         this.#worker = isElectron() ? utilityProcess.fork(this.#workerModule, [], {env: env}) : childProcess.fork(this.#workerModule, [], {env: env})
@@ -206,6 +206,7 @@ export class Capture extends EventEmitter {
         this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
+        while (await workerSocket.invoke('count') !== this.count) await new Promise(resolve => setTimeout(resolve, 10))
         await this.destroyCaptureWorker()
         this.#started = false
         this.#operating = false
@@ -222,6 +223,7 @@ export class Capture extends EventEmitter {
         this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
+        while (await workerSocket.invoke('count') !== this.count) await new Promise(resolve => setTimeout(resolve, 10))
         this.#paused = true
         this.#operating = false
     }

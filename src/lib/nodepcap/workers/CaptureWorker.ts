@@ -18,6 +18,7 @@ const pipeClient: PipeClient = new PipeClient({
     id: process.env.captureWorkerId!,
     socketPath: process.env.socketPath!,
     actions: {
+        count: async (): Promise<number> => pcapWrite.wroteCount,
         start: async (): Promise<void> => bindingCapture.start(),
         stop: async (): Promise<void> => bindingCapture.stop(),
         setFilter: async (filter: string): Promise<void> => bindingCapture.setFilter(filter)

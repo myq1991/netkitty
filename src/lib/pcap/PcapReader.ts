@@ -19,8 +19,7 @@ export class PcapReader extends EventEmitter {
 
     protected readonly watch: boolean
 
-    // protected readonly chunkSize: number = 64 * 1024
-    protected readonly chunkSize: number = 1518
+    protected readonly chunkSize: number = 1518 * 10
 
     protected readonly parser: PcapParser
 

@@ -19,6 +19,10 @@ export class PcapWriter extends EventEmitter {
 
     protected offset: number = 0
 
+    public get wroteCount(): number {
+        return this.index
+    }
+
     constructor(options: IPcapWriterOptions) {
         super()
         this.filename = options.filename
