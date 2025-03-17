@@ -1,55 +1,22 @@
-import {PipeServer} from '../lib/pipe/PipeServer'
-import {PipeClient} from '../lib/pipe/PipeClient'
-import {fork} from 'node:child_process'
+import inquirer from 'inquirer'
+import {readdirSync} from 'node:fs'
 import path from 'node:path'
-import {Capture} from '../lib/nodepcap/Capture'
-import {BindingCapture} from '../lib/nodepcap/lib/BindingCapture'
-import {ErrorCode} from '../errors/common/ErrorCode'
-import {PcapParser} from '../lib/pcap/PcapParser'
-import {PcapReader} from '../lib/pcap/PcapReader'
+import {fork} from 'node:child_process'
 
-// const bc = new BindingCapture({iface: 'en0'})
-// bc.on('data', console.log)
-// bc.start()
+const unitDir: string = path.resolve(__dirname, './units')
+const unitModules: string[] = readdirSync(unitDir).filter(unit => unit.endsWith('spec.js')).map(unit => path.resolve(unitDir, unit))
 
-// console.log(GetNetworkInterfaces())
-
-// new Capture({
-//     device:'en0'
-// })
-
-let paused: boolean = false
-
-const capture = new Capture({device: 'en0'})
-capture.on('packet', async (info) => {
-    const buf = await pr.readPacket(info.offset, info.length)
-    console.log(info.index, buf.length)
-    // console.log(
-    //     info.index,
-    //     buf
-    // )
-})
-console.log(capture.temporaryFilename)
-let pr: PcapReader
-capture.start().then(() => {
-    console.log('start!')
-    // pr = _pr
-    pr = new PcapReader({filename: capture.temporaryFilename, watch: true})
-    setTimeout(async () => {
-        await capture.pause()
-        console.log('paused!')
-        paused = true
-        setTimeout(async () => {
-            await capture.resume()
-            console.log('resumed!')
-            paused = false
-            setTimeout(async () => {
-                console.log('about to stop!!!!!')
-                console.time('stopped!')
-                await capture.stop()
-                console.timeEnd('stopped!')
-            }, 60000)
-        }, 10000)
-    }, 10000)
-})
-
+inquirer
+    .prompt([
+        {
+            type: 'list',
+            name: 'unit',
+            message: 'Select an unit to test',
+            choices: unitModules.map(unitPath => path.basename(unitPath, '.spec.js'))
+        }
+    ])
+    .then(async (answers) => {
+        const [selectedModule] = unitModules.filter(unitPath => path.basename(unitPath, '.spec.js') === answers.unit)
+        fork(selectedModule)
+    })
+    .catch(console.error)
