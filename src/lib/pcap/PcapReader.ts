@@ -1,5 +1,5 @@
 import EventEmitter from 'events'
-import {FileHandle, open} from 'node:fs/promises'
+import {FileHandle, FileReadResult, open} from 'node:fs/promises'
 import {read, ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './PcapParser'
@@ -23,8 +23,6 @@ export class PcapReader extends EventEmitter {
 
     protected readonly parser: PcapParser
 
-    protected readBufferFileHandle: FileHandle | null
-
     protected started: boolean = false
 
     protected index: number = 0
@@ -33,9 +31,7 @@ export class PcapReader extends EventEmitter {
 
     protected readDone: boolean = false
 
-    protected get readBufferFd(): number {
-        return this.readBufferFileHandle ? this.readBufferFileHandle.fd : -1
-    }
+    protected readBufferFileHandle: FileHandle | null = null
 
     protected get readStream(): ReadStream {
         return this.duplexPair.socket2
@@ -69,8 +65,9 @@ export class PcapReader extends EventEmitter {
      * Initialize read buffer file handle
      * @protected
      */
-    protected async initReadBufferFileHandle(): Promise<void> {
+    protected async initReadBufferFileHandle(): Promise<FileHandle> {
         if (!this.readBufferFileHandle) this.readBufferFileHandle = await open(this.filename, 'r')
+        return this.readBufferFileHandle
     }
 
     /**
@@ -78,23 +75,42 @@ export class PcapReader extends EventEmitter {
      * @protected
      */
     protected async readBuffer(): Promise<boolean> {
-        await this.initReadBufferFileHandle()
-        return new Promise(resolve => {
-            if (this.readBufferFd < 0) return resolve(true)
-            read(this.readBufferFd, Buffer.alloc(this.chunkSize), 0, this.chunkSize, this.offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
-                let isReachEnd: boolean = false
-                if (bytesRead > 0 && !err) {
-                    const data: Buffer = Buffer.alloc(bytesRead)
-                    buffer.copy(data, 0, 0, bytesRead)
-                    this.offset += bytesRead
-                    this.writeStream.write(data)
-                } else {
-                    isReachEnd = true
-                }
-                return resolve(isReachEnd)
+        const readBufferFileHandle: FileHandle = await this.initReadBufferFileHandle()
+        try {
+            const result: FileReadResult<Buffer> = await readBufferFileHandle.read({
+                buffer: Buffer.alloc(this.chunkSize),
+                offset: 0,
+                length: this.chunkSize,
+                position: this.offset
             })
-        })
+            if (result.bytesRead <= 0) return true
+            const data: Buffer = Buffer.alloc(result.bytesRead)
+            result.buffer.copy(data, 0, 0, result.bytesRead)
+            this.offset += result.bytesRead
+            this.writeStream.write(data)
+            return false
+        } catch (e) {
+            return true
+        }
     }
+
+    // protected async readBuffer(): Promise<boolean> {
+    //     const readBufferFileHandle: FileHandle = await this.initReadBufferFileHandle()
+    //     return new Promise<boolean>(resolve => {
+    //         read(readBufferFileHandle.fd, Buffer.alloc(this.chunkSize), 0, this.chunkSize, this.offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
+    //             let isReachEnd: boolean = false
+    //             if (bytesRead > 0 && !err) {
+    //                 const data: Buffer = Buffer.alloc(bytesRead)
+    //                 buffer.copy(data, 0, 0, bytesRead)
+    //                 this.offset += bytesRead
+    //                 this.writeStream.write(data)
+    //             } else {
+    //                 isReachEnd = true
+    //             }
+    //             return resolve(isReachEnd)
+    //         })
+    //     })
+    // }
 
     /**
      * Read file continually
@@ -104,16 +120,15 @@ export class PcapReader extends EventEmitter {
         process.nextTick(async (): Promise<void> => {
             let read: boolean = true
             this.once('stop', (): boolean => read = false)
-            let waitUntil: number = 0
             let isReachEnd: boolean = false
             while (read || !isReachEnd) {
-                if (waitUntil && Date.now() >= waitUntil) continue
-                waitUntil = 0
                 isReachEnd = await this.readBuffer()
                 if (isReachEnd) {
-                    waitUntil = Date.now() + 100
+                    await new Promise(resolve => setTimeout(resolve, 1))
                 }
             }
+            await this.readBufferFileHandle?.close()
+            this.readBufferFileHandle = null
             this.readDone = true
             this.emit('done')
         })
@@ -132,6 +147,8 @@ export class PcapReader extends EventEmitter {
                 isReachEnd = await this.readBuffer()
             }
             if (!stopped) await this.stop()
+            await this.readBufferFileHandle?.close()
+            this.readBufferFileHandle = null
             this.readDone = true
             this.emit('done')
         })
@@ -144,17 +161,16 @@ export class PcapReader extends EventEmitter {
      */
     public async readPacket(offset: number, length: number): Promise<Buffer> {
         const fileHandle: FileHandle = await this.initReadPacketFileHandle()
-        return await new Promise<Buffer>((resolve, reject) => {
-            const recordHeaderLength: number = 16
-            read(fileHandle.fd, Buffer.alloc(length), 0, length, offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
-                if (err) return reject(err)
-                if (!bytesRead) return reject(new Error('No data to read'))
-                const data: Buffer = Buffer.alloc(length - recordHeaderLength)
-                buffer.copy(data, 0, recordHeaderLength, bytesRead)
-                fileHandle.close()
-                return resolve(data)
-            })
+        const recordHeaderLength: number = 16
+        const packetLength: number = length - recordHeaderLength
+        const result: FileReadResult<Buffer> = await fileHandle.read({
+            buffer: Buffer.alloc(packetLength),
+            offset: 0,
+            length: packetLength,
+            position: offset + recordHeaderLength
         })
+        await fileHandle.close()
+        return result.buffer
     }
 
     /**
@@ -188,8 +204,6 @@ export class PcapReader extends EventEmitter {
             this.readStream.once('error', err => !!err)
             this.readStream.destroy()
         })
-        await this.readBufferFileHandle?.close()
-        this.readBufferFileHandle = null
     }
 
     /**

@@ -16,13 +16,13 @@ export class Analyzer extends EventEmitter {
         this.#reader = new PcapReader({filename: this.#filename})
     }
 
-    public start() {
+    public async start() {
         if (this.#started) return
         this.#started = true
-        this.#reader.start()
+        await this.#reader.start()
     }
 
-    public stop() {
+    public async stop() {
 
     }
 }
