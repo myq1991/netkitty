@@ -13,7 +13,6 @@ export interface IPcapReaderOptions {
 
 export class PcapReader extends EventEmitter {
 
-    protected readonly duplexPair: DuplexPair = new DuplexPair()
 
     protected readonly filename: string
 
@@ -21,9 +20,9 @@ export class PcapReader extends EventEmitter {
 
     protected readonly chunkSize: number = 1518 * 10
 
-    protected readonly parser: PcapParser
+    protected duplexPair: DuplexPair
 
-    protected started: boolean = false
+    protected parser: PcapParser
 
     protected index: number = 0
 
@@ -46,11 +45,31 @@ export class PcapReader extends EventEmitter {
         this.filename = options.filename
         this.watch = !!options.watch
         this.chunkSize = options.chunkSize ? options.chunkSize : this.chunkSize
+    }
+
+    /**
+     * Initialize reader
+     * @protected
+     */
+    protected initReader(): void {
+        this.duplexPair = new DuplexPair()
         this.parser = PcapParser.parse(this.readStream)
         this.parser.on('packet', (pcapPacketInfo: IPcapPacketInfo): void => {
             this.index = pcapPacketInfo.index
             this.emit('packet', pcapPacketInfo)
         })
+    }
+
+    /**
+     * Reset reader
+     * @protected
+     */
+    protected async reset(): Promise<void> {
+        await this.stop()
+        this.parser?.removeAllListeners()
+        this.index = 0
+        this.offset = 0
+        this.initReader()
     }
 
     /**
@@ -159,33 +178,36 @@ export class PcapReader extends EventEmitter {
      * Start reading pcap
      */
     public async start(): Promise<void> {
-        if (this.started) return
+        await this.reset()
         if (this.watch) {
             this.continualRead()
         } else {
             this.straightRead()
         }
-        this.started = true
     }
 
     /**
      * Stop reading pcap
      */
     public async stop(): Promise<void> {
-        this.emit('stop')
-        if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
-        await new Promise<void>(resolve => {
-            if (this.writeStream.closed) return resolve()
-            this.writeStream.once('close', () => resolve())
-            this.writeStream.once('error', err => !!err)
-            this.writeStream.destroy()
-        })
-        await new Promise<void>(resolve => {
-            if (this.readStream.closed) return resolve()
-            this.readStream.once('close', () => resolve())
-            this.readStream.once('error', err => !!err)
-            this.readStream.destroy()
-        })
+        if (this.parser) {
+            this.emit('stop')
+            if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
+        }
+        if (this.duplexPair) {
+            await new Promise<void>(resolve => {
+                if (this.writeStream.closed) return resolve()
+                this.writeStream.once('close', () => resolve())
+                this.writeStream.once('error', err => !!err)
+                this.writeStream.destroy()
+            })
+            await new Promise<void>(resolve => {
+                if (this.readStream.closed) return resolve()
+                this.readStream.once('close', () => resolve())
+                this.readStream.once('error', err => !!err)
+                this.readStream.destroy()
+            })
+        }
     }
 
     /**
