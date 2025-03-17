@@ -1,6 +1,6 @@
 import EventEmitter from 'events'
 import {FileHandle, FileReadResult, open} from 'node:fs/promises'
-import {read, ReadStream, WriteStream} from 'node:fs'
+import {ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './PcapParser'
 import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
@@ -93,24 +93,6 @@ export class PcapReader extends EventEmitter {
             return true
         }
     }
-
-    // protected async readBuffer(): Promise<boolean> {
-    //     const readBufferFileHandle: FileHandle = await this.initReadBufferFileHandle()
-    //     return new Promise<boolean>(resolve => {
-    //         read(readBufferFileHandle.fd, Buffer.alloc(this.chunkSize), 0, this.chunkSize, this.offset, (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer): void => {
-    //             let isReachEnd: boolean = false
-    //             if (bytesRead > 0 && !err) {
-    //                 const data: Buffer = Buffer.alloc(bytesRead)
-    //                 buffer.copy(data, 0, 0, bytesRead)
-    //                 this.offset += bytesRead
-    //                 this.writeStream.write(data)
-    //             } else {
-    //                 isReachEnd = true
-    //             }
-    //             return resolve(isReachEnd)
-    //         })
-    //     })
-    // }
 
     /**
      * Read file continually
