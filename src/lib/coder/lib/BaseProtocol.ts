@@ -60,14 +60,16 @@ export abstract class BaseProtocol {
             })
         }))
         let headerWalkLength: number = 0
+        let minOffset: number = Infinity
         Object.keys(value).forEach((key: string): void => {
+            value[key].offset += headerOffset
+            minOffset = minOffset > value[key].offset ? value[key].offset : minOffset
             const endPos: number = value[key].offset + value[key].length
             headerWalkLength = endPos > headerWalkLength ? endPos : headerWalkLength
         })
-        console.log('headerWalkLength:', headerWalkLength)//TODO offset不太对
         const actualHeaderLength: number = headerWalkLength - headerOffset
         const headerDecodeResult: DecodeResult = {
-            offset: headerOffset,
+            offset: minOffset,
             length: actualHeaderLength,
             label: this.constructor['PROTOCOL_NAME'],
             value: value

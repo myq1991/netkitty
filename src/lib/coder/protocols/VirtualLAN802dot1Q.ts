@@ -31,7 +31,7 @@ export default class VirtualLAN802dot1Q extends BaseProtocol {
                 type: 'number',
                 encode: (input: number): EncodeResult => Buffer.from(input.toString(16).padStart(4, '0'), 'hex'),
                 decode: (data: Buffer): DecodeResult => ({
-                    offset: 12,
+                    offset: 2,
                     length: 2,
                     label: 'Type',
                     value: parseInt(data.subarray(2, 4).toString('hex'), 16)
