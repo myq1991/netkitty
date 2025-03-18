@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/myq1991/netkitty#readme",
   "devDependencies": {
+    "@types/json-schema": "^7.0.15",
     "@types/node": "^22.13.10",
     "@types/sort-array": "^4.1.2",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
@@ -45,6 +46,7 @@
     "bignumber.js": "^9.1.2",
     "duplexpair": "^1.0.2",
     "is-electron": "^2.2.2",
+    "json-schema": "^0.4.0",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4",
     "socket-ipc": "^4.0.2",
