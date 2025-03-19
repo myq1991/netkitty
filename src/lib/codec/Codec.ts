@@ -5,6 +5,7 @@ import {CodecModuleConstructor} from './types/CodecModuleConstructor'
 import {CodecModule} from './types/CodecModule'
 import RawData from './headers/RawData'
 import {CodecDecodeResult} from './types/CodecDecodeResult'
+import {CodecEncodeInput} from './types/CodecEncodeInput'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
@@ -74,8 +75,24 @@ export class Codec {
         return Object.getOwnPropertyDescriptor(target, this.generateHiddenPropertyKey(key))?.value
     }
 
-    async #encode() {
-        //TODO
+    /**
+     * Internal encode headers to packet
+     * @param inputs
+     * @private
+     */
+    async #encode(inputs: CodecEncodeInput[]): Promise<Buffer> {
+        let packet: Buffer = Buffer.from([])
+        let startPos: number = 0
+        for (const input of inputs) {
+            const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
+            if (!codecModuleConstructor) continue
+            const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos)
+            codecModule.instance = input.data
+            await codecModule.encode()
+            packet = codecModule.packet
+            startPos = codecModule.endPos
+        }
+        return packet
     }
 
     /**
@@ -113,5 +130,13 @@ export class Codec {
                 data: headerTreeNode
             }
         })
+    }
+
+    /**
+     * Encode packet
+     * @param inputs
+     */
+    public async encode(inputs: CodecEncodeInput[]): Promise<Buffer> {
+        return await this.#encode(inputs)
     }
 }

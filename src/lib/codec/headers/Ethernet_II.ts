@@ -18,7 +18,8 @@ export default class Ethernet_II extends BaseHeader {
                     this.instance.dst = Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
                 },
                 encode: (): void => {
-
+                    const dmac: number[] = this.instance.dst.toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
+                    this.writeBytes(0, Buffer.alloc(6, Buffer.from(dmac)))
                 }
             },
             src: {
@@ -29,7 +30,8 @@ export default class Ethernet_II extends BaseHeader {
                     this.instance.src = Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
                 },
                 encode: (): void => {
-                    //TODO
+                    const smac: number[] = this.instance.src.toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
+                    this.writeBytes(6, Buffer.alloc(6, Buffer.from(smac)))
                 }
             },
             type: {
@@ -38,7 +40,12 @@ export default class Ethernet_II extends BaseHeader {
                     this.instance.type = `0x${this.readBytes(12, 2).toString('hex').padStart(4, '0')}`
                 },
                 encode: (): void => {
-                    //TODO
+                    const hexEtherType: string = this.instance.type ? this.instance.type.toString() : '0x0000'
+                    let etherType: number = parseInt(hexEtherType, 16)
+                    etherType = etherType ? etherType : 0
+                    const typeBuffer: Buffer = Buffer.from(etherType.toString(16), 'hex')
+                    if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
+                    this.writeBytes(12, typeBuffer.subarray(0, 2))
                 }
             }
         }

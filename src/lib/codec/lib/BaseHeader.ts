@@ -104,6 +104,21 @@ export abstract class BaseHeader {
     }
 
     /**
+     * Write bytes to buffer
+     * @param offset
+     * @param buffer
+     * @protected
+     */
+    protected writeBytes(offset: number, buffer: Buffer): void {
+        const packetOffset: number = this.getPacketOffset(offset)
+        const writeEndPos: number = packetOffset + buffer.length
+        const headerLength: number = writeEndPos - this.startPos
+        this.headerLength = this.headerLength < headerLength ? headerLength : this.headerLength
+        if (this.packet.length < writeEndPos) this.packet = Buffer.concat([this.packet, Buffer.alloc(writeEndPos - this.packet.length, 0)])
+        this.packet.fill(buffer, packetOffset, writeEndPos)
+    }
+
+    /**
      * Read bits from buffer
      * @param offset
      * @param length
@@ -117,7 +132,7 @@ export abstract class BaseHeader {
         return parseInt(bitString.substring(bitOffset, bitOffset + bitLength), 2)
     }
 
-    protected writeBytes(offset: number, buffer: Buffer) {
+    protected writeBits(offset: number) {
         //TODO
     }
 
