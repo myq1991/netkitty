@@ -245,9 +245,6 @@ export default class Goose extends BaseHeader {
                                         'Quality'
                                     ]
                                 },
-                                length: {
-                                    type: 'integer'
-                                },
                                 value: {
                                     type: 'string'
                                 }
