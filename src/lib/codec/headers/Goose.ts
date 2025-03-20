@@ -2,6 +2,16 @@ import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {CodecModule} from '../types/CodecModule'
 import TLV from 'node-tlv'
+import {
+    HexToFloat32,
+    HexToInt16,
+    HexToInt32,
+    HexToInt64,
+    HexToInt8,
+    HexToUInt16,
+    HexToUInt32,
+    HexToUInt8
+} from '../lib/HexHelper'
 
 type AllDataItem = {
     dataType: string
@@ -302,40 +312,65 @@ export default class Goose extends BaseHeader {
                                         switch (length) {
                                             case 2: {
                                                 dataItem.dataType = 'INT8'
-                                                dataItem.value = parseInt(value.toString('hex'), 16).toString()
+                                                dataItem.value = HexToInt8(value.toString('hex')).toString()
                                             }
                                                 break
                                             case 3: {
                                                 dataItem.dataType = 'INT16'
-                                                dataItem.value = ''
+                                                dataItem.value = HexToInt16(value.toString('hex')).toString()
                                             }
                                                 break
                                             case 5: {
                                                 dataItem.dataType = 'INT32'
-                                                dataItem.value = ''
+                                                dataItem.value = HexToInt32(value.toString('hex')).toString()
                                             }
                                                 break
                                             case 9: {
                                                 dataItem.dataType = 'INT64'
-                                                dataItem.value = ''
+                                                dataItem.value = HexToInt64(value.toString('hex')).toString()
                                             }
                                                 break
                                         }
                                     }
                                         break
                                     case 0x86: {
+                                        switch (length) {
+                                            case 2: {
+                                                dataItem.dataType = 'INT8U'
+                                                dataItem.value = HexToUInt8(value.toString('hex')).toString()
+                                            }
+                                                break
+                                            case 3: {
+                                                dataItem.dataType = 'INT16U'
+                                                dataItem.value = HexToUInt16(value.toString('hex')).toString()
+                                            }
+                                                break
+                                            case 5: {
+                                                dataItem.dataType = 'INT32U'
+                                                dataItem.value = HexToUInt32(value.toString('hex')).toString()
+                                            }
+                                                break
+                                        }
                                     }
                                         break
                                     case 0x87: {
+                                        dataItem.dataType = 'FLOAT32'
+                                        dataItem.value = HexToFloat32(value.toString('hex')).toString()
                                     }
                                         break
                                     case 0x89: {
+                                        dataItem.dataType = 'OCTET-STRING'
+                                        dataItem.value = value.toString('ascii')
                                     }
                                         break
                                     case 0x8a: {
+                                        dataItem.dataType = 'VISIBLE-STRING'
+                                        dataItem.value = value.toString('ascii')
                                     }
                                         break
                                     case 0x91: {
+                                        dataItem.dataType = 'TimeStamp'
+                                        dataItem.value = parseInt(value.toString('hex'), 16).toString()
                                     }
                                         break
                                 }
