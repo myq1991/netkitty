@@ -51,7 +51,7 @@ export default class Ethernet_II extends BaseHeader {
         }
     }
 
-    public match(prevCodecModule?: CodecModule): boolean {
+    public match(prevCodecModule: CodecModule): boolean {
         const specialScenes: string[] = ['trill', 'vxlan', 'nvgre', 'mpls', 'qinq', 'gre', 'geneve']
         if (prevCodecModule && !specialScenes.includes(prevCodecModule.id)) return false
         return true

@@ -22,7 +22,7 @@ export abstract class BaseHeader {
     }
 
     public static MATCH(prevCodecModule?: CodecModule, prevCodecModules?: CodecModule[]): boolean {
-        return this.CODEC_INSTANCE.match(prevCodecModule, prevCodecModules)
+        return this.CODEC_INSTANCE.match(prevCodecModule!, prevCodecModules!)
     }
 
     public static CREATE_INSTANCE(packet: Buffer, startPos: number): CodecModule {
@@ -86,8 +86,9 @@ export abstract class BaseHeader {
     /**
      * Is data buffer fits current header codec
      * @param prevCodecModule
+     * @param prevCodecModules
      */
-    public abstract match(prevCodecModule?: CodecModule, prevCodecModules?: CodecModule[]): boolean
+    public abstract match(prevCodecModule: CodecModule, prevCodecModules: CodecModule[]): boolean
 
     /**
      * Internal read bytes from buffer
