@@ -40,14 +40,14 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.writeBits(0, 2, 4, 12, vlanId ? vlanId : 0)
                 }
             },
-            type: {
+            etherType: {
                 type: 'string',
                 decode: (): void => {
-                    this.instance.type = `0x${this.readBytes(2, 2).toString('hex').padStart(4, '0')}`
+                    this.instance.etherType = `0x${this.readBytes(2, 2).toString('hex').padStart(4, '0')}`
                 },
                 encode: (): void => {
-                    parseInt(this.instance.type.toString(), 16)
-                    const hexEtherType: string = this.instance.type ? this.instance.type.toString() : '0x0000'
+                    parseInt(this.instance.etherType.toString(), 16)
+                    const hexEtherType: string = this.instance.etherType ? this.instance.etherType.toString() : '0x0000'
                     let etherType: number = parseInt(hexEtherType, 16)
                     etherType = etherType ? etherType : 0
                     const typeBuffer: Buffer = Buffer.from(etherType.toString(16), 'hex')
@@ -63,6 +63,6 @@ export default class VLAN_802dot1Q extends BaseHeader {
 
     public match(prevCodecModule?: CodecModule): boolean {
         if (!prevCodecModule) return false
-        return prevCodecModule.instance.type === '0x8100'
+        return prevCodecModule.instance.etherType === '0x8100'
     }
 }

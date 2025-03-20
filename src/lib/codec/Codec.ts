@@ -98,13 +98,13 @@ export class Codec {
     /**
      * Internal decode packet
      * @param packet
-     * @param prevCodecModule
+     * @param prevCodecModules
      * @param startPos
      * @param headerTree
      * @private
      */
-    async #decode(packet: Buffer, prevCodecModule?: CodecModule, startPos: number = 0, headerTree: HeaderTreeNode[] = []): Promise<HeaderTreeNode[]> {
-        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(prevCodecModule))
+    async #decode(packet: Buffer, prevCodecModules: CodecModule[] = [], startPos: number = 0, headerTree: HeaderTreeNode[] = []): Promise<HeaderTreeNode[]> {
+        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(prevCodecModules[prevCodecModules.length - 1], prevCodecModules))
         if (!codecModuleConstructor) throw new Error('TODO 处理没有编解码器时的状况')
         const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos)
         await codecModule.decode()
@@ -114,7 +114,8 @@ export class Codec {
         headerTree.push(headerTreeNode)
         const nextStartPos: number = codecModule.endPos
         if (nextStartPos >= packet.length) return headerTree
-        return this.#decode(packet, codecModule, nextStartPos, headerTree)
+        prevCodecModules.push(codecModule)
+        return this.#decode(packet, prevCodecModules, nextStartPos, headerTree)
     }
 
     /**

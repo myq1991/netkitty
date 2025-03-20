@@ -21,8 +21,8 @@ export abstract class BaseHeader {
         return JSON.parse(JSON.stringify(this.CODEC_INSTANCE.SCHEMA))
     }
 
-    public static MATCH(prevCodecModule?: CodecModule): boolean {
-        return this.CODEC_INSTANCE.match(prevCodecModule)
+    public static MATCH(prevCodecModule?: CodecModule, prevCodecModules?: CodecModule[]): boolean {
+        return this.CODEC_INSTANCE.match(prevCodecModule, prevCodecModules)
     }
 
     public static CREATE_INSTANCE(packet: Buffer, startPos: number): CodecModule {
@@ -87,7 +87,7 @@ export abstract class BaseHeader {
      * Is data buffer fits current header codec
      * @param prevCodecModule
      */
-    public abstract match(prevCodecModule?: CodecModule): boolean
+    public abstract match(prevCodecModule?: CodecModule, prevCodecModules?: CodecModule[]): boolean
 
     /**
      * Internal read bytes from buffer
