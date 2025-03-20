@@ -15,7 +15,6 @@ import {
 
 type AllDataItem = {
     dataType: string
-    length: number
     value: any
 }
 
@@ -284,7 +283,6 @@ export default class Goose extends BaseHeader {
                                 const value: Buffer = dataTLV.getValue('buffer')
                                 const dataItem: AllDataItem = {
                                     dataType: '',
-                                    length: length,
                                     value: null
                                 }
                                 switch (dataTLV.getTag('number')) {
