@@ -57,6 +57,7 @@ export default class VLAN_802dot1Q extends BaseHeader {
             }
         }
     }
+
     public id: string = 'vlan'
 
     public name: string = '802.1Q Virtual LAN'
