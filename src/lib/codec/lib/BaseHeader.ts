@@ -90,17 +90,29 @@ export abstract class BaseHeader {
     public abstract match(prevCodecModule?: CodecModule): boolean
 
     /**
+     * Internal read bytes from buffer
+     * @param offset
+     * @param length
+     * @param expandBufferLength
+     * @private
+     */
+    #readBytes(offset: number, length: number, expandBufferLength: boolean): Buffer {
+        const packetOffset: number = this.getPacketOffset(offset)
+        const readEndPos: number = packetOffset + length
+        if (this.packet.length < readEndPos && expandBufferLength) this.packet = Buffer.concat([this.packet, Buffer.alloc(readEndPos - this.packet.length, 0)])
+        const headerLength: number = readEndPos - this.startPos
+        this.headerLength = this.headerLength < headerLength ? headerLength : this.headerLength
+        return this.packet.subarray(packetOffset, packetOffset + length)
+    }
+
+    /**
      * Read bytes from buffer
      * @param offset
      * @param length
      * @protected
      */
     protected readBytes(offset: number, length: number): Buffer {
-        const packetOffset: number = this.getPacketOffset(offset)
-        const readEndPos: number = packetOffset + length
-        const headerLength: number = readEndPos - this.startPos
-        this.headerLength = this.headerLength < headerLength ? headerLength : this.headerLength
-        return this.packet.subarray(packetOffset, packetOffset + length)
+        return this.#readBytes(offset, length, false)
     }
 
     /**
@@ -112,9 +124,7 @@ export abstract class BaseHeader {
     protected writeBytes(offset: number, buffer: Buffer): void {
         const packetOffset: number = this.getPacketOffset(offset)
         const writeEndPos: number = packetOffset + buffer.length
-        const headerLength: number = writeEndPos - this.startPos
-        this.headerLength = this.headerLength < headerLength ? headerLength : this.headerLength
-        if (this.packet.length < writeEndPos) this.packet = Buffer.concat([this.packet, Buffer.alloc(writeEndPos - this.packet.length, 0)])
+        this.#readBytes(offset, buffer.length, true)
         this.packet.fill(buffer, packetOffset, writeEndPos)
     }
 
@@ -127,13 +137,29 @@ export abstract class BaseHeader {
      * @protected
      */
     protected readBits(offset: number, length: number, bitOffset: number, bitLength: number): number {
-        const buffer: Buffer = this.readBytes(offset, length)
+        const buffer: Buffer = this.#readBytes(offset, length, false)
         const bitString: string = parseInt(buffer.toString('hex'), 16).toString(2).padStart(length * 8, '0')
         return parseInt(bitString.substring(bitOffset, bitOffset + bitLength), 2)
     }
 
-    protected writeBits(offset: number) {
-        //TODO
+    /**
+     * Write bits to buffer
+     * @param offset
+     * @param length
+     * @param bitOffset
+     * @param bitLength
+     * @param value
+     * @protected
+     */
+    protected writeBits(offset: number, length: number, bitOffset: number, bitLength: number, value: number): void {
+        const buffer: Buffer = this.#readBytes(offset, length, true)
+        let bitArray: string[] = Array.from(parseInt(buffer.toString('hex'), 16).toString(2).padStart(buffer.length * 8, '0'))
+        const valueBitArray: string[] = Array.from(value.toString(2).padStart(bitLength, '0'))
+        bitArray = bitArray.map((bit: string, index: number): string => {
+            if (index < bitOffset) return bit
+            return valueBitArray[index - bitOffset]
+        })
+        this.writeBytes(offset, Buffer.from(parseInt(bitArray.join(''), 2).toString(16).padStart(buffer.length * 2, '0'), 'hex'))
     }
 
     /**

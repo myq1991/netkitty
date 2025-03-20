@@ -14,7 +14,9 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.instance.priority = this.readBits(0, 2, 0, 3)
                 },
                 encode: (): void => {
-                    //TODO
+                    let priorityValue: number = parseInt(this.instance.priority.toString())
+                    priorityValue = priorityValue ? priorityValue : 0
+                    this.writeBits(0, 2, 0, 3, priorityValue)
                 }
             },
             dei: {
@@ -23,7 +25,7 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.instance.dei = !!this.readBits(0, 2, 3, 1)
                 },
                 encode: (): void => {
-                    //TODO
+                    this.writeBits(0, 2, 3, 1, !!this.instance.dei ? 1 : 0)
                 }
             },
             id: {
@@ -34,7 +36,8 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.instance.id = this.readBits(0, 2, 4, 12)
                 },
                 encode: (): void => {
-                    //TODO
+                    let vlanId: number = parseInt(this.instance.id.toString())
+                    this.writeBits(0, 2, 4, 12, vlanId ? vlanId : 0)
                 }
             },
             type: {
@@ -43,7 +46,13 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.instance.type = `0x${this.readBytes(2, 2).toString('hex').padStart(4, '0')}`
                 },
                 encode: (): void => {
-                    //TODO
+                    parseInt(this.instance.type.toString(), 16)
+                    const hexEtherType: string = this.instance.type ? this.instance.type.toString() : '0x0000'
+                    let etherType: number = parseInt(hexEtherType, 16)
+                    etherType = etherType ? etherType : 0
+                    const typeBuffer: Buffer = Buffer.from(etherType.toString(16), 'hex')
+                    if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
+                    this.writeBytes(2, typeBuffer.subarray(0, 2))
                 }
             }
         }
