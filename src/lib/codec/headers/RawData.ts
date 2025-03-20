@@ -1,5 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
-import {BaseHeader} from '../lib/BaseHeader'
+import {BaseHeader} from '../abstracts/BaseHeader'
 import {CodecModule} from '../types/CodecModule'
 
 export default class RawData extends BaseHeader {
@@ -7,13 +7,16 @@ export default class RawData extends BaseHeader {
     public readonly SCHEMA: ProtocolJSONSchema = {
         properties: {
             data: {
-                type: 'string',
+                type: 'array',
+                items: {
+                    type: 'number'
+                },
                 decode: (): void => {
                     const dataLength: number = this.packet.length - this.startPos
-                    this.instance.data = this.readBytes(0, dataLength).toString('hex')
+                    this.instance.data = Array.from(this.readBytes(0, dataLength))
                 },
                 encode: (): void => {
-                    this.writeBytes(0, Buffer.from(this.instance.data.toString(), 'hex'))
+                    this.writeBytes(0, Buffer.from(this.instance.data as number[]))
                 }
             }
         }

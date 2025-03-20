@@ -31,6 +31,7 @@
   "devDependencies": {
     "@types/json-schema": "^7.0.15",
     "@types/node": "^22.13.10",
+    "@types/node-tlv": "^1.5.4",
     "@types/sort-array": "^4.1.2",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
@@ -49,6 +50,7 @@
     "json-schema": "^0.4.0",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4",
+    "node-tlv": "^1.5.14",
     "socket-ipc": "^4.0.2",
     "sort-array": "^5.0.0",
     "xpipe": "^1.0.8"

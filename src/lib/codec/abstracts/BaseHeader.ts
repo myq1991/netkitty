@@ -167,17 +167,19 @@ export abstract class BaseHeader {
      * Get field codecs from schema tree
      * @param schema
      * @param codecName
+     * @param execBeforeSubCodecs
      * @param codecs
      * @protected
      */
-    protected getFieldCodecs(schema: ProtocolFieldJSONSchema, codecName: string, codecs: (() => Promise<void>)[] = []): (() => Promise<void>)[] {
+    protected getFieldCodecs(schema: ProtocolFieldJSONSchema, codecName: string, execBeforeSubCodecs: boolean, codecs: (() => Promise<void>)[] = []): (() => Promise<void>)[] {
         if (!schema.properties) return codecs
         for (const propertyName of Object.keys(schema.properties)) {
             const fieldSchema: ProtocolFieldJSONSchema = schema.properties[propertyName]
-            const codec: (() => void | Promise<void>) | undefined = fieldSchema[codecName]
-            if (!codec) continue
-            codecs.push(async (): Promise<void> => await codec())
-            if (fieldSchema.properties) this.getFieldCodecs(fieldSchema, codecName, codecs)
+            let codec: (() => void | Promise<void>) | undefined = fieldSchema[codecName]
+            if (!codec) codec = async (): Promise<void> => (void (0))
+            if (execBeforeSubCodecs) codecs.push(async (): Promise<void> => await codec())
+            if (fieldSchema.properties) this.getFieldCodecs(fieldSchema, codecName, execBeforeSubCodecs, codecs)
+            if (!execBeforeSubCodecs) codecs.push(async (): Promise<void> => await codec())
         }
         return codecs
     }
@@ -186,7 +188,7 @@ export abstract class BaseHeader {
      * Decode packet header field by field
      */
     public async decode(): Promise<void> {
-        const decodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'decode')
+        const decodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'decode', true)
         for (const decode of decodes) {
             await decode()
         }
@@ -196,7 +198,7 @@ export abstract class BaseHeader {
      * Encode packet header field by field
      */
     public async encode(): Promise<void> {
-        const encodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'encode')
+        const encodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'encode', false)
         for (const encode of encodes) {
             await encode()
         }

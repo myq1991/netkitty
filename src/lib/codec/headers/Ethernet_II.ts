@@ -1,4 +1,4 @@
-import {BaseHeader} from '../lib/BaseHeader'
+import {BaseHeader} from '../abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {CodecModule} from '../types/CodecModule'
 

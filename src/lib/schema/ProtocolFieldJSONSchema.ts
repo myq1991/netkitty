@@ -3,15 +3,14 @@ import {ProtocolFieldJSONSchemaDefinition} from './ProtocolFieldJSONSchemaDefini
 
 export interface ProtocolFieldJSONSchema extends JSONSchema7 {
 
-    encode: () => void | Promise<void>
+    encode?: () => void | Promise<void>
 
-    decode: () => void | Promise<void>
+    decode?: () => void | Promise<void>
 
     $defs?: {
         [key: string]: ProtocolFieldJSONSchemaDefinition;
     } | undefined;
 
-    items?: ProtocolFieldJSONSchemaDefinition | ProtocolFieldJSONSchemaDefinition[] | undefined;
     additionalItems?: ProtocolFieldJSONSchemaDefinition | undefined;
     contains?: ProtocolFieldJSONSchemaDefinition | undefined;
 
