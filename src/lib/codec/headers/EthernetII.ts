@@ -2,7 +2,7 @@ import {BaseHeader} from '../abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {CodecModule} from '../types/CodecModule'
 
-export default class Ethernet_II extends BaseHeader {
+export default class EthernetII extends BaseHeader {
 
     public readonly id: string = 'eth'
 
