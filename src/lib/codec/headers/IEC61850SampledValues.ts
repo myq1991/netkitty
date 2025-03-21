@@ -3,6 +3,8 @@ import {BaseHeader} from '../abstracts/BaseHeader'
 import {CodecModule} from '../types/CodecModule'
 import TLV from 'node-tlv'
 import {HexToUInt16, HexToUInt32, HexToUInt8} from '../lib/HexToNumber'
+import {UInt16ToBERHex} from '../lib/NumberToBERHex'
+import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
 
 type ASDUItem = {
     svID: string
@@ -110,7 +112,18 @@ export default class IEC61850SampledValues extends BaseHeader {
                     this.instance.svPdu = {}
                 },
                 encode: (): void => {
-                    //TODO
+                    let buffer: Buffer = Buffer.from([])
+                    this.TLVChild.forEach(TLVItem => buffer = Buffer.concat([buffer, TLVItem.bTag, TLVItem.bLength, TLVItem.bValue]))
+                    const svPduTLV: TLV = new TLV(0x60, buffer)
+                    let svPduBuffer: Buffer = Buffer.concat([svPduTLV.bTag, svPduTLV.bLength, svPduTLV.bValue])
+                    this.writeBytes(8, svPduBuffer)
+                    /**
+                     * Update the length only if it is not set
+                     * Update length(APPID's length + Length's length + Reserved1's length + Reserved2's length + svPdu's length)
+                     */
+                    if (this.instance.length as number > 0) return
+                    this.instance.length = 2 + 2 + 2 + 2 + svPduBuffer.length
+                    this.SCHEMA.properties!['length']!['encode']!()
                 },
                 properties: {
                     noASDU: {
@@ -118,6 +131,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                         minimum: 1,
                         maximum: 65535,
                         decode: (): void => {
+                            console.log(this.TLVChild.length)
                             const noASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
                             if (!noASDUTLV) return this.recordError('svPdu.noASDU', 'Not Found')
                             const noASDUNum: number = HexToUInt16(noASDUTLV.getValue('hex'))
@@ -125,7 +139,8 @@ export default class IEC61850SampledValues extends BaseHeader {
                             this.instance.svPdu['noASDU'] = noASDUNum
                         },
                         encode: (): void => {
-                            //TODO
+                            if (this.instance.svPdu['noASDU'] === undefined) this.recordError('svPdu.noASDU', 'noASDU is not set')
+                            this.TLVChild.push(new TLV(0x80, UInt16ToBERHex(parseInt(this.instance.svPdu['noASDU'].toString()))))
                         }
                     },
                     seqASDU: {
@@ -252,7 +267,56 @@ export default class IEC61850SampledValues extends BaseHeader {
                             this.instance.svPdu['seqASDU'] = seqASDU
                         },
                         encode: (): void => {
-                            //TODO
+                            const seqASDU: ASDUItem[] = this.instance.svPdu['seqASDU'] ? this.instance.svPdu['seqASDU'] : []
+                            const seqASDUTLVs: TLV[] = []
+                            seqASDU.forEach((seqASDUItem: ASDUItem, index: number): void => {
+                                const seqASDUItemTLVs: TLV[] = []
+                                //svID
+                                if (seqASDUItem.svID !== undefined) {
+                                    seqASDUItemTLVs.push(new TLV(0x80, Buffer.from(seqASDUItem.svID ? seqASDUItem.svID : '', 'ascii')))
+                                } else {
+                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No svID')
+                                }
+                                //dataSet
+                                if (seqASDUItem.dataSet !== undefined) seqASDUItemTLVs.push(new TLV(0x81, Buffer.from(seqASDUItem.dataSet ? seqASDUItem.dataSet : '', 'ascii')))
+                                // smpCnt
+                                if (seqASDUItem.smpCnt !== undefined) {
+                                    seqASDUItemTLVs.push(new TLV(0x82, UInt16ToHex(seqASDUItem.smpCnt)))
+                                } else {
+                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No smpCnt')
+                                }
+                                // confRev
+                                if (seqASDUItem.confRev !== undefined) {
+                                    seqASDUItemTLVs.push(new TLV(0x83, UInt32ToHex(seqASDUItem.confRev)))
+                                } else {
+                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No confRev')
+                                }
+                                // refrTm
+                                if (seqASDUItem.refrTm !== undefined) seqASDUItemTLVs.push(new TLV(0x84, Buffer.from(BigInt(seqASDUItem.refrTm).toString(16).padStart(8 * 2, '0'), 'hex')))
+                                // smpSynch
+                                if (seqASDUItem.smpSynch !== undefined) {
+                                    seqASDUItemTLVs.push(new TLV(0x85, UInt8ToHex(seqASDUItem.smpSynch)))
+                                } else {
+                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No smpSynch')
+                                }
+                                // smpRate
+                                if (seqASDUItem.smpRate !== undefined) seqASDUItemTLVs.push(new TLV(0x86, UInt16ToHex(seqASDUItem.smpRate)))
+                                // sample
+                                if (seqASDUItem.sample !== undefined) {
+                                    seqASDUItemTLVs.push(new TLV(0x87, Buffer.from(seqASDUItem.sample, 'hex')))
+                                } else {
+                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No sample')
+                                }
+                                // smpMod
+                                if (seqASDUItem.smpMod !== undefined) seqASDUItemTLVs.push(new TLV(0x88, UInt16ToHex(seqASDUItem.smpMod)))
+                                if (!seqASDUItemTLVs.length) return
+                                let seqASDUItemBuffer: Buffer = Buffer.from([])
+                                seqASDUItemTLVs.forEach(seqASDUItemTLV => seqASDUItemBuffer = Buffer.concat([seqASDUItemBuffer, seqASDUItemTLV.bTag, seqASDUItemTLV.bLength, seqASDUItemTLV.bValue]))
+                                seqASDUTLVs.push(new TLV(0x30, seqASDUItemBuffer))
+                            })
+                            let seqASDUBuffer: Buffer = Buffer.from([])
+                            seqASDUTLVs.forEach(seqASDUTLV => seqASDUBuffer = Buffer.concat([seqASDUBuffer, seqASDUTLV.bTag, seqASDUTLV.bLength, seqASDUTLV.bValue]))
+                            this.TLVChild.push(new TLV(0xa2, seqASDUBuffer))
                         }
                     }
                 }

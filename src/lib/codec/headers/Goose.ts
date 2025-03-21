@@ -126,11 +126,11 @@ export default class Goose extends BaseHeader {
                     const goosePduTLV: TLV = new TLV(0x61, buffers)
                     const goosePduBuffer: Buffer = Buffer.concat([goosePduTLV.bTag, goosePduTLV.bLength, goosePduTLV.bValue])
                     this.writeBytes(8, goosePduBuffer)
-                    if (this.instance.length as number > 0) return
                     /**
                      * Update the length only if it is not set
                      * Update length(APPID's length + Length's length + Reserved1's length + Reserved2's length + goosePdu's length)
                      */
+                    if (this.instance.length as number > 0) return
                     this.instance.length = 2 + 2 + 2 + 2 + goosePduBuffer.length
                     this.SCHEMA.properties!['length']!['encode']!()
                 },
