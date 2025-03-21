@@ -131,7 +131,6 @@ export default class IEC61850SampledValues extends BaseHeader {
                         minimum: 1,
                         maximum: 65535,
                         decode: (): void => {
-                            console.log(this.TLVChild.length)
                             const noASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
                             if (!noASDUTLV) return this.recordError('svPdu.noASDU', 'Not Found')
                             const noASDUNum: number = HexToUInt16(noASDUTLV.getValue('hex'))
