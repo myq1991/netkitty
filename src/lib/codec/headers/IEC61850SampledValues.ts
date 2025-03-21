@@ -164,7 +164,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                         },
                         decode: (): void => {
                             const seqASDU: ASDUItem[] = []
-                            const seqASDUTLV = this.TLVChild.find(tlv => tlv.getTag('number') === 0xa2)
+                            const seqASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0xa2)
                             if (!seqASDUTLV) {
                                 this.instance.svPdu['seqASDU'] = seqASDU
                                 return
