@@ -6,6 +6,7 @@ import {CodecModule} from './types/CodecModule'
 import RawData from './headers/RawData'
 import {CodecDecodeResult} from './types/CodecDecodeResult'
 import {CodecEncodeInput} from './types/CodecEncodeInput'
+import {CodecErrorInfo} from './types/CodecErrorInfo'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
@@ -78,9 +79,10 @@ export class Codec {
     /**
      * Internal encode headers to packet
      * @param inputs
+     * @param errors
      * @private
      */
-    async #encode(inputs: CodecEncodeInput[]): Promise<Buffer> {
+    async #encode(inputs: CodecEncodeInput[], errors: CodecErrorInfo[] = []): Promise<Buffer> {
         let packet: Buffer = Buffer.from([])
         let startPos: number = 0
         for (const input of inputs) {
@@ -89,6 +91,7 @@ export class Codec {
             const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos)
             codecModule.instance = input.data
             await codecModule.encode()
+            codecModule.errors.forEach((errorInfo: CodecErrorInfo): number => errors.push(errorInfo))
             packet = codecModule.packet
             startPos = codecModule.endPos
         }
@@ -111,6 +114,7 @@ export class Codec {
         const headerTreeNode: HeaderTreeNode = codecModule.instance
         this.defineHiddenProperty('id', codecModule.id, headerTreeNode)
         this.defineHiddenProperty('name', codecModule.name, headerTreeNode)
+        this.defineHiddenProperty('errors', codecModule.errors, headerTreeNode)
         headerTree.push(headerTreeNode)
         const nextStartPos: number = codecModule.endPos
         if (nextStartPos >= packet.length) return headerTree
@@ -128,6 +132,7 @@ export class Codec {
             return {
                 id: this.getHiddenProperty('id', headerTreeNode),
                 name: this.getHiddenProperty('name', headerTreeNode),
+                errors: this.getHiddenProperty('errors', headerTreeNode),
                 data: headerTreeNode
             }
         })

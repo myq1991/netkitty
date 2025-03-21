@@ -11,18 +11,27 @@ import {
     HexToUInt16,
     HexToUInt32,
     HexToUInt8
-} from '../lib/HexHelper'
+} from '../lib/HexToNumber'
+import {
+    Int16ToBERHex,
+    Int32ToBERHex,
+    Int64ToBERHex,
+    Int8ToBERHex, UInt16ToBERHex,
+    UInt32ToBERHex,
+    UInt8ToBERHex
+} from '../lib/NumberToBERHex'
+import {Float32ToHex} from '../lib/NumberToHex'
 
 type AllDataItem = {
     dataType: string
-    value: any
+    value: string
 }
 
 export default class Goose extends BaseHeader {
 
     protected TLVInstance: TLV
 
-    protected TLVChild: TLV[]
+    protected TLVChild: TLV[] = []
 
     public SCHEMA: ProtocolJSONSchema = {
         properties: {
@@ -43,6 +52,7 @@ export default class Goose extends BaseHeader {
                 type: 'integer',
                 decode: (): void => {
                     this.instance.length = parseInt(this.readBytes(2, 2).toString('hex'), 16)
+                    if (this.instance.length === undefined) this.recordError('length', 'Not Found')
                 },
                 encode: (): void => {
                     let length: number = parseInt(this.instance.length.toString())
@@ -111,114 +121,218 @@ export default class Goose extends BaseHeader {
                     this.instance.pdu = {}
                 },
                 encode: (): void => {
-                    //TODO
+                    //TODO 内部TLV都组织好后再组织为总的TLV
+                    let buffers: Buffer = Buffer.from([])
+                    this.TLVChild.forEach(item => buffers = Buffer.concat([buffers, item.bTag, item.bLength, item.bValue]))
+                    const pduTLV: TLV = new TLV(0x61, buffers)
+                    const pduBuffer: Buffer = Buffer.concat([pduTLV.bTag, pduTLV.bLength, pduTLV.bValue])
+                    this.writeBytes(8, pduBuffer)
+                    if (this.instance.length as number > 0) return
+                    /**
+                     * Update the length only if it is not set
+                     * Update length(APPID's length + Length's length + Reserved1's length + Reserved2's length + APDU's length)
+                     */
+                    this.instance.length = 2 + 2 + 2 + 2 + pduBuffer.length
+                    this.SCHEMA.properties!['length']!['encode']!()
                 },
                 properties: {
                     gocbRef: {
                         type: 'string',
+                        maxLength: 129,
                         decode: (): void => {
-                            this.instance.pdu['gocbRef'] = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)?.getValue('buffer').toString()
+                            const gocbRefTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
+                            if (!gocbRefTLV) return this.recordError('pdu.gocbRef', 'Not Found')
+                            this.instance.pdu['gocbRef'] = gocbRefTLV.getValue('buffer').toString()
                         },
                         encode: (): void => {
-                            //TODO
+                            const gocbRefValue: string = this.instance.pdu['gocbRef']
+                            if (!gocbRefValue) return this.recordError('pdu.gocbRef', 'Not Found')
+                            let gocbRefBuffer: Buffer = Buffer.from(gocbRefValue)
+                            if (gocbRefBuffer.length > 129) {
+                                this.recordError('pdu.gocbRef', 'This VisibleString shall have a maximum size of 129 octets')
+                                gocbRefBuffer = gocbRefBuffer.subarray(0, 129)
+                            }
+                            this.TLVChild.push(new TLV(0x80, gocbRefBuffer))
                         }
                     },
                     timeAllowedtoLive: {
                         type: 'number',
+                        minimum: 1,
+                        maximum: 4294967295,
                         decode: (): void => {
                             const timeAllowedtoLiveString: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x81)?.getValue('hex')
-                            if (timeAllowedtoLiveString) this.instance.pdu['timeAllowedtoLive'] = parseInt(timeAllowedtoLiveString, 16)
+                            if (!timeAllowedtoLiveString) return this.recordError('pdu.timeAllowedtoLive', 'Not Found')
+                            this.instance.pdu['timeAllowedtoLive'] = HexToUInt32(timeAllowedtoLiveString)
                         },
                         encode: (): void => {
-                            //TODO
+                            let timeAllowedtoLiveValue: number = this.instance.pdu['timeAllowedtoLive']
+                            if (timeAllowedtoLiveValue === undefined) return this.recordError('pdu.timeAllowedtoLive', 'Not Found')
+                            if (timeAllowedtoLiveValue < 1 || timeAllowedtoLiveValue > 4294967295) {
+                                this.recordError('pdu.timeAllowedtoLive', 'This INTEGER value shall have a range of 1 to 4294967295')
+                                timeAllowedtoLiveValue = 4294967295
+                            }
+                            const timeAllowedtoLiveTLV: TLV = new TLV(0x81, Buffer.from(UInt32ToBERHex(timeAllowedtoLiveValue), 'hex'))
+                            this.TLVChild.push(timeAllowedtoLiveTLV)
                         }
                     },
                     datSet: {
                         type: 'string',
+                        maxLength: 129,
                         decode: (): void => {
-                            this.instance.pdu['datSet'] = this.TLVChild.find(tlv => tlv.getTag('number') === 0x82)?.getValue('buffer').toString()
+                            const datSetTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x82)
+                            if (!datSetTLV) return this.recordError('pdu.datSet', 'Not Found')
+                            this.instance.pdu['datSet'] = datSetTLV.getValue('buffer').toString()
                         },
                         encode: (): void => {
-                            //TODO
+                            const datSetValue: string = this.instance.pdu['datSet']
+                            if (!datSetValue) return this.recordError('pdu.datSet', 'Not Found')
+                            let datSetBuffer: Buffer = Buffer.from(datSetValue)
+                            if (datSetBuffer.length > 129) {
+                                this.recordError('pdu.datSet', 'This VisibleString shall have a maximum size of 129 octets')
+                                datSetBuffer = datSetBuffer.subarray(0, 129)
+                            }
+                            this.TLVChild.push(new TLV(0x82, datSetBuffer))
                         }
                     },
                     goID: {
                         type: 'string',
+                        maxLength: 65,
                         decode: (): void => {
-                            this.instance.pdu['goID'] = this.TLVChild.find(tlv => tlv.getTag('number') === 0x83)?.getValue('buffer').toString()
+                            const goIDTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x83)
+                            if (!goIDTLV) return this.recordError('pdu.goID', 'Not Found')
+                            this.instance.pdu['goID'] = goIDTLV.getValue('buffer').toString()
                         },
                         encode: (): void => {
-                            //TODO
+                            const goIDValue: string = this.instance.pdu['goID']
+                            if (!goIDValue) return this.recordError('pdu.goID', 'Not Found')
+                            let goIDBuffer: Buffer = Buffer.from(goIDValue)
+                            if (goIDBuffer.length > 65) {
+                                this.recordError('pdu.goID', 'This VisibleString shall have a maximum size of 65 octets')
+                                goIDBuffer = goIDBuffer.subarray(0, 65)
+                            }
+                            this.TLVChild.push(new TLV(0x83, goIDBuffer))
                         }
                     },
                     t: {
-                        type: 'integer',
+                        type: 'string',
                         decode: (): void => {
                             const tStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x84)?.getValue('hex')
-                            if (tStr) this.instance.pdu['t'] = parseInt(tStr, 16)
+                            if (!tStr) return this.recordError('pdu.t', 'Not Found')
+                            this.instance.pdu['t'] = BigInt(`0x${tStr}`).toString()
                         },
                         encode: (): void => {
-                            //TODO
+                            const tStr: string = this.instance.pdu['t']
+                            if (tStr === undefined) return this.recordError('pdu.t', 'Not Found')
+                            const tBigIntValue: bigint = BigInt(tStr)
+                            const tTLV: TLV = new TLV(0x84, Buffer.from(tBigIntValue.toString(16).padStart(8 * 2, '0'), 'hex'))
+                            this.TLVChild.push(tTLV)
                         }
                     },
                     stNum: {
                         type: 'integer',
+                        minimum: 1,
+                        maximum: 4294967295,
                         decode: (): void => {
                             const stNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x85)?.getValue('hex')
-                            if (stNumStr) this.instance.pdu['stNum'] = parseInt(stNumStr, 16)
+                            if (!stNumStr) return this.recordError('pdu.stNum', 'Not Found')
+                            this.instance.pdu['stNum'] = HexToUInt32(stNumStr)
+                            if (this.instance.pdu['stNum'] < 1 || this.instance.pdu['stNum'] > 4294967295) this.recordError('pdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
                         },
                         encode: (): void => {
-                            //TODO
+                            let stNumValue: number = this.instance.pdu['stNum']
+                            if (stNumValue < 1 || stNumValue > 4294967295) {
+                                stNumValue = 4294967295
+                                this.recordError('pdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
+                            }
+                            if (stNumValue === undefined) return this.recordError('pdu.stNum', 'Not Found')
+                            const stNumTLV: TLV = new TLV(0x85, Buffer.from(UInt32ToBERHex(stNumValue), 'hex'))
+                            this.TLVChild.push(stNumTLV)
                         }
                     },
                     sqNum: {
                         type: 'integer',
+                        minimum: 0,
+                        maximum: 4294967295,
                         decode: (): void => {
                             const sqNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x86)?.getValue('hex')
-                            if (sqNumStr) this.instance.pdu['sqNum'] = parseInt(sqNumStr, 16)
+                            if (!sqNumStr) return this.recordError('pdu.sqNum', 'Not Found')
+                            this.instance.pdu['sqNum'] = HexToUInt32(sqNumStr)
                         },
                         encode: (): void => {
-                            //TODO
+                            let sqNumValue: number = this.instance.pdu['sqNum']
+                            if (sqNumValue < 0 || sqNumValue > 4294967295) {
+                                sqNumValue = 4294967295
+                                this.recordError('pdu.sqNum', 'This INTEGER value shall have a range of 1 to 4294967295')
+                            }
+                            if (sqNumValue === undefined) return this.recordError('pdu.sqNum', 'Not Found')
+                            const sqNumTLV: TLV = new TLV(0x86, Buffer.from(UInt32ToBERHex(sqNumValue), 'hex'))
+                            this.TLVChild.push(sqNumTLV)
                         }
                     },
                     simulation: {
                         type: 'boolean',
                         decode: (): void => {
                             const simulationStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x87)?.getValue('hex')
-                            if (simulationStr) this.instance.pdu['simulation'] = !!parseInt(simulationStr, 16)
+                            if (!simulationStr) return this.recordError('pdu.simulation', 'Not Found')
+                            const simulationNum: number = parseInt(simulationStr, 16)
+                            if (simulationNum > 1) this.recordError('pdu.simulation', 'This Boolean shall have a range of TRUE, FALSE')
+                            this.instance.pdu['simulation'] = !!simulationNum
                         },
                         encode: (): void => {
-                            //TODO
+                            let simulationValue: boolean | undefined = this.instance.pdu['simulation']
+                            if (simulationValue === undefined) return this.recordError('pdu.simulation', 'Not Found')
+                            const simulationNum: number = simulationValue ? 1 : 0
+                            const simulationTLV: TLV = new TLV(0x87, Buffer.from(simulationNum.toString(16).padStart(2, '0'), 'hex'))
+                            this.TLVChild.push(simulationTLV)
                         }
                     },
                     confRev: {
                         type: 'integer',
                         decode: (): void => {
                             const confRevStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x88)?.getValue('hex')
-                            if (confRevStr) this.instance.pdu['confRev'] = parseInt(confRevStr, 16)
+                            if (!confRevStr) return this.recordError('pdu.confRev', 'Not Found')
+                            this.instance.pdu['confRev'] = HexToUInt32(confRevStr)
                         },
                         encode: (): void => {
-                            //TODO
+                            let confRevValue: number = this.instance.pdu['confRev']
+                            if (confRevValue > 4294967295) {
+                                confRevValue = 4294967295
+                                this.recordError('pdu.confRev', 'This INTEGER value shall have a range of 0 to 4294967295')
+                            }
+                            if (confRevValue === undefined) return this.recordError('pdu.confRev', 'Not Found')
+                            const confRevTLV: TLV = new TLV(0x88, UInt32ToBERHex(confRevValue))
+                            this.TLVChild.push(confRevTLV)
                         }
                     },
                     ndsCom: {
                         type: 'boolean',
                         decode: (): void => {
                             const ndsComStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x89)?.getValue('hex')
-                            if (ndsComStr) this.instance.pdu['ndsCom'] = !!parseInt(ndsComStr, 16)
+                            if (!ndsComStr) return this.recordError('pdu.ndsCom', 'Not Found')
+                            const ndsComNum: number = parseInt(ndsComStr, 16)
+                            if (ndsComNum > 1) this.recordError('pdu.ndsCom', 'This Boolean shall have a range of TRUE, FALSE')
+                            this.instance.pdu['ndsCom'] = !!ndsComNum
                         },
                         encode: (): void => {
-                            //TODO
+                            let ndsComValue: boolean | undefined = this.instance.pdu['ndsCom']
+                            if (ndsComValue === undefined) return this.recordError('pdu.ndsCom', 'Not Found')
+                            const ndsComNum: number = ndsComValue ? 1 : 0
+                            const ndsComTLV: TLV = new TLV(0x89, Buffer.from(ndsComNum.toString(16).padStart(2, '0'), 'hex'))
+                            this.TLVChild.push(ndsComTLV)
                         }
                     },
                     numDatSetEntries: {
                         type: 'integer',
                         decode: (): void => {
                             const numDatSetEntriesStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x8A)?.getValue('hex')
-                            if (numDatSetEntriesStr) this.instance.pdu['numDatSetEntries'] = parseInt(numDatSetEntriesStr, 16)
+                            if (!numDatSetEntriesStr) return this.recordError('pdu.numDatSetEntries', 'Not Found')
+                            this.instance.pdu['numDatSetEntries'] = parseInt(numDatSetEntriesStr, 16)
                         },
                         encode: (): void => {
-                            //TODO
+                            let numDatSetEntriesValue: number | undefined = this.instance.pdu['numDatSetEntries']
+                            if (numDatSetEntriesValue === undefined) return this.recordError('pdu.numDatSetEntries', 'Not Found')
+                            const numDatSetEntriesTLV: TLV = new TLV(0x8A, Buffer.from(UInt32ToBERHex(numDatSetEntriesValue), 'hex'))
+                            this.TLVChild.push(numDatSetEntriesTLV)
                         }
                     },
                     allData: {
@@ -280,7 +394,7 @@ export default class Goose extends BaseHeader {
                                 const value: Buffer = dataTLV.getValue('buffer')
                                 const dataItem: AllDataItem = {
                                     dataType: '',
-                                    value: null
+                                    value: ''
                                 }
                                 switch (dataTLV.getTag('number')) {
                                     case 0x83: {
@@ -304,27 +418,26 @@ export default class Goose extends BaseHeader {
                                     }
                                         break
                                     case 0x85: {
-                                        switch (length) {
-                                            case 2: {
+                                        if (length === 2) {
+                                            {
                                                 dataItem.dataType = 'INT8'
                                                 dataItem.value = HexToInt8(value.toString('hex')).toString()
                                             }
-                                                break
-                                            case 3: {
+                                        } else if (length === 3) {
+                                            {
                                                 dataItem.dataType = 'INT16'
                                                 dataItem.value = HexToInt16(value.toString('hex')).toString()
                                             }
-                                                break
-                                            case 5: {
+                                        } else if (length === 5) {
+                                            {
                                                 dataItem.dataType = 'INT32'
                                                 dataItem.value = HexToInt32(value.toString('hex')).toString()
                                             }
-                                                break
-                                            case 9: {
+                                        } else if (length === 9) {
+                                            {
                                                 dataItem.dataType = 'INT64'
                                                 dataItem.value = HexToInt64(value.toString('hex')).toString()
                                             }
-                                                break
                                         }
                                     }
                                         break
@@ -375,7 +488,126 @@ export default class Goose extends BaseHeader {
                             this.instance.pdu['allData'] = allData
                         },
                         encode: (): void => {
-                            //TODO
+                            const allData: AllDataItem[] = this.instance.pdu['allData'] ? this.instance.pdu['allData'] : []
+                            const dataItemTLVs: TLV[] = allData
+                                .map((dataItem: AllDataItem, index: number): TLV | null => {
+                                    dataItem.value = dataItem.value.trim()
+                                    switch (dataItem.dataType) {
+                                        case 'Boolean': {
+                                            const availableStringValues: string[] = ['FALSE', 'TRUE']
+                                            const stringValue: string = dataItem.value.toUpperCase()
+                                            let booleanIntValue: number = 0
+                                            if (availableStringValues.includes(stringValue)) {
+                                                booleanIntValue = availableStringValues.indexOf(stringValue)
+                                            } else {
+                                                this.recordError(`pdu.allData[${index}]`, 'Invalid Boolean value')
+                                            }
+                                            return new TLV(0x83, Buffer.from(booleanIntValue.toString(16).padStart(2, '0'), 'hex'))
+                                        }
+                                        case 'INT8': {
+                                            let intValue: number = parseInt(dataItem.value)
+                                            if (isNaN(intValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid INT8 value')
+                                            intValue = intValue ? intValue : 0
+                                            if (intValue < -128 || intValue > 127) this.recordError(`pdu.allData[${index}]`, 'Invalid INT8 value')
+                                            return new TLV(0x85, Buffer.from(Int8ToBERHex(intValue).padStart(2 * 2, '0'), 'hex'))
+                                        }
+                                        case 'INT16': {
+                                            let intValue: number = parseInt(dataItem.value)
+                                            if (isNaN(intValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid INT16 value')
+                                            intValue = intValue ? intValue : 0
+                                            if (intValue < -32768 || intValue > 32767) this.recordError(`pdu.allData[${index}]`, 'Invalid INT16 value')
+                                            return new TLV(0x85, Buffer.from(Int16ToBERHex(intValue).padStart(3 * 2, '0'), 'hex'))
+                                        }
+                                        case'INT32': {
+                                            let intValue: number = parseInt(dataItem.value)
+                                            if (isNaN(intValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid INT32 value')
+                                            intValue = intValue ? intValue : 0
+                                            if (intValue < -2147483648 || intValue > 2147483647) this.recordError(`pdu.allData[${index}]`, 'Invalid INT32 value')
+                                            return new TLV(0x85, Buffer.from(Int32ToBERHex(intValue).padStart(5 * 2, '0'), 'hex'))
+                                        }
+                                        case'INT64': {
+                                            let intValue: bigint = BigInt(dataItem.value)
+                                            if (intValue < BigInt('-9223372036854775808') || intValue > BigInt('9223372036854775807')) this.recordError(`pdu.allData[${index}]`, 'Invalid INT64 value')
+                                            return new TLV(0x85, Buffer.from(Int64ToBERHex(intValue).padStart(9 * 2, '0'), 'hex'))
+                                        }
+                                        case'INT8U': {
+                                            let uintValue: number = parseInt(dataItem.value)
+                                            if (isNaN(uintValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid INT8U value')
+                                            uintValue = uintValue ? uintValue : 0
+                                            if (uintValue < 0 || uintValue > 255) this.recordError(`pdu.allData[${index}]`, 'Invalid INT8U value')
+                                            return new TLV(0x86, Buffer.from(UInt8ToBERHex(uintValue).padStart(2 * 2, '0'), 'hex'))
+                                        }
+                                        case'INT16U': {
+                                            let uintValue: number = parseInt(dataItem.value)
+                                            if (isNaN(uintValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid INT16U value')
+                                            uintValue = uintValue ? uintValue : 0
+                                            if (uintValue < 0 || uintValue > 65535) this.recordError(`pdu.allData[${index}]`, 'Invalid INT16U value')
+                                            return new TLV(0x86, Buffer.from(UInt16ToBERHex(uintValue).padStart(3 * 2, '0'), 'hex'))
+                                        }
+                                        case'INT32U': {
+                                            let uintValue: number = parseInt(dataItem.value)
+                                            if (isNaN(uintValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid INT32U value')
+                                            uintValue = uintValue ? uintValue : 0
+                                            if (uintValue < 0 || uintValue > 4294967295) this.recordError(`pdu.allData[${index}]`, 'Invalid INT32U value')
+                                            return new TLV(0x86, Buffer.from(UInt32ToBERHex(uintValue).padStart(5 * 2, '0'), 'hex'))
+                                        }
+                                        case'FLOAT32': {
+                                            let float32Value: number = parseFloat(dataItem.value)
+                                            if (isNaN(float32Value)) this.recordError(`pdu.allData[${index}]`, 'Invalid FLOAT32 value')
+                                            float32Value = float32Value ? float32Value : 0
+                                            return new TLV(0x86, Buffer.from(Float32ToHex(float32Value).padStart(4 * 2, '0'), 'hex'))
+                                        }
+                                        case'CODED-ENUM': {
+                                            let codedEnumValue: number = parseInt(dataItem.value)
+                                            if (isNaN(codedEnumValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid CODED-ENUM value')
+                                            codedEnumValue = codedEnumValue ? codedEnumValue : 0
+                                            return new TLV(0x84, Buffer.from(UInt16ToBERHex(codedEnumValue).padStart(2 * 2, '0'), 'hex'))
+                                        }
+                                        case'OCTET-STRING': {
+                                            const asciiText: string = dataItem.value
+                                            if (!asciiText) {
+                                                this.recordError(`pdu.allData[${index}]`, 'Empty OCTET-STRING, ignored')
+                                                return null
+                                            }
+                                            if (asciiText.length > 20) this.recordError(`pdu.allData[${index}]`, 'OCTET-STRING too long')
+                                            const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(20 * 2)
+                                            return new TLV(0x89, Buffer.from(hex, 'hex').subarray(0, 20))
+                                        }
+                                        case'VISIBLE-STRING': {
+                                            const asciiText: string = dataItem.value
+                                            if (!asciiText) {
+                                                this.recordError(`pdu.allData[${index}]`, 'Empty VISIBLE-STRING, ignored')
+                                                return null
+                                            }
+                                            if (asciiText.length > 35) this.recordError(`pdu.allData[${index}]`, 'VISIBLE-STRING too long')
+                                            const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(35 * 2)
+                                            return new TLV(0x8a, Buffer.from(hex, 'hex').subarray(0, 35))
+                                        }
+                                        case'TimeStamp': {
+                                            let timestamp: number = parseInt(dataItem.value)
+                                            if (isNaN(timestamp)) this.recordError(`pdu.allData[${index}]`, 'Invalid TimeStamp value')
+                                            timestamp = timestamp ? timestamp : 0
+                                            return new TLV(0x91, Buffer.from(timestamp.toString(16).padStart(8 * 2, '0'), 'hex'))
+                                        }
+                                        case'Quality': {
+                                            const bitString: string = dataItem.value
+                                            let intValue: number = parseInt(bitString, 2)
+                                            if (isNaN(intValue)) this.recordError(`pdu.allData[${index}]`, 'Invalid Quality value')
+                                            intValue = intValue ? intValue : 0
+                                            return new TLV(0x84, Buffer.from(intValue.toString(16).padStart(3 * 2, '0'), 'hex'))
+                                        }
+                                        default: {
+                                            this.recordError(`pdu.allData[${index}]`, 'Invalid dataType, ignored')
+                                            return null
+                                        }
+                                    }
+                                })
+                                .filter((dataItemTLV: TLV | null): dataItemTLV is TLV => !!dataItemTLV)
+
+                            let dataItemsHex: string = ''
+                            dataItemTLVs.forEach(dataItemTLV => dataItemsHex = `${dataItemsHex}${dataItemTLV.toString()}`)
+                            const allDataTLV: TLV = new TLV(0xAB, dataItemsHex)
+                            this.TLVChild.push(allDataTLV)
                         }
                     }
                 }

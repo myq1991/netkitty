@@ -2,6 +2,7 @@ import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {HeaderTreeNode} from '../types/HeaderTreeNode'
 import {CodecModule} from '../types/CodecModule'
 import {ProtocolFieldJSONSchema} from '../../schema/ProtocolFieldJSONSchema'
+import {CodecErrorInfo} from '../types/CodecErrorInfo'
 
 export abstract class BaseHeader {
 
@@ -44,6 +45,14 @@ export abstract class BaseHeader {
      */
     public readonly abstract name: string
 
+    /**
+     * Encode/Decode error info objects
+     */
+    public errors: CodecErrorInfo[] = []
+
+    /**
+     * Header schema instance
+     */
     public instance: HeaderTreeNode = {}
 
     /**
@@ -182,6 +191,20 @@ export abstract class BaseHeader {
             if (!execBeforeSubCodecs) codecs.push(async (): Promise<void> => await codec())
         }
         return codecs
+    }
+
+    /**
+     * Record encode/decode error
+     * @param path
+     * @param message
+     * @protected
+     */
+    protected recordError(path: string, message: string): void {
+        this.errors.push({
+            id: this.id,
+            path: path,
+            message: message
+        })
     }
 
     /**
