@@ -621,6 +621,6 @@ export default class Goose extends BaseHeader {
 
     public match(prevCodecModule: CodecModule, prevCodecModules: CodecModule[]): boolean {
         if (!prevCodecModule) return false
-        return prevCodecModule.instance.etherType === '0x88b8'
+        return prevCodecModule.instance.etherType === 0x88b8
     }
 }
