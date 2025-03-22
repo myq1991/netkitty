@@ -39,6 +39,7 @@ export default class Goose extends BaseHeader {
                 type: 'integer',
                 minimum: 0,
                 maximum: 0x3fff,
+                label: 'APPID',
                 decode: (): void => {
                     this.instance.appid = parseInt(this.readBytes(0, 2).toString('hex'), 16)
                 },
@@ -50,6 +51,9 @@ export default class Goose extends BaseHeader {
             },
             length: {
                 type: 'integer',
+                minimum: 0,
+                maximum: 65535,
+                label: 'Length',
                 decode: (): void => {
                     this.instance.length = parseInt(this.readBytes(2, 2).toString('hex'), 16)
                     if (this.instance.length === undefined) this.recordError('length', 'Not Found')
@@ -62,12 +66,14 @@ export default class Goose extends BaseHeader {
             },
             reserved1: {
                 type: 'object',
+                label: 'Reserved1',
                 decode: (): void => {
                     this.instance.reserved1 = {}
                 },
                 properties: {
                     simulated: {
                         type: 'boolean',
+                        label: 'Simulated',
                         decode: (): void => {
                             this.instance.reserved1['simulated'] = !!this.readBits(4, 2, 0, 1)
                         },
@@ -80,6 +86,7 @@ export default class Goose extends BaseHeader {
                         type: 'number',
                         minimum: 0,
                         maximum: 32767,
+                        label: 'Reserved',
                         decode: (): void => {
                             this.instance.reserved1['reserved'] = this.readBits(4, 2, 1, 16)
                         },
@@ -93,6 +100,7 @@ export default class Goose extends BaseHeader {
             },
             reserved2: {
                 type: 'object',
+                label: 'Reserved2',
                 decode: (): void => {
                     this.instance.reserved2 = {}
                 },
@@ -101,6 +109,7 @@ export default class Goose extends BaseHeader {
                         type: 'number',
                         minimum: 0,
                         maximum: 65535,
+                        label: 'Reserved',
                         decode: (): void => {
                             this.instance.reserved2['reserved'] = this.readBits(4, 2, 0, 16)
                         },
@@ -114,6 +123,7 @@ export default class Goose extends BaseHeader {
             },
             goosePdu: {
                 type: 'object',
+                label: 'GOOSE PDU',
                 decode: (): void => {
                     const buffer: Buffer = this.readBytes(8, (this.instance.length as number) - 8)
                     this.TLVInstance = TLV.parse(buffer)
@@ -138,6 +148,7 @@ export default class Goose extends BaseHeader {
                     gocbRef: {
                         type: 'string',
                         maxLength: 129,
+                        label: 'GoCBReference',
                         decode: (): void => {
                             const gocbRefTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
                             if (!gocbRefTLV) return this.recordError('goosePdu.gocbRef', 'Not Found')
@@ -158,6 +169,7 @@ export default class Goose extends BaseHeader {
                         type: 'number',
                         minimum: 1,
                         maximum: 4294967295,
+                        label: 'TimeAllowedtoLive',
                         decode: (): void => {
                             const timeAllowedtoLiveString: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x81)?.getValue('hex')
                             if (!timeAllowedtoLiveString) return this.recordError('goosePdu.timeAllowedtoLive', 'Not Found')
@@ -177,6 +189,7 @@ export default class Goose extends BaseHeader {
                     datSet: {
                         type: 'string',
                         maxLength: 129,
+                        label: 'DatSet',
                         decode: (): void => {
                             const datSetTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x82)
                             if (!datSetTLV) return this.recordError('goosePdu.datSet', 'Not Found')
@@ -196,6 +209,7 @@ export default class Goose extends BaseHeader {
                     goID: {
                         type: 'string',
                         maxLength: 65,
+                        label: 'GoID',
                         decode: (): void => {
                             const goIDTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x83)
                             if (!goIDTLV) return this.recordError('goosePdu.goID', 'Not Found')
@@ -214,6 +228,7 @@ export default class Goose extends BaseHeader {
                     },
                     t: {
                         type: 'string',
+                        label: 'TimeStamp',
                         decode: (): void => {
                             const tStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x84)?.getValue('hex')
                             if (!tStr) return this.recordError('goosePdu.t', 'Not Found')
@@ -231,6 +246,7 @@ export default class Goose extends BaseHeader {
                         type: 'integer',
                         minimum: 1,
                         maximum: 4294967295,
+                        label: 'StNum',
                         decode: (): void => {
                             const stNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x85)?.getValue('hex')
                             if (!stNumStr) return this.recordError('goosePdu.stNum', 'Not Found')
@@ -252,6 +268,7 @@ export default class Goose extends BaseHeader {
                         type: 'integer',
                         minimum: 0,
                         maximum: 4294967295,
+                        label: 'SqNum',
                         decode: (): void => {
                             const sqNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x86)?.getValue('hex')
                             if (!sqNumStr) return this.recordError('goosePdu.sqNum', 'Not Found')
@@ -270,6 +287,7 @@ export default class Goose extends BaseHeader {
                     },
                     simulation: {
                         type: 'boolean',
+                        label: 'Simulation',
                         decode: (): void => {
                             const simulationStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x87)?.getValue('hex')
                             if (!simulationStr) return this.recordError('goosePdu.simulation', 'Not Found')
@@ -287,6 +305,7 @@ export default class Goose extends BaseHeader {
                     },
                     confRev: {
                         type: 'integer',
+                        label: 'ConfRev',
                         decode: (): void => {
                             const confRevStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x88)?.getValue('hex')
                             if (!confRevStr) return this.recordError('goosePdu.confRev', 'Not Found')
@@ -305,6 +324,7 @@ export default class Goose extends BaseHeader {
                     },
                     ndsCom: {
                         type: 'boolean',
+                        label: 'NdsCom',
                         decode: (): void => {
                             const ndsComStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x89)?.getValue('hex')
                             if (!ndsComStr) return this.recordError('goosePdu.ndsCom', 'Not Found')
@@ -322,6 +342,7 @@ export default class Goose extends BaseHeader {
                     },
                     numDatSetEntries: {
                         type: 'integer',
+                        label: 'NumDatSetEntries',
                         decode: (): void => {
                             const numDatSetEntriesStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x8A)?.getValue('hex')
                             if (!numDatSetEntriesStr) return this.recordError('goosePdu.numDatSetEntries', 'Not Found')
@@ -336,11 +357,14 @@ export default class Goose extends BaseHeader {
                     },
                     allData: {
                         type: 'array',
+                        label: 'AllData',
                         items: {
                             type: 'object',
+                            label: 'Data',
                             properties: {
                                 dataType: {
                                     type: 'string',
+                                    label: 'DataType',
                                     enum: [
                                         'Boolean',
                                         'INT8',
@@ -359,7 +383,8 @@ export default class Goose extends BaseHeader {
                                     ]
                                 },
                                 value: {
-                                    type: 'string'
+                                    type: 'string',
+                                    label: 'Value'
                                 }
                             }
                         },

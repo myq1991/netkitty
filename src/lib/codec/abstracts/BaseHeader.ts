@@ -10,6 +10,13 @@ export abstract class BaseHeader {
         return new (this as any)()
     }
 
+    protected static SET_PREV_CODEC_MODULES(target: CodecModule, prevCodecModules: CodecModule[]): void {
+        // target.prevCodecModule = prevCodecModules[0]
+        Object.defineProperty(target, 'prevCodecModule', {value: prevCodecModules[0]})
+        Object.defineProperty(target, 'prevCodecModules', {value: prevCodecModules})
+
+    }
+
     public static get PROTOCOL_ID(): string {
         return this.CODEC_INSTANCE.id
     }
@@ -23,6 +30,8 @@ export abstract class BaseHeader {
     }
 
     public static MATCH(prevCodecModule?: CodecModule, prevCodecModules?: CodecModule[]): boolean {
+        // const instance:CodecModule=this.CODEC_INSTANCE
+        // this.SET_PREV_CODEC_MODULES(instance,prevCodecModules?prevCodecModules:[])
         return this.CODEC_INSTANCE.match(prevCodecModule!, prevCodecModules!)
     }
 
@@ -73,10 +82,21 @@ export abstract class BaseHeader {
     }
 
     /**
+     * Readonly Header length
+     */
+    public get length(): number {
+        return this.headerLength
+    }
+
+    /**
      * Header length
      * @protected
      */
     protected headerLength: number = 0
+
+    protected readonly prevCodecModule: CodecModule
+
+    protected readonly prevCodecModules: CodecModule[]
 
     constructor(packet: Buffer, startPos: number) {
         this.packet = packet
@@ -205,6 +225,47 @@ export abstract class BaseHeader {
             path: path,
             message: message
         })
+    }
+
+    /**
+     * Set instance's node value
+     * @param node
+     * @param fields
+     * @param value
+     * @protected
+     */
+    protected setNodeValue(node: HeaderTreeNode, fields: string[], value: any): HeaderTreeNode {
+        const field: string = fields.shift() as any
+        if (fields.length) {
+            node[field] = node[field] ? node[field] : {}
+            return this.setNodeValue(node[field] as HeaderTreeNode, fields, value)
+        } else {
+            node[field] = value
+            return node
+        }
+    }
+
+    /**
+     * Recode specific field AFTER entire header encoded
+     * @param fieldPath
+     * @param fieldValue
+     * @param throwErrorIfNotFound
+     */
+    public async recodeField(fieldPath: string, fieldValue: any, throwErrorIfNotFound: boolean = false): Promise<void> {
+        const fields: string[] = fieldPath.split('.')
+        let fieldSchema: ProtocolFieldJSONSchema | null = this.SCHEMA as ProtocolFieldJSONSchema
+        for (const field of fields) {
+            if (!fieldSchema) break
+            if (!fieldSchema.properties) break
+            fieldSchema = !fieldSchema.properties[field] ? null : fieldSchema.properties[field]
+        }
+        if (!fieldSchema || !fieldSchema['encode']) {
+            if (throwErrorIfNotFound) throw new Error('Encoder not found')
+            return
+        }
+        this.instance = this.setNodeValue(this.instance, fields, fieldValue)
+        const fieldEncoder: () => void | Promise<void> = fieldSchema['encode']
+        await fieldEncoder()
     }
 
     /**

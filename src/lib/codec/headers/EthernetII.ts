@@ -14,6 +14,7 @@ export default class EthernetII extends BaseHeader {
                 type: 'string',
                 minLength: 17,
                 maxLength: 17,
+                label: 'Destination',
                 decode: (): void => {
                     this.instance.dmac = Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
                 },
@@ -26,6 +27,7 @@ export default class EthernetII extends BaseHeader {
                 type: 'string',
                 minLength: 17,
                 maxLength: 17,
+                label: 'Source',
                 decode: (): void => {
                     this.instance.smac = Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
                 },
@@ -38,6 +40,7 @@ export default class EthernetII extends BaseHeader {
                 type: 'integer',
                 minimum: 0x0600,
                 maximum: 0xffff,
+                label: 'EtherType',
                 decode: (): void => {
                     this.instance.etherType = parseInt(this.readBytes(12, 2).toString('hex'), 16)
                 },

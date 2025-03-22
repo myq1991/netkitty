@@ -7,9 +7,13 @@ export interface ProtocolFieldJSONSchema extends JSONSchema7 {
 
     decode?: () => void | Promise<void>
 
+    label?: string
+
     $defs?: {
         [key: string]: ProtocolFieldJSONSchemaDefinition;
     } | undefined;
+
+    items?: ProtocolFieldJSONSchemaDefinition | ProtocolFieldJSONSchemaDefinition[] | undefined;
 
     additionalItems?: ProtocolFieldJSONSchemaDefinition | undefined;
     contains?: ProtocolFieldJSONSchemaDefinition | undefined;

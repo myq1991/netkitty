@@ -30,6 +30,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                 type: 'integer',
                 minimum: 0,
                 maximum: 0x3fff,
+                label: 'APPID',
                 decode: (): void => {
                     this.instance.appid = parseInt(this.readBytes(0, 2).toString('hex'), 16)
                 },
@@ -41,6 +42,7 @@ export default class IEC61850SampledValues extends BaseHeader {
             },
             length: {
                 type: 'integer',
+                label: 'Length',
                 decode: (): void => {
                     this.instance.length = parseInt(this.readBytes(2, 2).toString('hex'), 16)
                     if (this.instance.length === undefined) this.recordError('length', 'Not Found')
@@ -53,12 +55,14 @@ export default class IEC61850SampledValues extends BaseHeader {
             },
             reserved1: {
                 type: 'object',
+                label: 'Reserved1',
                 decode: (): void => {
                     this.instance.reserved1 = {}
                 },
                 properties: {
                     simulated: {
                         type: 'boolean',
+                        label: 'Simulated',
                         decode: (): void => {
                             this.instance.reserved1['simulated'] = !!this.readBits(4, 2, 0, 1)
                         },
@@ -71,6 +75,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                         type: 'number',
                         minimum: 0,
                         maximum: 32767,
+                        label: 'Reserved',
                         decode: (): void => {
                             this.instance.reserved1['reserved'] = this.readBits(4, 2, 1, 16)
                         },
@@ -84,6 +89,7 @@ export default class IEC61850SampledValues extends BaseHeader {
             },
             reserved2: {
                 type: 'object',
+                label: 'Reserved2',
                 decode: (): void => {
                     this.instance.reserved2 = {}
                 },
@@ -92,6 +98,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                         type: 'number',
                         minimum: 0,
                         maximum: 65535,
+                        label: 'Reserved',
                         decode: (): void => {
                             this.instance.reserved2['reserved'] = this.readBits(4, 2, 0, 16)
                         },
@@ -105,6 +112,7 @@ export default class IEC61850SampledValues extends BaseHeader {
             },
             svPdu: {
                 type: 'object',
+                label: 'Sampled Values PDU',
                 decode: (): void => {
                     const buffer: Buffer = this.readBytes(8, (this.instance.length as number) - 8)
                     this.TLVInstance = TLV.parse(buffer)
@@ -130,6 +138,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                         type: 'integer',
                         minimum: 1,
                         maximum: 65535,
+                        label: 'Number of ASDU',
                         decode: (): void => {
                             const noASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
                             if (!noASDUTLV) return this.recordError('svPdu.noASDU', 'Not Found')
@@ -144,35 +153,45 @@ export default class IEC61850SampledValues extends BaseHeader {
                     },
                     seqASDU: {
                         type: 'array',
+                        label: 'Sequence ASDU',
                         items: {
                             type: 'object',
                             properties: {
                                 svID: {
-                                    type: 'string'
+                                    type: 'string',
+                                    label: 'SvID'
                                 },
                                 dataSet: {
-                                    type: 'string'
+                                    type: 'string',
+                                    label: 'DatSet'
                                 },
                                 smpCnt: {
-                                    type: 'integer'
+                                    type: 'integer',
+                                    label: 'SmpCnt'
                                 },
                                 confRev: {
-                                    type: 'integer'
+                                    type: 'integer',
+                                    label: 'ConfRev'
                                 },
                                 refrTm: {
-                                    type: 'string'
+                                    type: 'string',
+                                    label: 'RefrTm'
                                 },
                                 smpSynch: {
-                                    type: 'integer'
+                                    type: 'integer',
+                                    label: 'SmpSynch'
                                 },
                                 smpRate: {
-                                    type: 'integer'
+                                    type: 'integer',
+                                    label: 'SmpRate'
                                 },
                                 sample: {
-                                    type: 'string'
+                                    type: 'string',
+                                    label: 'Sample'
                                 },
                                 smpMod: {
-                                    type: 'integer'
+                                    type: 'integer',
+                                    label: 'SmpMod'
                                 }
                             }
                         },
