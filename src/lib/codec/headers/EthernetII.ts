@@ -1,6 +1,5 @@
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
-import {CodecModule} from '../types/CodecModule'
 
 export default class EthernetII extends BaseHeader {
 
@@ -55,9 +54,9 @@ export default class EthernetII extends BaseHeader {
         }
     }
 
-    public match(prevCodecModule: CodecModule): boolean {
+    public match(): boolean {
         const specialScenes: string[] = ['trill', 'vxlan', 'nvgre', 'mpls', 'qinq', 'gre', 'geneve']
-        if (prevCodecModule && !specialScenes.includes(prevCodecModule.id)) return false
+        if (this.prevCodecModule && !specialScenes.includes(this.prevCodecModule.id)) return false
         return true
     }
 }

@@ -1,6 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {CodecModule} from '../types/CodecModule'
 import TLV from 'node-tlv'
 import {
     HexToFloat32,
@@ -643,8 +642,8 @@ export default class Goose extends BaseHeader {
 
     public name: string = 'GOOSE'
 
-    public match(prevCodecModule: CodecModule, prevCodecModules: CodecModule[]): boolean {
-        if (!prevCodecModule) return false
-        return prevCodecModule.instance.etherType === 0x88b8
+    public match(): boolean {
+        if (!this.prevCodecModule) return false
+        return this.prevCodecModule.instance.etherType === 0x88b8
     }
 }

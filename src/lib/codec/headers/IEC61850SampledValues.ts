@@ -1,6 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {CodecModule} from '../types/CodecModule'
 import TLV from 'node-tlv'
 import {HexToUInt16, HexToUInt32, HexToUInt8} from '../lib/HexToNumber'
 import {UInt16ToBERHex} from '../lib/NumberToBERHex'
@@ -346,8 +345,8 @@ export default class IEC61850SampledValues extends BaseHeader {
 
     public name: string = 'IEC61850 Sampled Values'
 
-    public match(prevCodecModule: CodecModule, prevCodecModules: CodecModule[]): boolean {
-        if (!prevCodecModule) return false
-        return prevCodecModule.instance.etherType === 0x88ba
+    public match(): boolean {
+        if (!this.prevCodecModule) return false
+        return this.prevCodecModule.instance.etherType === 0x88ba
     }
 }

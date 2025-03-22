@@ -62,8 +62,8 @@ export default class VLAN_802dot1Q extends BaseHeader {
 
     public name: string = '802.1Q Virtual LAN'
 
-    public match(prevCodecModule: CodecModule): boolean {
-        if (!prevCodecModule) return false
-        return prevCodecModule.instance.etherType === 0x8100
+    public match(): boolean {
+        if (!this.prevCodecModule) return false
+        return this.prevCodecModule.instance.etherType === 0x8100
     }
 }

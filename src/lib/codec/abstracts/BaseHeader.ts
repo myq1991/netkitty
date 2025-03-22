@@ -10,11 +10,8 @@ export abstract class BaseHeader {
         return new (this as any)()
     }
 
-    protected static SET_PREV_CODEC_MODULES(target: CodecModule, prevCodecModules: CodecModule[]): void {
-        // target.prevCodecModule = prevCodecModules[0]
-        Object.defineProperty(target, 'prevCodecModule', {value: prevCodecModules[0]})
-        Object.defineProperty(target, 'prevCodecModules', {value: prevCodecModules})
-
+    protected static CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(prevCodecModules: CodecModule[]): CodecModule {
+        return new (this as any)(undefined, undefined, prevCodecModules)
     }
 
     public static get PROTOCOL_ID(): string {
@@ -29,14 +26,12 @@ export abstract class BaseHeader {
         return JSON.parse(JSON.stringify(this.CODEC_INSTANCE.SCHEMA))
     }
 
-    public static MATCH(prevCodecModule?: CodecModule, prevCodecModules?: CodecModule[]): boolean {
-        // const instance:CodecModule=this.CODEC_INSTANCE
-        // this.SET_PREV_CODEC_MODULES(instance,prevCodecModules?prevCodecModules:[])
-        return this.CODEC_INSTANCE.match(prevCodecModule!, prevCodecModules!)
+    public static MATCH(prevCodecModules: CodecModule[]): boolean {
+        return this.CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(prevCodecModules ? prevCodecModules : []).match()
     }
 
-    public static CREATE_INSTANCE(packet: Buffer, startPos: number): CodecModule {
-        return new (this as any)(packet, startPos)
+    public static CREATE_INSTANCE(packet: Buffer, startPos: number, prevCodecModules: CodecModule[]): CodecModule {
+        return new (this as any)(packet, startPos, prevCodecModules)
     }
 
     /**
@@ -98,9 +93,13 @@ export abstract class BaseHeader {
 
     protected readonly prevCodecModules: CodecModule[]
 
-    constructor(packet: Buffer, startPos: number) {
+    constructor(packet: Buffer, startPos: number, prevCodecModules: CodecModule[]) {
         this.packet = packet
         this.startPos = startPos
+        prevCodecModules = prevCodecModules ? prevCodecModules : []
+        this.prevCodecModules = prevCodecModules
+        const prevCodecModuleIndex: number = this.prevCodecModules.length - 1
+        this.prevCodecModule = this.prevCodecModules[prevCodecModuleIndex > -1 ? prevCodecModuleIndex : 0]
     }
 
     /**
@@ -114,10 +113,8 @@ export abstract class BaseHeader {
 
     /**
      * Is data buffer fits current header codec
-     * @param prevCodecModule
-     * @param prevCodecModules
      */
-    public abstract match(prevCodecModule: CodecModule, prevCodecModules: CodecModule[]): boolean
+    public abstract match(): boolean
 
     /**
      * Internal read bytes from buffer

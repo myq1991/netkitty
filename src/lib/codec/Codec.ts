@@ -85,15 +85,17 @@ export class Codec {
     async #encode(inputs: CodecEncodeInput[], errors: CodecErrorInfo[] = []): Promise<Buffer> {
         let packet: Buffer = Buffer.from([])
         let startPos: number = 0
+        const prevCodecModules: CodecModule[] = []
         for (const input of inputs) {
             const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
             if (!codecModuleConstructor) continue
-            const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos)
+            const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, prevCodecModules)
             codecModule.instance = input.data
             await codecModule.encode()
             codecModule.errors.forEach((errorInfo: CodecErrorInfo): number => errors.push(errorInfo))
             packet = codecModule.packet
             startPos = codecModule.endPos
+            prevCodecModules.push(codecModule)
         }
         return packet
     }
@@ -107,9 +109,9 @@ export class Codec {
      * @private
      */
     async #decode(packet: Buffer, prevCodecModules: CodecModule[] = [], startPos: number = 0, headerTree: HeaderTreeNode[] = []): Promise<HeaderTreeNode[]> {
-        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(prevCodecModules[prevCodecModules.length - 1], prevCodecModules))
+        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(prevCodecModules))
         if (!codecModuleConstructor) throw new Error('TODO 处理没有编解码器时的状况')
-        const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos)
+        const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, prevCodecModules)
         await codecModule.decode()
         const headerTreeNode: HeaderTreeNode = codecModule.instance
         this.defineHiddenProperty('id', codecModule.id, headerTreeNode)

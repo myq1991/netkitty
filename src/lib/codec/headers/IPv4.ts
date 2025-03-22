@@ -1,6 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {CodecModule} from '../types/CodecModule'
 
 export default class IPv4 extends BaseHeader {
 
@@ -215,8 +214,8 @@ export default class IPv4 extends BaseHeader {
 
     public name: string = 'IPv4'
 
-    public match(prevCodecModule: CodecModule, prevCodecModules: CodecModule[]): boolean {
-        if (!prevCodecModule) return false
-        return prevCodecModule.instance.etherType === 0x0800
+    public match(): boolean {
+        if (!this.prevCodecModule) return false
+        return this.prevCodecModule.instance.etherType === 0x0800
     }
 }
