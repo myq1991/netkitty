@@ -50,7 +50,7 @@ export default class IPv4 extends BaseHeader {
                     if (!headerLength) headerLength = headerLength ? headerLength : 0
                     if (headerLength) headerLength = Math.floor(headerLength / 4)
                     this.writeBits(0, 1, 4, 4, headerLength)
-                    if (!headerLength) this.afterEncode((): void => {
+                    if (!headerLength) this.addPostSelfEncodeHandler((): void => {
                         this.instance.hdrLen = this.length
                         this.writeBits(0, 1, 4, 4, Math.floor(this.length / 4))
                     })
@@ -250,7 +250,7 @@ export default class IPv4 extends BaseHeader {
                         this.writeBytes(10, Buffer.from(UInt16ToHex(checksum), 'hex'))
                     } else {
                         this.writeBytes(10, Buffer.alloc(2, 0))
-                        this.afterEncode((): void => {
+                        this.addPostSelfEncodeHandler((): void => {
                             this.writeBytes(10, Buffer.from(UInt16ToHex(this.calculateIPv4Checksum(this.packet.subarray(this.startPos, this.endPos))), 'hex'))
                         })
                     }

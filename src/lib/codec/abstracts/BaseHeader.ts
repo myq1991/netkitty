@@ -3,6 +3,8 @@ import {HeaderTreeNode} from '../types/HeaderTreeNode'
 import {CodecModule} from '../types/CodecModule'
 import {ProtocolFieldJSONSchema} from '../../schema/ProtocolFieldJSONSchema'
 import {CodecErrorInfo} from '../types/CodecErrorInfo'
+import {PostHandlerItem} from '../types/PostHandlerItem'
+import {SortPostHandlers} from '../lib/SortPostHandlers'
 
 export abstract class BaseHeader {
 
@@ -30,8 +32,8 @@ export abstract class BaseHeader {
         return this.CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(prevCodecModules ? prevCodecModules : []).match()
     }
 
-    public static CREATE_INSTANCE(packet: Buffer, startPos: number, prevCodecModules: CodecModule[]): CodecModule {
-        return new (this as any)(packet, startPos, prevCodecModules)
+    public static CREATE_INSTANCE(packet: Buffer, startPos: number, prevCodecModules: CodecModule[], postHandlers: PostHandlerItem[]): CodecModule {
+        return new (this as any)(packet, startPos, prevCodecModules, postHandlers)
     }
 
     /**
@@ -102,18 +104,18 @@ export abstract class BaseHeader {
     protected readonly prevCodecModules: CodecModule[]
 
     /**
-     * Registered after encode handlers
+     * Registered post encode handlers (CodecModule)
      * @protected
      */
-    protected readonly afterEncodeHandlers: (() => void | Promise<void>)[] = []
+    protected readonly postSelfEncodeHandlers: PostHandlerItem[] = []
 
     /**
-     * Registered after decode handlers
+     * Registered post decode handlers (CodecModule)
      * @protected
      */
-    protected readonly afterDecodeHandlers: (() => void | Promise<void>)[] = []
+    protected readonly postSelfDecodeHandlers: PostHandlerItem[] = []
 
-    constructor(packet: Buffer, startPos: number, prevCodecModules: CodecModule[]) {
+    constructor(packet: Buffer, startPos: number, prevCodecModules: CodecModule[], postHandlers: PostHandlerItem[]) {
         this.packet = packet
         this.startPos = startPos
         prevCodecModules = prevCodecModules ? prevCodecModules : []
@@ -246,21 +248,49 @@ export abstract class BaseHeader {
     }
 
     /**
-     * Register after encode handler
+     * Register post encode handler for current codec
      * @param handler
+     * @param priority
      * @protected
      */
-    protected afterEncode(handler: () => void | Promise<void>): void {
-        this.afterEncodeHandlers.push(handler)
+    protected addPostSelfEncodeHandler(handler: () => void | Promise<void>, priority: number = 0): void {
+        this.postSelfEncodeHandlers.push({
+            priority: priority,
+            handler: handler
+        })
     }
 
     /**
-     * Register after decode handler
+     * Register post decode handler for current codec
      * @param handler
+     * @param priority
      * @protected
      */
-    protected afterDecode(handler: () => void | Promise<void>): void {
-        this.afterDecodeHandlers.push(handler)
+    protected addPostSelfDecodeHandler(handler: () => void | Promise<void>, priority: number = 0): void {
+        this.postSelfDecodeHandlers.push({
+            priority: priority,
+            handler: handler
+        })
+    }
+
+    /**
+     * Register post encode handler for packet
+     * @param handler
+     * @param priority
+     * @protected
+     */
+    protected addPostPacketEncodeHandler(handler: () => void | Promise<void>, priority: number = 0): void {
+        //TODO
+    }
+
+    /**
+     * Register post decode handler for packet
+     * @param handler
+     * @param priority
+     * @protected
+     */
+    protected addPostPacketDecodeHandler(handler: () => void | Promise<void>, priority: number = 0): void {
+        //TODO
     }
 
     /**
@@ -312,10 +342,11 @@ export abstract class BaseHeader {
         for (const decode of decodes) {
             await decode()
         }
-        let afterDecodeHandler: (() => void | Promise<void>) | undefined = this.afterDecodeHandlers.shift()
-        while (afterDecodeHandler) {
-            await afterDecodeHandler()
-            afterDecodeHandler = this.afterDecodeHandlers.shift()
+        const postSelfDecodeHandlers: PostHandlerItem[] = SortPostHandlers(this.postSelfDecodeHandlers)
+        let postDecodeHandler: PostHandlerItem | undefined = postSelfDecodeHandlers.shift()
+        while (postDecodeHandler) {
+            await postDecodeHandler.handler()
+            postDecodeHandler = postSelfDecodeHandlers.shift()
         }
     }
 
@@ -327,10 +358,11 @@ export abstract class BaseHeader {
         for (const encode of encodes) {
             await encode()
         }
-        let afterEncodeHandler: (() => void | Promise<void>) | undefined = this.afterEncodeHandlers.shift()
-        while (afterEncodeHandler) {
-            await afterEncodeHandler()
-            afterEncodeHandler = this.afterEncodeHandlers.shift()
+        const postSelfEncodeHandlers: PostHandlerItem[] = SortPostHandlers(this.postSelfEncodeHandlers)
+        let postEncodeHandler: PostHandlerItem | undefined = postSelfEncodeHandlers.shift()
+        while (postEncodeHandler) {
+            await postEncodeHandler.handler()
+            postEncodeHandler = postSelfEncodeHandlers.shift()
         }
     }
 }

@@ -7,6 +7,8 @@ import RawData from './headers/RawData'
 import {CodecDecodeResult} from './types/CodecDecodeResult'
 import {CodecEncodeInput} from './types/CodecEncodeInput'
 import {CodecErrorInfo} from './types/CodecErrorInfo'
+import {PostHandlerItem} from './types/PostHandlerItem'
+import {CodecObject} from './types/CodecObject'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
@@ -80,22 +82,27 @@ export class Codec {
      * Internal encode headers to packet
      * @param inputs
      * @param errors
+     * @param postEncodeHandlers
      * @private
      */
-    async #encode(inputs: CodecEncodeInput[], errors: CodecErrorInfo[] = []): Promise<Buffer> {
+    async #encode(inputs: CodecEncodeInput[], errors: CodecErrorInfo[] = [], postEncodeHandlers: PostHandlerItem[] = []): Promise<Buffer> {
+        // const codecObject: CodecObject = {
+        //     packet: Buffer.from([]),
+        //     startPos: 0
+        // }
         let packet: Buffer = Buffer.from([])
         let startPos: number = 0
-        const prevCodecModules: CodecModule[] = []
+        const codecModules: CodecModule[] = []
         for (const input of inputs) {
             const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
             if (!codecModuleConstructor) continue
-            const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, prevCodecModules)
+            const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, codecModules, postEncodeHandlers)
             codecModule.instance = input.data
             await codecModule.encode()
             codecModule.errors.forEach((errorInfo: CodecErrorInfo): number => errors.push(errorInfo))
             packet = codecModule.packet
             startPos = codecModule.endPos
-            prevCodecModules.push(codecModule)
+            codecModules.push(codecModule)
         }
         return packet
     }
@@ -103,25 +110,20 @@ export class Codec {
     /**
      * Internal decode packet
      * @param packet
-     * @param prevCodecModules
+     * @param codecModules
      * @param startPos
-     * @param headerTree
+     * @param postDecodeHandlers
      * @private
      */
-    async #decode(packet: Buffer, prevCodecModules: CodecModule[] = [], startPos: number = 0, headerTree: HeaderTreeNode[] = []): Promise<HeaderTreeNode[]> {
-        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(prevCodecModules))
+    async #decode(packet: Buffer, codecModules: CodecModule[] = [], startPos: number = 0, postDecodeHandlers: PostHandlerItem[] = []): Promise<void> {
+        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(codecModules))
         if (!codecModuleConstructor) throw new Error('TODO 处理没有编解码器时的状况')
-        const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, prevCodecModules)
+        const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, codecModules, postDecodeHandlers)
         await codecModule.decode()
-        const headerTreeNode: HeaderTreeNode = codecModule.instance
-        this.defineHiddenProperty('id', codecModule.id, headerTreeNode)
-        this.defineHiddenProperty('name', codecModule.name, headerTreeNode)
-        this.defineHiddenProperty('errors', codecModule.errors, headerTreeNode)
-        headerTree.push(headerTreeNode)
         const nextStartPos: number = codecModule.endPos
-        if (nextStartPos >= packet.length) return headerTree
-        prevCodecModules.push(codecModule)
-        return this.#decode(packet, prevCodecModules, nextStartPos, headerTree)
+        codecModules.push(codecModule)
+        if (nextStartPos >= packet.length) return
+        return this.#decode(packet, codecModules, nextStartPos, postDecodeHandlers)
     }
 
     /**
@@ -129,15 +131,17 @@ export class Codec {
      * @param packet
      */
     public async decode(packet: Buffer): Promise<CodecDecodeResult[]> {
-        const headerTree: HeaderTreeNode[] = await this.#decode(packet)
-        return headerTree.map((headerTreeNode: HeaderTreeNode): CodecDecodeResult => {
-            return {
-                id: this.getHiddenProperty('id', headerTreeNode),
-                name: this.getHiddenProperty('name', headerTreeNode),
-                errors: this.getHiddenProperty('errors', headerTreeNode),
-                data: headerTreeNode
-            }
-        })
+
+        const codecModules: CodecModule[] = []
+        await this.#decode(packet, codecModules, 0, [])
+        // const headerTree: HeaderTreeNode[] = codecModules.map((codecModule: CodecModule): HeaderTreeNode => codecModule.instance)
+        //TODO post handler invoke
+        return codecModules.map((codecModule: CodecModule): CodecDecodeResult => ({
+            id: codecModule.id,
+            name: codecModule.name,
+            errors: codecModule.errors,
+            data: codecModule.instance
+        }))
     }
 
     /**
