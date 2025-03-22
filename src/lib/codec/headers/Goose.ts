@@ -20,6 +20,7 @@ import {
     UInt8ToBERHex
 } from '../lib/NumberToBERHex'
 import {Float32ToHex} from '../lib/NumberToHex'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 type AllDataItem = {
     dataType: string
@@ -148,15 +149,16 @@ export default class Goose extends BaseHeader {
                         type: 'string',
                         maxLength: 129,
                         label: 'GoCBReference',
+                        contentEncoding: StringContentEncodingEnum.ASCII,
                         decode: (): void => {
                             const gocbRefTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
                             if (!gocbRefTLV) return this.recordError('goosePdu.gocbRef', 'Not Found')
-                            this.instance.goosePdu['gocbRef'] = gocbRefTLV.getValue('buffer').toString()
+                            this.instance.goosePdu['gocbRef'] = gocbRefTLV.getValue('buffer').toString('ascii')
                         },
                         encode: (): void => {
                             const gocbRefValue: string = this.instance.goosePdu['gocbRef']
                             if (!gocbRefValue) return this.recordError('goosePdu.gocbRef', 'Not Found')
-                            let gocbRefBuffer: Buffer = Buffer.from(gocbRefValue)
+                            let gocbRefBuffer: Buffer = Buffer.from(gocbRefValue, 'ascii')
                             if (gocbRefBuffer.length > 129) {
                                 this.recordError('goosePdu.gocbRef', 'This VisibleString shall have a maximum size of 129 octets')
                                 gocbRefBuffer = gocbRefBuffer.subarray(0, 129)
@@ -189,15 +191,16 @@ export default class Goose extends BaseHeader {
                         type: 'string',
                         maxLength: 129,
                         label: 'DatSet',
+                        contentEncoding: StringContentEncodingEnum.ASCII,
                         decode: (): void => {
                             const datSetTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x82)
                             if (!datSetTLV) return this.recordError('goosePdu.datSet', 'Not Found')
-                            this.instance.goosePdu['datSet'] = datSetTLV.getValue('buffer').toString()
+                            this.instance.goosePdu['datSet'] = datSetTLV.getValue('buffer').toString('ascii')
                         },
                         encode: (): void => {
                             const datSetValue: string = this.instance.goosePdu['datSet']
                             if (!datSetValue) return this.recordError('goosePdu.datSet', 'Not Found')
-                            let datSetBuffer: Buffer = Buffer.from(datSetValue)
+                            let datSetBuffer: Buffer = Buffer.from(datSetValue, 'ascii')
                             if (datSetBuffer.length > 129) {
                                 this.recordError('goosePdu.datSet', 'This VisibleString shall have a maximum size of 129 octets')
                                 datSetBuffer = datSetBuffer.subarray(0, 129)
@@ -209,15 +212,16 @@ export default class Goose extends BaseHeader {
                         type: 'string',
                         maxLength: 65,
                         label: 'GoID',
+                        contentEncoding: StringContentEncodingEnum.ASCII,
                         decode: (): void => {
                             const goIDTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x83)
                             if (!goIDTLV) return this.recordError('goosePdu.goID', 'Not Found')
-                            this.instance.goosePdu['goID'] = goIDTLV.getValue('buffer').toString()
+                            this.instance.goosePdu['goID'] = goIDTLV.getValue('buffer').toString('ascii')
                         },
                         encode: (): void => {
                             const goIDValue: string = this.instance.goosePdu['goID']
                             if (!goIDValue) return this.recordError('goosePdu.goID', 'Not Found')
-                            let goIDBuffer: Buffer = Buffer.from(goIDValue)
+                            let goIDBuffer: Buffer = Buffer.from(goIDValue, 'ascii')
                             if (goIDBuffer.length > 65) {
                                 this.recordError('goosePdu.goID', 'This VisibleString shall have a maximum size of 65 octets')
                                 goIDBuffer = goIDBuffer.subarray(0, 65)
@@ -228,6 +232,7 @@ export default class Goose extends BaseHeader {
                     t: {
                         type: 'string',
                         label: 'TimeStamp',
+                        contentEncoding: StringContentEncodingEnum.BIGINT,
                         decode: (): void => {
                             const tStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x84)?.getValue('hex')
                             if (!tStr) return this.recordError('goosePdu.t', 'Not Found')
@@ -364,6 +369,7 @@ export default class Goose extends BaseHeader {
                                 dataType: {
                                     type: 'string',
                                     label: 'DataType',
+                                    contentEncoding: StringContentEncodingEnum.UTF8,
                                     enum: [
                                         'Boolean',
                                         'INT8',
@@ -383,6 +389,7 @@ export default class Goose extends BaseHeader {
                                 },
                                 value: {
                                     type: 'string',
+                                    contentEncoding: StringContentEncodingEnum.UTF8,
                                     label: 'Value'
                                 }
                             }

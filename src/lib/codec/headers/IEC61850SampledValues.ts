@@ -4,6 +4,7 @@ import TLV from 'node-tlv'
 import {HexToUInt16, HexToUInt32, HexToUInt8} from '../lib/HexToNumber'
 import {UInt16ToBERHex} from '../lib/NumberToBERHex'
 import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 type ASDUItem = {
     svID: string
@@ -158,10 +159,12 @@ export default class IEC61850SampledValues extends BaseHeader {
                             properties: {
                                 svID: {
                                     type: 'string',
+                                    contentEncoding: StringContentEncodingEnum.ASCII,
                                     label: 'SvID'
                                 },
                                 dataSet: {
                                     type: 'string',
+                                    contentEncoding: StringContentEncodingEnum.ASCII,
                                     label: 'DatSet'
                                 },
                                 smpCnt: {
@@ -174,6 +177,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 },
                                 refrTm: {
                                     type: 'string',
+                                    contentEncoding: StringContentEncodingEnum.BIGINT,
                                     label: 'RefrTm'
                                 },
                                 smpSynch: {
@@ -186,6 +190,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 },
                                 sample: {
                                     type: 'string',
+                                    contentEncoding: StringContentEncodingEnum.HEX,
                                     label: 'Sample'
                                 },
                                 smpMod: {
