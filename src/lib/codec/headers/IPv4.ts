@@ -1,6 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
+import {CodecModule} from '../types/CodecModule'
 
 export default class IPv4 extends BaseHeader {
 
@@ -53,7 +54,7 @@ export default class IPv4 extends BaseHeader {
                     if (!headerLength) this.addPostSelfEncodeHandler((): void => {
                         this.instance.hdrLen = this.length
                         this.writeBits(0, 1, 4, 4, Math.floor(this.length / 4))
-                    })
+                    }, 10)
                 }
             },
             dsfield: {
@@ -103,7 +104,19 @@ export default class IPv4 extends BaseHeader {
                     //This field's real value needs down stream codec invoke recode to fill
                     let length: number = this.instance.length as number
                     length = length ? length : 0
-                    this.writeBytes(2, Buffer.from(UInt16ToHex(length), 'hex'))
+                    if (length) {
+                        this.writeBytes(2, Buffer.from(UInt16ToHex(length), 'hex'))
+                    } else {
+                        this.addPostPacketEncodeHandler((): void => {
+                            let startCount: boolean = false
+                            let totalLength: number = 0
+                            this.codecModules.forEach((codecModule: CodecModule): void => {
+                                if (codecModule === this) startCount = true
+                                if (startCount) totalLength += codecModule.length
+                            })
+                            this.writeBytes(2, Buffer.from(UInt16ToHex(totalLength), 'hex'))
+                        })
+                    }
                 }
             },
             id: {
@@ -250,9 +263,9 @@ export default class IPv4 extends BaseHeader {
                         this.writeBytes(10, Buffer.from(UInt16ToHex(checksum), 'hex'))
                     } else {
                         this.writeBytes(10, Buffer.alloc(2, 0))
-                        this.addPostSelfEncodeHandler((): void => {
+                        this.addPostPacketEncodeHandler((): void => {
                             this.writeBytes(10, Buffer.from(UInt16ToHex(this.calculateIPv4Checksum(this.packet.subarray(this.startPos, this.endPos))), 'hex'))
-                        })
+                        }, 65535)
                     }
                 }
             },
@@ -310,6 +323,7 @@ export default class IPv4 extends BaseHeader {
             padding: {
                 type: 'array',
                 label: 'Padding',
+                //the IPv4 Header should have a length that a multiple of 32 bits
                 items: {
                     type: 'number',
                     minimum: 0,

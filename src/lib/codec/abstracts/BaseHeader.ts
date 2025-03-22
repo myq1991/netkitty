@@ -5,6 +5,7 @@ import {ProtocolFieldJSONSchema} from '../../schema/ProtocolFieldJSONSchema'
 import {CodecErrorInfo} from '../types/CodecErrorInfo'
 import {PostHandlerItem} from '../types/PostHandlerItem'
 import {SortPostHandlers} from '../lib/SortPostHandlers'
+import {CodecData} from '../types/CodecData'
 
 export abstract class BaseHeader {
 
@@ -12,8 +13,8 @@ export abstract class BaseHeader {
         return new (this as any)()
     }
 
-    protected static CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(prevCodecModules: CodecModule[]): CodecModule {
-        return new (this as any)(undefined, undefined, prevCodecModules)
+    protected static CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(codecModules: CodecModule[]): CodecModule {
+        return new (this as any)(undefined, codecModules, [])
     }
 
     public static get PROTOCOL_ID(): string {
@@ -28,12 +29,12 @@ export abstract class BaseHeader {
         return JSON.parse(JSON.stringify(this.CODEC_INSTANCE.SCHEMA))
     }
 
-    public static MATCH(prevCodecModules: CodecModule[]): boolean {
-        return this.CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(prevCodecModules ? prevCodecModules : []).match()
+    public static MATCH(codecModules: CodecModule[]): boolean {
+        return this.CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(codecModules ? codecModules : []).match()
     }
 
-    public static CREATE_INSTANCE(packet: Buffer, startPos: number, prevCodecModules: CodecModule[], postHandlers: PostHandlerItem[]): CodecModule {
-        return new (this as any)(packet, startPos, prevCodecModules, postHandlers)
+    public static CREATE_INSTANCE(codecData: CodecData, codecModules: CodecModule[]): CodecModule {
+        return new (this as any)(codecData, codecModules)
     }
 
     /**
@@ -62,9 +63,19 @@ export abstract class BaseHeader {
     public instance: HeaderTreeNode = {}
 
     /**
-     * Entire packet buffer data
+     * Entire packet buffer data getter
      */
-    public packet: Buffer = Buffer.from([])
+    public get packet(): Buffer {
+        return this.codecData.packet
+    }
+
+    /**
+     * Entire packet buffer data setter
+     * @param packet
+     */
+    public set packet(packet: Buffer) {
+        this.codecData.packet = packet
+    }
 
     /**
      * The start position of this header in the entire packet's buffer
@@ -98,10 +109,16 @@ export abstract class BaseHeader {
     protected readonly prevCodecModule: CodecModule
 
     /**
-     * Previous Codec modules
+     * Codec modules
      * @protected
      */
+    protected readonly codecModules: CodecModule[]
+
     protected readonly prevCodecModules: CodecModule[]
+
+    protected get postPacketHandlers(): PostHandlerItem[] {
+        return this.codecData.postHandlers
+    }
 
     /**
      * Registered post encode handlers (CodecModule)
@@ -115,11 +132,18 @@ export abstract class BaseHeader {
      */
     protected readonly postSelfDecodeHandlers: PostHandlerItem[] = []
 
-    constructor(packet: Buffer, startPos: number, prevCodecModules: CodecModule[], postHandlers: PostHandlerItem[]) {
-        this.packet = packet
-        this.startPos = startPos
-        prevCodecModules = prevCodecModules ? prevCodecModules : []
-        this.prevCodecModules = prevCodecModules
+    /**
+     * Codec data
+     * @protected
+     */
+    protected readonly codecData: CodecData
+
+    constructor(codecData: CodecData, codecModules: CodecModule[]) {
+        this.codecData = codecData
+        this.startPos = codecData?.startPos ? codecData.startPos : 0
+        codecModules = codecModules ? codecModules : []
+        this.codecModules = codecModules
+        this.prevCodecModules = [...codecModules]
         const prevCodecModuleIndex: number = this.prevCodecModules.length - 1
         this.prevCodecModule = this.prevCodecModules[prevCodecModuleIndex > -1 ? prevCodecModuleIndex : 0]
     }
@@ -280,7 +304,10 @@ export abstract class BaseHeader {
      * @protected
      */
     protected addPostPacketEncodeHandler(handler: () => void | Promise<void>, priority: number = 0): void {
-        //TODO
+        this.postPacketHandlers.push({
+            priority: priority,
+            handler: handler
+        })
     }
 
     /**
@@ -290,7 +317,10 @@ export abstract class BaseHeader {
      * @protected
      */
     protected addPostPacketDecodeHandler(handler: () => void | Promise<void>, priority: number = 0): void {
-        //TODO
+        this.postPacketHandlers.push({
+            priority: priority,
+            handler: handler
+        })
     }
 
     /**

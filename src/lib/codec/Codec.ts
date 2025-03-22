@@ -1,6 +1,5 @@
 import path from 'node:path'
 import {readdirSync} from 'fs'
-import {HeaderTreeNode} from './types/HeaderTreeNode'
 import {CodecModuleConstructor} from './types/CodecModuleConstructor'
 import {CodecModule} from './types/CodecModule'
 import RawData from './headers/RawData'
@@ -8,7 +7,8 @@ import {CodecDecodeResult} from './types/CodecDecodeResult'
 import {CodecEncodeInput} from './types/CodecEncodeInput'
 import {CodecErrorInfo} from './types/CodecErrorInfo'
 import {PostHandlerItem} from './types/PostHandlerItem'
-import {CodecObject} from './types/CodecObject'
+import {CodecData} from './types/CodecData'
+import {SortPostHandlers} from './lib/SortPostHandlers'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
@@ -45,85 +45,47 @@ export class Codec {
     }
 
     /**
-     * Generate hidden property key
-     * @param key
-     * @protected
-     */
-    protected generateHiddenPropertyKey(key: string): string {
-        return `__$HIDDEN__${key}`
-    }
-
-    /**
-     * Define hidden property key
-     * @param key
-     * @param value
-     * @param target
-     * @protected
-     */
-    protected defineHiddenProperty(key: string, value: any, target: Object): void {
-        Object.defineProperty(target, this.generateHiddenPropertyKey(key), {
-            configurable: false,
-            enumerable: false,
-            value: value
-        })
-    }
-
-    /**
-     * Get hidden property key
-     * @param key
-     * @param target
-     * @protected
-     */
-    protected getHiddenProperty(key: string, target: Object): any {
-        return Object.getOwnPropertyDescriptor(target, this.generateHiddenPropertyKey(key))?.value
-    }
-
-    /**
      * Internal encode headers to packet
      * @param inputs
      * @param errors
-     * @param postEncodeHandlers
      * @private
      */
-    async #encode(inputs: CodecEncodeInput[], errors: CodecErrorInfo[] = [], postEncodeHandlers: PostHandlerItem[] = []): Promise<Buffer> {
-        // const codecObject: CodecObject = {
-        //     packet: Buffer.from([]),
-        //     startPos: 0
-        // }
-        let packet: Buffer = Buffer.from([])
-        let startPos: number = 0
+    async #encode(inputs: CodecEncodeInput[], errors: CodecErrorInfo[] = []): Promise<CodecData> {
+        const codecData: CodecData = {
+            packet: Buffer.from([]),
+            startPos: 0,
+            postHandlers: []
+        }
         const codecModules: CodecModule[] = []
         for (const input of inputs) {
             const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
             if (!codecModuleConstructor) continue
-            const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, codecModules, postEncodeHandlers)
+            const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
             codecModule.instance = input.data
             await codecModule.encode()
             codecModule.errors.forEach((errorInfo: CodecErrorInfo): number => errors.push(errorInfo))
-            packet = codecModule.packet
-            startPos = codecModule.endPos
+            codecData.startPos = codecModule.endPos
             codecModules.push(codecModule)
         }
-        return packet
+        return codecData
     }
 
     /**
      * Internal decode packet
-     * @param packet
+     * @param codecData
      * @param codecModules
-     * @param startPos
-     * @param postDecodeHandlers
      * @private
      */
-    async #decode(packet: Buffer, codecModules: CodecModule[] = [], startPos: number = 0, postDecodeHandlers: PostHandlerItem[] = []): Promise<void> {
+    async #decode(codecData: CodecData, codecModules: CodecModule[] = []): Promise<void> {
         const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(codecModules))
         if (!codecModuleConstructor) throw new Error('TODO 处理没有编解码器时的状况')
-        const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(packet, startPos, codecModules, postDecodeHandlers)
+        const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
         await codecModule.decode()
-        const nextStartPos: number = codecModule.endPos
+        // const nextStartPos: number = codecModule.endPos
+        codecData.startPos = codecModule.endPos
         codecModules.push(codecModule)
-        if (nextStartPos >= packet.length) return
-        return this.#decode(packet, codecModules, nextStartPos, postDecodeHandlers)
+        if (codecData.startPos >= codecData.packet.length) return
+        return this.#decode(codecData, codecModules)
     }
 
     /**
@@ -131,11 +93,19 @@ export class Codec {
      * @param packet
      */
     public async decode(packet: Buffer): Promise<CodecDecodeResult[]> {
-
+        const codecData: CodecData = {
+            packet: packet,
+            startPos: 0,
+            postHandlers: []
+        }
         const codecModules: CodecModule[] = []
-        await this.#decode(packet, codecModules, 0, [])
-        // const headerTree: HeaderTreeNode[] = codecModules.map((codecModule: CodecModule): HeaderTreeNode => codecModule.instance)
-        //TODO post handler invoke
+        await this.#decode(codecData, codecModules)
+        codecData.postHandlers = SortPostHandlers(codecData.postHandlers)
+        let postDecodeHandler: PostHandlerItem | undefined = codecData.postHandlers.shift()
+        while (postDecodeHandler) {
+            await postDecodeHandler.handler()
+            postDecodeHandler = codecData.postHandlers.shift()
+        }
         return codecModules.map((codecModule: CodecModule): CodecDecodeResult => ({
             id: codecModule.id,
             name: codecModule.name,
@@ -149,6 +119,14 @@ export class Codec {
      * @param inputs
      */
     public async encode(inputs: CodecEncodeInput[]): Promise<Buffer> {
-        return await this.#encode(inputs)
+        const errors: CodecErrorInfo[] = []
+        const codecData: CodecData = await this.#encode(inputs, errors)
+        codecData.postHandlers = SortPostHandlers(codecData.postHandlers)
+        let postEncodeHandler: PostHandlerItem | undefined = codecData.postHandlers.shift()
+        while (postEncodeHandler) {
+            await postEncodeHandler.handler()
+            postEncodeHandler = codecData.postHandlers.shift()
+        }
+        return codecData.packet
     }
 }
