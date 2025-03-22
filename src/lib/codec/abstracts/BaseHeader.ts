@@ -89,9 +89,29 @@ export abstract class BaseHeader {
      */
     protected headerLength: number = 0
 
+    /**
+     * Previous Codec module
+     * @protected
+     */
     protected readonly prevCodecModule: CodecModule
 
+    /**
+     * Previous Codec modules
+     * @protected
+     */
     protected readonly prevCodecModules: CodecModule[]
+
+    /**
+     * Registered after encode handlers
+     * @protected
+     */
+    protected readonly afterEncodeHandlers: (() => void | Promise<void>)[] = []
+
+    /**
+     * Registered after decode handlers
+     * @protected
+     */
+    protected readonly afterDecodeHandlers: (() => void | Promise<void>)[] = []
 
     constructor(packet: Buffer, startPos: number, prevCodecModules: CodecModule[]) {
         this.packet = packet
@@ -184,6 +204,7 @@ export abstract class BaseHeader {
         const valueBitArray: string[] = Array.from(value.toString(2).padStart(bitLength, '0'))
         bitArray = bitArray.map((bit: string, index: number): string => {
             if (index < bitOffset) return bit
+            if (index >= (bitOffset + bitLength)) return bit
             return valueBitArray[index - bitOffset]
         })
         this.writeBytes(offset, Buffer.from(parseInt(bitArray.join(''), 2).toString(16).padStart(buffer.length * 2, '0'), 'hex'))
@@ -222,6 +243,24 @@ export abstract class BaseHeader {
             path: path,
             message: message
         })
+    }
+
+    /**
+     * Register after encode handler
+     * @param handler
+     * @protected
+     */
+    protected afterEncode(handler: () => void | Promise<void>): void {
+        this.afterEncodeHandlers.push(handler)
+    }
+
+    /**
+     * Register after decode handler
+     * @param handler
+     * @protected
+     */
+    protected afterDecode(handler: () => void | Promise<void>): void {
+        this.afterDecodeHandlers.push(handler)
     }
 
     /**
@@ -273,6 +312,11 @@ export abstract class BaseHeader {
         for (const decode of decodes) {
             await decode()
         }
+        let afterDecodeHandler: (() => void | Promise<void>) | undefined = this.afterDecodeHandlers.shift()
+        while (afterDecodeHandler) {
+            await afterDecodeHandler()
+            afterDecodeHandler = this.afterDecodeHandlers.shift()
+        }
     }
 
     /**
@@ -282,6 +326,11 @@ export abstract class BaseHeader {
         const encodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'encode', false)
         for (const encode of encodes) {
             await encode()
+        }
+        let afterEncodeHandler: (() => void | Promise<void>) | undefined = this.afterEncodeHandlers.shift()
+        while (afterEncodeHandler) {
+            await afterEncodeHandler()
+            afterEncodeHandler = this.afterEncodeHandlers.shift()
         }
     }
 }

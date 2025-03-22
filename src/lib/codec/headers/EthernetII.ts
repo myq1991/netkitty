@@ -1,5 +1,6 @@
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
+import {UInt16ToHex} from '../lib/NumberToHex'
 
 export default class EthernetII extends BaseHeader {
 
@@ -46,7 +47,7 @@ export default class EthernetII extends BaseHeader {
                 encode: (): void => {
                     let etherType: number = this.instance.etherType ? parseInt(this.instance.etherType.toString()) : 0x0000
                     etherType = etherType ? etherType : 0
-                    const typeBuffer: Buffer = Buffer.from(etherType.toString(16), 'hex')
+                    const typeBuffer: Buffer = Buffer.from(UInt16ToHex(etherType), 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
                     this.writeBytes(12, typeBuffer.subarray(0, 2))
                 }
