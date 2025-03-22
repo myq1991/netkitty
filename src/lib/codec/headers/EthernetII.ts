@@ -1,6 +1,7 @@
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {UInt16ToHex} from '../lib/NumberToHex'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 export default class EthernetII extends BaseHeader {
 
@@ -15,6 +16,7 @@ export default class EthernetII extends BaseHeader {
                 minLength: 17,
                 maxLength: 17,
                 label: 'Destination',
+                contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     this.instance.dmac = Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
                 },
@@ -28,6 +30,7 @@ export default class EthernetII extends BaseHeader {
                 minLength: 17,
                 maxLength: 17,
                 label: 'Source',
+                contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     this.instance.smac = Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
                 },

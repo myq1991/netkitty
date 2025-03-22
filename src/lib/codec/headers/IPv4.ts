@@ -2,6 +2,7 @@ import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
 import {CodecModule} from '../types/CodecModule'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 export default class IPv4 extends BaseHeader {
 
@@ -274,6 +275,7 @@ export default class IPv4 extends BaseHeader {
                 label: 'Source Address',
                 minLength: 7,
                 maxLength: 15,
+                contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     const sipBuffer: Buffer = this.readBytes(12, 4)
                     this.instance.sip = Array.from(sipBuffer).join('.')
@@ -293,6 +295,7 @@ export default class IPv4 extends BaseHeader {
                 minLength: 7,
                 maxLength: 15,
                 label: 'Destination Address',
+                contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     const dipBuffer: Buffer = this.readBytes(16, 4)
                     this.instance.dip = Array.from(dipBuffer).join('.')
@@ -308,11 +311,9 @@ export default class IPv4 extends BaseHeader {
                 }
             },
             options: {
-                type: 'array',
+                type: 'string',
                 label: 'Options',
-                items: {
-                    type: 'number'
-                },
+                contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
                     //TODO
                 },
@@ -321,14 +322,10 @@ export default class IPv4 extends BaseHeader {
                 }
             },
             padding: {
-                type: 'array',
+                type: 'string',
                 label: 'Padding',
+                contentEncoding: StringContentEncodingEnum.BINARY,
                 //the IPv4 Header should have a length that a multiple of 32 bits
-                items: {
-                    type: 'number',
-                    minimum: 0,
-                    maximum: 0
-                },
                 decode: (): void => {
                     //TODO
                 },
