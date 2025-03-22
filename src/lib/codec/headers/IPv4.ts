@@ -3,6 +3,7 @@ import {BaseHeader} from '../abstracts/BaseHeader'
 import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
 import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
+import {FixHexString} from '../lib/FixHexString'
 
 export default class IPv4 extends BaseHeader {
 
@@ -313,24 +314,25 @@ export default class IPv4 extends BaseHeader {
             options: {
                 type: 'string',
                 label: 'Options',
+                minLength: 0,
+                maxLength: 40,
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
-                    //TODO
+                    if (this.length < (this.instance.hdrLen as number)) {
+                        const restBytes: Buffer = this.readBytes(this.length, (this.instance.hdrLen as number) - this.length)
+                        this.instance.options = restBytes.toString('hex')
+                    }
                 },
                 encode: (): void => {
-                    //TODO
-                }
-            },
-            padding: {
-                type: 'string',
-                label: 'Padding',
-                contentEncoding: StringContentEncodingEnum.BINARY,
-                //the IPv4 Header should have a length that a multiple of 32 bits
-                decode: (): void => {
-                    //TODO
-                },
-                encode: (): void => {
-                    //TODO
+                    if (this.instance.options) {
+                        let optionsBuffer: Buffer = Buffer.from(FixHexString(this.instance.options as string), 'hex')
+                        if (optionsBuffer.length > 40) optionsBuffer = optionsBuffer.subarray(0, 40)
+                        const estimateHdrLen: number = this.length + optionsBuffer.length
+                        if (estimateHdrLen % 4) {
+                            optionsBuffer = Buffer.concat([optionsBuffer, Buffer.from([0x00])])
+                        }
+                        this.writeBytes(this.length, optionsBuffer)
+                    }
                 }
             }
         }
