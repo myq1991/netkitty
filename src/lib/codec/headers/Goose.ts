@@ -15,12 +15,14 @@ import {
     Int16ToBERHex,
     Int32ToBERHex,
     Int64ToBERHex,
-    Int8ToBERHex, UInt16ToBERHex,
+    Int8ToBERHex,
+    UInt16ToBERHex,
     UInt32ToBERHex,
     UInt8ToBERHex
 } from '../lib/NumberToBERHex'
 import {Float32ToHex, UInt16ToHex} from '../lib/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
+import {UInt32ToBERBuffer} from '../lib/NumberToBERBuffer'
 
 type AllDataItem = {
     dataType: string
@@ -183,7 +185,7 @@ export default class Goose extends BaseHeader {
                                 this.recordError('goosePdu.timeAllowedtoLive', 'This INTEGER value shall have a range of 1 to 4294967295')
                                 timeAllowedtoLiveValue = 4294967295
                             }
-                            const timeAllowedtoLiveTLV: TLV = new TLV(0x81, Buffer.from(UInt32ToBERHex(timeAllowedtoLiveValue), 'hex'))
+                            const timeAllowedtoLiveTLV: TLV = new TLV(0x81, UInt32ToBERBuffer(timeAllowedtoLiveValue))
                             this.TLVChild.push(timeAllowedtoLiveTLV)
                         }
                     },
@@ -264,7 +266,7 @@ export default class Goose extends BaseHeader {
                                 this.recordError('goosePdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
                             }
                             if (stNumValue === undefined) return this.recordError('goosePdu.stNum', 'Not Found')
-                            const stNumTLV: TLV = new TLV(0x85, Buffer.from(UInt32ToBERHex(stNumValue), 'hex'))
+                            const stNumTLV: TLV = new TLV(0x85, UInt32ToBERBuffer(stNumValue))
                             this.TLVChild.push(stNumTLV)
                         }
                     },
@@ -285,7 +287,7 @@ export default class Goose extends BaseHeader {
                                 this.recordError('goosePdu.sqNum', 'This INTEGER value shall have a range of 1 to 4294967295')
                             }
                             if (sqNumValue === undefined) return this.recordError('goosePdu.sqNum', 'Not Found')
-                            const sqNumTLV: TLV = new TLV(0x86, Buffer.from(UInt32ToBERHex(sqNumValue), 'hex'))
+                            const sqNumTLV: TLV = new TLV(0x86, UInt32ToBERBuffer(sqNumValue))
                             this.TLVChild.push(sqNumTLV)
                         }
                     },
@@ -322,7 +324,7 @@ export default class Goose extends BaseHeader {
                                 this.recordError('goosePdu.confRev', 'This INTEGER value shall have a range of 0 to 4294967295')
                             }
                             if (confRevValue === undefined) return this.recordError('goosePdu.confRev', 'Not Found')
-                            const confRevTLV: TLV = new TLV(0x88, UInt32ToBERHex(confRevValue))
+                            const confRevTLV: TLV = new TLV(0x88, UInt32ToBERBuffer(confRevValue))
                             this.TLVChild.push(confRevTLV)
                         }
                     },
@@ -355,7 +357,7 @@ export default class Goose extends BaseHeader {
                         encode: (): void => {
                             let numDatSetEntriesValue: number | undefined = this.instance.goosePdu.numDatSetEntries.getValue()
                             if (numDatSetEntriesValue === undefined) return this.recordError('goosePdu.numDatSetEntries', 'Not Found')
-                            const numDatSetEntriesTLV: TLV = new TLV(0x8A, Buffer.from(UInt32ToBERHex(numDatSetEntriesValue), 'hex'))
+                            const numDatSetEntriesTLV: TLV = new TLV(0x8A, UInt32ToBERBuffer(numDatSetEntriesValue))
                             this.TLVChild.push(numDatSetEntriesTLV)
                         }
                     },
