@@ -46,7 +46,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                 label: 'Length',
                 decode: (): void => {
                     this.instance.length.setValue(parseInt(this.readBytes(2, 2).toString('hex'), 16))
-                    if (this.instance.length.isUndefined()) this.recordError('length', 'Not Found')
+                    if (this.instance.length.isUndefined()) this.recordError(this.instance.length.getPath(), 'Not Found')
                 },
                 encode: (): void => {
                     let length: number = parseInt(this.instance.length.getValue().toString())
@@ -142,13 +142,13 @@ export default class IEC61850SampledValues extends BaseHeader {
                         label: 'Number of ASDU',
                         decode: (): void => {
                             const noASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
-                            if (!noASDUTLV) return this.recordError('svPdu.noASDU', 'Not Found')
+                            if (!noASDUTLV) return this.recordError(this.instance.svPdu.noASDU.getPath(), 'Not Found')
                             const noASDUNum: number = HexToUInt16(noASDUTLV.getValue('hex'))
-                            if (!noASDUNum) this.recordError('svPdu.noASDU', 'Number of ASDU should be greater or equal to 1')
+                            if (!noASDUNum) this.recordError(this.instance.svPdu.noASDU.getPath(), 'Number of ASDU should be greater or equal to 1')
                             this.instance.svPdu.noASDU.setValue(noASDUNum)
                         },
                         encode: (): void => {
-                            if (this.instance.svPdu.noASDU.isUndefined()) this.recordError('svPdu.noASDU', 'noASDU is not set')
+                            if (this.instance.svPdu.noASDU.isUndefined()) this.recordError(this.instance.svPdu.noASDU.getPath(), 'noASDU is not set')
                             this.TLVChild.push(new TLV(0x80, UInt16ToBERHex(parseInt(this.instance.svPdu.noASDU.getValue().toString()))))
                         }
                     },
@@ -209,7 +209,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                             }
                             const ASDUTLVs: TLV[] = seqASDUTLV.getChild()
                             ASDUTLVs.forEach((ASDUTLV: TLV, index: number): void => {
-                                if (ASDUTLV.getTag('number') !== 0x30) this.recordError(`svPdu.seqASDU[${index}]`, 'Invalid ASDU item tag')
+                                if (ASDUTLV.getTag('number') !== 0x30) this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'Invalid ASDU item tag')
                                 const ASDUAttributeTLVs: TLV[] = ASDUTLV.getChild()
                                 let svID: string
                                 let dataSet: string
@@ -225,7 +225,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (svIDTLV) {
                                     svID = svIDTLV.getValue('buffer').toString('ascii')
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'svID Not Found')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'svID Not Found')
                                 }
                                 //dataSet (optional)
                                 const dataSetTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x81)
@@ -237,14 +237,14 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (smpCntTLV) {
                                     smpCnt = BufferToUInt16(smpCntTLV.getValue('buffer'))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'smpCnt Not Found')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'smpCnt Not Found')
                                 }
                                 //confRev
                                 const confRevTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x83)
                                 if (confRevTLV) {
                                     confRev = BufferToUInt32(confRevTLV.getValue('buffer'))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'confRev Not Found')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'confRev Not Found')
                                 }
                                 //refrTm (optional)
                                 const refrTmTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x84)
@@ -256,7 +256,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (smpSynchTLV) {
                                     smpSynch = BufferToUInt8(smpSynchTLV.getValue('buffer'))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'smpSynch Not Found')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'smpSynch Not Found')
                                 }
                                 //smpRate (optional)
                                 const smpRateTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x86)
@@ -268,7 +268,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (sampleTLV) {
                                     sample = sampleTLV.getValue('hex')
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'sample Not Found')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'sample Not Found')
                                 }
                                 //smpMod (optional)
                                 const smpModTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x86)
@@ -298,7 +298,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (seqASDUItem.svID !== undefined) {
                                     seqASDUItemTLVs.push(new TLV(0x80, Buffer.from(seqASDUItem.svID ? seqASDUItem.svID : '', 'ascii')))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No svID')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'No svID')
                                 }
                                 //dataSet
                                 if (seqASDUItem.dataSet !== undefined) seqASDUItemTLVs.push(new TLV(0x81, Buffer.from(seqASDUItem.dataSet ? seqASDUItem.dataSet : '', 'ascii')))
@@ -306,13 +306,13 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (seqASDUItem.smpCnt !== undefined) {
                                     seqASDUItemTLVs.push(new TLV(0x82, UInt16ToHex(seqASDUItem.smpCnt)))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No smpCnt')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'No smpCnt')
                                 }
                                 // confRev
                                 if (seqASDUItem.confRev !== undefined) {
                                     seqASDUItemTLVs.push(new TLV(0x83, UInt32ToHex(seqASDUItem.confRev)))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No confRev')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'No confRev')
                                 }
                                 // refrTm
                                 if (seqASDUItem.refrTm !== undefined) seqASDUItemTLVs.push(new TLV(0x84, Buffer.from(BigInt(seqASDUItem.refrTm).toString(16).padStart(8 * 2, '0'), 'hex')))
@@ -320,7 +320,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (seqASDUItem.smpSynch !== undefined) {
                                     seqASDUItemTLVs.push(new TLV(0x85, UInt8ToHex(seqASDUItem.smpSynch)))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No smpSynch')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'No smpSynch')
                                 }
                                 // smpRate
                                 if (seqASDUItem.smpRate !== undefined) seqASDUItemTLVs.push(new TLV(0x86, UInt16ToHex(seqASDUItem.smpRate)))
@@ -328,7 +328,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 if (seqASDUItem.sample !== undefined) {
                                     seqASDUItemTLVs.push(new TLV(0x87, Buffer.from(seqASDUItem.sample, 'hex')))
                                 } else {
-                                    this.recordError(`svPdu.seqASDU[${index}]`, 'No sample')
+                                    this.recordError(this.instance.svPdu.seqASDU.getPath(index), 'No sample')
                                 }
                                 // smpMod
                                 if (seqASDUItem.smpMod !== undefined) seqASDUItemTLVs.push(new TLV(0x88, UInt16ToHex(seqASDUItem.smpMod)))
