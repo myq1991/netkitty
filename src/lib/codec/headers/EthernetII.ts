@@ -21,7 +21,7 @@ export default class EthernetII extends BaseHeader {
                     this.instance.dmac.setValue(Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: (): void => {
-                    const dmac: number[] = this.instance.dmac.getValue().toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
+                    const dmac: number[] = this.instance.dmac.getValue().toString().split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0)
                     this.writeBytes(0, Buffer.alloc(6, Buffer.from(dmac)))
                 }
             },
@@ -35,7 +35,7 @@ export default class EthernetII extends BaseHeader {
                     this.instance.smac.setValue(Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: (): void => {
-                    const smac: number[] = this.instance.smac.getValue().toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
+                    const smac: number[] = this.instance.smac.getValue().toString().split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0)
                     this.writeBytes(6, Buffer.alloc(6, Buffer.from(smac)))
                 }
             },

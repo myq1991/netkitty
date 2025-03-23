@@ -58,7 +58,7 @@ export default class Goose extends BaseHeader {
                 label: 'Length',
                 decode: (): void => {
                     this.instance.length.setValue(parseInt(this.readBytes(2, 2).toString('hex'), 16))
-                    if (this.instance.length.isUndefined()) this.recordError('length', 'Not Found')
+                    if (this.instance.length.isUndefined()) this.recordError(this.instance.length.getPath(), 'Not Found')
                 },
                 encode: (): void => {
                     let length: number = parseInt(this.instance.length.getValue().toString())
@@ -154,15 +154,15 @@ export default class Goose extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.ASCII,
                         decode: (): void => {
                             const gocbRefTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
-                            if (!gocbRefTLV) return this.recordError('goosePdu.gocbRef', 'Not Found')
+                            if (!gocbRefTLV) return this.recordError(this.instance.goosePdu.gocbRef.getPath(), 'Not Found')
                             this.instance.goosePdu.gocbRef.setValue(gocbRefTLV.getValue('buffer').toString('ascii'))
                         },
                         encode: (): void => {
                             const gocbRefValue: string = this.instance.goosePdu.gocbRef.getValue()
-                            if (!gocbRefValue) return this.recordError('goosePdu.gocbRef', 'Not Found')
+                            if (!gocbRefValue) return this.recordError(this.instance.goosePdu.gocbRef.getPath(), 'Not Found')
                             let gocbRefBuffer: Buffer = Buffer.from(gocbRefValue, 'ascii')
                             if (gocbRefBuffer.length > 129) {
-                                this.recordError('goosePdu.gocbRef', 'This VisibleString shall have a maximum size of 129 octets')
+                                this.recordError(this.instance.goosePdu.gocbRef.getPath(), 'This VisibleString shall have a maximum size of 129 octets')
                                 gocbRefBuffer = gocbRefBuffer.subarray(0, 129)
                             }
                             this.TLVChild.push(new TLV(0x80, gocbRefBuffer))
@@ -175,14 +175,14 @@ export default class Goose extends BaseHeader {
                         label: 'TimeAllowedtoLive',
                         decode: (): void => {
                             const timeAllowedtoLiveString: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x81)?.getValue('hex')
-                            if (!timeAllowedtoLiveString) return this.recordError('goosePdu.timeAllowedtoLive', 'Not Found')
+                            if (!timeAllowedtoLiveString) return this.recordError(this.instance.goosePdu.timeAllowedtoLive.getPath(), 'Not Found')
                             this.instance.goosePdu.timeAllowedtoLive.setValue(HexToUInt32(timeAllowedtoLiveString))
                         },
                         encode: (): void => {
                             let timeAllowedtoLiveValue: number = this.instance.goosePdu.timeAllowedtoLive.getValue()
-                            if (timeAllowedtoLiveValue === undefined) return this.recordError('goosePdu.timeAllowedtoLive', 'Not Found')
+                            if (timeAllowedtoLiveValue === undefined) return this.recordError(this.instance.goosePdu.timeAllowedtoLive.getPath(), 'Not Found')
                             if (timeAllowedtoLiveValue < 1 || timeAllowedtoLiveValue > 4294967295) {
-                                this.recordError('goosePdu.timeAllowedtoLive', 'This INTEGER value shall have a range of 1 to 4294967295')
+                                this.recordError(this.instance.goosePdu.timeAllowedtoLive.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
                                 timeAllowedtoLiveValue = 4294967295
                             }
                             const timeAllowedtoLiveTLV: TLV = new TLV(0x81, UInt32ToBERBuffer(timeAllowedtoLiveValue))
@@ -196,15 +196,15 @@ export default class Goose extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.ASCII,
                         decode: (): void => {
                             const datSetTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x82)
-                            if (!datSetTLV) return this.recordError('goosePdu.datSet', 'Not Found')
+                            if (!datSetTLV) return this.recordError(this.instance.goosePdu.datSet.getPath(), 'Not Found')
                             this.instance.goosePdu.datSet.setValue(datSetTLV.getValue('buffer').toString('ascii'))
                         },
                         encode: (): void => {
                             const datSetValue: string = this.instance.goosePdu.datSet.getValue()
-                            if (!datSetValue) return this.recordError('goosePdu.datSet', 'Not Found')
+                            if (!datSetValue) return this.recordError(this.instance.goosePdu.datSet.getPath(), 'Not Found')
                             let datSetBuffer: Buffer = Buffer.from(datSetValue, 'ascii')
                             if (datSetBuffer.length > 129) {
-                                this.recordError('goosePdu.datSet', 'This VisibleString shall have a maximum size of 129 octets')
+                                this.recordError(this.instance.goosePdu.datSet.getPath(), 'This VisibleString shall have a maximum size of 129 octets')
                                 datSetBuffer = datSetBuffer.subarray(0, 129)
                             }
                             this.TLVChild.push(new TLV(0x82, datSetBuffer))
@@ -217,15 +217,15 @@ export default class Goose extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.ASCII,
                         decode: (): void => {
                             const goIDTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x83)
-                            if (!goIDTLV) return this.recordError('goosePdu.goID', 'Not Found')
+                            if (!goIDTLV) return this.recordError(this.instance.goosePdu.goID.getPath(), 'Not Found')
                             this.instance.goosePdu.goID.setValue(goIDTLV.getValue('buffer').toString('ascii'))
                         },
                         encode: (): void => {
                             const goIDValue: string = this.instance.goosePdu.goID.getValue()
-                            if (!goIDValue) return this.recordError('goosePdu.goID', 'Not Found')
+                            if (!goIDValue) return this.recordError(this.instance.goosePdu.goID.getPath(), 'Not Found')
                             let goIDBuffer: Buffer = Buffer.from(goIDValue, 'ascii')
                             if (goIDBuffer.length > 65) {
-                                this.recordError('goosePdu.goID', 'This VisibleString shall have a maximum size of 65 octets')
+                                this.recordError(this.instance.goosePdu.goID.getPath(), 'This VisibleString shall have a maximum size of 65 octets')
                                 goIDBuffer = goIDBuffer.subarray(0, 65)
                             }
                             this.TLVChild.push(new TLV(0x83, goIDBuffer))
@@ -237,12 +237,12 @@ export default class Goose extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.BIGINT,
                         decode: (): void => {
                             const tStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x84)?.getValue('hex')
-                            if (!tStr) return this.recordError('goosePdu.t', 'Not Found')
+                            if (!tStr) return this.recordError(this.instance.goosePdu.t.getPath(), 'Not Found')
                             this.instance.goosePdu.t.setValue(BigInt(`0x${tStr}`).toString())
                         },
                         encode: (): void => {
                             const tStr: string = this.instance.goosePdu.t.getValue()
-                            if (tStr === undefined) return this.recordError('goosePdu.t', 'Not Found')
+                            if (tStr === undefined) return this.recordError(this.instance.goosePdu.t.getPath(), 'Not Found')
                             const tBigIntValue: bigint = BigInt(tStr)
                             const tTLV: TLV = new TLV(0x84, Buffer.from(tBigIntValue.toString(16).padStart(8 * 2, '0'), 'hex'))
                             this.TLVChild.push(tTLV)
@@ -255,17 +255,17 @@ export default class Goose extends BaseHeader {
                         label: 'StNum',
                         decode: (): void => {
                             const stNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x85)?.getValue('hex')
-                            if (!stNumStr) return this.recordError('goosePdu.stNum', 'Not Found')
+                            if (!stNumStr) return this.recordError(this.instance.goosePdu.stNum.getPath(), 'Not Found')
                             this.instance.goosePdu.stNum.setValue(HexToUInt32(stNumStr))
-                            if (this.instance.goosePdu.stNum.getValue() < 1 || this.instance.goosePdu.stNum.getValue() > 4294967295) this.recordError('goosePdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
+                            if (this.instance.goosePdu.stNum.getValue() < 1 || this.instance.goosePdu.stNum.getValue() > 4294967295) this.recordError(this.instance.goosePdu.stNum.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
                         },
                         encode: (): void => {
                             let stNumValue: number = this.instance.goosePdu.stNum.getValue()
                             if (stNumValue < 1 || stNumValue > 4294967295) {
                                 stNumValue = 4294967295
-                                this.recordError('goosePdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
+                                this.recordError(this.instance.goosePdu.stNum.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
                             }
-                            if (stNumValue === undefined) return this.recordError('goosePdu.stNum', 'Not Found')
+                            if (stNumValue === undefined) return this.recordError(this.instance.goosePdu.stNum.getPath(), 'Not Found')
                             const stNumTLV: TLV = new TLV(0x85, UInt32ToBERBuffer(stNumValue))
                             this.TLVChild.push(stNumTLV)
                         }
@@ -277,16 +277,16 @@ export default class Goose extends BaseHeader {
                         label: 'SqNum',
                         decode: (): void => {
                             const sqNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x86)?.getValue('hex')
-                            if (!sqNumStr) return this.recordError('goosePdu.sqNum', 'Not Found')
+                            if (!sqNumStr) return this.recordError(this.instance.goosePdu.sqNum.getPath(), 'Not Found')
                             this.instance.goosePdu.sqNum.setValue(HexToUInt32(sqNumStr))
                         },
                         encode: (): void => {
                             let sqNumValue: number = this.instance.goosePdu.sqNum.getValue()
                             if (sqNumValue < 0 || sqNumValue > 4294967295) {
                                 sqNumValue = 4294967295
-                                this.recordError('goosePdu.sqNum', 'This INTEGER value shall have a range of 1 to 4294967295')
+                                this.recordError(this.instance.goosePdu.sqNum.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
                             }
-                            if (sqNumValue === undefined) return this.recordError('goosePdu.sqNum', 'Not Found')
+                            if (sqNumValue === undefined) return this.recordError(this.instance.goosePdu.sqNum.getPath(), 'Not Found')
                             const sqNumTLV: TLV = new TLV(0x86, UInt32ToBERBuffer(sqNumValue))
                             this.TLVChild.push(sqNumTLV)
                         }
@@ -296,14 +296,14 @@ export default class Goose extends BaseHeader {
                         label: 'Simulation',
                         decode: (): void => {
                             const simulationStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x87)?.getValue('hex')
-                            if (!simulationStr) return this.recordError('goosePdu.simulation', 'Not Found')
+                            if (!simulationStr) return this.recordError(this.instance.goosePdu.simulation.getPath(), 'Not Found')
                             const simulationNum: number = parseInt(simulationStr, 16)
-                            if (simulationNum > 1) this.recordError('goosePdu.simulation', 'This Boolean shall have a range of TRUE, FALSE')
+                            if (simulationNum > 1) this.recordError(this.instance.goosePdu.simulation.getPath(), 'This Boolean shall have a range of TRUE, FALSE')
                             this.instance.goosePdu.simulation.setValue(!!simulationNum)
                         },
                         encode: (): void => {
                             let simulationValue: boolean | undefined = this.instance.goosePdu.simulation.getValue()
-                            if (simulationValue === undefined) return this.recordError('goosePdu.simulation', 'Not Found')
+                            if (simulationValue === undefined) return this.recordError(this.instance.goosePdu.simulation.getPath(), 'Not Found')
                             const simulationNum: number = simulationValue ? 1 : 0
                             const simulationTLV: TLV = new TLV(0x87, Buffer.from(simulationNum.toString(16).padStart(2, '0'), 'hex'))
                             this.TLVChild.push(simulationTLV)
@@ -314,16 +314,16 @@ export default class Goose extends BaseHeader {
                         label: 'ConfRev',
                         decode: (): void => {
                             const confRevStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x88)?.getValue('hex')
-                            if (!confRevStr) return this.recordError('goosePdu.confRev', 'Not Found')
+                            if (!confRevStr) return this.recordError(this.instance.goosePdu.confRev.getPath(), 'Not Found')
                             this.instance.goosePdu.confRev.setValue(HexToUInt32(confRevStr))
                         },
                         encode: (): void => {
                             let confRevValue: number = this.instance.goosePdu.confRev.getValue()
                             if (confRevValue > 4294967295) {
                                 confRevValue = 4294967295
-                                this.recordError('goosePdu.confRev', 'This INTEGER value shall have a range of 0 to 4294967295')
+                                this.recordError(this.instance.goosePdu.confRev.getPath(), 'This INTEGER value shall have a range of 0 to 4294967295')
                             }
-                            if (confRevValue === undefined) return this.recordError('goosePdu.confRev', 'Not Found')
+                            if (confRevValue === undefined) return this.recordError(this.instance.goosePdu.confRev.getPath(), 'Not Found')
                             const confRevTLV: TLV = new TLV(0x88, UInt32ToBERBuffer(confRevValue))
                             this.TLVChild.push(confRevTLV)
                         }
@@ -333,14 +333,14 @@ export default class Goose extends BaseHeader {
                         label: 'NdsCom',
                         decode: (): void => {
                             const ndsComStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x89)?.getValue('hex')
-                            if (!ndsComStr) return this.recordError('goosePdu.ndsCom', 'Not Found')
+                            if (!ndsComStr) return this.recordError(this.instance.goosePdu.ndsCom.getPath(), 'Not Found')
                             const ndsComNum: number = parseInt(ndsComStr, 16)
-                            if (ndsComNum > 1) this.recordError('goosePdu.ndsCom', 'This Boolean shall have a range of TRUE, FALSE')
+                            if (ndsComNum > 1) this.recordError(this.instance.goosePdu.ndsCom.getPath(), 'This Boolean shall have a range of TRUE, FALSE')
                             this.instance.goosePdu.ndsCom.setValue(!!ndsComNum)
                         },
                         encode: (): void => {
                             let ndsComValue: boolean | undefined = this.instance.goosePdu.ndsCom.getValue()
-                            if (ndsComValue === undefined) return this.recordError('goosePdu.ndsCom', 'Not Found')
+                            if (ndsComValue === undefined) return this.recordError(this.instance.goosePdu.ndsCom.getPath(), 'Not Found')
                             const ndsComNum: number = ndsComValue ? 1 : 0
                             const ndsComTLV: TLV = new TLV(0x89, Buffer.from(ndsComNum.toString(16).padStart(2, '0'), 'hex'))
                             this.TLVChild.push(ndsComTLV)
@@ -351,12 +351,12 @@ export default class Goose extends BaseHeader {
                         label: 'NumDatSetEntries',
                         decode: (): void => {
                             const numDatSetEntriesStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x8A)?.getValue('hex')
-                            if (!numDatSetEntriesStr) return this.recordError('goosePdu.numDatSetEntries', 'Not Found')
+                            if (!numDatSetEntriesStr) return this.recordError(this.instance.goosePdu.numDatSetEntries.getPath(), 'Not Found')
                             this.instance.goosePdu.numDatSetEntries.setValue(parseInt(numDatSetEntriesStr, 16))
                         },
                         encode: (): void => {
                             let numDatSetEntriesValue: number | undefined = this.instance.goosePdu.numDatSetEntries.getValue()
-                            if (numDatSetEntriesValue === undefined) return this.recordError('goosePdu.numDatSetEntries', 'Not Found')
+                            if (numDatSetEntriesValue === undefined) return this.recordError(this.instance.goosePdu.numDatSetEntries.getPath(), 'Not Found')
                             const numDatSetEntriesTLV: TLV = new TLV(0x8A, UInt32ToBERBuffer(numDatSetEntriesValue))
                             this.TLVChild.push(numDatSetEntriesTLV)
                         }
@@ -532,104 +532,104 @@ export default class Goose extends BaseHeader {
                                             if (availableStringValues.includes(stringValue)) {
                                                 booleanIntValue = availableStringValues.indexOf(stringValue)
                                             } else {
-                                                this.recordError(`goosePdu.allData[${index}]`, 'Invalid Boolean value')
+                                                this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid Boolean value')
                                             }
                                             return new TLV(0x83, Buffer.from(booleanIntValue.toString(16).padStart(2, '0'), 'hex'))
                                         }
                                         case 'INT8': {
                                             let intValue: number = parseInt(dataItem.value)
-                                            if (isNaN(intValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT8 value')
+                                            if (isNaN(intValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT8 value')
                                             intValue = intValue ? intValue : 0
-                                            if (intValue < -128 || intValue > 127) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT8 value')
+                                            if (intValue < -128 || intValue > 127) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT8 value')
                                             return new TLV(0x85, Buffer.from(Int8ToBERHex(intValue).padStart(2 * 2, '0'), 'hex'))
                                         }
                                         case 'INT16': {
                                             let intValue: number = parseInt(dataItem.value)
-                                            if (isNaN(intValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT16 value')
+                                            if (isNaN(intValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT16 value')
                                             intValue = intValue ? intValue : 0
-                                            if (intValue < -32768 || intValue > 32767) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT16 value')
+                                            if (intValue < -32768 || intValue > 32767) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT16 value')
                                             return new TLV(0x85, Buffer.from(Int16ToBERHex(intValue).padStart(3 * 2, '0'), 'hex'))
                                         }
                                         case'INT32': {
                                             let intValue: number = parseInt(dataItem.value)
-                                            if (isNaN(intValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT32 value')
+                                            if (isNaN(intValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT32 value')
                                             intValue = intValue ? intValue : 0
-                                            if (intValue < -2147483648 || intValue > 2147483647) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT32 value')
+                                            if (intValue < -2147483648 || intValue > 2147483647) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT32 value')
                                             return new TLV(0x85, Buffer.from(Int32ToBERHex(intValue).padStart(5 * 2, '0'), 'hex'))
                                         }
                                         case'INT64': {
                                             let intValue: bigint = BigInt(dataItem.value)
-                                            if (intValue < BigInt('-9223372036854775808') || intValue > BigInt('9223372036854775807')) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT64 value')
+                                            if (intValue < BigInt('-9223372036854775808') || intValue > BigInt('9223372036854775807')) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT64 value')
                                             return new TLV(0x85, Buffer.from(Int64ToBERHex(intValue).padStart(9 * 2, '0'), 'hex'))
                                         }
                                         case'INT8U': {
                                             let uintValue: number = parseInt(dataItem.value)
-                                            if (isNaN(uintValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT8U value')
+                                            if (isNaN(uintValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT8U value')
                                             uintValue = uintValue ? uintValue : 0
-                                            if (uintValue < 0 || uintValue > 255) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT8U value')
+                                            if (uintValue < 0 || uintValue > 255) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT8U value')
                                             return new TLV(0x86, Buffer.from(UInt8ToBERHex(uintValue).padStart(2 * 2, '0'), 'hex'))
                                         }
                                         case'INT16U': {
                                             let uintValue: number = parseInt(dataItem.value)
-                                            if (isNaN(uintValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT16U value')
+                                            if (isNaN(uintValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT16U value')
                                             uintValue = uintValue ? uintValue : 0
-                                            if (uintValue < 0 || uintValue > 65535) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT16U value')
+                                            if (uintValue < 0 || uintValue > 65535) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT16U value')
                                             return new TLV(0x86, Buffer.from(UInt16ToBERHex(uintValue).padStart(3 * 2, '0'), 'hex'))
                                         }
                                         case'INT32U': {
                                             let uintValue: number = parseInt(dataItem.value)
-                                            if (isNaN(uintValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT32U value')
+                                            if (isNaN(uintValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT32U value')
                                             uintValue = uintValue ? uintValue : 0
-                                            if (uintValue < 0 || uintValue > 4294967295) this.recordError(`goosePdu.allData[${index}]`, 'Invalid INT32U value')
+                                            if (uintValue < 0 || uintValue > 4294967295) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid INT32U value')
                                             return new TLV(0x86, Buffer.from(UInt32ToBERHex(uintValue).padStart(5 * 2, '0'), 'hex'))
                                         }
                                         case'FLOAT32': {
                                             let float32Value: number = parseFloat(dataItem.value)
-                                            if (isNaN(float32Value)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid FLOAT32 value')
+                                            if (isNaN(float32Value)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid FLOAT32 value')
                                             float32Value = float32Value ? float32Value : 0
                                             return new TLV(0x86, Buffer.from(Float32ToHex(float32Value).padStart(4 * 2, '0'), 'hex'))
                                         }
                                         case'CODED-ENUM': {
                                             let codedEnumValue: number = parseInt(dataItem.value)
-                                            if (isNaN(codedEnumValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid CODED-ENUM value')
+                                            if (isNaN(codedEnumValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid CODED-ENUM value')
                                             codedEnumValue = codedEnumValue ? codedEnumValue : 0
                                             return new TLV(0x84, Buffer.from(UInt16ToBERHex(codedEnumValue).padStart(2 * 2, '0'), 'hex'))
                                         }
                                         case'OCTET-STRING': {
                                             const asciiText: string = dataItem.value
                                             if (!asciiText) {
-                                                this.recordError(`goosePdu.allData[${index}]`, 'Empty OCTET-STRING, ignored')
+                                                this.recordError(this.instance.goosePdu.allData.getPath(index), 'Empty OCTET-STRING, ignored')
                                                 return null
                                             }
-                                            if (asciiText.length > 20) this.recordError(`goosePdu.allData[${index}]`, 'OCTET-STRING too long')
+                                            if (asciiText.length > 20) this.recordError(this.instance.goosePdu.allData.getPath(index), 'OCTET-STRING too long')
                                             const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(20 * 2)
                                             return new TLV(0x89, Buffer.from(hex, 'hex').subarray(0, 20))
                                         }
                                         case'VISIBLE-STRING': {
                                             const asciiText: string = dataItem.value
                                             if (!asciiText) {
-                                                this.recordError(`goosePdu.allData[${index}]`, 'Empty VISIBLE-STRING, ignored')
+                                                this.recordError(this.instance.goosePdu.allData.getPath(index), 'Empty VISIBLE-STRING, ignored')
                                                 return null
                                             }
-                                            if (asciiText.length > 35) this.recordError(`goosePdu.allData[${index}]`, 'VISIBLE-STRING too long')
+                                            if (asciiText.length > 35) this.recordError(this.instance.goosePdu.allData.getPath(index), 'VISIBLE-STRING too long')
                                             const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(35 * 2)
                                             return new TLV(0x8a, Buffer.from(hex, 'hex').subarray(0, 35))
                                         }
                                         case'TimeStamp': {
                                             let timestamp: number = parseInt(dataItem.value)
-                                            if (isNaN(timestamp)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid TimeStamp value')
+                                            if (isNaN(timestamp)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid TimeStamp value')
                                             timestamp = timestamp ? timestamp : 0
                                             return new TLV(0x91, Buffer.from(timestamp.toString(16).padStart(8 * 2, '0'), 'hex'))
                                         }
                                         case'Quality': {
                                             const bitString: string = dataItem.value
                                             let intValue: number = parseInt(bitString, 2)
-                                            if (isNaN(intValue)) this.recordError(`goosePdu.allData[${index}]`, 'Invalid Quality value')
+                                            if (isNaN(intValue)) this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid Quality value')
                                             intValue = intValue ? intValue : 0
                                             return new TLV(0x84, Buffer.from(intValue.toString(16).padStart(3 * 2, '0'), 'hex'))
                                         }
                                         default: {
-                                            this.recordError(`goosePdu.allData[${index}]`, 'Invalid dataType, ignored')
+                                            this.recordError(this.instance.goosePdu.allData.getPath(index), 'Invalid dataType, ignored')
                                             return null
                                         }
                                     }

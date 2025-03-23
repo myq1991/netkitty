@@ -77,10 +77,14 @@ export class FlexibleObject {
 
     /**
      * Get current object path
+     * The index parameter indicates array item if this object is an array
+     * @param index
      */
     // @ts-ignore
-    public getPath(): string {
-        return this.#paths.join('.')
+    public getPath(index?: number): string {
+        const objPath: string = this.#paths.join('.')
+        if (index === undefined) return objPath
+        return `${objPath}[${index}]`
     }
 
     [p: string]: FlexibleObject
