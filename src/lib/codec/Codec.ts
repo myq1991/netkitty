@@ -64,7 +64,7 @@ export class Codec {
             if (!codecModuleConstructor) continue
             const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
             //TODO 可能需要加入验证
-            codecModule.instance =  new FlexibleObject(input.data)
+            codecModule.instance = new FlexibleObject(input.data)
             await codecModule.encode()
             codecModule.errors.forEach((errorInfo: CodecErrorInfo): number => errors.push(errorInfo))
             codecData.startPos = codecModule.endPos
