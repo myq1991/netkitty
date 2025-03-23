@@ -25,14 +25,14 @@ export default class ARP extends BaseHeader {
                         },
                         encode: (): void => {
                             let hwType: number = this.instance.hardware.type.getValue()
-                            if (hwType === undefined) this.recordError('hardware.type', 'Not Found')
+                            if (hwType === undefined) this.recordError(this.instance.hardware.type.getPath(), 'Not Found')
                             hwType = hwType ? hwType : 0
                             if (hwType > 65535) {
-                                this.recordError('hardware.type', 'Maximum value is 65535')
+                                this.recordError(this.instance.hardware.type.getPath(), 'Maximum value is 65535')
                                 hwType = 65535
                             }
                             if (hwType < 0) {
-                                this.recordError('hardware.type', 'Minimum value is 0')
+                                this.recordError(this.instance.hardware.type.getPath(), 'Minimum value is 0')
                                 hwType = 0
                             }
                             this.writeBytes(0, UInt16ToBuffer(hwType))
@@ -48,14 +48,14 @@ export default class ARP extends BaseHeader {
                         },
                         encode: (): void => {
                             let hwSize: number = this.instance.hardware.size.getValue()
-                            if (hwSize === undefined) this.recordError('hardware.size', 'Not Found')
+                            if (hwSize === undefined) this.recordError(this.instance.hardware.size.getPath(), 'Not Found')
                             hwSize = hwSize ? hwSize : 0
                             if (hwSize > 255) {
-                                this.recordError('hardware.size', 'Maximum value is 255')
+                                this.recordError(this.instance.hardware.size.getPath(), 'Maximum value is 255')
                                 hwSize = 255
                             }
                             if (hwSize < 0) {
-                                this.recordError('hardware.size', 'Minimum value is 0')
+                                this.recordError(this.instance.hardware.size.getPath(), 'Minimum value is 0')
                                 hwSize = 0
                             }
                             this.writeBytes(4, UInt8ToBuffer(hwSize))
@@ -78,7 +78,7 @@ export default class ARP extends BaseHeader {
                         },
                         encode: (): void => {
                             let protoTypeHex: string = this.instance.protocol.type.getValue()
-                            if (protoTypeHex === undefined) this.recordError('protocol.type', 'Not Found')
+                            if (protoTypeHex === undefined) this.recordError(this.instance.protocol.type.getPath(), 'Not Found')
                             let protoType: number = HexToUInt16(protoTypeHex)
                             protoType = protoType ? protoType : 0
                             this.writeBytes(2, UInt16ToBuffer(protoType))
@@ -94,14 +94,14 @@ export default class ARP extends BaseHeader {
                         },
                         encode: (): void => {
                             let protoSize: number = this.instance.protocol.size.getValue()
-                            if (protoSize === undefined) this.recordError('protocol.size', 'Not Found')
+                            if (protoSize === undefined) this.recordError(this.instance.protocol.size.getPath(), 'Not Found')
                             protoSize = protoSize ? protoSize : 0
                             if (protoSize > 255) {
-                                this.recordError('protocol.size', 'Maximum value is 255')
+                                this.recordError(this.instance.protocol.size.getPath(), 'Maximum value is 255')
                                 protoSize = 255
                             }
                             if (protoSize < 0) {
-                                this.recordError('protocol.size', 'Minimum value is 0')
+                                this.recordError(this.instance.protocol.size.getPath(), 'Minimum value is 0')
                                 protoSize = 0
                             }
                             this.writeBytes(5, UInt8ToBuffer(protoSize))
@@ -115,13 +115,13 @@ export default class ARP extends BaseHeader {
                 enum: [1, 2, 3, 4],
                 decode: (): void => {
                     this.instance.opcode.setValue(BufferToUInt16(this.readBytes(6, 2)))
-                    if (![1, 2, 3, 4].includes(this.instance.opcode.getValue())) this.recordError('opcode', 'Opcode should be 1, 2, 3 or 4')
+                    if (![1, 2, 3, 4].includes(this.instance.opcode.getValue())) this.recordError(this.instance.opcode.getPath(), 'Opcode should be 1, 2, 3 or 4')
                 },
                 encode: (): void => {
                     let opcode: number = this.instance.opcode.getValue()
-                    if (opcode === undefined) this.recordError('opcode', 'Not Found')
+                    if (opcode === undefined) this.recordError(this.instance.opcode.getPath(), 'Not Found')
                     opcode = opcode ? opcode : 0
-                    if (![1, 2, 3, 4].includes(opcode)) this.recordError('opcode', 'Opcode should be 1, 2, 3 or 4')
+                    if (![1, 2, 3, 4].includes(opcode)) this.recordError(this.instance.opcode.getPath(), 'Opcode should be 1, 2, 3 or 4')
                     this.writeBytes(6, UInt16ToBuffer(opcode))
                 }
             },
@@ -142,7 +142,7 @@ export default class ARP extends BaseHeader {
                         encode: (): void => {
                             let macStr: string = this.instance.sender.mac.getValue()
                             const rawMacBuffer: Buffer = Buffer.from(macStr.split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0))
-                            if (rawMacBuffer.length !== 6) this.recordError('sender.mac', 'Invalid MAC address length')
+                            if (rawMacBuffer.length !== 6) this.recordError(this.instance.sender.mac.getPath(), 'Invalid MAC address length')
                             this.writeBytes(8, Buffer.alloc(6, rawMacBuffer))
                         }
                     },
@@ -159,7 +159,7 @@ export default class ARP extends BaseHeader {
                         encode: (): void => {
                             let ipv4Str: string = this.instance.sender.ipv4.getValue()
                             const rawIPv4Buffer: Buffer = Buffer.from(ipv4Str.split('.').map((value: string): number => parseInt(value)))
-                            if (rawIPv4Buffer.length !== 4) this.recordError('sender.ipv4', 'Invalid IPv4 address length')
+                            if (rawIPv4Buffer.length !== 4) this.recordError(this.instance.sender.ipv4.getPath(), 'Invalid IPv4 address length')
                             this.writeBytes(14, Buffer.alloc(4, rawIPv4Buffer))
                         }
                     }
@@ -182,7 +182,7 @@ export default class ARP extends BaseHeader {
                         encode: (): void => {
                             let macStr: string = this.instance.target.mac.getValue()
                             const rawMacBuffer: Buffer = Buffer.from(macStr.split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0))
-                            if (rawMacBuffer.length !== 6) this.recordError('target.mac', 'Invalid MAC address length')
+                            if (rawMacBuffer.length !== 6) this.recordError(this.instance.target.mac.getPath(), 'Invalid MAC address length')
                             this.writeBytes(18, Buffer.alloc(6, rawMacBuffer))
                         }
                     },
@@ -199,7 +199,7 @@ export default class ARP extends BaseHeader {
                         encode: (): void => {
                             let ipv4Str: string = this.instance.target.ipv4.getValue()
                             const rawIPv4Buffer: Buffer = Buffer.from(ipv4Str.split('.').map((value: string): number => parseInt(value)))
-                            if (rawIPv4Buffer.length !== 4) this.recordError('target.ipv4', 'Invalid IPv4 address length')
+                            if (rawIPv4Buffer.length !== 4) this.recordError(this.instance.target.ipv4.getPath(), 'Invalid IPv4 address length')
                             this.writeBytes(24, Buffer.alloc(4, rawIPv4Buffer))
                         }
                     }
