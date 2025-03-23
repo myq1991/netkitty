@@ -69,7 +69,7 @@ export class Codec {
         let headerCodecs: CodecModuleConstructor[] = []
         readdirSync(HEADER_CODECS_DIRECTORY)
             .map((moduleName: string): string => path.resolve(HEADER_CODECS_DIRECTORY, moduleName))
-            .map((codecModule: string) => {
+            .map((codecModule: string): CodecModuleConstructor | null => {
                 try {
                     const codecModuleConstructor: CodecModuleConstructor = require(codecModule).default
                     return codecModuleConstructor.PROTOCOL_NAME ? codecModuleConstructor : null
