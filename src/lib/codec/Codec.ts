@@ -9,6 +9,7 @@ import {CodecErrorInfo} from './types/CodecErrorInfo'
 import {PostHandlerItem} from './types/PostHandlerItem'
 import {CodecData} from './types/CodecData'
 import {SortPostHandlers} from './lib/SortPostHandlers'
+import {NoAvailableCodecError} from '../../errors/NoAvailableCodecError'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
@@ -78,7 +79,8 @@ export class Codec {
      */
     async #decode(codecData: CodecData, codecModules: CodecModule[] = []): Promise<void> {
         const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(codecModules))
-        if (!codecModuleConstructor) throw new Error('TODO 处理没有编解码器时的状况')
+        //This unavailable error should not be thrown, the raw data codec will always match unknown data successfully
+        if (!codecModuleConstructor) throw new NoAvailableCodecError('No available codec constructor')
         const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
         await codecModule.decode()
         // const nextStartPos: number = codecModule.endPos

@@ -18,5 +18,9 @@ export const ErrorCode = {
     E_ACTION_NOT_FOUND: {
         errno: 1005,
         code: 'E_ACTION_NOT_FOUND'
+    },
+    E_NO_AVAILABLE_CODEC: {
+        errno: 2000,
+        code: 'E_NO_AVAILABLE_CODEC'
     }
 }
