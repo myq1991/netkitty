@@ -11,9 +11,6 @@ export default class ARP extends BaseHeader {
             hardware: {
                 type: 'object',
                 label: 'Hardware',
-                decode: (): void => {
-                    this.instance.hardware = {}
-                },
                 properties: {
                     type: {
                         type: 'number',
@@ -21,10 +18,10 @@ export default class ARP extends BaseHeader {
                         minimum: 0,
                         maximum: 65535,
                         decode: (): void => {
-                            this.instance.hardware['type'] = HexToUInt16(this.readBytes(0, 2).toString('hex'))
+                            this.instance.hardware.type.setValue(HexToUInt16(this.readBytes(0, 2).toString('hex')))
                         },
                         encode: (): void => {
-                            let hwType: number = this.instance.hardware['type'] as number
+                            let hwType: number = this.instance.hardware.type.getValue()
                             if (hwType === undefined) this.recordError('hardware.type', 'Not Found')
                             hwType = hwType ? hwType : 0
                             if (hwType > 65535) {
@@ -44,10 +41,10 @@ export default class ARP extends BaseHeader {
                         minimum: 0,
                         maximum: 255,
                         decode: (): void => {
-                            this.instance.hardware['size'] = HexToUInt8(this.readBytes(4, 1).toString('hex'))
+                            this.instance.hardware.size.setValue(HexToUInt8(this.readBytes(4, 1).toString('hex')))
                         },
                         encode: (): void => {
-                            let hwSize: number = this.instance.hardware['size'] as number
+                            let hwSize: number = this.instance.hardware.size.getValue()
                             if (hwSize === undefined) this.recordError('hardware.size', 'Not Found')
                             hwSize = hwSize ? hwSize : 0
                             if (hwSize > 255) {
@@ -66,9 +63,6 @@ export default class ARP extends BaseHeader {
             protocol: {
                 type: 'object',
                 label: 'Protocol',
-                decode: (): void => {
-                    this.instance.protocol = {}
-                },
                 properties: {
                     type: {
                         type: 'string',
@@ -77,10 +71,10 @@ export default class ARP extends BaseHeader {
                         maxLength: 4,
                         contentEncoding: StringContentEncodingEnum.HEX,
                         decode: (): void => {
-                            this.instance.protocol['type'] = this.readBytes(2, 2).toString('hex')
+                            this.instance.protocol.type.setValue(this.readBytes(2, 2).toString('hex'))
                         },
                         encode: (): void => {
-                            let protoTypeHex: string = this.instance.protocol['type'] as string
+                            let protoTypeHex: string = this.instance.protocol.type.getValue()
                             if (protoTypeHex === undefined) this.recordError('protocol.type', 'Not Found')
                             let protoType: number = HexToUInt16(protoTypeHex)
                             protoType = protoType ? protoType : 0
@@ -93,10 +87,10 @@ export default class ARP extends BaseHeader {
                         minimum: 0,
                         maximum: 255,
                         decode: (): void => {
-                            this.instance.protocol['size'] = HexToUInt8(this.readBytes(5, 1).toString('hex'))
+                            this.instance.protocol.size.setValue(HexToUInt8(this.readBytes(5, 1).toString('hex')))
                         },
                         encode: (): void => {
-                            let protoSize: number = this.instance.protocol['size'] as number
+                            let protoSize: number = this.instance.protocol.size.getValue()
                             if (protoSize === undefined) this.recordError('protocol.size', 'Not Found')
                             protoSize = protoSize ? protoSize : 0
                             if (protoSize > 255) {
@@ -117,11 +111,11 @@ export default class ARP extends BaseHeader {
                 label: 'Opcode',
                 enum: [1, 2, 3, 4],
                 decode: (): void => {
-                    this.instance.opcode = HexToUInt16(this.readBytes(6, 2).toString('hex'))
-                    if (![1, 2, 3, 4].includes(this.instance.opcode)) this.recordError('opcode', 'Opcode should be 1, 2, 3 or 4')
+                    this.instance.opcode.setValue(HexToUInt16(this.readBytes(6, 2).toString('hex')))
+                    if (![1, 2, 3, 4].includes(this.instance.opcode.getValue())) this.recordError('opcode', 'Opcode should be 1, 2, 3 or 4')
                 },
                 encode: (): void => {
-                    let opcode: number = this.instance.opcode as number
+                    let opcode: number = this.instance.opcode.getValue()
                     if (opcode === undefined) this.recordError('opcode', 'Not Found')
                     opcode = opcode ? opcode : 0
                     if (![1, 2, 3, 4].includes(opcode)) this.recordError('opcode', 'Opcode should be 1, 2, 3 or 4')
@@ -131,9 +125,6 @@ export default class ARP extends BaseHeader {
             sender: {
                 type: 'object',
                 label: 'Sender',
-                decode: (): void => {
-                    this.instance.sender = {}
-                },
                 properties: {
                     mac: {
                         type: 'string',
@@ -143,10 +134,10 @@ export default class ARP extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.UTF8,
                         decode: (): void => {
                             const macAddrBuffer: Buffer = Buffer.alloc(6, this.readBytes(8, 6))
-                            this.instance.sender['mac'] = Array.from(macAddrBuffer).map((value: number): string => UInt8ToHex(value)).join(':')
+                            this.instance.sender.mac.setValue(Array.from(macAddrBuffer).map((value: number): string => UInt8ToHex(value)).join(':'))
                         },
                         encode: (): void => {
-                            let macStr: string = this.instance.sender['mac'] as string
+                            let macStr: string = this.instance.sender.mac.getValue()
                             const rawMacBuffer: Buffer = Buffer.from(macStr.split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0))
                             if (rawMacBuffer.length !== 6) this.recordError('sender.mac', 'Invalid MAC address length')
                             this.writeBytes(8, Buffer.alloc(6, rawMacBuffer))
@@ -160,10 +151,10 @@ export default class ARP extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.UTF8,
                         decode: (): void => {
                             const ipv4Buffer: Buffer = Buffer.alloc(4, this.readBytes(14, 4))
-                            this.instance.sender['ipv4'] = Array.from(ipv4Buffer).join('.')
+                            this.instance.sender.ipv4.setValue(Array.from(ipv4Buffer).join('.'))
                         },
                         encode: (): void => {
-                            let ipv4Str: string = this.instance.sender['ipv4'] as string
+                            let ipv4Str: string = this.instance.sender.ipv4.getValue()
                             const rawIPv4Buffer: Buffer = Buffer.from(ipv4Str.split('.').map((value: string): number => parseInt(value)))
                             if (rawIPv4Buffer.length !== 4) this.recordError('sender.ipv4', 'Invalid IPv4 address length')
                             this.writeBytes(14, Buffer.alloc(4, rawIPv4Buffer))
@@ -174,9 +165,6 @@ export default class ARP extends BaseHeader {
             target: {
                 type: 'object',
                 label: 'Target',
-                decode: (): void => {
-                    this.instance.target = {}
-                },
                 properties: {
                     mac: {
                         type: 'string',
@@ -186,10 +174,10 @@ export default class ARP extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.UTF8,
                         decode: (): void => {
                             const macAddrBuffer: Buffer = Buffer.alloc(6, this.readBytes(18, 6))
-                            this.instance.target['mac'] = Array.from(macAddrBuffer).map((value: number): string => UInt8ToHex(value)).join(':')
+                            this.instance.target.mac.setValue(Array.from(macAddrBuffer).map((value: number): string => UInt8ToHex(value)).join(':'))
                         },
                         encode: (): void => {
-                            let macStr: string = this.instance.target['mac'] as string
+                            let macStr: string = this.instance.target.mac.getValue()
                             const rawMacBuffer: Buffer = Buffer.from(macStr.split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0))
                             if (rawMacBuffer.length !== 6) this.recordError('target.mac', 'Invalid MAC address length')
                             this.writeBytes(18, Buffer.alloc(6, rawMacBuffer))
@@ -203,10 +191,10 @@ export default class ARP extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.UTF8,
                         decode: (): void => {
                             const ipv4Buffer: Buffer = Buffer.alloc(4, this.readBytes(24, 4))
-                            this.instance.target['ipv4'] = Array.from(ipv4Buffer).join('.')
+                            this.instance.target.ipv4.setValue(Array.from(ipv4Buffer).join('.'))
                         },
                         encode: (): void => {
-                            let ipv4Str: string = this.instance.target['ipv4'] as string
+                            let ipv4Str: string = this.instance.target.ipv4.getValue()
                             const rawIPv4Buffer: Buffer = Buffer.from(ipv4Str.split('.').map((value: string): number => parseInt(value)))
                             if (rawIPv4Buffer.length !== 4) this.recordError('target.ipv4', 'Invalid IPv4 address length')
                             this.writeBytes(24, Buffer.alloc(4, rawIPv4Buffer))
@@ -223,7 +211,7 @@ export default class ARP extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x0806)
+        return this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x0806)
     }
 
 }

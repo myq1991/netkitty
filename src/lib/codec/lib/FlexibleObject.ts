@@ -34,7 +34,7 @@ export class FlexibleObject {
      */
     // @ts-ignore
     public setValue(value: any): void {
-        if (typeof value === 'object') {
+        if (typeof value === 'object' && !Array.isArray(value)) {
             Object.keys(value).forEach(key => {
                 this.#data[key] = new FlexibleObject(this.#data[key])
                 this.#data[key].setValue(value[key])
@@ -51,7 +51,7 @@ export class FlexibleObject {
     // @ts-ignore
     public getValue(): any {
         if (this.#undefined) return undefined
-        if (typeof this.#data === 'object') {
+        if (typeof this.#data === 'object' && !Array.isArray(this.#data)) {
             const dumpObject: object = {}
             Object.keys(this.#data).forEach((key: string): void => {
                 const dumpResult: any = this.#data[key].getValue()

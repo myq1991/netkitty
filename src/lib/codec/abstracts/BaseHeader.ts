@@ -6,6 +6,7 @@ import {CodecErrorInfo} from '../types/CodecErrorInfo'
 import {PostHandlerItem} from '../types/PostHandlerItem'
 import {SortPostHandlers} from '../lib/SortPostHandlers'
 import {CodecData} from '../types/CodecData'
+import {FlexibleObject} from '../lib/FlexibleObject'
 
 export abstract class BaseHeader {
 
@@ -60,7 +61,7 @@ export abstract class BaseHeader {
     /**
      * Header schema instance
      */
-    public instance: HeaderTreeNode = {}
+    public instance: FlexibleObject = new FlexibleObject()
 
     /**
      * Entire packet buffer data getter
@@ -321,47 +322,6 @@ export abstract class BaseHeader {
             priority: priority,
             handler: handler
         })
-    }
-
-    /**
-     * Set instance's node value
-     * @param node
-     * @param fields
-     * @param value
-     * @protected
-     */
-    protected setNodeValue(node: HeaderTreeNode, fields: string[], value: any): HeaderTreeNode {
-        const field: string = fields.shift() as any
-        if (fields.length) {
-            node[field] = node[field] ? node[field] : {}
-            return this.setNodeValue(node[field] as HeaderTreeNode, fields, value)
-        } else {
-            node[field] = value
-            return node
-        }
-    }
-
-    /**
-     * Recode specific field AFTER entire header encoded
-     * @param fieldPath
-     * @param fieldValue
-     * @param throwErrorIfNotFound
-     */
-    public async recodeField(fieldPath: string, fieldValue: any, throwErrorIfNotFound: boolean = false): Promise<void> {
-        const fields: string[] = fieldPath.split('.')
-        let fieldSchema: ProtocolFieldJSONSchema | null = this.SCHEMA as ProtocolFieldJSONSchema
-        for (const field of fields) {
-            if (!fieldSchema) break
-            if (!fieldSchema.properties) break
-            fieldSchema = !fieldSchema.properties[field] ? null : fieldSchema.properties[field]
-        }
-        if (!fieldSchema || !fieldSchema['encode']) {
-            if (throwErrorIfNotFound) throw new Error('Encoder not found')
-            return
-        }
-        this.instance = this.setNodeValue(this.instance, fields, fieldValue)
-        const fieldEncoder: () => void | Promise<void> = fieldSchema['encode']
-        await fieldEncoder()
     }
 
     /**

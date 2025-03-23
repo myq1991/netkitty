@@ -10,6 +10,7 @@ import {PostHandlerItem} from './types/PostHandlerItem'
 import {CodecData} from './types/CodecData'
 import {SortPostHandlers} from './lib/SortPostHandlers'
 import {NoAvailableCodecError} from '../../errors/NoAvailableCodecError'
+import {FlexibleObject} from './lib/FlexibleObject'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
@@ -62,7 +63,8 @@ export class Codec {
             const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
             if (!codecModuleConstructor) continue
             const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
-            codecModule.instance = input.data
+            //TODO 可能需要加入验证
+            codecModule.instance =  new FlexibleObject(input.data)
             await codecModule.encode()
             codecModule.errors.forEach((errorInfo: CodecErrorInfo): number => errors.push(errorInfo))
             codecData.startPos = codecModule.endPos
@@ -112,7 +114,7 @@ export class Codec {
             id: codecModule.id,
             name: codecModule.name,
             errors: codecModule.errors,
-            data: codecModule.instance
+            data: codecModule.instance.getValue()
         }))
     }
 

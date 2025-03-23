@@ -41,10 +41,10 @@ export default class Goose extends BaseHeader {
                 maximum: 0x3fff,
                 label: 'APPID',
                 decode: (): void => {
-                    this.instance.appid = parseInt(this.readBytes(0, 2).toString('hex'), 16)
+                    this.instance.appid.setValue(parseInt(this.readBytes(0, 2).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    let APPID: number = parseInt(this.instance.appid.toString())
+                    let APPID: number = parseInt(this.instance.appid.getValue().toString())
                     APPID = APPID ? APPID : 0
                     this.writeBytes(0, Buffer.from(APPID.toString(16).padStart(4, '0'), 'hex'))
                 }
@@ -55,30 +55,34 @@ export default class Goose extends BaseHeader {
                 maximum: 65535,
                 label: 'Length',
                 decode: (): void => {
-                    this.instance.length = parseInt(this.readBytes(2, 2).toString('hex'), 16)
-                    if (this.instance.length === undefined) this.recordError('length', 'Not Found')
+                    this.instance.length.setValue(parseInt(this.readBytes(2, 2).toString('hex'), 16))
+                    if (this.instance.length.isUndefined()) this.recordError('length', 'Not Found')
                 },
                 encode: (): void => {
-                    let length: number = parseInt(this.instance.length.toString())
+                    let length: number = parseInt(this.instance.length.getValue().toString())
                     length = length ? length : 0
-                    this.writeBytes(2, Buffer.from(length.toString(16).padStart(4, '0'), 'hex'))
+                    if (length > 0) {
+                        this.writeBytes(2, Buffer.from(length.toString(16).padStart(4, '0'), 'hex'))
+                    } else {
+                        this.addPostSelfEncodeHandler((): void => {
+                            let finalLength: number = parseInt(this.instance.length.getValue().toString())
+                            this.writeBytes(2, Buffer.from(finalLength.toString(16).padStart(4, '0'), 'hex'))
+                        })
+                    }
                 }
             },
             reserved1: {
                 type: 'object',
                 label: 'Reserved1',
-                decode: (): void => {
-                    this.instance.reserved1 = {}
-                },
                 properties: {
                     simulated: {
                         type: 'boolean',
                         label: 'Simulated',
                         decode: (): void => {
-                            this.instance.reserved1['simulated'] = !!this.readBits(4, 2, 0, 1)
+                            this.instance.reserved1.simulated.setValue(!!this.readBits(4, 2, 0, 1))
                         },
                         encode: (): void => {
-                            const simulated: boolean = !!this.instance.reserved1['simulated']
+                            const simulated: boolean = !!this.instance.reserved1.simulated.getValue()
                             this.writeBits(4, 2, 0, 1, simulated ? 1 : 0)
                         }
                     },
@@ -88,10 +92,10 @@ export default class Goose extends BaseHeader {
                         maximum: 32767,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved1['reserved'] = this.readBits(4, 2, 1, 16)
+                            this.instance.reserved1.reserved.setValue(this.readBits(4, 2, 1, 16))
                         },
                         encode: (): void => {
-                            let reserved: number = parseInt(this.instance.reserved1['reserved'].toString())
+                            let reserved: number = parseInt(this.instance.reserved1.reserved.getValue().toString())
                             reserved = reserved ? reserved : 0
                             this.writeBits(4, 2, 1, 16, reserved)
                         }
@@ -101,9 +105,6 @@ export default class Goose extends BaseHeader {
             reserved2: {
                 type: 'object',
                 label: 'Reserved2',
-                decode: (): void => {
-                    this.instance.reserved2 = {}
-                },
                 properties: {
                     reserved: {
                         type: 'number',
@@ -111,10 +112,10 @@ export default class Goose extends BaseHeader {
                         maximum: 65535,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved2['reserved'] = this.readBits(4, 2, 0, 16)
+                            this.instance.reserved2.reserved.setValue(this.readBits(4, 2, 0, 16))
                         },
                         encode: (): void => {
-                            let reserved: number = parseInt(this.instance.reserved2['reserved'].toString())
+                            let reserved: number = parseInt(this.instance.reserved2.reserved.getValue().toString())
                             reserved = reserved ? reserved : 0
                             this.writeBits(4, 2, 0, 16, reserved)
                         }
@@ -125,10 +126,10 @@ export default class Goose extends BaseHeader {
                 type: 'object',
                 label: 'GOOSE PDU',
                 decode: (): void => {
-                    const buffer: Buffer = this.readBytes(8, (this.instance.length as number) - 8)
+                    const buffer: Buffer = this.readBytes(8, (this.instance.length.getValue() as number) - 8)
                     this.TLVInstance = TLV.parse(buffer)
                     this.TLVChild = this.TLVInstance.getChild()
-                    this.instance.goosePdu = {}
+                    this.instance.goosePdu.setValue({})
                 },
                 encode: (): void => {
                     let buffers: Buffer = Buffer.from([])
@@ -140,9 +141,8 @@ export default class Goose extends BaseHeader {
                      * Update the length only if it is not set
                      * Update length(APPID's length + Length's length + Reserved1's length + Reserved2's length + goosePdu's length)
                      */
-                    if (this.instance.length as number > 0) return
-                    this.instance.length = 2 + 2 + 2 + 2 + goosePduBuffer.length
-                    this.SCHEMA.properties!['length']!['encode']!()
+                    if (this.instance.length.getValue() > 0) return
+                    this.instance.length.setValue(2 + 2 + 2 + 2 + goosePduBuffer.length)
                 },
                 properties: {
                     gocbRef: {
@@ -153,10 +153,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const gocbRefTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
                             if (!gocbRefTLV) return this.recordError('goosePdu.gocbRef', 'Not Found')
-                            this.instance.goosePdu['gocbRef'] = gocbRefTLV.getValue('buffer').toString('ascii')
+                            this.instance.goosePdu.gocbRef.setValue(gocbRefTLV.getValue('buffer').toString('ascii'))
                         },
                         encode: (): void => {
-                            const gocbRefValue: string = this.instance.goosePdu['gocbRef']
+                            const gocbRefValue: string = this.instance.goosePdu.gocbRef.getValue()
                             if (!gocbRefValue) return this.recordError('goosePdu.gocbRef', 'Not Found')
                             let gocbRefBuffer: Buffer = Buffer.from(gocbRefValue, 'ascii')
                             if (gocbRefBuffer.length > 129) {
@@ -174,10 +174,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const timeAllowedtoLiveString: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x81)?.getValue('hex')
                             if (!timeAllowedtoLiveString) return this.recordError('goosePdu.timeAllowedtoLive', 'Not Found')
-                            this.instance.goosePdu['timeAllowedtoLive'] = HexToUInt32(timeAllowedtoLiveString)
+                            this.instance.goosePdu.timeAllowedtoLive.setValue(HexToUInt32(timeAllowedtoLiveString))
                         },
                         encode: (): void => {
-                            let timeAllowedtoLiveValue: number = this.instance.goosePdu['timeAllowedtoLive']
+                            let timeAllowedtoLiveValue: number = this.instance.goosePdu.timeAllowedtoLive.getValue()
                             if (timeAllowedtoLiveValue === undefined) return this.recordError('goosePdu.timeAllowedtoLive', 'Not Found')
                             if (timeAllowedtoLiveValue < 1 || timeAllowedtoLiveValue > 4294967295) {
                                 this.recordError('goosePdu.timeAllowedtoLive', 'This INTEGER value shall have a range of 1 to 4294967295')
@@ -195,10 +195,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const datSetTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x82)
                             if (!datSetTLV) return this.recordError('goosePdu.datSet', 'Not Found')
-                            this.instance.goosePdu['datSet'] = datSetTLV.getValue('buffer').toString('ascii')
+                            this.instance.goosePdu.datSet.setValue(datSetTLV.getValue('buffer').toString('ascii'))
                         },
                         encode: (): void => {
-                            const datSetValue: string = this.instance.goosePdu['datSet']
+                            const datSetValue: string = this.instance.goosePdu.datSet.getValue()
                             if (!datSetValue) return this.recordError('goosePdu.datSet', 'Not Found')
                             let datSetBuffer: Buffer = Buffer.from(datSetValue, 'ascii')
                             if (datSetBuffer.length > 129) {
@@ -216,10 +216,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const goIDTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x83)
                             if (!goIDTLV) return this.recordError('goosePdu.goID', 'Not Found')
-                            this.instance.goosePdu['goID'] = goIDTLV.getValue('buffer').toString('ascii')
+                            this.instance.goosePdu.goID.setValue(goIDTLV.getValue('buffer').toString('ascii'))
                         },
                         encode: (): void => {
-                            const goIDValue: string = this.instance.goosePdu['goID']
+                            const goIDValue: string = this.instance.goosePdu.goID.getValue()
                             if (!goIDValue) return this.recordError('goosePdu.goID', 'Not Found')
                             let goIDBuffer: Buffer = Buffer.from(goIDValue, 'ascii')
                             if (goIDBuffer.length > 65) {
@@ -236,10 +236,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const tStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x84)?.getValue('hex')
                             if (!tStr) return this.recordError('goosePdu.t', 'Not Found')
-                            this.instance.goosePdu['t'] = BigInt(`0x${tStr}`).toString()
+                            this.instance.goosePdu.t.setValue(BigInt(`0x${tStr}`).toString())
                         },
                         encode: (): void => {
-                            const tStr: string = this.instance.goosePdu['t']
+                            const tStr: string = this.instance.goosePdu.t.getValue()
                             if (tStr === undefined) return this.recordError('goosePdu.t', 'Not Found')
                             const tBigIntValue: bigint = BigInt(tStr)
                             const tTLV: TLV = new TLV(0x84, Buffer.from(tBigIntValue.toString(16).padStart(8 * 2, '0'), 'hex'))
@@ -254,11 +254,11 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const stNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x85)?.getValue('hex')
                             if (!stNumStr) return this.recordError('goosePdu.stNum', 'Not Found')
-                            this.instance.goosePdu['stNum'] = HexToUInt32(stNumStr)
-                            if (this.instance.goosePdu['stNum'] < 1 || this.instance.goosePdu['stNum'] > 4294967295) this.recordError('goosePdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
+                            this.instance.goosePdu.stNum.setValue(HexToUInt32(stNumStr))
+                            if (this.instance.goosePdu.stNum.getValue() < 1 || this.instance.goosePdu.stNum.getValue() > 4294967295) this.recordError('goosePdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
                         },
                         encode: (): void => {
-                            let stNumValue: number = this.instance.goosePdu['stNum']
+                            let stNumValue: number = this.instance.goosePdu.stNum.getValue()
                             if (stNumValue < 1 || stNumValue > 4294967295) {
                                 stNumValue = 4294967295
                                 this.recordError('goosePdu.stNum', 'This INTEGER value shall have a range of 1 to 4294967295')
@@ -276,10 +276,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const sqNumStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x86)?.getValue('hex')
                             if (!sqNumStr) return this.recordError('goosePdu.sqNum', 'Not Found')
-                            this.instance.goosePdu['sqNum'] = HexToUInt32(sqNumStr)
+                            this.instance.goosePdu.sqNum.setValue(HexToUInt32(sqNumStr))
                         },
                         encode: (): void => {
-                            let sqNumValue: number = this.instance.goosePdu['sqNum']
+                            let sqNumValue: number = this.instance.goosePdu.sqNum.getValue()
                             if (sqNumValue < 0 || sqNumValue > 4294967295) {
                                 sqNumValue = 4294967295
                                 this.recordError('goosePdu.sqNum', 'This INTEGER value shall have a range of 1 to 4294967295')
@@ -297,10 +297,10 @@ export default class Goose extends BaseHeader {
                             if (!simulationStr) return this.recordError('goosePdu.simulation', 'Not Found')
                             const simulationNum: number = parseInt(simulationStr, 16)
                             if (simulationNum > 1) this.recordError('goosePdu.simulation', 'This Boolean shall have a range of TRUE, FALSE')
-                            this.instance.goosePdu['simulation'] = !!simulationNum
+                            this.instance.goosePdu.simulation.setValue(!!simulationNum)
                         },
                         encode: (): void => {
-                            let simulationValue: boolean | undefined = this.instance.goosePdu['simulation']
+                            let simulationValue: boolean | undefined = this.instance.goosePdu.simulation.getValue()
                             if (simulationValue === undefined) return this.recordError('goosePdu.simulation', 'Not Found')
                             const simulationNum: number = simulationValue ? 1 : 0
                             const simulationTLV: TLV = new TLV(0x87, Buffer.from(simulationNum.toString(16).padStart(2, '0'), 'hex'))
@@ -313,10 +313,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const confRevStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x88)?.getValue('hex')
                             if (!confRevStr) return this.recordError('goosePdu.confRev', 'Not Found')
-                            this.instance.goosePdu['confRev'] = HexToUInt32(confRevStr)
+                            this.instance.goosePdu.confRev.setValue(HexToUInt32(confRevStr))
                         },
                         encode: (): void => {
-                            let confRevValue: number = this.instance.goosePdu['confRev']
+                            let confRevValue: number = this.instance.goosePdu.confRev.getValue()
                             if (confRevValue > 4294967295) {
                                 confRevValue = 4294967295
                                 this.recordError('goosePdu.confRev', 'This INTEGER value shall have a range of 0 to 4294967295')
@@ -334,10 +334,10 @@ export default class Goose extends BaseHeader {
                             if (!ndsComStr) return this.recordError('goosePdu.ndsCom', 'Not Found')
                             const ndsComNum: number = parseInt(ndsComStr, 16)
                             if (ndsComNum > 1) this.recordError('goosePdu.ndsCom', 'This Boolean shall have a range of TRUE, FALSE')
-                            this.instance.goosePdu['ndsCom'] = !!ndsComNum
+                            this.instance.goosePdu.ndsCom.setValue(!!ndsComNum)
                         },
                         encode: (): void => {
-                            let ndsComValue: boolean | undefined = this.instance.goosePdu['ndsCom']
+                            let ndsComValue: boolean | undefined = this.instance.goosePdu.ndsCom.getValue()
                             if (ndsComValue === undefined) return this.recordError('goosePdu.ndsCom', 'Not Found')
                             const ndsComNum: number = ndsComValue ? 1 : 0
                             const ndsComTLV: TLV = new TLV(0x89, Buffer.from(ndsComNum.toString(16).padStart(2, '0'), 'hex'))
@@ -350,10 +350,10 @@ export default class Goose extends BaseHeader {
                         decode: (): void => {
                             const numDatSetEntriesStr: string | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x8A)?.getValue('hex')
                             if (!numDatSetEntriesStr) return this.recordError('goosePdu.numDatSetEntries', 'Not Found')
-                            this.instance.goosePdu['numDatSetEntries'] = parseInt(numDatSetEntriesStr, 16)
+                            this.instance.goosePdu.numDatSetEntries.setValue(parseInt(numDatSetEntriesStr, 16))
                         },
                         encode: (): void => {
-                            let numDatSetEntriesValue: number | undefined = this.instance.goosePdu['numDatSetEntries']
+                            let numDatSetEntriesValue: number | undefined = this.instance.goosePdu.numDatSetEntries.getValue()
                             if (numDatSetEntriesValue === undefined) return this.recordError('goosePdu.numDatSetEntries', 'Not Found')
                             const numDatSetEntriesTLV: TLV = new TLV(0x8A, Buffer.from(UInt32ToBERHex(numDatSetEntriesValue), 'hex'))
                             this.TLVChild.push(numDatSetEntriesTLV)
@@ -515,10 +515,10 @@ export default class Goose extends BaseHeader {
                                 if (!dataItem.dataType) return
                                 allData.push(dataItem)
                             })
-                            this.instance.goosePdu['allData'] = allData
+                            this.instance.goosePdu.allData.setValue(allData)
                         },
                         encode: (): void => {
-                            const allData: AllDataItem[] = this.instance.goosePdu['allData'] ? this.instance.goosePdu['allData'] : []
+                            const allData: AllDataItem[] = this.instance.goosePdu.allData.isUndefined() ? [] : this.instance.goosePdu.allData.getValue()
                             const dataItemTLVs: TLV[] = allData
                                 .map((dataItem: AllDataItem, index: number): TLV | null => {
                                     dataItem.value = dataItem.value.trim()
@@ -651,6 +651,6 @@ export default class Goose extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x88b8)
+        return this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x88b8)
     }
 }

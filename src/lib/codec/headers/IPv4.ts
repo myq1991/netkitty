@@ -33,11 +33,11 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 15,
                 decode: (): void => {
-                    this.instance.version = this.readBits(0, 1, 0, 4)
-                    if (this.instance.version !== 4) this.recordError('version', 'IPv4 version should be 4')
+                    this.instance.version.setValue(this.readBits(0, 1, 0, 4))
+                    if (this.instance.version.getValue() !== 4) this.recordError('version', 'IPv4 version should be 4')
                 },
                 encode: (): void => {
-                    let version: number = this.instance.version as number
+                    let version: number = this.instance.version.getValue()
                     version = parseInt((version ? version : 4).toString())
                     version = version > 15 ? 15 : version
                     version = version < 0 ? 0 : version
@@ -51,15 +51,15 @@ export default class IPv4 extends BaseHeader {
                 minimum: 20,
                 maximum: 60,
                 decode: (): void => {
-                    this.instance.hdrLen = this.readBits(0, 1, 4, 4) * 4
+                    this.instance.hdrLen.setValue(this.readBits(0, 1, 4, 4) * 4)
                 },
                 encode: (): void => {
-                    let headerLength: number = this.instance.hdrLen as number
+                    let headerLength: number = this.instance.hdrLen.getValue()
                     if (!headerLength) headerLength = headerLength ? headerLength : 0
                     if (headerLength) headerLength = Math.floor(headerLength / 4)
                     this.writeBits(0, 1, 4, 4, headerLength)
                     if (!headerLength) this.addPostSelfEncodeHandler((): void => {
-                        this.instance.hdrLen = this.length
+                        this.instance.hdrLen.setValue(this.length)
                         this.writeBits(0, 1, 4, 4, Math.floor(this.length / 4))
                     }, 10)
                 }
@@ -67,9 +67,9 @@ export default class IPv4 extends BaseHeader {
             dsfield: {
                 type: 'object',
                 label: 'Differentiated Services Field',
-                decode: (): void => {
-                    this.instance.dsfield = {}
-                },
+                // decode: (): void => {
+                //     this.instance.dsfield = {}
+                // },
                 properties: {
                     dscp: {
                         type: 'integer',
@@ -77,10 +77,10 @@ export default class IPv4 extends BaseHeader {
                         maximum: 63,
                         label: 'Differentiated Services Codepoint',
                         decode: (): void => {
-                            this.instance.dsfield['dscp'] = this.readBits(1, 1, 0, 6)
+                            this.instance.dsfield.dscp.setValue(this.readBits(1, 1, 0, 6))
                         },
                         encode: (): void => {
-                            let dscp: number = this.instance.dsfield['dscp'] as number
+                            let dscp: number = this.instance.dsfield.dscp.getValue()
                             dscp = dscp ? dscp : 0
                             this.writeBits(1, 1, 0, 6, dscp)
                         }
@@ -89,10 +89,10 @@ export default class IPv4 extends BaseHeader {
                         type: 'integer',
                         label: 'Explicit Congestion Notification',
                         decode: (): void => {
-                            this.instance.dsfield['ecn'] = this.readBits(1, 1, 6, 2)
+                            this.instance.dsfield.ecn.setValue(this.readBits(1, 1, 6, 2))
                         },
                         encode: (): void => {
-                            let ecn: number = this.instance.dsfield['ecn'] as number
+                            let ecn: number = this.instance.dsfield.ecn.getValue()
                             ecn = ecn ? ecn : 0
                             this.writeBits(1, 1, 6, 2, ecn)
                         }
@@ -105,11 +105,11 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 65535,
                 decode: (): void => {
-                    this.instance.length = parseInt(this.readBytes(2, 2).toString('hex'), 16)
+                    this.instance.length.setValue(parseInt(this.readBytes(2, 2).toString('hex'), 16))
                 },
                 encode: (): void => {
                     //This field's real value needs down stream codec invoke recode to fill
-                    let length: number = this.instance.length as number
+                    let length: number = this.instance.length.getValue()
                     length = length ? length : 0
                     if (length) {
                         this.writeBytes(2, Buffer.from(UInt16ToHex(length), 'hex'))
@@ -132,11 +132,11 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 65535,
                 decode: (): void => {
-                    this.instance.id = parseInt(this.readBytes(4, 2).toString('hex'), 16)
+                    this.instance.id.setValue(parseInt(this.readBytes(4, 2).toString('hex'), 16))
                 },
                 encode: (): void => {
                     if (!this.instance.id) this.recordError('id', 'Not Found')
-                    let id: number = this.instance.id as number
+                    let id: number = this.instance.id.getValue()
                     id = id ? id : 0
                     this.writeBytes(4, Buffer.from(UInt16ToHex(id), 'hex'))
                 }
@@ -144,24 +144,24 @@ export default class IPv4 extends BaseHeader {
             flags: {
                 type: 'object',
                 label: 'Flags',
-                decode: (): void => {
-                    this.instance.flags = {}
-                },
+                // decode: (): void => {
+                //     this.instance.flags = {}
+                // },
                 properties: {
                     rb: {
                         type: 'integer',
                         enum: [0, 1],
                         label: 'Reserved bit',
                         decode: (): void => {
-                            this.instance.flags['rb'] = this.readBits(6, 1, 0, 1)
+                            this.instance.flags.rb.setValue(this.readBits(6, 1, 0, 1))
                         },
                         encode: (): void => {
                             let rb: number
-                            if (this.instance.flags === undefined || this.instance.flags['rb'] === undefined) {
+                            if (this.instance.flags.rb.isUndefined()) {
                                 this.recordError('flags.rb', 'Not Found')
                                 rb = 0
                             } else {
-                                rb = this.instance.flags['rb'] as number
+                                rb = this.instance.flags.rb.getValue()
                                 rb = parseInt(rb.toString())
                             }
                             this.writeBits(6, 1, 0, 1, rb)
@@ -172,15 +172,15 @@ export default class IPv4 extends BaseHeader {
                         enum: [0, 1],
                         label: 'Don\'t fragment',
                         decode: (): void => {
-                            this.instance.flags['df'] = this.readBits(6, 1, 1, 1)
+                            this.instance.flags.df.setValue(this.readBits(6, 1, 1, 1))
                         },
                         encode: (): void => {
                             let df: number
-                            if (this.instance.flags === undefined || this.instance.flags['df'] === undefined) {
+                            if (this.instance.flags.df.isUndefined()) {
                                 this.recordError('flags.df', 'Not Found')
                                 df = 1
                             } else {
-                                df = this.instance.flags['df'] as number
+                                df = this.instance.flags.df.getValue()
                                 df = parseInt(df.toString())
                             }
                             this.writeBits(6, 1, 1, 1, df)
@@ -191,15 +191,15 @@ export default class IPv4 extends BaseHeader {
                         enum: [0, 1],
                         label: 'More fragments',
                         decode: (): void => {
-                            this.instance.flags['mf'] = this.readBits(6, 1, 2, 1)
+                            this.instance.flags.mf.setValue(this.readBits(6, 1, 2, 1))
                         },
                         encode: (): void => {
                             let mf: number
-                            if (this.instance.flags === undefined || this.instance.flags['mf'] === undefined) {
+                            if (this.instance.flags.mf.isUndefined()) {
                                 this.recordError('flags.mf', 'Not Found')
                                 mf = 0
                             } else {
-                                mf = this.instance.flags['mf'] as number
+                                mf = this.instance.flags.mf.getValue()
                                 mf = parseInt(mf.toString())
                             }
                             this.writeBits(6, 1, 2, 1, mf)
@@ -213,11 +213,11 @@ export default class IPv4 extends BaseHeader {
                 maximum: 8191,
                 label: 'Fragment Offset',
                 decode: (): void => {
-                    this.instance.fragOffset = this.readBits(6, 2, 3, 13)
+                    this.instance.fragOffset.setValue(this.readBits(6, 2, 3, 13))
                 },
                 encode: (): void => {
-                    if (this.instance.fragOffset === undefined) this.recordError('fragOffset', 'Not Found')
-                    let fragOffset: number = this.instance.fragOffset as number
+                    if (this.instance.fragOffset.isUndefined()) this.recordError('fragOffset', 'Not Found')
+                    let fragOffset: number = this.instance.fragOffset.getValue()
                     fragOffset = fragOffset ? fragOffset : 0
                     this.writeBits(6, 2, 3, 13, fragOffset)
                 }
@@ -228,11 +228,11 @@ export default class IPv4 extends BaseHeader {
                 maximum: 255,
                 label: 'Time to Live',
                 decode: (): void => {
-                    this.instance.ttl = parseInt(this.readBytes(8, 1).toString('hex'), 16)
+                    this.instance.ttl.setValue(parseInt(this.readBytes(8, 1).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    if (this.instance.ttl === undefined) this.recordError('ttl', 'Not Found')
-                    let ttl: number = this.instance.ttl as number
+                    if (this.instance.ttl.isUndefined()) this.recordError('ttl', 'Not Found')
+                    let ttl: number = this.instance.ttl.getValue()
                     ttl = ttl ? ttl : 0
                     this.writeBytes(8, Buffer.from(UInt8ToHex(ttl), 'hex'))
                 }
@@ -243,11 +243,11 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 255,
                 decode: (): void => {
-                    this.instance.protocol = parseInt(this.readBytes(9, 1).toString('hex'), 16)
+                    this.instance.protocol.setValue(parseInt(this.readBytes(9, 1).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    if (this.instance.protocol === undefined) this.recordError('protocol', 'Not Found')
-                    let protocol: number = this.instance.protocol as number
+                    if (this.instance.protocol.isUndefined()) this.recordError('protocol', 'Not Found')
+                    let protocol: number = this.instance.protocol.getValue()
                     protocol = protocol ? protocol : 0
                     this.writeBytes(9, Buffer.from(UInt8ToHex(protocol), 'hex'))
                 }
@@ -258,10 +258,10 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 65535,
                 decode: (): void => {
-                    this.instance.checksum = parseInt(this.readBytes(10, 2).toString('hex'), 16)
+                    this.instance.checksum.setValue(parseInt(this.readBytes(10, 2).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    let checksum: number = this.instance.checksum ? this.instance.checksum as number : 0
+                    let checksum: number = !this.instance.checksum.isUndefined() ? this.instance.checksum.getValue() : 0
                     checksum = parseInt(checksum.toString())
                     checksum = checksum ? checksum : 0
                     checksum = checksum > 65535 ? 65535 : checksum
@@ -284,14 +284,14 @@ export default class IPv4 extends BaseHeader {
                 contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     const sipBuffer: Buffer = this.readBytes(12, 4)
-                    this.instance.sip = Array.from(sipBuffer).join('.')
+                    this.instance.sip.setValue(Array.from(sipBuffer).join('.'))
                 },
                 encode: (): void => {
-                    if (this.instance.sip === undefined) {
+                    if (this.instance.sip.isUndefined()) {
                         this.recordError('sip', 'Not Found')
-                        this.instance.sip = '0.0.0.0'
+                        this.instance.sip.setValue('0.0.0.0')
                     }
-                    const sipStr: string = this.instance.sip.toString()
+                    const sipStr: string = this.instance.sip.getValue().toString()
                     const numArr: number[] = sipStr.split('.').map(value => parseInt(value)).map(value => value ? value : 0)
                     this.writeBytes(12, Buffer.from(UInt32ToHex(parseInt(Buffer.from(numArr).toString('hex'), 16)), 'hex'))
                 }
@@ -304,14 +304,14 @@ export default class IPv4 extends BaseHeader {
                 contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     const dipBuffer: Buffer = this.readBytes(16, 4)
-                    this.instance.dip = Array.from(dipBuffer).join('.')
+                    this.instance.dip.setValue(Array.from(dipBuffer).join('.'))
                 },
                 encode: (): void => {
-                    if (this.instance.dip === undefined) {
+                    if (this.instance.dip.isUndefined()) {
                         this.recordError('dip', 'Not Found')
-                        this.instance.dip = '0.0.0.0'
+                        this.instance.dip.setValue('0.0.0.0')
                     }
-                    const dipStr: string = this.instance.dip.toString()
+                    const dipStr: string = this.instance.dip.getValue()
                     const numArr: number[] = dipStr.split('.').map(value => parseInt(value)).map(value => value ? value : 0)
                     this.writeBytes(16, Buffer.from(UInt32ToHex(parseInt(Buffer.from(numArr).toString('hex'), 16)), 'hex'))
                 }
@@ -323,14 +323,14 @@ export default class IPv4 extends BaseHeader {
                 maxLength: 40,
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
-                    if (this.length < (this.instance.hdrLen as number)) {
-                        const restBytes: Buffer = this.readBytes(this.length, (this.instance.hdrLen as number) - this.length)
-                        this.instance.options = restBytes.toString('hex')
+                    if (this.length < (this.instance.hdrLen.getValue())) {
+                        const restBytes: Buffer = this.readBytes(this.length, (this.instance.hdrLen.getValue()) - this.length)
+                        this.instance.options.setValue(restBytes.toString('hex'))
                     }
                 },
                 encode: (): void => {
-                    if (this.instance.options) {
-                        let optionsBuffer: Buffer = Buffer.from(FixHexString(this.instance.options as string), 'hex')
+                    if (!this.instance.options.isUndefined()) {
+                        let optionsBuffer: Buffer = Buffer.from(FixHexString(this.instance.options.getValue()), 'hex')
                         if (optionsBuffer.length > 40) optionsBuffer = optionsBuffer.subarray(0, 40)
                         const estimateHdrLen: number = this.length + optionsBuffer.length
                         if (estimateHdrLen % 4) {
@@ -353,6 +353,6 @@ export default class IPv4 extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x0800)
+        return this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x0800)
     }
 }

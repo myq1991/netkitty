@@ -18,10 +18,10 @@ export default class EthernetII extends BaseHeader {
                 label: 'Destination',
                 contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
-                    this.instance.dmac = Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
+                    this.instance.dmac.setValue(Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: (): void => {
-                    const dmac: number[] = this.instance.dmac.toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
+                    const dmac: number[] = this.instance.dmac.getValue().toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
                     this.writeBytes(0, Buffer.alloc(6, Buffer.from(dmac)))
                 }
             },
@@ -32,10 +32,10 @@ export default class EthernetII extends BaseHeader {
                 label: 'Source',
                 contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
-                    this.instance.smac = Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':')
+                    this.instance.smac.setValue(Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: (): void => {
-                    const smac: number[] = this.instance.smac.toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
+                    const smac: number[] = this.instance.smac.getValue().toString().split(':').map(value => parseInt(value, 16)).map(value => value ? value : 0)
                     this.writeBytes(6, Buffer.alloc(6, Buffer.from(smac)))
                 }
             },
@@ -46,10 +46,10 @@ export default class EthernetII extends BaseHeader {
                 label: 'EtherType',
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
-                    this.instance.etherType = this.readBytes(12, 2).toString('hex').padStart(4, '0')
+                    this.instance.etherType.setValue(this.readBytes(12, 2).toString('hex').padStart(4, '0'))
                 },
                 encode: (): void => {
-                    let etherType: string = this.instance.etherType ? UInt16ToHex(parseInt(this.instance.etherType.toString(), 16)) : UInt16ToHex(0x0000)
+                    let etherType: string = this.instance.etherType.isUndefined() ? UInt16ToHex(0x0000) : UInt16ToHex(parseInt(this.instance.etherType.getValue().toString(), 16))
                     etherType = etherType ? etherType : UInt16ToHex(0x0000)
                     const typeBuffer: Buffer = Buffer.from(etherType, 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)

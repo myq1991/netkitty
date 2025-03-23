@@ -32,10 +32,10 @@ export default class IEC61850SampledValues extends BaseHeader {
                 maximum: 0x3fff,
                 label: 'APPID',
                 decode: (): void => {
-                    this.instance.appid = parseInt(this.readBytes(0, 2).toString('hex'), 16)
+                    this.instance.appid.setValue(parseInt(this.readBytes(0, 2).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    let APPID: number = parseInt(this.instance.appid.toString())
+                    let APPID: number = parseInt(this.instance.appid.getValue().toString())
                     APPID = APPID ? APPID : 0
                     this.writeBytes(0, Buffer.from(APPID.toString(16).padStart(4, '0'), 'hex'))
                 }
@@ -44,30 +44,34 @@ export default class IEC61850SampledValues extends BaseHeader {
                 type: 'integer',
                 label: 'Length',
                 decode: (): void => {
-                    this.instance.length = parseInt(this.readBytes(2, 2).toString('hex'), 16)
-                    if (this.instance.length === undefined) this.recordError('length', 'Not Found')
+                    this.instance.length.setValue(parseInt(this.readBytes(2, 2).toString('hex'), 16))
+                    if (this.instance.length.isUndefined()) this.recordError('length', 'Not Found')
                 },
                 encode: (): void => {
-                    let length: number = parseInt(this.instance.length.toString())
+                    let length: number = parseInt(this.instance.length.getValue().toString())
                     length = length ? length : 0
-                    this.writeBytes(2, Buffer.from(length.toString(16).padStart(4, '0'), 'hex'))
+                    if (length > 0) {
+                        this.writeBytes(2, Buffer.from(length.toString(16).padStart(4, '0'), 'hex'))
+                    } else {
+                        this.addPostSelfEncodeHandler((): void => {
+                            let length: number = parseInt(this.instance.length.getValue().toString())
+                            this.writeBytes(2, Buffer.from(length.toString(16).padStart(4, '0'), 'hex'))
+                        })
+                    }
                 }
             },
             reserved1: {
                 type: 'object',
                 label: 'Reserved1',
-                decode: (): void => {
-                    this.instance.reserved1 = {}
-                },
                 properties: {
                     simulated: {
                         type: 'boolean',
                         label: 'Simulated',
                         decode: (): void => {
-                            this.instance.reserved1['simulated'] = !!this.readBits(4, 2, 0, 1)
+                            this.instance.reserved1.simulated.setValue(!!this.readBits(4, 2, 0, 1))
                         },
                         encode: (): void => {
-                            const simulated: boolean = !!this.instance.reserved1['simulated']
+                            const simulated: boolean = !!this.instance.reserved1.simulated.getValue()
                             this.writeBits(4, 2, 0, 1, simulated ? 1 : 0)
                         }
                     },
@@ -77,10 +81,10 @@ export default class IEC61850SampledValues extends BaseHeader {
                         maximum: 32767,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved1['reserved'] = this.readBits(4, 2, 1, 16)
+                            this.instance.reserved1.reserved.setValue(this.readBits(4, 2, 1, 16))
                         },
                         encode: (): void => {
-                            let reserved: number = parseInt(this.instance.reserved1['reserved'].toString())
+                            let reserved: number = parseInt(this.instance.reserved1.reserved.getValue().toString())
                             reserved = reserved ? reserved : 0
                             this.writeBits(4, 2, 1, 16, reserved)
                         }
@@ -90,9 +94,6 @@ export default class IEC61850SampledValues extends BaseHeader {
             reserved2: {
                 type: 'object',
                 label: 'Reserved2',
-                decode: (): void => {
-                    this.instance.reserved2 = {}
-                },
                 properties: {
                     reserved: {
                         type: 'number',
@@ -100,10 +101,10 @@ export default class IEC61850SampledValues extends BaseHeader {
                         maximum: 65535,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved2['reserved'] = this.readBits(4, 2, 0, 16)
+                            this.instance.reserved2.reserved.setValue(this.readBits(4, 2, 0, 16))
                         },
                         encode: (): void => {
-                            let reserved: number = parseInt(this.instance.reserved2['reserved'].toString())
+                            let reserved: number = parseInt(this.instance.reserved2.reserved.getValue().toString())
                             reserved = reserved ? reserved : 0
                             this.writeBits(4, 2, 0, 16, reserved)
                         }
@@ -114,10 +115,10 @@ export default class IEC61850SampledValues extends BaseHeader {
                 type: 'object',
                 label: 'Sampled Values PDU',
                 decode: (): void => {
-                    const buffer: Buffer = this.readBytes(8, (this.instance.length as number) - 8)
+                    const buffer: Buffer = this.readBytes(8, (this.instance.length.getValue()) - 8)
                     this.TLVInstance = TLV.parse(buffer)
                     this.TLVChild = this.TLVInstance.getChild()
-                    this.instance.svPdu = {}
+                    this.instance.svPdu.setValue({})
                 },
                 encode: (): void => {
                     let buffer: Buffer = Buffer.from([])
@@ -129,9 +130,8 @@ export default class IEC61850SampledValues extends BaseHeader {
                      * Update the length only if it is not set
                      * Update length(APPID's length + Length's length + Reserved1's length + Reserved2's length + svPdu's length)
                      */
-                    if (this.instance.length as number > 0) return
-                    this.instance.length = 2 + 2 + 2 + 2 + svPduBuffer.length
-                    this.SCHEMA.properties!['length']!['encode']!()
+                    if (this.instance.length.getValue() > 0) return
+                    this.instance.length.setValue(2 + 2 + 2 + 2 + svPduBuffer.length)
                 },
                 properties: {
                     noASDU: {
@@ -144,11 +144,11 @@ export default class IEC61850SampledValues extends BaseHeader {
                             if (!noASDUTLV) return this.recordError('svPdu.noASDU', 'Not Found')
                             const noASDUNum: number = HexToUInt16(noASDUTLV.getValue('hex'))
                             if (!noASDUNum) this.recordError('svPdu.noASDU', 'Number of ASDU should be greater or equal to 1')
-                            this.instance.svPdu['noASDU'] = noASDUNum
+                            this.instance.svPdu.noASDU.setValue(noASDUNum)
                         },
                         encode: (): void => {
-                            if (this.instance.svPdu['noASDU'] === undefined) this.recordError('svPdu.noASDU', 'noASDU is not set')
-                            this.TLVChild.push(new TLV(0x80, UInt16ToBERHex(parseInt(this.instance.svPdu['noASDU'].toString()))))
+                            if (this.instance.svPdu.noASDU.isUndefined()) this.recordError('svPdu.noASDU', 'noASDU is not set')
+                            this.TLVChild.push(new TLV(0x80, UInt16ToBERHex(parseInt(this.instance.svPdu.noASDU.getValue().toString()))))
                         }
                     },
                     seqASDU: {
@@ -203,7 +203,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                             const seqASDU: ASDUItem[] = []
                             const seqASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0xa2)
                             if (!seqASDUTLV) {
-                                this.instance.svPdu['seqASDU'] = seqASDU
+                                this.instance.svPdu.seqASDU.setValue(seqASDU)
                                 return
                             }
                             const ASDUTLVs: TLV[] = seqASDUTLV.getChild()
@@ -286,10 +286,10 @@ export default class IEC61850SampledValues extends BaseHeader {
                                     smpMod: smpMod!
                                 })
                             })
-                            this.instance.svPdu['seqASDU'] = seqASDU
+                            this.instance.svPdu.seqASDU.setValue(seqASDU)
                         },
                         encode: (): void => {
-                            const seqASDU: ASDUItem[] = this.instance.svPdu['seqASDU'] ? this.instance.svPdu['seqASDU'] : []
+                            const seqASDU: ASDUItem[] = this.instance.svPdu.seqASDU.isUndefined() ? [] : this.instance.svPdu.seqASDU.getValue()
                             const seqASDUTLVs: TLV[] = []
                             seqASDU.forEach((seqASDUItem: ASDUItem, index: number): void => {
                                 const seqASDUItemTLVs: TLV[] = []
@@ -352,6 +352,6 @@ export default class IEC61850SampledValues extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x88ba)
+        return this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x88ba)
     }
 }

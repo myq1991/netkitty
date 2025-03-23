@@ -12,10 +12,10 @@ export default class RawData extends BaseHeader {
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
                     const dataLength: number = this.packet.length - this.startPos
-                    this.instance.data = this.readBytes(0, dataLength).toString('hex')
+                    this.instance.data.setValue(this.readBytes(0, dataLength).toString('hex'))
                 },
                 encode: (): void => {
-                    this.writeBytes(0, Buffer.from(this.instance.data.toString(), 'hex'))
+                    this.writeBytes(0, Buffer.from(this.instance.data.getValue().toString(), 'hex'))
                 }
             }
         }
