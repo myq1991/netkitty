@@ -34,14 +34,14 @@ export default class IPv4 extends BaseHeader {
                 maximum: 15,
                 decode: (): void => {
                     this.instance.version.setValue(this.readBits(0, 1, 0, 4))
-                    if (this.instance.version.getValue() !== 4) this.recordError('version', 'IPv4 version should be 4')
+                    if (this.instance.version.getValue() !== 4) this.recordError(this.instance.version.getPath(), 'IPv4 version should be 4')
                 },
                 encode: (): void => {
                     let version: number = this.instance.version.getValue()
                     version = parseInt((version ? version : 4).toString())
                     version = version > 15 ? 15 : version
                     version = version < 0 ? 0 : version
-                    if (version !== 4) this.recordError('version', 'IPv4 version should be 4')
+                    if (version !== 4) this.recordError(this.instance.version.getPath(), 'IPv4 version should be 4')
                     this.writeBits(0, 1, 0, 4, version)
                 }
             },
@@ -67,9 +67,6 @@ export default class IPv4 extends BaseHeader {
             dsfield: {
                 type: 'object',
                 label: 'Differentiated Services Field',
-                // decode: (): void => {
-                //     this.instance.dsfield = {}
-                // },
                 properties: {
                     dscp: {
                         type: 'integer',
@@ -135,7 +132,7 @@ export default class IPv4 extends BaseHeader {
                     this.instance.id.setValue(parseInt(this.readBytes(4, 2).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    if (!this.instance.id) this.recordError('id', 'Not Found')
+                    if (this.instance.id.isUndefined()) this.recordError(this.instance.id.getPath(), 'Not Found')
                     let id: number = this.instance.id.getValue()
                     id = id ? id : 0
                     this.writeBytes(4, Buffer.from(UInt16ToHex(id), 'hex'))
@@ -144,9 +141,6 @@ export default class IPv4 extends BaseHeader {
             flags: {
                 type: 'object',
                 label: 'Flags',
-                // decode: (): void => {
-                //     this.instance.flags = {}
-                // },
                 properties: {
                     rb: {
                         type: 'integer',
@@ -158,7 +152,7 @@ export default class IPv4 extends BaseHeader {
                         encode: (): void => {
                             let rb: number
                             if (this.instance.flags.rb.isUndefined()) {
-                                this.recordError('flags.rb', 'Not Found')
+                                this.recordError(this.instance.flags.rb.getPath(), 'Not Found')
                                 rb = 0
                             } else {
                                 rb = this.instance.flags.rb.getValue()
@@ -177,7 +171,7 @@ export default class IPv4 extends BaseHeader {
                         encode: (): void => {
                             let df: number
                             if (this.instance.flags.df.isUndefined()) {
-                                this.recordError('flags.df', 'Not Found')
+                                this.recordError(this.instance.flags.df.getPath(), 'Not Found')
                                 df = 1
                             } else {
                                 df = this.instance.flags.df.getValue()
@@ -196,7 +190,7 @@ export default class IPv4 extends BaseHeader {
                         encode: (): void => {
                             let mf: number
                             if (this.instance.flags.mf.isUndefined()) {
-                                this.recordError('flags.mf', 'Not Found')
+                                this.recordError(this.instance.flags.mf.getPath(), 'Not Found')
                                 mf = 0
                             } else {
                                 mf = this.instance.flags.mf.getValue()
@@ -216,7 +210,7 @@ export default class IPv4 extends BaseHeader {
                     this.instance.fragOffset.setValue(this.readBits(6, 2, 3, 13))
                 },
                 encode: (): void => {
-                    if (this.instance.fragOffset.isUndefined()) this.recordError('fragOffset', 'Not Found')
+                    if (this.instance.fragOffset.isUndefined()) this.recordError(this.instance.fragOffset.getPath(), 'Not Found')
                     let fragOffset: number = this.instance.fragOffset.getValue()
                     fragOffset = fragOffset ? fragOffset : 0
                     this.writeBits(6, 2, 3, 13, fragOffset)
@@ -231,7 +225,7 @@ export default class IPv4 extends BaseHeader {
                     this.instance.ttl.setValue(parseInt(this.readBytes(8, 1).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    if (this.instance.ttl.isUndefined()) this.recordError('ttl', 'Not Found')
+                    if (this.instance.ttl.isUndefined()) this.recordError(this.instance.ttl.getPath(), 'Not Found')
                     let ttl: number = this.instance.ttl.getValue()
                     ttl = ttl ? ttl : 0
                     this.writeBytes(8, Buffer.from(UInt8ToHex(ttl), 'hex'))
@@ -246,7 +240,7 @@ export default class IPv4 extends BaseHeader {
                     this.instance.protocol.setValue(parseInt(this.readBytes(9, 1).toString('hex'), 16))
                 },
                 encode: (): void => {
-                    if (this.instance.protocol.isUndefined()) this.recordError('protocol', 'Not Found')
+                    if (this.instance.protocol.isUndefined()) this.recordError(this.instance.protocol.getPath(), 'Not Found')
                     let protocol: number = this.instance.protocol.getValue()
                     protocol = protocol ? protocol : 0
                     this.writeBytes(9, Buffer.from(UInt8ToHex(protocol), 'hex'))
@@ -288,7 +282,7 @@ export default class IPv4 extends BaseHeader {
                 },
                 encode: (): void => {
                     if (this.instance.sip.isUndefined()) {
-                        this.recordError('sip', 'Not Found')
+                        this.recordError(this.instance.sip.getPath(), 'Not Found')
                         this.instance.sip.setValue('0.0.0.0')
                     }
                     const sipStr: string = this.instance.sip.getValue().toString()
@@ -308,7 +302,7 @@ export default class IPv4 extends BaseHeader {
                 },
                 encode: (): void => {
                     if (this.instance.dip.isUndefined()) {
-                        this.recordError('dip', 'Not Found')
+                        this.recordError(this.instance.dip.getPath(), 'Not Found')
                         this.instance.dip.setValue('0.0.0.0')
                     }
                     const dipStr: string = this.instance.dip.getValue()
