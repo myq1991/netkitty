@@ -2,7 +2,10 @@ import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {UInt16ToHex, UInt8ToHex} from '../lib/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {HexToUInt16, HexToUInt8} from '../lib/HexToNumber'
+import {HexToUInt16} from '../lib/HexToNumber'
+import {BufferToInt16, BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
+import {BufferToHex} from '../lib/BufferToHex'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 
 export default class ARP extends BaseHeader {
 
@@ -18,7 +21,7 @@ export default class ARP extends BaseHeader {
                         minimum: 0,
                         maximum: 65535,
                         decode: (): void => {
-                            this.instance.hardware.type.setValue(HexToUInt16(this.readBytes(0, 2).toString('hex')))
+                            this.instance.hardware.type.setValue(BufferToInt16(this.readBytes(0, 2)))
                         },
                         encode: (): void => {
                             let hwType: number = this.instance.hardware.type.getValue()
@@ -32,7 +35,7 @@ export default class ARP extends BaseHeader {
                                 this.recordError('hardware.type', 'Minimum value is 0')
                                 hwType = 0
                             }
-                            this.writeBytes(0, Buffer.from(UInt16ToHex(hwType), 'hex'))
+                            this.writeBytes(0, UInt16ToBuffer(hwType))
                         }
                     },
                     size: {
@@ -41,7 +44,7 @@ export default class ARP extends BaseHeader {
                         minimum: 0,
                         maximum: 255,
                         decode: (): void => {
-                            this.instance.hardware.size.setValue(HexToUInt8(this.readBytes(4, 1).toString('hex')))
+                            this.instance.hardware.size.setValue(BufferToUInt8(this.readBytes(4, 1)))
                         },
                         encode: (): void => {
                             let hwSize: number = this.instance.hardware.size.getValue()
@@ -55,7 +58,7 @@ export default class ARP extends BaseHeader {
                                 this.recordError('hardware.size', 'Minimum value is 0')
                                 hwSize = 0
                             }
-                            this.writeBytes(4, Buffer.from(UInt8ToHex(hwSize), 'hex'))
+                            this.writeBytes(4, UInt8ToBuffer(hwSize))
                         }
                     }
                 }
@@ -71,14 +74,14 @@ export default class ARP extends BaseHeader {
                         maxLength: 4,
                         contentEncoding: StringContentEncodingEnum.HEX,
                         decode: (): void => {
-                            this.instance.protocol.type.setValue(this.readBytes(2, 2).toString('hex'))
+                            this.instance.protocol.type.setValue(BufferToHex(this.readBytes(2, 2)))
                         },
                         encode: (): void => {
                             let protoTypeHex: string = this.instance.protocol.type.getValue()
                             if (protoTypeHex === undefined) this.recordError('protocol.type', 'Not Found')
                             let protoType: number = HexToUInt16(protoTypeHex)
                             protoType = protoType ? protoType : 0
-                            this.writeBytes(2, Buffer.from(UInt16ToHex(protoType), 'hex'))
+                            this.writeBytes(2, UInt16ToBuffer(protoType))
                         }
                     },
                     size: {
@@ -87,7 +90,7 @@ export default class ARP extends BaseHeader {
                         minimum: 0,
                         maximum: 255,
                         decode: (): void => {
-                            this.instance.protocol.size.setValue(HexToUInt8(this.readBytes(5, 1).toString('hex')))
+                            this.instance.protocol.size.setValue(BufferToUInt8(this.readBytes(5, 1)))
                         },
                         encode: (): void => {
                             let protoSize: number = this.instance.protocol.size.getValue()
@@ -101,7 +104,7 @@ export default class ARP extends BaseHeader {
                                 this.recordError('protocol.size', 'Minimum value is 0')
                                 protoSize = 0
                             }
-                            this.writeBytes(5, Buffer.from(UInt8ToHex(protoSize), 'hex'))
+                            this.writeBytes(5, UInt8ToBuffer(protoSize))
                         }
                     }
                 }
@@ -111,7 +114,7 @@ export default class ARP extends BaseHeader {
                 label: 'Opcode',
                 enum: [1, 2, 3, 4],
                 decode: (): void => {
-                    this.instance.opcode.setValue(HexToUInt16(this.readBytes(6, 2).toString('hex')))
+                    this.instance.opcode.setValue(BufferToUInt16(this.readBytes(6, 2)))
                     if (![1, 2, 3, 4].includes(this.instance.opcode.getValue())) this.recordError('opcode', 'Opcode should be 1, 2, 3 or 4')
                 },
                 encode: (): void => {
@@ -119,7 +122,7 @@ export default class ARP extends BaseHeader {
                     if (opcode === undefined) this.recordError('opcode', 'Not Found')
                     opcode = opcode ? opcode : 0
                     if (![1, 2, 3, 4].includes(opcode)) this.recordError('opcode', 'Opcode should be 1, 2, 3 or 4')
-                    this.writeBytes(6, Buffer.from(UInt16ToHex(opcode), 'hex'))
+                    this.writeBytes(6, UInt16ToBuffer(opcode))
                 }
             },
             sender: {
