@@ -352,6 +352,6 @@ export default class IEC61850SampledValues extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === 0x88ba
+        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x88ba)
     }
 }

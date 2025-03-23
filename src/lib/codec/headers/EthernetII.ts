@@ -40,17 +40,18 @@ export default class EthernetII extends BaseHeader {
                 }
             },
             etherType: {
-                type: 'integer',
-                minimum: 0x0600,
-                maximum: 0xffff,
+                type: 'string',
+                minLength: 4,
+                maxLength: 4,
                 label: 'EtherType',
+                contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
-                    this.instance.etherType = parseInt(this.readBytes(12, 2).toString('hex'), 16)
+                    this.instance.etherType = this.readBytes(12, 2).toString('hex').padStart(4, '0')
                 },
                 encode: (): void => {
-                    let etherType: number = this.instance.etherType ? parseInt(this.instance.etherType.toString()) : 0x0000
-                    etherType = etherType ? etherType : 0
-                    const typeBuffer: Buffer = Buffer.from(UInt16ToHex(etherType), 'hex')
+                    let etherType: string = this.instance.etherType ? UInt16ToHex(parseInt(this.instance.etherType.toString(), 16)) : UInt16ToHex(0x0000)
+                    etherType = etherType ? etherType : UInt16ToHex(0x0000)
+                    const typeBuffer: Buffer = Buffer.from(etherType, 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
                     this.writeBytes(12, typeBuffer.subarray(0, 2))
                 }

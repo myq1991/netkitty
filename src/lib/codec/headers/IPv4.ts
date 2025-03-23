@@ -7,6 +7,11 @@ import {FixHexString} from '../lib/FixHexString'
 
 export default class IPv4 extends BaseHeader {
 
+    /**
+     * Calculate IPv4 header checksum
+     * @param headerBuffer
+     * @protected
+     */
     protected calculateIPv4Checksum(headerBuffer: Buffer): number {
         const header: Uint8Array = Uint8Array.from(headerBuffer)
         let sum: number = 0
@@ -329,6 +334,10 @@ export default class IPv4 extends BaseHeader {
                         if (optionsBuffer.length > 40) optionsBuffer = optionsBuffer.subarray(0, 40)
                         const estimateHdrLen: number = this.length + optionsBuffer.length
                         if (estimateHdrLen % 4) {
+                            /**
+                             * IPv4 Header should have a length that a multiple of 32 bits
+                             * @see https://learningnetwork.cisco.com/s/question/0D53i00000Kt6hHCAR/padding-field-on-ipv4-header
+                             */
                             optionsBuffer = Buffer.concat([optionsBuffer, Buffer.from([0x00])])
                         }
                         this.writeBytes(this.length, optionsBuffer)
@@ -344,6 +353,6 @@ export default class IPv4 extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === 0x0800
+        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x0800)
     }
 }

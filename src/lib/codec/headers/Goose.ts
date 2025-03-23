@@ -19,7 +19,7 @@ import {
     UInt32ToBERHex,
     UInt8ToBERHex
 } from '../lib/NumberToBERHex'
-import {Float32ToHex} from '../lib/NumberToHex'
+import {Float32ToHex, UInt16ToHex} from '../lib/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 type AllDataItem = {
@@ -651,6 +651,6 @@ export default class Goose extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === 0x88b8
+        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x88b8)
     }
 }

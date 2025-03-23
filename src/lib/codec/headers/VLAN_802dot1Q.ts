@@ -1,6 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {CodecModule} from '../types/CodecModule'
+import {UInt16ToHex} from '../lib/NumberToHex'
 
 export default class VLAN_802dot1Q extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
@@ -41,16 +42,16 @@ export default class VLAN_802dot1Q extends BaseHeader {
                 }
             },
             etherType: {
-                type: 'integer',
-                minimum: 0x0600,
-                maximum: 0xffff,
+                type: 'string',
+                minLength: 4,
+                maxLength: 4,
                 decode: (): void => {
-                    this.instance.etherType = parseInt(this.readBytes(2, 2).toString('hex'), 16)
+                    this.instance.etherType = this.readBytes(2, 2).toString('hex').padStart(4, '0')
                 },
                 encode: (): void => {
-                    let etherType: number = this.instance.etherType ? parseInt(this.instance.etherType.toString()) : 0x0000
-                    etherType = etherType ? etherType : 0
-                    const typeBuffer: Buffer = Buffer.from(etherType.toString(16), 'hex')
+                    let etherType: string = this.instance.etherType ? UInt16ToHex(parseInt(this.instance.etherType.toString(), 16)) : UInt16ToHex(0x0000)
+                    etherType = etherType ? etherType : UInt16ToHex(0x0000)
+                    const typeBuffer: Buffer = Buffer.from(etherType, 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
                     this.writeBytes(2, typeBuffer.subarray(0, 2))
                 }
@@ -64,6 +65,6 @@ export default class VLAN_802dot1Q extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType === 0x8100
+        return this.prevCodecModule.instance.etherType === UInt16ToHex(0x8100)
     }
 }
