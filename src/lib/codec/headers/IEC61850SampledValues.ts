@@ -5,6 +5,7 @@ import {HexToUInt16, HexToUInt32, HexToUInt8} from '../lib/HexToNumber'
 import {UInt16ToBERHex} from '../lib/NumberToBERHex'
 import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
+import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../lib/BufferToNumber'
 
 type ASDUItem = {
     svID: string
@@ -234,33 +235,33 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 //smpCnt
                                 const smpCntTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x82)
                                 if (smpCntTLV) {
-                                    smpCnt = HexToUInt16(smpCntTLV.getValue('buffer').toString('hex'))
+                                    smpCnt = BufferToUInt16(smpCntTLV.getValue('buffer'))
                                 } else {
                                     this.recordError(`svPdu.seqASDU[${index}]`, 'smpCnt Not Found')
                                 }
                                 //confRev
                                 const confRevTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x83)
                                 if (confRevTLV) {
-                                    confRev = HexToUInt32(confRevTLV.getValue('buffer').toString('hex'))
+                                    confRev = BufferToUInt32(confRevTLV.getValue('buffer'))
                                 } else {
                                     this.recordError(`svPdu.seqASDU[${index}]`, 'confRev Not Found')
                                 }
                                 //refrTm (optional)
                                 const refrTmTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x84)
                                 if (refrTmTLV) {
-                                    refrTm = BigInt(`0x${refrTmTLV.getValue('hex')}`).toString()
+                                    refrTm = BufferToUInt64(refrTmTLV.getValue('buffer')).toString()
                                 }
                                 //smpSynch
                                 const smpSynchTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x85)
                                 if (smpSynchTLV) {
-                                    smpSynch = HexToUInt8(smpSynchTLV.getValue('buffer').toString('hex'))
+                                    smpSynch = BufferToUInt8(smpSynchTLV.getValue('buffer'))
                                 } else {
                                     this.recordError(`svPdu.seqASDU[${index}]`, 'smpSynch Not Found')
                                 }
                                 //smpRate (optional)
                                 const smpRateTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x86)
                                 if (smpRateTLV) {
-                                    smpRate = HexToUInt16(smpRateTLV.getValue('buffer').toString('hex'))
+                                    smpRate = BufferToUInt16(smpRateTLV.getValue('buffer'))
                                 }
                                 //sample
                                 const sampleTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x87)
@@ -272,7 +273,7 @@ export default class IEC61850SampledValues extends BaseHeader {
                                 //smpMod (optional)
                                 const smpModTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x86)
                                 if (smpModTLV) {
-                                    smpMod = HexToUInt16(smpModTLV.getValue('buffer').toString('hex'))
+                                    smpMod = BufferToUInt16(smpModTLV.getValue('buffer'))
                                 }
                                 seqASDU.push({
                                     svID: svID!,
