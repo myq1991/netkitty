@@ -2,6 +2,8 @@ export class FlexibleObject {
 
     readonly #parent: FlexibleObject | undefined
 
+    readonly #paths: string[]
+
     #data: any
 
     #undefined: boolean = true
@@ -12,14 +14,15 @@ export class FlexibleObject {
         if (this.#parent) this.#parent.#markFlexibleObjectDefined()
     }
 
-    constructor(data?: object, parent?: FlexibleObject) {
+    constructor(data?: object, parent?: FlexibleObject, paths?: string[]) {
         this.#parent = parent
         this.#data = {}
+        this.#paths = paths ? paths : []
         if (data !== undefined) this.setValue(data)
         return new Proxy(this, {
             get: (target: FlexibleObject, p: string): any => {
                 if (this[p]) return (...args: any[]): any => (this[p] as any)(...args)
-                if (target.#data[p] === undefined) target.#data[p] = new FlexibleObject(target.#data[p], this)
+                if (target.#data[p] === undefined) target.#data[p] = new FlexibleObject(target.#data[p], this, [...this.#paths, p])
                 return target.#data[p]
             },
             set: (target: FlexibleObject, p: string, newValue: any): boolean => {
@@ -36,7 +39,7 @@ export class FlexibleObject {
     public setValue(value: any): void {
         if (typeof value === 'object' && !Array.isArray(value)) {
             Object.keys(value).forEach(key => {
-                this.#data[key] = new FlexibleObject(this.#data[key], this)
+                this.#data[key] = new FlexibleObject(this.#data[key], this, [...this.#paths, key])
                 this.#data[key].setValue(value[key])
             })
         } else {
@@ -76,8 +79,8 @@ export class FlexibleObject {
      * Get current object path
      */
     // @ts-ignore
-    public getPath() {
-
+    public getPath(): string {
+        return this.#paths.join('.')
     }
 
     [p: string]: FlexibleObject

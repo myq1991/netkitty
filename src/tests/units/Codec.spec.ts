@@ -38,14 +38,15 @@ async function ARP_Codec(packet: string): Promise<void> {
     // await IPv4_Codec('AAAAAAAAAAAAAAAACABLAABseDcAAEABdS1/AAABfwAAAYYWAAAAAgIQAAIAAAACAAQABQAGAO8AAAAAKVCMCgABkk2uRRMODAAICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc=')
     // await ARP_Codec('////////AFDCV7MQCAYAAQgABgQAAQBQwlezEMCorNcAAAAAAADAqKwBAAAAAAAAAAAAAAAWOgAFAgAA')
 
-    const fobj = new FlexibleObject({
-        cc1: true
-    })
-    fobj.cc2.bb3.setValue(true)
-
-    fobj.c1.b1.ccc1.setValue('1')
-    fobj.c1.b1.ccc2.setValue(2)
-    fobj.c1.b1.ccc3.setValue(true)
-    // console.log(fobj.cc2.bb4.getValue(), fobj.cc2.bb4.isUndefined())
-    console.log(JSON.stringify(fobj.getValue(), null, 2))
+    // const fobj = new FlexibleObject({
+    //     cc1: true
+    // })
+    // fobj.cc2.bb3.setValue(true)
+    //
+    // fobj.c1.b1.ccc1.setValue('1')
+    // fobj.c1.b1.ccc2.setValue(2)
+    // fobj.c1.b1.ccc3.setValue(true)
+    // // console.log(fobj.cc2.bb4.getValue(), fobj.cc2.bb4.isUndefined())
+    // console.log(JSON.stringify(fobj.getValue(), null, 2))
+    // console.log(fobj.c1.b1.ccc4.hhh6.getPath())
 })()
