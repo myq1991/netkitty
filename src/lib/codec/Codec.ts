@@ -11,15 +11,54 @@ import {CodecData} from './types/CodecData'
 import {SortPostHandlers} from './lib/SortPostHandlers'
 import {NoAvailableCodecError} from '../../errors/NoAvailableCodecError'
 import {FlexibleObject} from './lib/FlexibleObject'
+import {CodecSchema} from './types/CodecSchema'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
 export class Codec {
 
-    protected readonly HEADER_CODECS: CodecModuleConstructor[] = []
+    readonly #codecModuleConstructors: CodecModuleConstructor[] = []
 
-    constructor() {
-        this.HEADER_CODECS = this.loadHeaderCodecs()
+    readonly #codecSchemas: CodecSchema[] = []
+
+    protected get HEADER_CODECS(): CodecModuleConstructor[] {
+        return this.#codecModuleConstructors
+    }
+
+    public get CODEC_SCHEMAS(): CodecSchema[] {
+        return this.#codecSchemas
+    }
+
+    constructor(codecModuleConstructors: CodecModuleConstructor[] = []) {
+        this.#codecModuleConstructors = this.loadHeaderCodecs()
+        if (codecModuleConstructors) {
+            const replaced: CodecModuleConstructor[] = []
+            codecModuleConstructors.forEach((codecModuleConstructor: CodecModuleConstructor) => {
+                const id: string = codecModuleConstructor.PROTOCOL_ID
+                this.#codecModuleConstructors.forEach((HEADER_CODEC: CodecModuleConstructor, index: number, array: CodecModuleConstructor[]): void => {
+                    if (HEADER_CODEC.PROTOCOL_ID === id) {
+                        array[index] = codecModuleConstructor
+                        replaced.push(codecModuleConstructor)
+                    }
+                })
+            })
+            codecModuleConstructors
+                .filter((codecModuleConstructor: CodecModuleConstructor): boolean => !replaced.includes(codecModuleConstructor))
+                .forEach((codecModuleConstructor: CodecModuleConstructor): number => this.#codecModuleConstructors.push(codecModuleConstructor))
+        }
+        this.#codecSchemas = this.loadCodecSchemas()
+    }
+
+    /**
+     * Load codec schemas
+     * @protected
+     */
+    protected loadCodecSchemas(): CodecSchema[] {
+        return this.HEADER_CODECS.map((codecModuleConstructor: CodecModuleConstructor): CodecSchema => ({
+            id: codecModuleConstructor.PROTOCOL_ID,
+            name: codecModuleConstructor.PROTOCOL_NAME,
+            schema: codecModuleConstructor.PROTOCOL_SCHEMA
+        }))
     }
 
     /**
@@ -85,7 +124,6 @@ export class Codec {
         if (!codecModuleConstructor) throw new NoAvailableCodecError('No available codec constructor')
         const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
         await codecModule.decode()
-        // const nextStartPos: number = codecModule.endPos
         codecData.startPos = codecModule.endPos
         codecModules.push(codecModule)
         if (codecData.startPos >= codecData.packet.length) return
