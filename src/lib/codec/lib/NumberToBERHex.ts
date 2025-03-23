@@ -10,3 +10,4 @@ export const Int64ToBERHex: (value: bigint) => string = (value: bigint): string 
 export const UInt8ToBERHex: (value: number) => string = (value: number): string => toBERHex(value.toString(16))
 export const UInt16ToBERHex: (value: number) => string = (value: number): string => toBERHex(value.toString(16))
 export const UInt32ToBERHex: (value: number) => string = (value: number): string => toBERHex(value.toString(16))
+export const UInt64ToBERHex: (value: bigint) => string = (value: bigint): string => toBERHex(BigInt(value).toString(16))

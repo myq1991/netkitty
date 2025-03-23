@@ -5,6 +5,7 @@ export const Int64ToHex: (value: bigint) => string = (value: bigint): string => 
 export const UInt8ToHex: (value: number) => string = (value: number): string => value.toString(16).padStart(2, '0')
 export const UInt16ToHex: (value: number) => string = (value: number): string => value.toString(16).padStart(4, '0')
 export const UInt32ToHex: (value: number) => string = (value: number): string => value.toString(16).padStart(8, '0')
+export const UInt64ToHex: (value: bigint) => string = (value: bigint): string => BigInt(value).toString(16).padStart(16, '0')
 
 export const Float32ToHex: (value: number) => string = (value: number): string => {
     const buffer = new ArrayBuffer(4)

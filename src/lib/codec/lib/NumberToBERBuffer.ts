@@ -5,6 +5,7 @@ import {
     Int8ToBERHex,
     UInt16ToBERHex,
     UInt32ToBERHex,
+    UInt64ToBERHex,
     UInt8ToBERHex
 } from './NumberToBERHex'
 
@@ -15,3 +16,4 @@ export const Int64ToBERBuffer: (value: bigint) => Buffer = (value: bigint): Buff
 export const UInt8ToBERBuffer: (value: number) => Buffer = (value: number): Buffer => Buffer.from(UInt8ToBERHex(value), 'hex')
 export const UInt16ToBERBuffer: (value: number) => Buffer = (value: number): Buffer => Buffer.from(UInt16ToBERHex(value), 'hex')
 export const UInt32ToBERBuffer: (value: number) => Buffer = (value: number): Buffer => Buffer.from(UInt32ToBERHex(value), 'hex')
+export const UInt64ToBERBuffer: (value: bigint) => Buffer = (value: bigint): Buffer => Buffer.from(UInt64ToBERHex(value), 'hex')
