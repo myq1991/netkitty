@@ -1,6 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 export default class RawData extends BaseHeader {

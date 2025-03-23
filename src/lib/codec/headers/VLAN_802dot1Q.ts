@@ -1,6 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {CodecModule} from '../types/CodecModule'
 import {UInt16ToHex} from '../lib/NumberToHex'
 
 export default class VLAN_802dot1Q extends BaseHeader {

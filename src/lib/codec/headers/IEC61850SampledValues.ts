@@ -1,7 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import TLV from 'node-tlv'
-import {HexToUInt16, HexToUInt32, HexToUInt8} from '../lib/HexToNumber'
+import {HexToUInt16} from '../lib/HexToNumber'
 import {UInt16ToBERHex} from '../lib/NumberToBERHex'
 import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'

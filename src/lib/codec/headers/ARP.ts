@@ -210,7 +210,7 @@ export default class ARP extends BaseHeader {
 
     public id: string = 'arp'
 
-    public name: string = 'ARP'
+    public name: string = 'Address Resolution Protocol'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

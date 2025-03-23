@@ -1,9 +1,12 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
+import {UInt16ToHex} from '../lib/NumberToHex'
 import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {FixHexString} from '../lib/FixHexString'
+import {BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
+import {UInt16ToBuffer, UInt32ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
+import {BufferToHex} from '../lib/BufferToHex'
 
 export default class IPv4 extends BaseHeader {
 
@@ -102,14 +105,14 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 65535,
                 decode: (): void => {
-                    this.instance.length.setValue(parseInt(this.readBytes(2, 2).toString('hex'), 16))
+                    this.instance.length.setValue(BufferToUInt16(this.readBytes(2, 2)))
                 },
                 encode: (): void => {
                     //This field's real value needs down stream codec invoke recode to fill
                     let length: number = this.instance.length.getValue()
                     length = length ? length : 0
                     if (length) {
-                        this.writeBytes(2, Buffer.from(UInt16ToHex(length), 'hex'))
+                        this.writeBytes(2, UInt16ToBuffer(length))
                     } else {
                         this.addPostPacketEncodeHandler((): void => {
                             let startCount: boolean = false
@@ -118,7 +121,7 @@ export default class IPv4 extends BaseHeader {
                                 if (codecModule === this) startCount = true
                                 if (startCount) totalLength += codecModule.length
                             })
-                            this.writeBytes(2, Buffer.from(UInt16ToHex(totalLength), 'hex'))
+                            this.writeBytes(2, UInt16ToBuffer(totalLength))
                         })
                     }
                 }
@@ -129,13 +132,12 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 65535,
                 decode: (): void => {
-                    this.instance.id.setValue(parseInt(this.readBytes(4, 2).toString('hex'), 16))
+                    this.instance.id.setValue(BufferToUInt16(this.readBytes(4, 2)))
                 },
                 encode: (): void => {
                     if (this.instance.id.isUndefined()) this.recordError(this.instance.id.getPath(), 'Not Found')
                     let id: number = this.instance.id.getValue()
-                    id = id ? id : 0
-                    this.writeBytes(4, Buffer.from(UInt16ToHex(id), 'hex'))
+                    this.writeBytes(4, UInt16ToBuffer(id ? id : 0))
                 }
             },
             flags: {
@@ -222,13 +224,12 @@ export default class IPv4 extends BaseHeader {
                 maximum: 255,
                 label: 'Time to Live',
                 decode: (): void => {
-                    this.instance.ttl.setValue(parseInt(this.readBytes(8, 1).toString('hex'), 16))
+                    this.instance.ttl.setValue(BufferToUInt8(this.readBytes(8, 1)))
                 },
                 encode: (): void => {
                     if (this.instance.ttl.isUndefined()) this.recordError(this.instance.ttl.getPath(), 'Not Found')
                     let ttl: number = this.instance.ttl.getValue()
-                    ttl = ttl ? ttl : 0
-                    this.writeBytes(8, Buffer.from(UInt8ToHex(ttl), 'hex'))
+                    this.writeBytes(8, UInt8ToBuffer(ttl ? ttl : 0))
                 }
             },
             protocol: {
@@ -237,13 +238,12 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 255,
                 decode: (): void => {
-                    this.instance.protocol.setValue(parseInt(this.readBytes(9, 1).toString('hex'), 16))
+                    this.instance.protocol.setValue(BufferToUInt8(this.readBytes(9, 1)))
                 },
                 encode: (): void => {
                     if (this.instance.protocol.isUndefined()) this.recordError(this.instance.protocol.getPath(), 'Not Found')
                     let protocol: number = this.instance.protocol.getValue()
-                    protocol = protocol ? protocol : 0
-                    this.writeBytes(9, Buffer.from(UInt8ToHex(protocol), 'hex'))
+                    this.writeBytes(9, UInt8ToBuffer(protocol ? protocol : 0))
                 }
             },
             checksum: {
@@ -252,7 +252,7 @@ export default class IPv4 extends BaseHeader {
                 minimum: 0,
                 maximum: 65535,
                 decode: (): void => {
-                    this.instance.checksum.setValue(parseInt(this.readBytes(10, 2).toString('hex'), 16))
+                    this.instance.checksum.setValue(BufferToUInt16(this.readBytes(10, 2)))
                 },
                 encode: (): void => {
                     let checksum: number = !this.instance.checksum.isUndefined() ? this.instance.checksum.getValue() : 0
@@ -261,11 +261,11 @@ export default class IPv4 extends BaseHeader {
                     checksum = checksum > 65535 ? 65535 : checksum
                     checksum = checksum < 0 ? 0 : checksum
                     if (checksum) {
-                        this.writeBytes(10, Buffer.from(UInt16ToHex(checksum), 'hex'))
+                        this.writeBytes(10, UInt16ToBuffer(checksum))
                     } else {
                         this.writeBytes(10, Buffer.alloc(2, 0))
                         this.addPostPacketEncodeHandler((): void => {
-                            this.writeBytes(10, Buffer.from(UInt16ToHex(this.calculateIPv4Checksum(this.packet.subarray(this.startPos, this.endPos))), 'hex'))
+                            this.writeBytes(10, UInt16ToBuffer(this.calculateIPv4Checksum(this.packet.subarray(this.startPos, this.endPos))))
                         }, 65535)
                     }
                 }
@@ -287,7 +287,7 @@ export default class IPv4 extends BaseHeader {
                     }
                     const sipStr: string = this.instance.sip.getValue().toString()
                     const numArr: number[] = sipStr.split('.').map(value => parseInt(value)).map(value => value ? value : 0)
-                    this.writeBytes(12, Buffer.from(UInt32ToHex(parseInt(Buffer.from(numArr).toString('hex'), 16)), 'hex'))
+                    this.writeBytes(12, UInt32ToBuffer(parseInt(Buffer.from(numArr).toString('hex'), 16)))
                 }
             },
             dip: {
@@ -307,7 +307,7 @@ export default class IPv4 extends BaseHeader {
                     }
                     const dipStr: string = this.instance.dip.getValue()
                     const numArr: number[] = dipStr.split('.').map(value => parseInt(value)).map(value => value ? value : 0)
-                    this.writeBytes(16, Buffer.from(UInt32ToHex(parseInt(Buffer.from(numArr).toString('hex'), 16)), 'hex'))
+                    this.writeBytes(16, UInt32ToBuffer(parseInt(Buffer.from(numArr).toString('hex'), 16)))
                 }
             },
             options: {
@@ -318,8 +318,7 @@ export default class IPv4 extends BaseHeader {
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
                     if (this.length < (this.instance.hdrLen.getValue())) {
-                        const restBytes: Buffer = this.readBytes(this.length, (this.instance.hdrLen.getValue()) - this.length)
-                        this.instance.options.setValue(restBytes.toString('hex'))
+                        this.instance.options.setValue(BufferToHex(this.readBytes(this.length, (this.instance.hdrLen.getValue()) - this.length)))
                     }
                 },
                 encode: (): void => {
@@ -343,7 +342,7 @@ export default class IPv4 extends BaseHeader {
 
     public id: string = 'ipv4'
 
-    public name: string = 'IPv4'
+    public name: string = 'Internet Protocol Version 4'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
