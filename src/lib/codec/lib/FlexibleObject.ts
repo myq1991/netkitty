@@ -36,7 +36,7 @@ export class FlexibleObject {
     public setValue(value: any): void {
         if (typeof value === 'object' && !Array.isArray(value)) {
             Object.keys(value).forEach(key => {
-                this.#data[key] = new FlexibleObject(this.#data[key])
+                this.#data[key] = new FlexibleObject(this.#data[key], this)
                 this.#data[key].setValue(value[key])
             })
         } else {
@@ -70,6 +70,14 @@ export class FlexibleObject {
     // @ts-ignore
     public isUndefined(): boolean {
         return this.#undefined
+    }
+
+    /**
+     * Get current object path
+     */
+    // @ts-ignore
+    public getPath() {
+
     }
 
     [p: string]: FlexibleObject

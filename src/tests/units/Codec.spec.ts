@@ -33,19 +33,19 @@ async function ARP_Codec(packet: string): Promise<void> {
 
 (async (): Promise<void> => {
     // await GOOSE_Codec('AaD0CC93AKD0CC93iLgAAQCRAAAAAGGBhoAaR0VEZXZpY2VGNjUwL0xMTjAkR08kZ2NiMDGBAwCcQIIYR0VEZXZpY2VGNjUwL0xMTjAkR09PU0UxgwtGNjUwX0dPT1NFMYQIOG6780IXKAqFAQGGAQuHAQCIAQGJAQCKAQirIIMBAIQDAwAAgwEAhAMDAACDAQCEAwMAAIMBAIQDAwAA')
-    await IEC61850SampleValues_Codec('AQzNBAAByv7A/+5piLpAAQBmAAAAAGBcgAEBolcwVYAENDAwMYICCDaDBAAAAAGFAQKHQAADpBwAAAAAAAAgrAAAAAD//DyAAAAAAAAAAUgAACAAAPOi+AAAAAAAC1wyAAAAAP8BRogAAAAAAABFsgAAIAA=')
+    // await IEC61850SampleValues_Codec('AQzNBAAByv7A/+5piLpAAQBmAAAAAGBcgAEBolcwVYAENDAwMYICCDaDBAAAAAGFAQKHQAADpBwAAAAAAAAgrAAAAAD//DyAAAAAAAAAAUgAACAAAPOi+AAAAAAAC1wyAAAAAP8BRogAAAAAAABFsgAAIAA=')
     // await IPv4_Codec('AQBeAAD7RvyxjrRvCABFAABDFi9AAP8Rwg7AqAHI4AAA+61EFOkALwQ6AAAAAAABAAAAAAAACl9seXJhLW1kbnMEX3VkcAVsb2NhbAAADIAB')
     // await IPv4_Codec('AAAAAAAAAAAAAAAACABLAABseDcAAEABdS1/AAABfwAAAYYWAAAAAgIQAAIAAAACAAQABQAGAO8AAAAAKVCMCgABkk2uRRMODAAICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc=')
     // await ARP_Codec('////////AFDCV7MQCAYAAQgABgQAAQBQwlezEMCorNcAAAAAAADAqKwBAAAAAAAAAAAAAAAWOgAFAgAA')
 
-    // const fobj = new FlexibleObject({
-    //     cc1: true
-    // })
-    // fobj.cc2.bb3.setValue(true)
-    //
-    // // fobj.c1.b1.ccc1.setValue('1')
-    // // fobj.c1.b1.ccc2.setValue(2)
-    // // fobj.c1.b1.ccc3.setValue(true)
+    const fobj = new FlexibleObject({
+        cc1: true
+    })
+    fobj.cc2.bb3.setValue(true)
+
+    fobj.c1.b1.ccc1.setValue('1')
+    fobj.c1.b1.ccc2.setValue(2)
+    fobj.c1.b1.ccc3.setValue(true)
     // console.log(fobj.cc2.bb4.getValue(), fobj.cc2.bb4.isUndefined())
-    // // console.log(JSON.stringify(fobj.cc2.getValue(), null, 2))
+    console.log(JSON.stringify(fobj.getValue(), null, 2))
 })()
