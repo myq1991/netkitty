@@ -1,10 +1,11 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {BufferToUInt16, BufferToUInt32} from '../lib/BufferToNumber'
+import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../lib/BufferToNumber'
 import {UInt16ToBuffer, UInt32ToBuffer} from '../lib/NumberToBuffer'
 import {IPv6ToBuffer} from '../lib/IPToBuffer'
 import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
+import {UInt64ToHex} from '../lib/NumberToHex'
 
 enum TCPOption {
     End_of_Option_List = 'EOL',
@@ -17,6 +18,67 @@ enum TCPOption {
     User_Timeout = 'UTO',
     TCP_Authentication_Option = 'TCP-AO'
 }
+
+type OPTION_EOL = {
+    option: TCPOption.End_of_Option_List
+}
+
+type OPTION_NOP = {
+    option: TCPOption.No_Operation
+}
+
+type OPTION_MSS = {
+    option: TCPOption.Maximum_Segment_Size
+    mss: number
+}
+
+type OPTION_WINDOW_SCALE = {
+    option: TCPOption.Window_Scale
+    shift: number
+}
+
+type OPTION_SACK_PERMITTED = {
+    option: TCPOption.Selective_Acknowledgment_Permitted
+}
+
+type OPTION_SACK = {
+    option: TCPOption.Selective_Acknowledgment
+    blocks: string[]
+}
+
+type OPTION_TS = {
+    option: TCPOption.Timestamp
+    tsval: number
+    tsecr: number
+}
+
+type OPTION_UTO = {
+    option: TCPOption.User_Timeout
+    timeout: number
+    granularity: number
+}
+
+type OPTION_TCP_AO = {
+    option: TCPOption.TCP_Authentication_Option
+    data: string
+}
+
+type OPTION_DEFAULT = {
+    kind: number
+    data: string
+}
+
+type OptionItem =
+    OPTION_EOL
+    | OPTION_NOP
+    | OPTION_MSS
+    | OPTION_WINDOW_SCALE
+    | OPTION_SACK_PERMITTED
+    | OPTION_SACK
+    | OPTION_TS
+    | OPTION_UTO
+    | OPTION_TCP_AO
+    | OPTION_DEFAULT
 
 export default class TCP extends BaseHeader {
 
@@ -352,9 +414,6 @@ export default class TCP extends BaseHeader {
                                 if (codecModule === this) startPos = codecModule.startPos
                                 endPos = codecModule.endPos > endPos ? codecModule.endPos : endPos
                             })
-                            const t1 = this.packet.subarray(startPos, endPos)
-                            console.log(startPos, endPos)
-                            console.log(t1, t1.length)
                             this.writeBytes(16, UInt16ToBuffer(this.calculateTCPChecksum(this.packet.subarray(startPos, endPos))))
                         }, 100)
                     }
@@ -390,6 +449,7 @@ export default class TCP extends BaseHeader {
                         //Kind = 0 (End of Option List, EOL)
                         {
                             type: 'object',
+                            label: 'End of Option List',
                             properties: {
                                 option: {
                                     type: 'string',
@@ -401,6 +461,7 @@ export default class TCP extends BaseHeader {
                         //Kind = 1 (No-Operation, NOP)
                         {
                             type: 'object',
+                            label: 'No-Operation',
                             properties: {
                                 option: {
                                     type: 'string',
@@ -412,28 +473,43 @@ export default class TCP extends BaseHeader {
                         //Kind = 2 (Maximum Segment Size, MSS)
                         {
                             type: 'object',
+                            label: 'Maximum Segment Size',
                             properties: {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
                                     enum: [TCPOption.Maximum_Segment_Size]
+                                },
+                                mss: {
+                                    type: 'integer',
+                                    label: 'MSS',
+                                    maximum: 65535,
+                                    minimum: 0
                                 }
                             }
                         },
                         //Kind = 3 (Window Scale)
                         {
                             type: 'object',
+                            label: 'Window Scale',
                             properties: {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
                                     enum: [TCPOption.Window_Scale]
+                                },
+                                shift: {
+                                    type: 'integer',
+                                    label: 'Shift count',
+                                    minimum: 0,
+                                    maximum: 14
                                 }
                             }
                         },
                         //Kind = 4 (Selective Acknowledgment Permitted, SACK-Permitted)
                         {
                             type: 'object',
+                            label: 'Selective Acknowledgment Permitted',
                             properties: {
                                 option: {
                                     type: 'string',
@@ -445,44 +521,86 @@ export default class TCP extends BaseHeader {
                         //Kind = 5 (Selective Acknowledgment, SACK)
                         {
                             type: 'object',
+                            label: 'Selective Acknowledgment',
                             properties: {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
                                     enum: [TCPOption.Selective_Acknowledgment]
+                                },
+                                blocks: {
+                                    type: 'array',
+                                    label: 'SACK Blocks',
+                                    items: {
+                                        type: 'string',
+                                        maxLength: 16,
+                                        minLength: 16,
+                                        contentEncoding: StringContentEncodingEnum.HEX
+                                    }
                                 }
                             }
                         },
                         //Kind = 8 (Timestamp, TS)
                         {
                             type: 'object',
+                            label: 'Timestamp',
                             properties: {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
                                     enum: [TCPOption.Timestamp]
+                                },
+                                tsval: {
+                                    type: 'integer',
+                                    label: 'TSval',
+                                    minimum: 0,
+                                    maximum: 4294967295
+                                },
+                                tsecr: {
+                                    type: 'integer',
+                                    label: 'TSecr',
+                                    minimum: 0,
+                                    maximum: 4294967295
                                 }
                             }
                         },
                         //Kind = 28 (User Timeout, UTO)
                         {
                             type: 'object',
+                            label: 'User Timeout',
                             properties: {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
                                     enum: [TCPOption.User_Timeout]
+                                },
+                                timeout: {
+                                    type: 'integer',
+                                    label: 'Timeout',
+                                    minimum: 0,
+                                    maximum: 65535
+                                },
+                                granularity: {
+                                    type: 'integer',
+                                    label: 'Granularity',
+                                    enum: [0, 1]
                                 }
                             }
                         },
                         //Kind = 29 (TCP Authentication Option, TCP-AO)
                         {
                             type: 'object',
+                            label: 'TCP Authentication Option',
                             properties: {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
                                     enum: [TCPOption.TCP_Authentication_Option]
+                                },
+                                data: {
+                                    type: 'string',
+                                    label: 'Data',
+                                    contentEncoding: StringContentEncodingEnum.HEX
                                 }
                             }
                         },
@@ -502,6 +620,171 @@ export default class TCP extends BaseHeader {
                             }
                         }
                     ]
+                },
+                decode: (): void => {
+                    const hdrLen: number = this.instance.hdrLen.getValue()
+                    const optionsLength: number = hdrLen - this.length
+                    if (!optionsLength) return
+                    let optionOffset: number = this.length
+                    const options: OptionItem[] = []
+                    let index: number = 0
+                    while (optionOffset < hdrLen) {
+                        const kind: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                        optionOffset += 1
+                        switch (kind) {
+                            //Kind = 0 (End of Option List, EOL)
+                            case 0: {
+                                options.push({
+                                    option: TCPOption.End_of_Option_List
+                                })
+                            }
+                                break
+                            //Kind = 1 (No-Operation, NOP)
+                            case 1: {
+                                options.push({
+                                    option: TCPOption.No_Operation
+                                })
+                            }
+                                break
+                            //Kind = 2 (Maximum Segment Size, MSS)
+                            case 2: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                if (length !== 4) this.recordError(this.instance.options.getPath(index), 'MSS option TLV length should be 4')
+                                optionOffset += 1
+                                let value: number = BufferToUInt16(this.readBytes(optionOffset, 2))
+                                optionOffset += 2
+                                options.push({
+                                    option: TCPOption.Maximum_Segment_Size,
+                                    mss: value
+                                })
+                            }
+                                break
+                            //Kind = 3 (Window Scale)
+                            case 3: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                if (length !== 3) this.recordError(this.instance.options.getPath(index), 'Window Scale option TLV length should be 3')
+                                optionOffset += 1
+                                let value: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (value < 0 || value > 14) this.recordError(this.instance.options.getPath(index), 'Window Scale option TLV value should between 0 and 14')
+                                options.push({
+                                    option: TCPOption.Window_Scale,
+                                    shift: value
+                                })
+                            }
+                                break
+                            //Kind = 4 (Selective Acknowledgment Permitted, SACK-Permitted)
+                            case 4: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (length !== 2) this.recordError(this.instance.options.getPath(index), 'SACK-Permitted option TLV length should be 2')
+                                options.push({
+                                    option: TCPOption.Selective_Acknowledgment_Permitted
+                                })
+                            }
+                                break
+                            //Kind = 5 (Selective Acknowledgment, SACK)
+                            case 5: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                let sackBlockTotalLength: number = length - 2
+                                if (sackBlockTotalLength < 0) {
+                                    this.recordError(this.instance.options.getPath(index), 'SACK option block count should not less than 0')
+                                    sackBlockTotalLength = 0
+                                }
+                                let sackBlockCount: number = sackBlockTotalLength ? Math.floor(sackBlockTotalLength / 8) : 0
+                                const sackBlocks: string[] = []
+                                while (sackBlockCount > 0) {
+                                    sackBlocks.push(UInt64ToHex(BigInt(`0x${BufferToUInt64(this.readBytes(optionOffset, 8)).toString(16)}`)))
+                                    optionOffset += 8
+                                    sackBlockCount -= 1
+                                }
+                                options.push({
+                                    option: TCPOption.Selective_Acknowledgment,
+                                    blocks: sackBlocks
+                                })
+                            }
+                                break
+                            //Kind = 8 (Timestamp, TS)
+                            case 8: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (length !== 10) this.recordError(this.instance.options.getPath(index), 'Timestamp option TLV length should be 10')
+                                let tsval: number = BufferToUInt32(this.readBytes(optionOffset, 4))
+                                optionOffset += 4
+                                let tsecr: number = BufferToUInt32(this.readBytes(optionOffset, 4))
+                                optionOffset += 4
+                                options.push({
+                                    option: TCPOption.Timestamp,
+                                    tsval: tsval,
+                                    tsecr: tsecr
+                                })
+                            }
+                                break
+                            //Kind = 28 (User Timeout, UTO)
+                            case 28: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (length !== 4) this.recordError(this.instance.options.getPath(index), 'UTO option TLV length should be 4')
+                                let timeout: number = BufferToUInt16(this.readBytes(optionOffset, 2))
+                                optionOffset += 2
+                                let granularity: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                options.push({
+                                    option: TCPOption.User_Timeout,
+                                    timeout: timeout,
+                                    granularity: granularity
+                                })
+                            }
+                                break
+                            //Kind = 29 (TCP Authentication Option, TCP-AO)
+                            case 29: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                let dataLength: number = length - 2
+                                if (dataLength < 0) {
+                                    this.recordError(this.instance.options.getPath(index), 'TCP Authentication Option TLV length should not less than 2')
+                                    dataLength = 0
+                                }
+                                let data: Buffer
+                                if (dataLength) {
+                                    data = this.readBytes(optionOffset, dataLength)
+                                    optionOffset += dataLength
+                                } else {
+                                    data = Buffer.from([])
+                                }
+                                options.push({
+                                    option: TCPOption.TCP_Authentication_Option,
+                                    data: data.toString('hex')
+                                })
+                            }
+                                break
+                            default: {
+                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                let dataLength: number = length - 2
+                                if (dataLength < 0) {
+                                    this.recordError(this.instance.options.getPath(index), 'Option TLV length should not less than 2')
+                                    dataLength = 0
+                                }
+                                let data: Buffer
+                                if (dataLength) {
+                                    data = this.readBytes(optionOffset, dataLength)
+                                    optionOffset += dataLength
+                                } else {
+                                    data = Buffer.from([])
+                                }
+                                options.push({
+                                    kind: kind,
+                                    data: data.toString('hex')
+                                })
+                            }
+                        }
+                        index += 1
+                    }
+                    this.instance.options.setValue(options)
+                },
+                encode: (): void => {
+                    //TODO
                 }
             }
         }

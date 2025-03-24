@@ -7,12 +7,12 @@ async function DecodeAndEncode(packet: string): Promise<void> {
     console.log('packetBuffer:', packetBuffer.toString('hex'))
     const codec = new Codec()
     const decodeResult = await codec.decode(packetBuffer)
-    // console.log(JSON.stringify(decodeResult, null, 2))
-    const encodeResult = await codec.encode(decodeResult)
-    console.log('encodeResult:', encodeResult.toString('hex'))
-    console.log('packetBuffer===encodeResult', packetBuffer.toString('hex') === encodeResult.toString('hex'))
-    const decodeResult1 = await codec.decode(encodeResult)
-    console.log(JSON.stringify(decodeResult1, null, 2))
+    console.log(JSON.stringify(decodeResult, null, 2))
+    // const encodeResult = await codec.encode(decodeResult)
+    // console.log('encodeResult:', encodeResult.toString('hex'))
+    // console.log('packetBuffer===encodeResult', packetBuffer.toString('hex') === encodeResult.toString('hex'))
+    // const decodeResult1 = await codec.decode(encodeResult)
+    // console.log(JSON.stringify(decodeResult1, null, 2))
 }
 
 async function GOOSE_Codec(packet: string): Promise<void> {
