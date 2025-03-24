@@ -7,6 +7,8 @@ import {FixHexString} from '../lib/FixHexString'
 import {BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
 import {UInt16ToBuffer, UInt32ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 import {BufferToHex} from '../lib/BufferToHex'
+import {IPv4ToBuffer} from '../lib/IPToBuffer'
+import {BufferToIPv4} from '../lib/BufferToIP'
 
 export default class IPv4 extends BaseHeader {
 
@@ -278,7 +280,7 @@ export default class IPv4 extends BaseHeader {
                 contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     const sipBuffer: Buffer = this.readBytes(12, 4)
-                    this.instance.sip.setValue(Array.from(sipBuffer).join('.'))
+                    this.instance.sip.setValue(BufferToIPv4(sipBuffer))
                 },
                 encode: (): void => {
                     if (this.instance.sip.isUndefined()) {
@@ -286,8 +288,7 @@ export default class IPv4 extends BaseHeader {
                         this.instance.sip.setValue('0.0.0.0')
                     }
                     const sipStr: string = this.instance.sip.getValue().toString()
-                    const numArr: number[] = sipStr.split('.').map(value => parseInt(value)).map(value => value ? value : 0)
-                    this.writeBytes(12, UInt32ToBuffer(parseInt(Buffer.from(numArr).toString('hex'), 16)))
+                    this.writeBytes(12, IPv4ToBuffer(sipStr))
                 }
             },
             dip: {
@@ -298,7 +299,7 @@ export default class IPv4 extends BaseHeader {
                 contentEncoding: StringContentEncodingEnum.UTF8,
                 decode: (): void => {
                     const dipBuffer: Buffer = this.readBytes(16, 4)
-                    this.instance.dip.setValue(Array.from(dipBuffer).join('.'))
+                    this.instance.dip.setValue(BufferToIPv4(dipBuffer))
                 },
                 encode: (): void => {
                     if (this.instance.dip.isUndefined()) {
@@ -306,8 +307,7 @@ export default class IPv4 extends BaseHeader {
                         this.instance.dip.setValue('0.0.0.0')
                     }
                     const dipStr: string = this.instance.dip.getValue()
-                    const numArr: number[] = dipStr.split('.').map(value => parseInt(value)).map(value => value ? value : 0)
-                    this.writeBytes(16, UInt32ToBuffer(parseInt(Buffer.from(numArr).toString('hex'), 16)))
+                    this.writeBytes(16, IPv4ToBuffer(dipStr))
                 }
             },
             options: {

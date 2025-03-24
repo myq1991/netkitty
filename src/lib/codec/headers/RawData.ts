@@ -8,6 +8,7 @@ export default class RawData extends BaseHeader {
         properties: {
             data: {
                 type: 'string',
+                label: 'Raw',
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
                     const dataLength: number = this.packet.length - this.startPos

@@ -6,6 +6,8 @@ import {HexToUInt16} from '../lib/HexToNumber'
 import {BufferToInt16, BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
 import {BufferToHex} from '../lib/BufferToHex'
 import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
+import {BufferToIPv4} from '../lib/BufferToIP'
+import {IPv4ToBuffer} from '../lib/IPToBuffer'
 
 export default class ARP extends BaseHeader {
 
@@ -154,13 +156,11 @@ export default class ARP extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.UTF8,
                         decode: (): void => {
                             const ipv4Buffer: Buffer = Buffer.alloc(4, this.readBytes(14, 4))
-                            this.instance.sender.ipv4.setValue(Array.from(ipv4Buffer).join('.'))
+                            this.instance.sender.ipv4.setValue(BufferToIPv4(ipv4Buffer))
                         },
                         encode: (): void => {
                             let ipv4Str: string = this.instance.sender.ipv4.getValue()
-                            const rawIPv4Buffer: Buffer = Buffer.from(ipv4Str.split('.').map((value: string): number => parseInt(value)))
-                            if (rawIPv4Buffer.length !== 4) this.recordError(this.instance.sender.ipv4.getPath(), 'Invalid IPv4 address length')
-                            this.writeBytes(14, Buffer.alloc(4, rawIPv4Buffer))
+                            this.writeBytes(14, IPv4ToBuffer(ipv4Str))
                         }
                     }
                 }
@@ -194,13 +194,11 @@ export default class ARP extends BaseHeader {
                         contentEncoding: StringContentEncodingEnum.UTF8,
                         decode: (): void => {
                             const ipv4Buffer: Buffer = Buffer.alloc(4, this.readBytes(24, 4))
-                            this.instance.target.ipv4.setValue(Array.from(ipv4Buffer).join('.'))
+                            this.instance.target.ipv4.setValue(BufferToIPv4(ipv4Buffer))
                         },
                         encode: (): void => {
                             let ipv4Str: string = this.instance.target.ipv4.getValue()
-                            const rawIPv4Buffer: Buffer = Buffer.from(ipv4Str.split('.').map((value: string): number => parseInt(value)))
-                            if (rawIPv4Buffer.length !== 4) this.recordError(this.instance.target.ipv4.getPath(), 'Invalid IPv4 address length')
-                            this.writeBytes(24, Buffer.alloc(4, rawIPv4Buffer))
+                            this.writeBytes(24, IPv4ToBuffer(ipv4Str))
                         }
                     }
                 }

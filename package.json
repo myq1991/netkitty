@@ -46,6 +46,7 @@
   "dependencies": {
     "bignumber.js": "^9.1.2",
     "duplexpair": "^1.0.2",
+    "ip-address": "^10.0.1",
     "is-electron": "^2.2.2",
     "json-schema": "^0.4.0",
     "node-addon-api": "^8.3.1",
