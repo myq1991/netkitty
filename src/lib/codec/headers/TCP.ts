@@ -891,6 +891,12 @@ export default class TCP extends BaseHeader {
                             }
                         }
                     })
+                    if (this.length > 60) return this.recordError(this.instance.options.getPath(), 'Options too large')
+                    const headerBitLength: number = this.length * 8
+                    if (headerBitLength % 4) {
+                        //Add Padding
+                        this.writeBytes(this.length, Buffer.from([0x00]))
+                    }
                 }
             }
         }
