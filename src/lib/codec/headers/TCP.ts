@@ -1,11 +1,12 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt32ToBuffer} from '../lib/NumberToBuffer'
+import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 import {IPv6ToBuffer} from '../lib/IPToBuffer'
 import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {UInt64ToHex} from '../lib/NumberToHex'
+import {HexToUInt64} from '../lib/HexToNumber'
 
 enum TCPOption {
     End_of_Option_List = 'EOL',
@@ -232,7 +233,6 @@ export default class TCP extends BaseHeader {
                 encode: (): void => {
                     let hdrLen: number = this.instance.hdrLen.getValue()
                     hdrLen = hdrLen ? hdrLen : 0
-                    hdrLen = 0//TODO 调试用
                     if (hdrLen) {
                         this.writeBits(12, 1, 0, 4, Math.floor(hdrLen / 4))
                     } else {
@@ -402,7 +402,6 @@ export default class TCP extends BaseHeader {
                 encode: (): void => {
                     let checksum: number = this.instance.checksum.getValue()
                     checksum = checksum ? checksum : 0
-                    checksum = 0//TODO 调试用
                     if (checksum) {
                         this.writeBytes(16, UInt16ToBuffer(checksum))
                     } else {
@@ -725,7 +724,7 @@ export default class TCP extends BaseHeader {
                             case 28: {
                                 let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
-                                if (length !== 4) this.recordError(this.instance.options.getPath(index), 'UTO option TLV length should be 4')
+                                if (length !== 5) this.recordError(this.instance.options.getPath(index), 'UTO option TLV length should be 5')
                                 let timeout: number = BufferToUInt16(this.readBytes(optionOffset, 2))
                                 optionOffset += 2
                                 let granularity: number = BufferToUInt8(this.readBytes(optionOffset, 1))
@@ -784,7 +783,114 @@ export default class TCP extends BaseHeader {
                     this.instance.options.setValue(options)
                 },
                 encode: (): void => {
-                    //TODO
+                    const options: (OptionItem[]) | undefined = this.instance.options.getValue()
+                    if (!options) return
+                    let optionOffset: number = this.length
+                    options.forEach((optionItem: OptionItem): void => {
+                        const namedOptionItem: OPTION_EOL | OPTION_NOP | OPTION_MSS | OPTION_WINDOW_SCALE | OPTION_SACK_PERMITTED | OPTION_SACK | OPTION_TS | OPTION_UTO | OPTION_TCP_AO = optionItem as any
+                        switch (namedOptionItem.option) {
+                            case TCPOption.End_of_Option_List: {
+                                const optionEOL: OPTION_EOL = optionItem as OPTION_EOL
+                                this.writeBytes(optionOffset, UInt8ToBuffer(0))
+                                optionOffset += 1
+                                return
+                            }
+                            case TCPOption.No_Operation: {
+                                const optionNOP: OPTION_NOP = optionItem as OPTION_NOP
+                                this.writeBytes(optionOffset, UInt8ToBuffer(1))
+                                optionOffset += 1
+                                return
+                            }
+                            case TCPOption.Maximum_Segment_Size: {
+                                const optionMSS: OPTION_MSS = optionItem as OPTION_MSS
+                                const mssBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(2),
+                                    UInt8ToBuffer(4),
+                                    UInt16ToBuffer(optionMSS.mss)
+                                ])
+                                this.writeBytes(optionOffset, mssBuffer)
+                                optionOffset += mssBuffer.length
+                                return
+                            }
+                            case TCPOption.Window_Scale: {
+                                const optionWS: OPTION_WINDOW_SCALE = optionItem as OPTION_WINDOW_SCALE
+                                const wsBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(3),
+                                    UInt8ToBuffer(3),
+                                    UInt8ToBuffer(optionWS.shift)
+                                ])
+                                this.writeBytes(optionOffset, wsBuffer)
+                                optionOffset += wsBuffer.length
+                                return
+                            }
+                            case TCPOption.Selective_Acknowledgment_Permitted: {
+                                const optionSackPermitted: OPTION_SACK_PERMITTED = optionItem as OPTION_SACK_PERMITTED
+                                const sackPermittedBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(4),
+                                    UInt8ToBuffer(2)
+                                ])
+                                this.writeBytes(optionOffset, sackPermittedBuffer)
+                                optionOffset += sackPermittedBuffer.length
+                                return
+                            }
+                            case TCPOption.Selective_Acknowledgment: {
+                                const optionSack: OPTION_SACK = optionItem as OPTION_SACK
+                                const kindBuffer: Buffer = UInt8ToBuffer(5)
+                                let length: number = 2
+                                let blocksBuffer: Buffer = Buffer.from([])
+                                optionSack.blocks.forEach((block: string): void => {
+                                    blocksBuffer = Buffer.concat([blocksBuffer, UInt64ToBuffer(HexToUInt64(block))])
+                                })
+                                const sackBuffer: Buffer = Buffer.concat([kindBuffer, UInt8ToBuffer(length + blocksBuffer.length), blocksBuffer])
+                                this.writeBytes(optionOffset, sackBuffer)
+                                optionOffset += sackBuffer.length
+                                return
+                            }
+                            case TCPOption.Timestamp: {
+                                const optionTS: OPTION_TS = optionItem as OPTION_TS
+                                const tsBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(8),
+                                    UInt8ToBuffer(10),
+                                    UInt32ToBuffer(optionTS.tsval ? optionTS.tsval : 0),
+                                    UInt32ToBuffer(optionTS.tsecr ? optionTS.tsecr : 0)
+                                ])
+                                this.writeBytes(optionOffset, tsBuffer)
+                                optionOffset += tsBuffer.length
+                                return
+                            }
+                            case TCPOption.User_Timeout: {
+                                const optionUTO: OPTION_UTO = optionItem as OPTION_UTO
+                                const utoBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(28),
+                                    UInt8ToBuffer(5),
+                                    UInt16ToBuffer(optionUTO.timeout ? optionUTO.timeout : 0),
+                                    UInt8ToBuffer(optionUTO.granularity ? optionUTO.granularity : 0)
+                                ])
+                                this.writeBytes(optionOffset, utoBuffer)
+                                optionOffset += utoBuffer.length
+                                return
+                            }
+                            case TCPOption.TCP_Authentication_Option: {
+                                const optionTcpAo: OPTION_TCP_AO = optionItem as OPTION_TCP_AO
+                                const kindBuffer: Buffer = UInt8ToBuffer(29)
+                                const dataBuffer: Buffer = Buffer.from(optionTcpAo.data, 'hex')
+                                const lengthBuffer: Buffer = UInt8ToBuffer(dataBuffer.length + 2)
+                                const tcpAoBuffer: Buffer = Buffer.concat([kindBuffer, lengthBuffer, dataBuffer])
+                                this.writeBytes(optionOffset, tcpAoBuffer)
+                                optionOffset += tcpAoBuffer.length
+                                return
+                            }
+                            default: {
+                                const defaultOptionItem: OPTION_DEFAULT = optionItem as OPTION_DEFAULT
+                                const kind: number = defaultOptionItem.kind
+                                const hexBuffer: Buffer = Buffer.from(defaultOptionItem.data.toString(), 'hex')
+                                const length: number = hexBuffer.length + 2
+                                const defaultOptionBuffer: Buffer = Buffer.concat([UInt8ToBuffer(kind), UInt8ToBuffer(length), hexBuffer])
+                                this.writeBytes(optionOffset, defaultOptionBuffer)
+                                optionOffset += defaultOptionBuffer.length
+                            }
+                        }
+                    })
                 }
             }
         }
