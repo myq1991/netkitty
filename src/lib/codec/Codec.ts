@@ -155,6 +155,7 @@ export class Codec {
         return codecModules.map((codecModule: CodecModule): CodecDecodeResult => ({
             id: codecModule.id,
             name: codecModule.name,
+            nickname: codecModule.nickname,
             errors: codecModule.errors,
             data: codecModule.instance.getValue()
         }))
