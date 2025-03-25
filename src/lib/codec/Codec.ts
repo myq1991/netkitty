@@ -156,6 +156,7 @@ export class Codec {
             id: codecModule.id,
             name: codecModule.name,
             nickname: codecModule.nickname,
+            protocol: codecModule.isProtocol,
             errors: codecModule.errors,
             data: codecModule.instance.getValue()
         }))

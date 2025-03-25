@@ -75,6 +75,8 @@ export abstract class BaseHeader {
      */
     public readonly abstract nickname: string
 
+    public readonly isProtocol: boolean = true
+
     /**
      * Encode/Decode error info objects
      */

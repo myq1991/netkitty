@@ -5,6 +5,7 @@ export type CodecDecodeResult = {
     id: string
     name: string
     nickname: string
+    protocol: boolean
     errors: CodecErrorInfo[]
     data: HeaderTreeNode
 }
