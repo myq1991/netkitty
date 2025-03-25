@@ -6,6 +6,7 @@ import {BufferToHex} from '../lib/BufferToHex'
 export default class RawData extends BaseHeader {
 
     public readonly SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             data: {
                 type: 'string',

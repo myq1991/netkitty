@@ -10,6 +10,7 @@ export default class EthernetII extends BaseHeader {
     public readonly name: string = 'Ethernet II'
 
     public readonly SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             dmac: {
                 type: 'string',

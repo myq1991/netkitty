@@ -134,6 +134,7 @@ export default class TCP extends BaseHeader {
     }
 
     public SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             srcport: {
                 type: 'integer',
@@ -459,7 +460,7 @@ export default class TCP extends BaseHeader {
                 type: 'array',
                 label: 'Options',
                 items: {
-                    allOf: [
+                    anyOf: [
                         //Kind = 0 (End of Option List, EOL)
                         {
                             type: 'object',

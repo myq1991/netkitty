@@ -6,6 +6,11 @@ import {PostHandlerItem} from '../types/PostHandlerItem'
 import {SortPostHandlers} from '../lib/SortPostHandlers'
 import {CodecData} from '../types/CodecData'
 import {FlexibleObject} from '../lib/FlexibleObject'
+import {Ajv, ErrorObject, ValidateFunction} from 'ajv'
+import {HeaderTreeNode} from '../types/HeaderTreeNode'
+import {CodecSchemaValidateError} from '../../../errors/CodecSchemaValidateError'
+
+const CONSTRUCTOR_VALIDATE_KEY: string = '__validate'
 
 export abstract class BaseHeader {
 
@@ -26,7 +31,20 @@ export abstract class BaseHeader {
     }
 
     public static get PROTOCOL_SCHEMA(): ProtocolJSONSchema {
-        return JSON.parse(JSON.stringify(this.CODEC_INSTANCE.SCHEMA))
+        const schema: ProtocolJSONSchema = JSON.parse(JSON.stringify(this.CODEC_INSTANCE.SCHEMA))
+        if (!Object.hasOwn(this, CONSTRUCTOR_VALIDATE_KEY)) {
+            const validate: ValidateFunction = new Ajv({
+                strict: false,
+                useDefaults: true,
+                coerceTypes: true
+            }).compile(schema)
+            Object.defineProperty(this, CONSTRUCTOR_VALIDATE_KEY, {
+                enumerable: false,
+                configurable: false,
+                value: validate
+            })
+        }
+        return schema
     }
 
     public static MATCH(codecModules: CodecModule[]): boolean {
@@ -335,6 +353,30 @@ export abstract class BaseHeader {
             priority: priority,
             handler: handler
         })
+    }
+
+    /**
+     * Validate input json node is valid
+     * @param headerTreeNode
+     */
+    public validate(headerTreeNode: HeaderTreeNode): HeaderTreeNode {
+        let validate: ValidateFunction = this.constructor[CONSTRUCTOR_VALIDATE_KEY]
+        if (!validate) {
+            validate = new Ajv({
+                strict: false,
+                useDefaults: true,
+                coerceTypes: true
+            }).compile(this.SCHEMA)
+            this.constructor[CONSTRUCTOR_VALIDATE_KEY] = validate
+        }
+        const isValid: boolean = validate(headerTreeNode)
+        if (!isValid) {
+            let errorObject: ErrorObject | undefined | null
+            if (validate.errors) errorObject = validate.errors[0]
+            const errorMessage: string = errorObject?.message ? errorObject.message : 'Unknown Error'
+            throw new CodecSchemaValidateError(errorMessage)
+        }
+        return headerTreeNode
     }
 
     /**

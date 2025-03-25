@@ -8,7 +8,6 @@ import {CodecEncodeInput} from './types/CodecEncodeInput'
 import {CodecErrorInfo} from './types/CodecErrorInfo'
 import {PostHandlerItem} from './types/PostHandlerItem'
 import {CodecData} from './types/CodecData'
-import {SortPostHandlers} from './lib/SortPostHandlers'
 import {NoAvailableCodecError} from '../../errors/NoAvailableCodecError'
 import {FlexibleObject} from './lib/FlexibleObject'
 import {CodecSchema} from './types/CodecSchema'
@@ -42,7 +41,6 @@ export class Codec {
                         replaced.push(codecModuleConstructor)
                     }
                 })
-
             })
             codecModuleConstructors
                 .filter((codecModuleConstructor: CodecModuleConstructor): boolean => !replaced.includes(codecModuleConstructor))
@@ -104,8 +102,7 @@ export class Codec {
             const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
             if (!codecModuleConstructor) continue
             const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
-            //TODO 可能需要加入验证
-            codecModule.instance = new FlexibleObject(input.data)
+            codecModule.instance = new FlexibleObject(codecModule.validate(input.data))
             await codecModule.encode()
             codecModule.errors.forEach((errorInfo: CodecErrorInfo): number => errors.push(errorInfo))
             codecData.startPos = codecModule.endPos

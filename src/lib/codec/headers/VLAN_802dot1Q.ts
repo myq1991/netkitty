@@ -5,6 +5,7 @@ import {BufferToUInt16} from '../lib/BufferToNumber'
 
 export default class VLAN_802dot1Q extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             priority: {
                 type: 'integer',

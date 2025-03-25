@@ -12,6 +12,7 @@ import {IPv4ToBuffer} from '../lib/IPToBuffer'
 export default class ARP extends BaseHeader {
 
     public SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             hardware: {
                 type: 'object',

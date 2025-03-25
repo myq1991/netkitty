@@ -59,6 +59,7 @@ export default class UDP extends BaseHeader {
     }
 
     public SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             srcport: {
                 type: 'integer',

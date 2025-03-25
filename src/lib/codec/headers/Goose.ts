@@ -38,11 +38,12 @@ export default class Goose extends BaseHeader {
     protected TLVChild: TLV[] = []
 
     public SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             appid: {
                 type: 'integer',
                 minimum: 0,
-                maximum: 0x3fff,
+                maximum: 65535,
                 label: 'APPID',
                 decode: (): void => {
                     this.instance.appid.setValue(BufferToUInt16(this.readBytes(0, 2)))

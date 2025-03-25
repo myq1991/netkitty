@@ -31,6 +31,7 @@ export default class IPv4 extends BaseHeader {
     }
 
     public SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
         properties: {
             version: {
                 type: 'integer',
@@ -291,7 +292,7 @@ export default class IPv4 extends BaseHeader {
                 type: 'string',
                 label: 'Options',
                 minLength: 0,
-                maxLength: 40,
+                maxLength: 40 * 2,
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
                     if (this.length < (this.instance.hdrLen.getValue())) {

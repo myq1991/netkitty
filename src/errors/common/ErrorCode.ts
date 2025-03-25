@@ -22,5 +22,9 @@ export const ErrorCode = {
     E_NO_AVAILABLE_CODEC: {
         errno: 2000,
         code: 'E_NO_AVAILABLE_CODEC'
+    },
+    E_CODEC_SCHEMA_VALIDATE: {
+        errno: 2001,
+        code: 'E_CODEC_SCHEMA_VALIDATE'
     }
 }
