@@ -21,7 +21,12 @@ export default class EthernetII extends BaseHeader {
                     this.instance.dmac.setValue(Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: (): void => {
-                    const dmac: number[] = this.instance.dmac.getValue().toString().split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0)
+                    const dmac: number[] = this.instance.dmac
+                        .getValue('00:00:00:00:00:00', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                        .toString()
+                        .split(':')
+                        .map((value: string): number => parseInt(value, 16))
+                        .map((value: number): number => value ? value : 0)
                     this.writeBytes(0, Buffer.alloc(6, Buffer.from(dmac)))
                 }
             },
@@ -35,7 +40,12 @@ export default class EthernetII extends BaseHeader {
                     this.instance.smac.setValue(Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: (): void => {
-                    const smac: number[] = this.instance.smac.getValue().toString().split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0)
+                    const smac: number[] = this.instance.smac
+                        .getValue('00:00:00:00:00:00', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                        .toString()
+                        .split(':')
+                        .map((value: string): number => parseInt(value, 16))
+                        .map((value: number): number => value ? value : 0)
                     this.writeBytes(6, Buffer.alloc(6, Buffer.from(smac)))
                 }
             },
@@ -49,8 +59,7 @@ export default class EthernetII extends BaseHeader {
                     this.instance.etherType.setValue(this.readBytes(12, 2).toString('hex').padStart(4, '0'))
                 },
                 encode: (): void => {
-                    let etherType: string = this.instance.etherType.isUndefined() ? UInt16ToHex(0x0000) : UInt16ToHex(parseInt(this.instance.etherType.getValue().toString(), 16))
-                    etherType = etherType ? etherType : UInt16ToHex(0x0000)
+                    let etherType: string = this.instance.etherType.getValue(UInt16ToHex(0x0000), (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const typeBuffer: Buffer = Buffer.from(etherType, 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
                     this.writeBytes(12, typeBuffer.subarray(0, 2))

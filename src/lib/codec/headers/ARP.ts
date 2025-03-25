@@ -26,9 +26,7 @@ export default class ARP extends BaseHeader {
                             this.instance.hardware.type.setValue(BufferToInt16(this.readBytes(0, 2)))
                         },
                         encode: (): void => {
-                            let hwType: number = this.instance.hardware.type.getValue()
-                            if (hwType === undefined) this.recordError(this.instance.hardware.type.getPath(), 'Not Found')
-                            hwType = hwType ? hwType : 0
+                            let hwType: number = this.instance.hardware.type.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (hwType > 65535) {
                                 this.recordError(this.instance.hardware.type.getPath(), 'Maximum value is 65535')
                                 hwType = 65535
@@ -37,6 +35,7 @@ export default class ARP extends BaseHeader {
                                 this.recordError(this.instance.hardware.type.getPath(), 'Minimum value is 0')
                                 hwType = 0
                             }
+                            this.instance.hardware.type.setValue(hwType)
                             this.writeBytes(0, UInt16ToBuffer(hwType))
                         }
                     },
@@ -49,9 +48,7 @@ export default class ARP extends BaseHeader {
                             this.instance.hardware.size.setValue(BufferToUInt8(this.readBytes(4, 1)))
                         },
                         encode: (): void => {
-                            let hwSize: number = this.instance.hardware.size.getValue()
-                            if (hwSize === undefined) this.recordError(this.instance.hardware.size.getPath(), 'Not Found')
-                            hwSize = hwSize ? hwSize : 0
+                            let hwSize: number = this.instance.hardware.size.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (hwSize > 255) {
                                 this.recordError(this.instance.hardware.size.getPath(), 'Maximum value is 255')
                                 hwSize = 255
@@ -60,6 +57,7 @@ export default class ARP extends BaseHeader {
                                 this.recordError(this.instance.hardware.size.getPath(), 'Minimum value is 0')
                                 hwSize = 0
                             }
+                            this.instance.hardware.size.setValue(hwSize)
                             this.writeBytes(4, UInt8ToBuffer(hwSize))
                         }
                     }
@@ -79,10 +77,13 @@ export default class ARP extends BaseHeader {
                             this.instance.protocol.type.setValue(BufferToHex(this.readBytes(2, 2)))
                         },
                         encode: (): void => {
-                            let protoTypeHex: string = this.instance.protocol.type.getValue()
-                            if (protoTypeHex === undefined) this.recordError(this.instance.protocol.type.getPath(), 'Not Found')
+                            let protoTypeHex: string = this.instance.protocol.type.getValue('0000', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             let protoType: number = HexToUInt16(protoTypeHex)
-                            protoType = protoType ? protoType : 0
+                            if (isNaN(protoType)) {
+                                this.recordError(this.instance.protocol.type.getPath(), 'Invalid hex value')
+                                protoType = 0
+                            }
+                            this.instance.protocol.type.setValue(protoType)
                             this.writeBytes(2, UInt16ToBuffer(protoType))
                         }
                     },
@@ -95,9 +96,7 @@ export default class ARP extends BaseHeader {
                             this.instance.protocol.size.setValue(BufferToUInt8(this.readBytes(5, 1)))
                         },
                         encode: (): void => {
-                            let protoSize: number = this.instance.protocol.size.getValue()
-                            if (protoSize === undefined) this.recordError(this.instance.protocol.size.getPath(), 'Not Found')
-                            protoSize = protoSize ? protoSize : 0
+                            let protoSize: number = this.instance.protocol.size.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (protoSize > 255) {
                                 this.recordError(this.instance.protocol.size.getPath(), 'Maximum value is 255')
                                 protoSize = 255
@@ -106,6 +105,7 @@ export default class ARP extends BaseHeader {
                                 this.recordError(this.instance.protocol.size.getPath(), 'Minimum value is 0')
                                 protoSize = 0
                             }
+                            this.instance.protocol.size.setValue(protoSize)
                             this.writeBytes(5, UInt8ToBuffer(protoSize))
                         }
                     }
@@ -120,10 +120,9 @@ export default class ARP extends BaseHeader {
                     if (![1, 2, 3, 4].includes(this.instance.opcode.getValue())) this.recordError(this.instance.opcode.getPath(), 'Opcode should be 1, 2, 3 or 4')
                 },
                 encode: (): void => {
-                    let opcode: number = this.instance.opcode.getValue()
-                    if (opcode === undefined) this.recordError(this.instance.opcode.getPath(), 'Not Found')
-                    opcode = opcode ? opcode : 0
+                    let opcode: number = this.instance.opcode.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     if (![1, 2, 3, 4].includes(opcode)) this.recordError(this.instance.opcode.getPath(), 'Opcode should be 1, 2, 3 or 4')
+                    this.instance.opcode.setValue(opcode)
                     this.writeBytes(6, UInt16ToBuffer(opcode))
                 }
             },

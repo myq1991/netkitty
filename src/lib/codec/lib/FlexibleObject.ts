@@ -50,10 +50,19 @@ export class FlexibleObject {
 
     /**
      * Get object node value
+     * @param defaultValue
+     * @param onUndefinedCallback
+     * @param getPathIndex
      */
     // @ts-ignore
-    public getValue(): any {
-        if (this.#undefined) return undefined
+    public getValue<T = any>(defaultValue?: T, onUndefinedCallback?: (nodePath: string) => void, getPathIndex?: number): T {
+        if (this.#undefined) {
+            if (onUndefinedCallback) onUndefinedCallback(this.getPath(getPathIndex))
+            if (defaultValue !== undefined) {
+                return defaultValue
+            }
+            return undefined as any
+        }
         if (typeof this.#data === 'object' && !Array.isArray(this.#data)) {
             const dumpObject: object = {}
             Object.keys(this.#data).forEach((key: string): void => {
@@ -61,9 +70,9 @@ export class FlexibleObject {
                 if (dumpResult === undefined) return
                 dumpObject[key] = dumpResult
             })
-            return dumpObject
+            return dumpObject as any
         } else {
-            return this.#undefined ? undefined : this.#data
+            return this.#undefined ? undefined as any : this.#data
         }
     }
 
