@@ -1,6 +1,6 @@
 {
   "name": "netkitty",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Network tools kit",
   "main": "dist/NetKitty.js",
   "types": "dist/NetKitty.d.ts",
