@@ -71,6 +71,11 @@ export abstract class BaseHeader {
     public readonly abstract name: string
 
     /**
+     * Human-readable header nickname
+     */
+    public readonly abstract nickname: string
+
+    /**
      * Encode/Decode error info objects
      */
     public errors: CodecErrorInfo[] = []

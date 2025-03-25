@@ -5,10 +5,6 @@ import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 export class EthernetII extends BaseHeader {
 
-    public readonly id: string = 'eth'
-
-    public readonly name: string = 'Ethernet II'
-
     public readonly SCHEMA: ProtocolJSONSchema = {
         type: 'object',
         properties: {
@@ -68,6 +64,12 @@ export class EthernetII extends BaseHeader {
             }
         }
     }
+
+    public readonly id: string = 'eth'
+
+    public readonly name: string = 'Ethernet II'
+
+    public readonly nickname: string = 'ETH'
 
     public match(): boolean {
         const specialScenes: string[] = ['trill', 'vxlan', 'nvgre', 'mpls', 'qinq', 'gre', 'geneve']

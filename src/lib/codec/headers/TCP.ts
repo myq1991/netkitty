@@ -918,9 +918,11 @@ export class TCP extends BaseHeader {
         }
     }
 
-    public id: string = 'tcp'
+    public readonly id: string = 'tcp'
 
-    public name: string = 'Transmission Control Protocol'
+    public readonly name: string = 'Transmission Control Protocol'
+
+    public readonly nickname: string = 'TCP'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

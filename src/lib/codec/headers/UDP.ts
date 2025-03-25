@@ -167,9 +167,11 @@ export class UDP extends BaseHeader {
         }
     }
 
-    public id: string = 'udp'
+    public readonly id: string = 'udp'
 
-    public name: string = 'User Datagram Protocol'
+    public readonly name: string = 'User Datagram Protocol'
+
+    public readonly nickname: string = 'UDP'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

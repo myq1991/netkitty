@@ -647,9 +647,11 @@ export class Goose extends BaseHeader {
         }
     }
 
-    public id: string = 'goose'
+    public readonly id: string = 'goose'
 
-    public name: string = 'GOOSE'
+    public readonly name: string = 'GOOSE'
+
+    public readonly nickname: string = 'IEC 61850/GOOSE'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

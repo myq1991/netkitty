@@ -27,6 +27,8 @@ export class RawData extends BaseHeader {
 
     public readonly name: string = 'Raw Data'
 
+    public readonly nickname: string = 'Raw'
+
     public match(): boolean {
         return !!this.prevCodecModule
     }

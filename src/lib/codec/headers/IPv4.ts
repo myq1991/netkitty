@@ -318,9 +318,11 @@ export class IPv4 extends BaseHeader {
         }
     }
 
-    public id: string = 'ipv4'
+    public readonly id: string = 'ipv4'
 
-    public name: string = 'Internet Protocol Version 4'
+    public readonly name: string = 'Internet Protocol Version 4'
+
+    public readonly nickname: string = ''
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

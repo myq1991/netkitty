@@ -63,9 +63,11 @@ export class VLAN_802dot1Q extends BaseHeader {
         }
     }
 
-    public id: string = 'vlan'
+    public readonly id: string = 'vlan'
 
-    public name: string = '802.1Q Virtual LAN'
+    public readonly name: string = '802.1Q Virtual LAN'
+
+    public readonly nickname: string = 'VLAN'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

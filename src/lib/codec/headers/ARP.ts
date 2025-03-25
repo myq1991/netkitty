@@ -206,9 +206,11 @@ export class ARP extends BaseHeader {
         }
     }
 
-    public id: string = 'arp'
+    public readonly id: string = 'arp'
 
-    public name: string = 'Address Resolution Protocol'
+    public readonly name: string = 'Address Resolution Protocol'
+
+    public readonly nickname: string = 'ARP'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
