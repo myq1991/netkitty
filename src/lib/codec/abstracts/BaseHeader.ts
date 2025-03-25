@@ -1,5 +1,4 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
-import {HeaderTreeNode} from '../types/HeaderTreeNode'
 import {CodecModule} from '../types/CodecModule'
 import {ProtocolFieldJSONSchema} from '../../schema/ProtocolFieldJSONSchema'
 import {CodecErrorInfo} from '../types/CodecErrorInfo'
