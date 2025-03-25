@@ -12,6 +12,7 @@ import {SortPostHandlers} from './lib/SortPostHandlers'
 import {NoAvailableCodecError} from '../../errors/NoAvailableCodecError'
 import {FlexibleObject} from './lib/FlexibleObject'
 import {CodecSchema} from './types/CodecSchema'
+import {ProcessPacketDecodePostHandlers, ProcessPacketEncodePostHandlers} from './lib/ProcessPacketPostHandlers'
 
 const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
 
@@ -41,6 +42,7 @@ export class Codec {
                         replaced.push(codecModuleConstructor)
                     }
                 })
+
             })
             codecModuleConstructors
                 .filter((codecModuleConstructor: CodecModuleConstructor): boolean => !replaced.includes(codecModuleConstructor))
@@ -142,11 +144,11 @@ export class Codec {
         }
         const codecModules: CodecModule[] = []
         await this.#decode(codecData, codecModules)
-        codecData.postHandlers = SortPostHandlers(codecData.postHandlers)
-        let postDecodeHandler: PostHandlerItem | undefined = codecData.postHandlers.shift()
+        const postDecodeHandlers: PostHandlerItem[] = ProcessPacketDecodePostHandlers(codecData.postHandlers)
+        let postDecodeHandler: PostHandlerItem | undefined = postDecodeHandlers.shift()
         while (postDecodeHandler) {
             await postDecodeHandler.handler()
-            postDecodeHandler = codecData.postHandlers.shift()
+            postDecodeHandler = postDecodeHandlers.shift()
         }
         return codecModules.map((codecModule: CodecModule): CodecDecodeResult => ({
             id: codecModule.id,
@@ -163,11 +165,11 @@ export class Codec {
     public async encode(inputs: CodecEncodeInput[]): Promise<Buffer> {
         const errors: CodecErrorInfo[] = []
         const codecData: CodecData = await this.#encode(inputs, errors)
-        codecData.postHandlers = SortPostHandlers(codecData.postHandlers)
-        let postEncodeHandler: PostHandlerItem | undefined = codecData.postHandlers.shift()
+        const postEncodeHandlers: PostHandlerItem[] = ProcessPacketEncodePostHandlers(codecData.postHandlers)
+        let postEncodeHandler: PostHandlerItem | undefined = postEncodeHandlers.shift()
         while (postEncodeHandler) {
             await postEncodeHandler.handler()
-            postEncodeHandler = codecData.postHandlers.shift()
+            postEncodeHandler = postEncodeHandlers.shift()
         }
         return codecData.packet
     }

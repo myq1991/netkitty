@@ -114,10 +114,21 @@ export abstract class BaseHeader {
      */
     protected readonly codecModules: CodecModule[]
 
+    /**
+     * Previous codec modules
+     * @protected
+     */
     protected readonly prevCodecModules: CodecModule[]
 
+    /**
+     * Current header index in packet headers
+     * @protected
+     */
+    protected readonly headerIndex: number = 0
+
     protected get postPacketHandlers(): PostHandlerItem[] {
-        return this.codecData.postHandlers
+        if (this.codecData.postHandlers[this.headerIndex] === undefined) this.codecData.postHandlers[this.headerIndex] = []
+        return this.codecData.postHandlers[this.headerIndex]
     }
 
     /**
@@ -146,6 +157,7 @@ export abstract class BaseHeader {
         this.prevCodecModules = [...codecModules]
         const prevCodecModuleIndex: number = this.prevCodecModules.length - 1
         this.prevCodecModule = this.prevCodecModules[prevCodecModuleIndex > -1 ? prevCodecModuleIndex : 0]
+        this.headerIndex = this.prevCodecModules.length
     }
 
     /**
@@ -299,6 +311,7 @@ export abstract class BaseHeader {
 
     /**
      * Register post encode handler for packet
+     * @description Registered handler call sequence: LIFO (Last In First Out)
      * @param handler
      * @param priority
      * @protected
@@ -312,6 +325,7 @@ export abstract class BaseHeader {
 
     /**
      * Register post decode handler for packet
+     * @description Registered handler call sequence: FIFO (First In First Out)
      * @param handler
      * @param priority
      * @protected

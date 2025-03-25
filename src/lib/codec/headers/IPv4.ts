@@ -5,7 +5,7 @@ import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {FixHexString} from '../lib/FixHexString'
 import {BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt32ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 import {BufferToHex} from '../lib/BufferToHex'
 import {IPv4ToBuffer} from '../lib/IPToBuffer'
 import {BufferToIPv4} from '../lib/BufferToIP'
@@ -116,6 +116,7 @@ export default class IPv4 extends BaseHeader {
                     if (length) {
                         this.writeBytes(2, UInt16ToBuffer(length))
                     } else {
+                        this.writeBytes(2, UInt16ToBuffer(length))
                         this.addPostPacketEncodeHandler((): void => {
                             let startCount: boolean = false
                             let totalLength: number = 0
@@ -124,7 +125,7 @@ export default class IPv4 extends BaseHeader {
                                 if (startCount) totalLength += codecModule.length
                             })
                             this.writeBytes(2, UInt16ToBuffer(totalLength))
-                        })
+                        }, 1)
                     }
                 }
             },
@@ -265,10 +266,10 @@ export default class IPv4 extends BaseHeader {
                     if (checksum) {
                         this.writeBytes(10, UInt16ToBuffer(checksum))
                     } else {
-                        this.writeBytes(10, Buffer.alloc(2, 0))
+                        this.writeBytes(10, UInt16ToBuffer(checksum))
                         this.addPostPacketEncodeHandler((): void => {
                             this.writeBytes(10, UInt16ToBuffer(this.calculateIPv4Checksum(this.packet.subarray(this.startPos, this.endPos))))
-                        }, 65535)
+                        }, 2)
                     }
                 }
             },

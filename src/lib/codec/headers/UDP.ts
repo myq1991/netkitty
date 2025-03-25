@@ -118,6 +118,7 @@ export default class UDP extends BaseHeader {
                     if (length) {
                         this.writeBytes(4, UInt16ToBuffer(length))
                     } else {
+                        this.writeBytes(4, UInt16ToBuffer(length))
                         this.addPostPacketEncodeHandler((): void => {
                             let startCount: boolean = false
                             let udpLength: number = 0
@@ -126,7 +127,7 @@ export default class UDP extends BaseHeader {
                                 if (startCount) udpLength += codecModule.length
                             })
                             this.writeBytes(4, UInt16ToBuffer(udpLength))
-                        }, 10)
+                        }, 1)
                     }
                 }
             },
@@ -154,7 +155,7 @@ export default class UDP extends BaseHeader {
                             })
                             let calcChecksum: number = this.calculateUDPChecksum(this.packet.subarray(this.startPos, this.startPos + udpHeaderWithDataLength))
                             this.writeBytes(6, UInt16ToBuffer(calcChecksum))
-                        }, 100)
+                        }, 2)
                     }
                 }
             }
