@@ -1,6 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {UInt16ToHex} from '../lib/NumberToHex'
+import {BufferToUInt16} from '../lib/BufferToNumber'
 
 export default class VLAN_802dot1Q extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
@@ -14,8 +15,8 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.instance.priority.setValue(this.readBits(0, 2, 0, 3))
                 },
                 encode: (): void => {
-                    let priorityValue: number = parseInt(this.instance.priority.getValue().toString())
-                    priorityValue = priorityValue ? priorityValue : 0
+                    const priorityValue: number = this.instance.priority.getValue(0)
+                    this.instance.priority.setValue(priorityValue)
                     this.writeBits(0, 2, 0, 3, priorityValue)
                 }
             },
@@ -25,7 +26,9 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.instance.dei.setValue(!!this.readBits(0, 2, 3, 1))
                 },
                 encode: (): void => {
-                    this.writeBits(0, 2, 3, 1, !!this.instance.dei ? 1 : 0)
+                    const dei: boolean = !!this.instance.dei.getValue()
+                    this.instance.dei.setValue(dei)
+                    this.writeBits(0, 2, 3, 1, dei ? 1 : 0)
                 }
             },
             id: {
@@ -36,8 +39,9 @@ export default class VLAN_802dot1Q extends BaseHeader {
                     this.instance.id.setValue(this.readBits(0, 2, 4, 12))
                 },
                 encode: (): void => {
-                    let vlanId: number = parseInt(this.instance.id.getValue().toString())
-                    this.writeBits(0, 2, 4, 12, vlanId ? vlanId : 0)
+                    const vlanId: number = this.instance.id.getValue(0)
+                    this.instance.id.setValue(vlanId)
+                    this.writeBits(0, 2, 4, 12, vlanId)
                 }
             },
             etherType: {
@@ -45,14 +49,14 @@ export default class VLAN_802dot1Q extends BaseHeader {
                 minLength: 4,
                 maxLength: 4,
                 decode: (): void => {
-                    this.instance.etherType.setValue(this.readBytes(2, 2).toString('hex').padStart(4, '0'))
+                    this.instance.etherType.setValue(BufferToUInt16(this.readBytes(2, 2)))
                 },
                 encode: (): void => {
-                    let etherType: string = this.instance.etherType.isUndefined() ? UInt16ToHex(0x0000) : UInt16ToHex(parseInt(this.instance.etherType.getValue().toString(), 16))
-                    etherType = etherType ? etherType : UInt16ToHex(0x0000)
+                    let etherType: string = this.instance.etherType.getValue(UInt16ToHex(0x0000), (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const typeBuffer: Buffer = Buffer.from(etherType, 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
                     this.writeBytes(2, typeBuffer.subarray(0, 2))
+
                 }
             }
         }
