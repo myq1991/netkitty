@@ -89,6 +89,7 @@ export default class TCP extends BaseHeader {
      * @protected
      */
     protected calculateTCPChecksum(tcpHeaderBuffer: Buffer): number {
+        const tcpHeaderLength: number = tcpHeaderBuffer.length
         const ipVersion: number = this.prevCodecModule.instance.version.getValue()
         let pseudoHeaderBuffer: Buffer = Buffer.from([])
         const sourceIp: string = this.prevCodecModule.instance.sip.getValue()
@@ -103,8 +104,8 @@ export default class TCP extends BaseHeader {
                 destinationIPv4Buffer,
                 Buffer.from('00', 'hex'), //Reserved field
                 Buffer.from('06', 'hex'), //Protocol type (TCP = 6)
-                Buffer.from([(this.length >> 8) & 0xFF]),
-                Buffer.from([this.length & 0xFF])
+                Buffer.from([(tcpHeaderLength >> 8) & 0xFF]),
+                Buffer.from([tcpHeaderLength & 0xFF])
             ])
         } else if (ipVersion === 6) {
             //16 Bytes
@@ -118,8 +119,8 @@ export default class TCP extends BaseHeader {
                 Buffer.from('00', 'hex'), //Reserved field
                 Buffer.from('00', 'hex'), //Reserved field
                 Buffer.from('06', 'hex'), //Protocol type (TCP = 6)
-                Buffer.from([(this.length >> 8) & 0xFF]),
-                Buffer.from([this.length & 0xFF])
+                Buffer.from([(tcpHeaderLength >> 8) & 0xFF]),
+                Buffer.from([tcpHeaderLength & 0xFF])
             ])
         } else {
             return 0
