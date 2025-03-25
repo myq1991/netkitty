@@ -5,7 +5,7 @@ import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 import {IPv6ToBuffer} from '../lib/IPToBuffer'
 import {CodecModule} from '../types/CodecModule'
 
-export default class UDP extends BaseHeader {
+export class UDP extends BaseHeader {
 
     /**
      * Calculate UDP Checksum

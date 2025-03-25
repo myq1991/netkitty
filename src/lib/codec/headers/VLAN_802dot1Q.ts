@@ -3,7 +3,7 @@ import {BaseHeader} from '../abstracts/BaseHeader'
 import {UInt16ToHex} from '../lib/NumberToHex'
 import {BufferToUInt16} from '../lib/BufferToNumber'
 
-export default class VLAN_802dot1Q extends BaseHeader {
+export class VLAN_802dot1Q extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
         properties: {

@@ -12,9 +12,9 @@ async function DecodeAndEncode(packet: string): Promise<void> {
         const encodeResult = await codec.encode(decodeResult)
     }
     // const encodeResult = await codec.encode(decodeResult)
-    // console.log('encodeResult:', encodeResult.toString('hex'))
-    // console.log('packetBuffer===encodeResult', packetBuffer.toString('hex') === encodeResult.toString('hex'))
-    // const decodeResult1 = await codec.decode(encodeResult)
+    // console.log('encodeResult:', encodeResult.packet.toString('hex'))
+    // console.log('packetBuffer===encodeResult', packetBuffer.toString('hex') === encodeResult.packet.toString('hex'))
+    // const decodeResult1 = await codec.decode(encodeResult.packet)
     // console.log(JSON.stringify(decodeResult1, null, 2))
 }
 

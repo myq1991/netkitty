@@ -81,7 +81,7 @@ type OptionItem =
     | OPTION_TCP_AO
     | OPTION_DEFAULT
 
-export default class TCP extends BaseHeader {
+export class TCP extends BaseHeader {
 
     /**
      * Calculate TCP Checksum

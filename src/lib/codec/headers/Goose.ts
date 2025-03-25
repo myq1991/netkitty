@@ -31,7 +31,7 @@ type AllDataItem = {
     value: string
 }
 
-export default class Goose extends BaseHeader {
+export class Goose extends BaseHeader {
 
     protected TLVInstance: TLV
 

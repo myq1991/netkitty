@@ -3,7 +3,7 @@ import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {UInt16ToHex} from '../lib/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
-export default class EthernetII extends BaseHeader {
+export class EthernetII extends BaseHeader {
 
     public readonly id: string = 'eth'
 

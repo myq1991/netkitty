@@ -1,8 +1,5 @@
-import path from 'node:path'
-import {readdirSync} from 'fs'
 import {CodecModuleConstructor} from './types/CodecModuleConstructor'
 import {CodecModule} from './types/CodecModule'
-import RawData from './headers/RawData'
 import {CodecDecodeResult} from './types/CodecDecodeResult'
 import {CodecEncodeInput} from './types/CodecEncodeInput'
 import {CodecErrorInfo} from './types/CodecErrorInfo'
@@ -12,8 +9,28 @@ import {NoAvailableCodecError} from '../../errors/NoAvailableCodecError'
 import {FlexibleObject} from './lib/FlexibleObject'
 import {CodecSchema} from './types/CodecSchema'
 import {ProcessPacketDecodePostHandlers, ProcessPacketEncodePostHandlers} from './lib/ProcessPacketPostHandlers'
+import {CodecEncodeResult} from './types/CodecEncodeResult'
+import {ARP} from './headers/ARP'
+import {EthernetII} from './headers/EthernetII'
+import {Goose} from './headers/Goose'
+import {IEC61850SampledValues} from './headers/IEC61850SampledValues'
+import {IPv4} from './headers/IPv4'
+import {RawData} from './headers/RawData'
+import {TCP} from './headers/TCP'
+import {UDP} from './headers/UDP'
+import {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 
-const HEADER_CODECS_DIRECTORY: string = path.resolve(__dirname, './headers')
+export const Headers: CodecModuleConstructor[] = [
+    ARP,
+    EthernetII,
+    Goose,
+    IEC61850SampledValues,
+    IPv4,
+    RawData,
+    TCP,
+    UDP,
+    VLAN_802dot1Q
+]
 
 export class Codec {
 
@@ -66,19 +83,7 @@ export class Codec {
      * @protected
      */
     protected loadHeaderCodecs(): CodecModuleConstructor[] {
-        let headerCodecs: CodecModuleConstructor[] = []
-        readdirSync(HEADER_CODECS_DIRECTORY)
-            .map((moduleName: string): string => path.resolve(HEADER_CODECS_DIRECTORY, moduleName))
-            .map((codecModule: string): CodecModuleConstructor | null => {
-                try {
-                    const codecModuleConstructor: CodecModuleConstructor = require(codecModule).default
-                    return codecModuleConstructor.PROTOCOL_NAME ? codecModuleConstructor : null
-                } catch (e) {
-                    return null
-                }
-            })
-            .filter((codecModuleConstructor: CodecModuleConstructor | null): codecModuleConstructor is CodecModuleConstructor => !!codecModuleConstructor)
-            .forEach((codecModuleConstructor: CodecModuleConstructor): number => headerCodecs.push(codecModuleConstructor))
+        let headerCodecs: CodecModuleConstructor[] = Headers
         headerCodecs = headerCodecs.filter((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID !== RawData.PROTOCOL_ID)
         //Ensure RawData codec is in the end of header codecs
         headerCodecs.push(RawData)
@@ -159,7 +164,7 @@ export class Codec {
      * Encode packet
      * @param inputs
      */
-    public async encode(inputs: CodecEncodeInput[]): Promise<Buffer> {
+    public async encode(inputs: CodecEncodeInput[]): Promise<CodecEncodeResult> {
         const errors: CodecErrorInfo[] = []
         const codecData: CodecData = await this.#encode(inputs, errors)
         const postEncodeHandlers: PostHandlerItem[] = ProcessPacketEncodePostHandlers(codecData.postHandlers)
@@ -168,6 +173,9 @@ export class Codec {
             await postEncodeHandler.handler()
             postEncodeHandler = postEncodeHandlers.shift()
         }
-        return codecData.packet
+        return {
+            packet: codecData.packet,
+            errors: errors
+        }
     }
 }

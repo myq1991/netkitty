@@ -3,7 +3,7 @@ import {BaseHeader} from '../abstracts/BaseHeader'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {BufferToHex} from '../lib/BufferToHex'
 
-export default class RawData extends BaseHeader {
+export class RawData extends BaseHeader {
 
     public readonly SCHEMA: ProtocolJSONSchema = {
         type: 'object',

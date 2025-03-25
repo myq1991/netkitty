@@ -10,7 +10,7 @@ import {BufferToHex} from '../lib/BufferToHex'
 import {IPv4ToBuffer} from '../lib/IPToBuffer'
 import {BufferToIPv4} from '../lib/BufferToIP'
 
-export default class IPv4 extends BaseHeader {
+export class IPv4 extends BaseHeader {
 
     /**
      * Calculate IPv4 header checksum

@@ -20,7 +20,7 @@ type ASDUItem = {
     smpMod?: number
 }
 
-export default class IEC61850SampledValues extends BaseHeader {
+export class IEC61850SampledValues extends BaseHeader {
 
     protected TLVInstance: TLV
 

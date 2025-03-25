@@ -9,7 +9,7 @@ import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 import {BufferToIPv4} from '../lib/BufferToIP'
 import {IPv4ToBuffer} from '../lib/IPToBuffer'
 
-export default class ARP extends BaseHeader {
+export class ARP extends BaseHeader {
 
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
