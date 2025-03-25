@@ -1,6 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
+import {BufferToHex} from '../lib/BufferToHex'
 
 export default class RawData extends BaseHeader {
 
@@ -12,7 +13,7 @@ export default class RawData extends BaseHeader {
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
                     const dataLength: number = this.packet.length - this.startPos
-                    this.instance.data.setValue(this.readBytes(0, dataLength).toString('hex'))
+                    this.instance.data.setValue(BufferToHex(this.readBytes(0, dataLength)))
                 },
                 encode: (): void => {
                     this.writeBytes(0, Buffer.from(this.instance.data.getValue().toString(), 'hex'))
