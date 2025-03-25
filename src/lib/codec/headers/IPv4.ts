@@ -322,7 +322,7 @@ export class IPv4 extends BaseHeader {
 
     public readonly name: string = 'Internet Protocol Version 4'
 
-    public readonly nickname: string = ''
+    public readonly nickname: string = 'IPv4'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
