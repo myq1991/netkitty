@@ -30,7 +30,7 @@
     "allowArbitraryExtensions": true,
     "isolatedModules": true,
     "declarationMap": true,
-    "outDir": "build",
+    "outDir": "dist",
     "rootDir": "src",
   },
   "exclude": [
