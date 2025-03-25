@@ -102,8 +102,8 @@ export default class TCP extends BaseHeader {
             pseudoHeaderBuffer = Buffer.concat([
                 sourceIPv4Buffer,
                 destinationIPv4Buffer,
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('06', 'hex'), //Protocol type (TCP = 6)
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(6), //Protocol type (TCP = 6)
                 Buffer.from([(tcpHeaderLength >> 8) & 0xFF]),
                 Buffer.from([tcpHeaderLength & 0xFF])
             ])
@@ -115,10 +115,10 @@ export default class TCP extends BaseHeader {
             pseudoHeaderBuffer = Buffer.concat([
                 sourceIPv6Buffer,
                 destinationIPv6Buffer,
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('06', 'hex'), //Protocol type (TCP = 6)
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(6), //Protocol type (TCP = 6)
                 Buffer.from([(tcpHeaderLength >> 8) & 0xFF]),
                 Buffer.from([tcpHeaderLength & 0xFF])
             ])

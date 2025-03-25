@@ -1,7 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {BufferToUInt16} from '../lib/BufferToNumber'
-import {UInt16ToBuffer} from '../lib/NumberToBuffer'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 import {IPv6ToBuffer} from '../lib/IPToBuffer'
 import {CodecModule} from '../types/CodecModule'
 
@@ -26,9 +26,9 @@ export default class UDP extends BaseHeader {
             pseudoHeaderBuffer = Buffer.concat([
                 sourceIPv4Buffer,
                 destinationIPv4Buffer,
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('11', 'hex'), //Protocol type (UDP = 17)
-                Buffer.from([(udpHeaderLength>> 8) & 0xFF]),
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(17), //Protocol type (UDP = 17)
+                Buffer.from([(udpHeaderLength >> 8) & 0xFF]),
                 Buffer.from([udpHeaderLength & 0xFF])
             ])
         } else if (ipVersion === 6) {
@@ -39,10 +39,10 @@ export default class UDP extends BaseHeader {
             pseudoHeaderBuffer = Buffer.concat([
                 sourceIPv6Buffer,
                 destinationIPv6Buffer,
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('00', 'hex'), //Reserved field
-                Buffer.from('11', 'hex'), //Protocol type (UDP = 17)
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(17), //Protocol type (UDP = 17)
                 Buffer.from([(udpHeaderLength >> 8) & 0xFF]),
                 Buffer.from([udpHeaderLength & 0xFF])
             ])
