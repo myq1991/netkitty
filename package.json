@@ -11,7 +11,6 @@
     "build:js": "npm run clean:js && tsc",
     "build:cpp": "npm run clean:cpp && node-gyp-build",
     "rebuild": "npm run clean && npm run build:cpp && npm run build:js",
-    "publish": "npm publish --registry=https://registry.npmjs.org/",
     "test": "npm run rebuild && node build/tests/Test.spec.js"
   },
   "repository": {
