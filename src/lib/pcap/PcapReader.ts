@@ -193,7 +193,7 @@ export class PcapReader extends EventEmitter {
     public async stop(): Promise<void> {
         if (this.parser) {
             this.emit('stop')
-            if (!this.readDone) await new Promise(resolve => this.once('done', resolve)) //TODO 造成了非watch读取时的死锁
+            if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
         }
         if (this.duplexPair) {
             await new Promise<void>(resolve => {
