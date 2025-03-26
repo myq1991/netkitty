@@ -13,7 +13,6 @@ export interface IPcapReaderOptions {
 
 export class PcapReader extends EventEmitter {
 
-
     protected readonly filename: string
 
     protected readonly watch: boolean
@@ -54,10 +53,12 @@ export class PcapReader extends EventEmitter {
     protected initReader(): void {
         this.duplexPair = new DuplexPair()
         this.parser = PcapParser.parse(this.readStream)
-        this.parser.on('packet', (pcapPacketInfo: IPcapPacketInfo): void => {
-            this.index = pcapPacketInfo.index
-            this.emit('packet', pcapPacketInfo)
-        })
+        this.parser
+            .on('packet', (pcapPacketInfo: IPcapPacketInfo): void => {
+                this.index = pcapPacketInfo.index
+                this.emit('packet', pcapPacketInfo)
+            })
+            .on('error', (err: Error): boolean => this.emit('error', err))
     }
 
     /**
@@ -147,10 +148,10 @@ export class PcapReader extends EventEmitter {
             while (!isReachEnd && !stopped) {
                 isReachEnd = await this.readBuffer()
             }
+            this.readDone = true
             if (!stopped) await this.stop()
             await this.readBufferFileHandle?.close()
             this.readBufferFileHandle = null
-            this.readDone = true
             this.emit('done')
         })
     }
@@ -192,7 +193,7 @@ export class PcapReader extends EventEmitter {
     public async stop(): Promise<void> {
         if (this.parser) {
             this.emit('stop')
-            if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
+            if (!this.readDone) await new Promise(resolve => this.once('done', resolve)) //TODO 造成了非watch读取时的死锁
         }
         if (this.duplexPair) {
             await new Promise<void>(resolve => {
@@ -223,6 +224,7 @@ export class PcapReader extends EventEmitter {
     public on(eventName: 'done', listener: (...args: any[]) => void): this
     public on(eventName: 'stop', listener: (...args: any[]) => void): this
     public on(eventName: 'close', listener: (...args: any[]) => void): this
+    public on(eventName: 'error', listener: (error: Error) => void): this
     public on(eventName: string, listener: (...args: any[]) => void): this {
         super.on(eventName, listener)
         return this
@@ -232,6 +234,7 @@ export class PcapReader extends EventEmitter {
     public once(eventName: 'done', listener: (...args: any[]) => void): this
     public once(eventName: 'stop', listener: (...args: any[]) => void): this
     public once(eventName: 'close', listener: (...args: any[]) => void): this
+    public once(eventName: 'error', listener: (error: Error) => void): this
     public once(eventName: string, listener: (...args: any[]) => void): this {
         super.once(eventName, listener)
         return this

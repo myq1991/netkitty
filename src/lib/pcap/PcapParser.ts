@@ -66,7 +66,7 @@ export class PcapParser extends EventEmitter {
             // determine pcap endianness
             if (magicNumber == 'a1b2c3d4') {
                 this.endianness = 'BE'
-            } else if (magicNumber == 'd4c3b2a1') {
+            } else if (magicNumber == 'd4c3b2a1' || magicNumber == '4d3cb2a1') {
                 this.endianness = 'LE'
             } else {
                 this.errored = true
