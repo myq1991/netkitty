@@ -75,6 +75,9 @@ export abstract class BaseHeader {
      */
     public readonly abstract nickname: string
 
+    /**
+     * Current header is a protocol or not
+     */
     public readonly isProtocol: boolean = true
 
     /**
@@ -151,6 +154,10 @@ export abstract class BaseHeader {
      */
     protected readonly headerIndex: number = 0
 
+    /**
+     * Post packet handlers
+     * @protected
+     */
     protected get postPacketHandlers(): PostHandlerItem[] {
         if (this.codecData.postHandlers[this.headerIndex] === undefined) this.codecData.postHandlers[this.headerIndex] = []
         return this.codecData.postHandlers[this.headerIndex]
