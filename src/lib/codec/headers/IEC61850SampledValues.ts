@@ -352,7 +352,7 @@ export class IEC61850SampledValues extends BaseHeader {
 
     public readonly name: string = 'IEC61850 Sampled Values'
 
-    public readonly nickname: string = 'IEC 61850/SV'
+    public readonly nickname: string = 'SV'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
