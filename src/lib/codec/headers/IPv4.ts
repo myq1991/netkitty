@@ -261,7 +261,7 @@ export class IPv4 extends BaseHeader {
                 label: 'Source Address',
                 minLength: 7,
                 maxLength: 15,
-                contentEncoding: StringContentEncodingEnum.UTF8,
+                contentEncoding: StringContentEncodingEnum.IPv4,
                 decode: (): void => {
                     const sipBuffer: Buffer = this.readBytes(12, 4)
                     this.instance.sip.setValue(BufferToIPv4(sipBuffer))
@@ -277,7 +277,7 @@ export class IPv4 extends BaseHeader {
                 minLength: 7,
                 maxLength: 15,
                 label: 'Destination Address',
-                contentEncoding: StringContentEncodingEnum.UTF8,
+                contentEncoding: StringContentEncodingEnum.IPv4,
                 decode: (): void => {
                     const dipBuffer: Buffer = this.readBytes(16, 4)
                     this.instance.dip.setValue(BufferToIPv4(dipBuffer))
