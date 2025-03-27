@@ -326,6 +326,7 @@ export class IPv4 extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
+        console.log('!!!!!',this.prevCodecModule.instance.etherType.getValue())
         return this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x0800)
     }
 }
