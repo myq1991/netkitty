@@ -211,14 +211,21 @@ export abstract class BaseHeader {
      * @param offset
      * @param length
      * @param expandBufferLength
+     * @param changeHeaderLength
      * @private
      */
-    #readBytes(offset: number, length: number, expandBufferLength: boolean): Buffer {
+    #readBytes(offset: number, length: number, expandBufferLength: boolean, changeHeaderLength: boolean): Buffer {
         const packetOffset: number = this.getPacketOffset(offset)
-        const readEndPos: number = packetOffset + length
-        if (this.packet.length < readEndPos && expandBufferLength) this.packet = Buffer.concat([this.packet, Buffer.alloc(readEndPos - this.packet.length, 0)])
+        let readEndPos: number = packetOffset + length
+        if (this.packet.length < readEndPos) {
+            if (expandBufferLength) {
+                this.packet = Buffer.concat([this.packet, Buffer.alloc(readEndPos - this.packet.length, 0)])
+            } else {
+                readEndPos = this.packet.length
+            }
+        }
         const headerLength: number = readEndPos - this.startPos
-        this.headerLength = this.headerLength < headerLength ? headerLength : this.headerLength
+        if (changeHeaderLength) this.headerLength = this.headerLength < headerLength ? headerLength : this.headerLength
         return this.packet.subarray(packetOffset, packetOffset + length)
     }
 
@@ -226,10 +233,11 @@ export abstract class BaseHeader {
      * Read bytes from buffer
      * @param offset
      * @param length
+     * @param dryRun
      * @protected
      */
-    protected readBytes(offset: number, length: number): Buffer {
-        return this.#readBytes(offset, length, false)
+    protected readBytes(offset: number, length: number, dryRun: boolean = false): Buffer {
+        return this.#readBytes(offset, length, false, !dryRun)
     }
 
     /**
@@ -241,7 +249,7 @@ export abstract class BaseHeader {
     protected writeBytes(offset: number, buffer: Buffer): void {
         const packetOffset: number = this.getPacketOffset(offset)
         const writeEndPos: number = packetOffset + buffer.length
-        this.#readBytes(offset, buffer.length, true)
+        this.#readBytes(offset, buffer.length, true, true)
         this.packet.fill(buffer, packetOffset, writeEndPos)
     }
 
@@ -254,7 +262,7 @@ export abstract class BaseHeader {
      * @protected
      */
     protected readBits(offset: number, length: number, bitOffset: number, bitLength: number): number {
-        const buffer: Buffer = this.#readBytes(offset, length, false)
+        const buffer: Buffer = this.#readBytes(offset, length, false, true)
         const bitString: string = parseInt(buffer.toString('hex'), 16).toString(2).padStart(length * 8, '0')
         return parseInt(bitString.substring(bitOffset, bitOffset + bitLength), 2)
     }
@@ -269,7 +277,7 @@ export abstract class BaseHeader {
      * @protected
      */
     protected writeBits(offset: number, length: number, bitOffset: number, bitLength: number, value: number): void {
-        const buffer: Buffer = this.#readBytes(offset, length, true)
+        const buffer: Buffer = this.#readBytes(offset, length, true, true)
         let bitArray: string[] = Array.from(parseInt(buffer.toString('hex'), 16).toString(2).padStart(buffer.length * 8, '0'))
         const valueBitArray: string[] = Array.from(value.toString(2).padStart(bitLength, '0'))
         bitArray = bitArray.map((bit: string, index: number): string => {

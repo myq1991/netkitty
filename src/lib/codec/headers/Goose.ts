@@ -128,9 +128,18 @@ export class Goose extends BaseHeader {
                 type: 'object',
                 label: 'GOOSE PDU',
                 decode: (): void => {
-                    const buffer: Buffer = this.readBytes(8, (this.instance.length.getValue() as number) - 8)
-                    this.TLVInstance = TLV.parse(buffer)
-                    this.TLVChild = this.TLVInstance.getChild()
+                    let redTLVBufferLength: number = (this.instance.length.getValue() as number) - 8
+                    while (!this.TLVInstance) {
+                        try {
+                            const buffer: Buffer = this.readBytes(8, redTLVBufferLength, true)
+                            this.TLVInstance = TLV.parse(buffer)
+                            this.readBytes(8, this.TLVInstance.length, false)//Update header length
+                        } catch (e) {
+                            redTLVBufferLength -= 1
+                            if (!redTLVBufferLength) break
+                        }
+                    }
+                    this.TLVChild = this.TLVInstance ? this.TLVInstance.getChild() : []
                 },
                 encode: (): void => {
                     let buffers: Buffer = Buffer.from([])
@@ -260,6 +269,7 @@ export class Goose extends BaseHeader {
                         },
                         encode: (): void => {
                             let stNumValue: number = this.instance.goosePdu.stNum.getValue(-1, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                            if (stNumValue < 0) return
                             if (stNumValue < 1 || stNumValue > 4294967295) {
                                 stNumValue = 4294967295
                                 this.recordError(this.instance.goosePdu.stNum.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
@@ -281,6 +291,7 @@ export class Goose extends BaseHeader {
                         },
                         encode: (): void => {
                             let sqNumValue: number = this.instance.goosePdu.sqNum.getValue(-1, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                            if (sqNumValue < 0) return
                             if (sqNumValue < 0 || sqNumValue > 4294967295) {
                                 sqNumValue = 4294967295
                                 this.recordError(this.instance.goosePdu.sqNum.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
@@ -516,7 +527,7 @@ export class Goose extends BaseHeader {
                                 if (!dataItem.dataType) return
                                 allData.push(dataItem)
                             })
-                            this.instance.goosePdu.allData.setValue(allData)
+                            if (allData.length) this.instance.goosePdu.allData.setValue(allData)
                         },
                         encode: (): void => {
                             const allData: AllDataItem[] = this.instance.goosePdu.allData.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
@@ -635,11 +646,12 @@ export class Goose extends BaseHeader {
                                     }
                                 })
                                 .filter((dataItemTLV: TLV | null): dataItemTLV is TLV => !!dataItemTLV)
-
-                            let dataItemsHex: string = ''
-                            dataItemTLVs.forEach(dataItemTLV => dataItemsHex = `${dataItemsHex}${dataItemTLV.toString()}`)
-                            const allDataTLV: TLV = new TLV(0xAB, dataItemsHex)
-                            this.TLVChild.push(allDataTLV)
+                            if (dataItemTLVs.length) {
+                                let dataItemsHex: string = ''
+                                dataItemTLVs.forEach(dataItemTLV => dataItemsHex = `${dataItemsHex}${dataItemTLV.toString()}`)
+                                const allDataTLV: TLV = new TLV(0xAB, dataItemsHex)
+                                this.TLVChild.push(allDataTLV)
+                            }
                         }
                     }
                 }

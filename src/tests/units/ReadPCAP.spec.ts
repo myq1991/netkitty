@@ -1,5 +1,4 @@
 import {PcapReader} from '../../lib/pcap/PcapReader'
-import path from 'node:path'
 
 (async (): Promise<void> => {
     // const reader = new PcapReader({filename: path.resolve(__dirname, '../../../test.pcap'), watch: false})
@@ -9,6 +8,6 @@ import path from 'node:path'
         console.log(pcapPacketInfo.index)
     }).once('done', () => {
         console.log('done!')
-    }).once('error',console.error)
+    }).once('error', console.error)
     await reader.start()
 })()
