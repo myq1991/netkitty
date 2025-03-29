@@ -85,7 +85,6 @@ export class ICMPv6 extends BaseHeader {
                 },
                 encode: (): void => {
                     let checksum: number = this.instance.checksum.getValue(0)
-                    checksum = 0//TODO 调试用
                     this.instance.checksum.setValue(checksum)
                     this.writeBytes(2, UInt16ToBuffer(checksum))
                     if (!checksum) {
