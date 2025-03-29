@@ -20,6 +20,7 @@ import {TCP} from './headers/TCP'
 import {UDP} from './headers/UDP'
 import {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 import {IPv6} from './headers/IPv6'
+import {IPv6HopByHopOptions} from './headers/IPv6HopByHopOptions'
 
 export const Headers: CodecModuleConstructor[] = [
     ARP,
@@ -28,6 +29,7 @@ export const Headers: CodecModuleConstructor[] = [
     IEC61850SampledValues,
     IPv4,
     IPv6,
+    IPv6HopByHopOptions,
     RawData,
     TCP,
     UDP,

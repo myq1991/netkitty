@@ -622,6 +622,7 @@ export class TCP extends BaseHeader {
                         //Default
                         {
                             type: 'object',
+                            label: 'Default',
                             properties: {
                                 kind: {
                                     type: 'integer',
