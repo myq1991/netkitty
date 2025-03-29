@@ -1,6 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {UInt16ToHex} from '../lib/NumberToHex'
 import {BufferToUInt8} from '../lib/BufferToNumber'
 import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
