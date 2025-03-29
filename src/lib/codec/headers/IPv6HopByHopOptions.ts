@@ -6,7 +6,6 @@ import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import TLV from 'node-tlv'
 import {HexToUInt16, HexToUInt32, HexToUInt64, HexToUInt8} from '../lib/HexToNumber'
 
-//Type=0 Pad1
 //Type=1 PadN
 //Type=4 Tunnel Encapsulation Limit
 //Type=5 Router Alert

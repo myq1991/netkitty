@@ -21,6 +21,7 @@ import {UDP} from './headers/UDP'
 import {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 import {IPv6} from './headers/IPv6'
 import {IPv6HopByHopOptions} from './headers/IPv6HopByHopOptions'
+import {ICMPv6} from './headers/ICMPv6'
 
 export const Headers: CodecModuleConstructor[] = [
     ARP,
@@ -30,6 +31,7 @@ export const Headers: CodecModuleConstructor[] = [
     IPv4,
     IPv6,
     IPv6HopByHopOptions,
+    ICMPv6,
     RawData,
     TCP,
     UDP,
