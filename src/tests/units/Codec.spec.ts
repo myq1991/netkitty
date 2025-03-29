@@ -8,7 +8,7 @@ async function DecodeAndEncode(packet: string): Promise<void> {
     const codec = new Codec()
     const decodeResult = await codec.decode(packetBuffer)
     // console.log(JSON.stringify(decodeResult, null, 2))
-    // for (let i = 0; i < 1; i++) {
+    // for (let i = 0; i < 100000; i++) {
     //     const encodeResult = await codec.encode(decodeResult)
     // }
     const encodeResult = await codec.encode(decodeResult)

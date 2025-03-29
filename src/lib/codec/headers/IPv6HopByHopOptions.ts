@@ -527,7 +527,7 @@ export class IPv6HopByHopOptions extends BaseHeader {
     public readonly isProtocol: boolean = false
 
     public match(): boolean {
-        if (!this.prevCodecModule) return false
+        if (!this.prevCodecModule || this.prevCodecModule.id !== 'ipv6') return false
         return this.prevCodecModule.instance.nxt.getValue() === 0x00
     }
 
