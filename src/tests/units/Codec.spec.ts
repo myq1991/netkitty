@@ -30,6 +30,10 @@ async function IPv4_Codec(packet: string): Promise<void> {
     await DecodeAndEncode(packet)
 }
 
+async function IPv6_Codec(packet: string): Promise<void> {
+    await DecodeAndEncode(packet)
+}
+
 async function ARP_Codec(packet: string): Promise<void> {
     await DecodeAndEncode(packet)
 }
@@ -71,5 +75,10 @@ async function UDP_Codec(packet: string): Promise<void> {
     // console.time('UDP')
     // await UDP_Codec('////////CAAnzP1BCABFAAD/uTJAAEAR+6XAqAHGwKgB/wCKAIoA62oQEQp9csCoAcYAigDVAAAgRkFGRUZEQ0FDQUNBQ0FDQUNBQ0FDQUNBQ0FDQUNBQUEAIEZIRVBGQ0VMRUhGQ0VQRkZGQUNBQ0FDQUNBQ0FDQUJOAP9TTUIlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEQAAOwAAAAAAAAAAAAAAAAAAAAAAAAA7AFYAAwABAAEAAgBMAFxNQUlMU0xPVFxCUk9XU0UAAe2A/AoAUFRTAAAAAAAAAAAAAAAAAAYBA5qBAA8BVapwdHMgc2VydmVyIChTYW1iYSwgVWJ1bnR1KQA=')
     // console.timeEnd('UDP')
+
+    console.time('IPv6')
+    await IPv6_Codec('xAI6RAAAxAA6RAAAht1gAAAAADw6QP6AAAAAAAAAxgA6//5EAAD+gAAAAAAAAMYCOv/+RAAAgQDIrxOKAAEBAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0')
+    console.timeEnd('IPv6')
+
 
 })()

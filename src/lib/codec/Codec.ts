@@ -19,6 +19,7 @@ import {RawData} from './headers/RawData'
 import {TCP} from './headers/TCP'
 import {UDP} from './headers/UDP'
 import {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
+import {IPv6} from './headers/IPv6'
 
 export const Headers: CodecModuleConstructor[] = [
     ARP,
@@ -26,6 +27,7 @@ export const Headers: CodecModuleConstructor[] = [
     Goose,
     IEC61850SampledValues,
     IPv4,
+    IPv6,
     RawData,
     TCP,
     UDP,
