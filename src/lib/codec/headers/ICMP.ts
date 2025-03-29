@@ -1,50 +1,44 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt32ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {BufferToHex} from '../lib/BufferToHex'
-import {CodecModule} from '../types/CodecModule'
-import {IPv6ToBuffer} from '../lib/IPToBuffer'
 
-export class ICMPv6 extends BaseHeader {
+export class ICMP extends BaseHeader {
 
     /**
-     * Calculate ICMPv6 checksum
+     * Calculate ICMPv4 checksum
      * @protected
      */
-    protected calculateIcmpv6Checksum(): number {
-        const ipv6Header: CodecModule | undefined = this.prevCodecModules.find((prevCodecModule: CodecModule): boolean => prevCodecModule.id === 'ipv6')
-        if (!ipv6Header) return 0
-        const messageBody: Buffer = Buffer.from(this.instance.message.getValue(''), 'hex')
-        const sip: string = ipv6Header.instance.sip.getValue('0000:0000:0000:0000:0000:0000:0000:0000')
-        const dip: string = ipv6Header.instance.dip.getValue('0000:0000:0000:0000:0000:0000:0000:0000')
-        const pseudoHeader: Buffer = Buffer.concat([
-            IPv6ToBuffer(sip),
-            IPv6ToBuffer(dip),
-            UInt32ToBuffer(messageBody.length + 4),
-            UInt8ToBuffer(0x00),
-            UInt8ToBuffer(0x00),
-            UInt8ToBuffer(0x00),
-            UInt8ToBuffer(0x3a)
-        ])
-
+    protected calculateIcmpChecksum(): number {
         const icmpHeader: Buffer = Buffer.concat([
             UInt8ToBuffer(this.instance.type.getValue(0)),
             UInt8ToBuffer(this.instance.code.getValue(0)),
-            UInt16ToBuffer(this.instance.checksum.getValue(0))
+            UInt16ToBuffer(this.instance.checksum.getValue(0)),
+            UInt16ToBuffer(this.instance.ident.getValue(0)),
+            UInt16ToBuffer(this.instance.seq.getValue(0)),
+            Buffer.from(this.instance.message.getValue(''), 'hex')
         ])
-        const buffer: Buffer = Buffer.concat([
-            pseudoHeader,
-            icmpHeader,
-            messageBody
-        ])
-        const paddedBuffer: Buffer = buffer.length % 2 === 1 ? Buffer.concat([buffer, UInt8ToBuffer(0)]) : buffer
-        let checksum: number = 0
-        for (let i: number = 0; i < paddedBuffer.length; i += 2) {
-            checksum += (paddedBuffer[i] << 8) | (paddedBuffer[i + 1] || 0)
-            if (checksum > 0xFFFF) checksum = (checksum & 0xFFFF) + 1
+        const paddedBuffer: Buffer = icmpHeader.length % 2 === 1 ?
+            Buffer.concat([
+                icmpHeader,
+                UInt8ToBuffer(0)
+            ]) : icmpHeader
+
+        // 4. 计算 checksum
+        let checksum = 0
+        for (let i = 0; i < paddedBuffer.length; i += 2) {
+            const word = (paddedBuffer[i] << 8) | (paddedBuffer[i + 1] || 0)
+            checksum += word
+
+            // 处理溢出
+            if (checksum > 0xFFFF) {
+                checksum = (checksum & 0xFFFF) + 1
+            }
         }
+
+        // 取反得到最终 checksum
         return (~checksum) & 0xFFFF
     }
 
@@ -92,10 +86,38 @@ export class ICMPv6 extends BaseHeader {
                     this.instance.checksum.setValue(checksum)
                     this.writeBytes(2, UInt16ToBuffer(checksum))
                     if (!checksum) {
-                        checksum = this.calculateIcmpv6Checksum()
+                        checksum = this.calculateIcmpChecksum()
                         this.instance.checksum.setValue(checksum)
                         this.writeBytes(2, UInt16ToBuffer(checksum))
                     }
+                }
+            },
+            ident: {
+                type: 'number',
+                label: 'Identifier (BE)',
+                minimum: 0,
+                maximum: 65535,
+                decode: (): void => {
+                    this.instance.ident.setValue(BufferToUInt16(this.readBytes(4, 2)))
+                },
+                encode: (): void => {
+                    const ident: number = this.instance.ident.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                    this.instance.ident.setValue(ident)
+                    this.writeBytes(4, UInt16ToBuffer(ident))
+                }
+            },
+            seq: {
+                type: 'number',
+                label: 'Sequence Number (BE)',
+                minimum: 0,
+                maximum: 65535,
+                decode: (): void => {
+                    this.instance.seq.setValue(BufferToUInt16(this.readBytes(6, 2)))
+                },
+                encode: (): void => {
+                    const seq: number = this.instance.seq.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                    this.instance.seq.setValue(seq)
+                    this.writeBytes(6, UInt16ToBuffer(seq))
                 }
             },
             message: {
@@ -103,26 +125,27 @@ export class ICMPv6 extends BaseHeader {
                 label: 'Message Body',
                 contentEncoding: StringContentEncodingEnum.HEX,
                 decode: (): void => {
-                    const messageDataLength: number = this.packet.length - this.startPos - 4
-                    this.instance.message.setValue(BufferToHex(this.readBytes(4, messageDataLength)))
+                    const messageDataLength: number = this.packet.length - this.startPos - 8
+                    this.instance.message.setValue(BufferToHex(this.readBytes(8, messageDataLength)))
                 },
                 encode: (): void => {
                     const messageHex: string = this.instance.message.getValue('')
                     this.instance.message.setValue(messageHex)
-                    this.writeBytes(4, Buffer.from(messageHex, 'hex'))
+                    this.writeBytes(8, Buffer.from(messageHex, 'hex'))
                 }
             }
         }
     }
 
-    public id: string = 'icmpv6'
+    public id: string = 'icmp'
 
-    public name: string = 'Internet Control Message Protocol v6'
+    public name: string = 'Internet Control Message Protocol'
 
-    public nickname: string = 'ICMPv6'
+    public nickname: string = 'ICMP'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.nxt.getValue() === 0x3a
+        return this.prevCodecModule.instance.protocol.getValue() === 0x01
     }
+
 }

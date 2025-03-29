@@ -22,12 +22,14 @@ import {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 import {IPv6} from './headers/IPv6'
 import {IPv6HopByHopOptions} from './headers/IPv6HopByHopOptions'
 import {ICMPv6} from './headers/ICMPv6'
+import {ICMP} from './headers/ICMP'
 
 export const Headers: CodecModuleConstructor[] = [
     ARP,
     EthernetII,
     Goose,
     IEC61850SampledValues,
+    ICMP,
     IPv4,
     IPv6,
     IPv6HopByHopOptions,
