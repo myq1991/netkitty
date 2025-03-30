@@ -1,9 +1,9 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
+import {BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {BufferToHex} from '../lib/BufferToHex'
+import {BufferToHex} from '../../helper/BufferToHex'
 
 export class ICMP extends BaseHeader {
 

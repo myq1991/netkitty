@@ -1,12 +1,12 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import TLV from 'node-tlv'
-import {HexToUInt16} from '../lib/HexToNumber'
-import {UInt16ToBERHex} from '../lib/NumberToBERHex'
-import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../lib/NumberToHex'
+import {HexToUInt16} from '../../helper/HexToNumber'
+import {UInt16ToBERHex} from '../../helper/NumberToBERHex'
+import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer} from '../lib/NumberToBuffer'
+import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer} from '../../helper/NumberToBuffer'
 
 type ASDUItem = {
     svID: string

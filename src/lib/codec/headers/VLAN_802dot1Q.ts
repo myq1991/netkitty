@@ -1,7 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {UInt16ToHex} from '../lib/NumberToHex'
-import {BufferToHex} from '../lib/BufferToHex'
+import {UInt16ToHex} from '../../helper/NumberToHex'
+import {BufferToHex} from '../../helper/BufferToHex'
 
 export class VLAN_802dot1Q extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {

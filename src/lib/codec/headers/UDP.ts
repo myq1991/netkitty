@@ -1,8 +1,8 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {BufferToUInt16} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
-import {IPv6ToBuffer} from '../lib/IPToBuffer'
+import {BufferToUInt16} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
+import {IPv6ToBuffer} from '../../helper/IPToBuffer'
 import {CodecModule} from '../types/CodecModule'
 
 export class UDP extends BaseHeader {

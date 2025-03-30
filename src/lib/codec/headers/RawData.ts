@@ -1,7 +1,7 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {BufferToHex} from '../lib/BufferToHex'
+import {BufferToHex} from '../../helper/BufferToHex'
 
 export class RawData extends BaseHeader {
 

@@ -1,6 +1,6 @@
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
-import {UInt16ToHex} from '../lib/NumberToHex'
+import {UInt16ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 export class EthernetII extends BaseHeader {

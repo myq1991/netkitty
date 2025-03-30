@@ -1,6 +1,6 @@
 import {Codec} from '../../lib/codec/Codec'
 import {FlexibleObject} from '../../lib/codec/lib/FlexibleObject'
-import {UInt8ToHex} from '../../lib/codec/lib/NumberToHex'
+import {UInt8ToHex} from '../../lib/helper/NumberToHex'
 
 async function DecodeAndEncode(packet: string): Promise<void> {
     const packetBuffer: Buffer = Buffer.from(packet, 'base64')

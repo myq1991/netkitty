@@ -10,7 +10,7 @@ import {
     HexToUInt16,
     HexToUInt32,
     HexToUInt8
-} from '../lib/HexToNumber'
+} from '../../helper/HexToNumber'
 import {
     Int16ToBERHex,
     Int32ToBERHex,
@@ -19,12 +19,12 @@ import {
     UInt16ToBERHex,
     UInt32ToBERHex,
     UInt8ToBERHex
-} from '../lib/NumberToBERHex'
-import {Float32ToHex, UInt16ToHex} from '../lib/NumberToHex'
+} from '../../helper/NumberToBERHex'
+import {Float32ToHex, UInt16ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {UInt32ToBERBuffer} from '../lib/NumberToBERBuffer'
-import {BufferToUInt16} from '../lib/BufferToNumber'
-import {UInt16ToBuffer} from '../lib/NumberToBuffer'
+import {UInt32ToBERBuffer} from '../../helper/NumberToBERBuffer'
+import {BufferToUInt16} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer} from '../../helper/NumberToBuffer'
 
 type AllDataItem = {
     dataType: string

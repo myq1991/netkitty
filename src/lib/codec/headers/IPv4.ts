@@ -1,14 +1,14 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {UInt16ToHex} from '../lib/NumberToHex'
+import {UInt16ToHex} from '../../helper/NumberToHex'
 import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {FixHexString} from '../lib/FixHexString'
-import {BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
-import {BufferToHex} from '../lib/BufferToHex'
-import {IPv4ToBuffer} from '../lib/IPToBuffer'
-import {BufferToIPv4} from '../lib/BufferToIP'
+import {BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
+import {BufferToHex} from '../../helper/BufferToHex'
+import {IPv4ToBuffer} from '../../helper/IPToBuffer'
+import {BufferToIPv4} from '../../helper/BufferToIP'
+import {HexToBuffer} from '../../helper/HexToBuffer'
 
 export class IPv4 extends BaseHeader {
 
@@ -301,7 +301,7 @@ export class IPv4 extends BaseHeader {
                 },
                 encode: (): void => {
                     if (!this.instance.options.isUndefined()) {
-                        let optionsBuffer: Buffer = Buffer.from(FixHexString(this.instance.options.getValue()), 'hex')
+                        let optionsBuffer: Buffer = HexToBuffer(this.instance.options.getValue(''))
                         if (optionsBuffer.length > 40) optionsBuffer = optionsBuffer.subarray(0, 40)
                         const estimateHdrLen: number = this.length + optionsBuffer.length
                         if (estimateHdrLen % 4) {

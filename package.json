@@ -1,9 +1,29 @@
 {
   "name": "netkitty",
-  "version": "0.0.16",
+  "version": "0.0.20",
   "description": "Network tools kit",
-  "main": "dist/NetKitty.js",
-  "types": "dist/NetKitty.d.ts",
+  "exports": {
+    "./network": {
+      "types": "./dist/NetworkExports.d.ts",
+      "require": "./dist/NetworkExports.js"
+    },
+    "./pcap": {
+      "types": "./dist/PcapExports.d.ts",
+      "require": "./dist/PcapExports.js"
+    },
+    "./codec": {
+      "types": "./dist/CodecExports.d.ts",
+      "require": "./dist/CodecExports.js"
+    },
+    "./codec/header": {
+      "types": "./dist/CodecHeaderExports.d.ts",
+      "require": "./dist/CodecHeaderExports.js"
+    },
+    "./helper": {
+      "types": "./dist/HelperExports.d.ts",
+      "require": "./dist/HelperExports.js"
+    }
+  },
   "scripts": {
     "clean": "npm run clean:js && npm run clean:cpp",
     "clean:js": "shx rm -rf ./build && shx rm -rf ./dist",
@@ -20,7 +40,11 @@
   "keywords": [
     "netkitty",
     "net-analysis",
-    "capture-net-packets"
+    "capture-net-packets",
+    "pcap",
+    "encode",
+    "decode",
+    "wireshark"
   ],
   "author": "alex.ma",
   "license": "MIT",

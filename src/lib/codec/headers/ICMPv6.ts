@@ -1,11 +1,11 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt32ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
-import {BufferToHex} from '../lib/BufferToHex'
+import {BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer, UInt32ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
+import {BufferToHex} from '../../helper/BufferToHex'
 import {CodecModule} from '../types/CodecModule'
-import {IPv6ToBuffer} from '../lib/IPToBuffer'
+import {IPv6ToBuffer} from '../../helper/IPToBuffer'
 
 export class ICMPv6 extends BaseHeader {
 

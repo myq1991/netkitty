@@ -1,2 +1,2 @@
-# netkitty
+# NetKitty
 miaowu~

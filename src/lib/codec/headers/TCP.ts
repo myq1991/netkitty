@@ -1,12 +1,12 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
-import {IPv6ToBuffer} from '../lib/IPToBuffer'
+import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
+import {IPv6ToBuffer} from '../../helper/IPToBuffer'
 import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {UInt64ToHex} from '../lib/NumberToHex'
-import {HexToUInt64} from '../lib/HexToNumber'
+import {UInt64ToHex} from '../../helper/NumberToHex'
+import {HexToUInt64} from '../../helper/HexToNumber'
 
 enum TCPOption {
     End_of_Option_List = 'EOL',

@@ -1,10 +1,10 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {BufferToUInt8} from '../lib/BufferToNumber'
-import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
+import {BufferToUInt8} from '../../helper/BufferToNumber'
+import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import TLV from 'node-tlv'
-import {HexToUInt16, HexToUInt32, HexToUInt64, HexToUInt8} from '../lib/HexToNumber'
+import {HexToUInt16, HexToUInt32, HexToUInt64, HexToUInt8} from '../../helper/HexToNumber'
 
 //Type=1 PadN
 //Type=4 Tunnel Encapsulation Limit

@@ -10,35 +10,8 @@ import {FlexibleObject} from './lib/FlexibleObject'
 import {CodecSchema} from './types/CodecSchema'
 import {ProcessPacketDecodePostHandlers, ProcessPacketEncodePostHandlers} from './lib/ProcessPacketPostHandlers'
 import {CodecEncodeResult} from './types/CodecEncodeResult'
-import {ARP} from './headers/ARP'
-import {EthernetII} from './headers/EthernetII'
-import {Goose} from './headers/Goose'
-import {IEC61850SampledValues} from './headers/IEC61850SampledValues'
-import {IPv4} from './headers/IPv4'
 import {RawData} from './headers/RawData'
-import {TCP} from './headers/TCP'
-import {UDP} from './headers/UDP'
-import {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
-import {IPv6} from './headers/IPv6'
-import {IPv6HopByHopOptions} from './headers/IPv6HopByHopOptions'
-import {ICMPv6} from './headers/ICMPv6'
-import {ICMP} from './headers/ICMP'
-
-export const Headers: CodecModuleConstructor[] = [
-    ARP,
-    EthernetII,
-    Goose,
-    IEC61850SampledValues,
-    ICMP,
-    IPv4,
-    IPv6,
-    IPv6HopByHopOptions,
-    ICMPv6,
-    RawData,
-    TCP,
-    UDP,
-    VLAN_802dot1Q
-]
+import * as packetHeaders from './PacketHeaders'
 
 export class Codec {
 
@@ -91,7 +64,7 @@ export class Codec {
      * @protected
      */
     protected loadHeaderCodecs(): CodecModuleConstructor[] {
-        let headerCodecs: CodecModuleConstructor[] = Headers
+        let headerCodecs: CodecModuleConstructor[] = [...Object.values(packetHeaders)]
         headerCodecs = headerCodecs.filter((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID !== RawData.PROTOCOL_ID)
         //Ensure RawData codec is in the end of header codecs
         headerCodecs.push(RawData)

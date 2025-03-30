@@ -1,13 +1,13 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
-import {UInt16ToHex, UInt8ToHex} from '../lib/NumberToHex'
+import {UInt16ToHex, UInt8ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
-import {HexToUInt16} from '../lib/HexToNumber'
-import {BufferToInt16, BufferToUInt16, BufferToUInt8} from '../lib/BufferToNumber'
-import {BufferToHex} from '../lib/BufferToHex'
-import {UInt16ToBuffer, UInt8ToBuffer} from '../lib/NumberToBuffer'
-import {BufferToIPv4} from '../lib/BufferToIP'
-import {IPv4ToBuffer} from '../lib/IPToBuffer'
+import {HexToUInt16} from '../../helper/HexToNumber'
+import {BufferToInt16, BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
+import {BufferToHex} from '../../helper/BufferToHex'
+import {UInt16ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
+import {BufferToIPv4} from '../../helper/BufferToIP'
+import {IPv4ToBuffer} from '../../helper/IPToBuffer'
 
 export class ARP extends BaseHeader {
 
