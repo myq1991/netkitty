@@ -18,8 +18,8 @@ export abstract class BaseHeader {
         return new (this as any)()
     }
 
-    protected static CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(codecModules: CodecModule[]): CodecModule {
-        return new (this as any)(undefined, codecModules, [])
+    protected static CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(codecData: CodecData, codecModules: CodecModule[]): CodecModule {
+        return this.CREATE_INSTANCE(codecData, codecModules)
     }
 
     public static get PROTOCOL_ID(): string {
@@ -47,8 +47,8 @@ export abstract class BaseHeader {
         return schema
     }
 
-    public static MATCH(codecModules: CodecModule[]): boolean {
-        return this.CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(codecModules ? codecModules : []).match()
+    public static MATCH(codecData: CodecData, codecModules: CodecModule[]): boolean {
+        return this.CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(codecData, codecModules ? codecModules : []).match()
     }
 
     public static CREATE_INSTANCE(codecData: CodecData, codecModules: CodecModule[]): CodecModule {

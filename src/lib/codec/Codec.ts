@@ -104,7 +104,7 @@ export class Codec {
      * @private
      */
     async #decode(codecData: CodecData, codecModules: CodecModule[] = []): Promise<void> {
-        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(codecModules))
+        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.MATCH(codecData, codecModules))
         //This unavailable error should not be thrown, the raw data codec will always match unknown data successfully
         if (!codecModuleConstructor) throw new NoAvailableCodecError('No available codec constructor')
         const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
