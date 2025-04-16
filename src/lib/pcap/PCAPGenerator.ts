@@ -5,8 +5,8 @@
 import BigNumber from 'bignumber.js'
 
 export type GeneratePCAPInputPacket = {
-    timestamp: number
     frameBase64Data: string
+    timestamp?: number
     microsecond?: {
         seconds: number
         microseconds: number
@@ -15,7 +15,7 @@ export type GeneratePCAPInputPacket = {
 
 export type GeneratePCAPPacket = {
     buffer: Buffer,
-    timestamp: number,
+    timestamp?: number,
     microsecond?: {
         seconds: number
         microseconds: number
@@ -90,7 +90,12 @@ export function GeneratePCAPData(packet: GeneratePCAPPacket): Buffer {
         seconds = packet.microsecond.seconds
         microseconds = packet.microsecond.microseconds
     } else {
-        [seconds, microseconds] = convertMillisecond2Microsecond(packet.timestamp)
+        if (packet.timestamp) {
+            [seconds, microseconds] = convertMillisecond2Microsecond(packet.timestamp)
+        } else {
+            seconds = 0
+            microseconds = 0
+        }
     }
     packetHeader.writeUInt32BE(seconds, 0) // 4
     if (packet.microsecond) {
