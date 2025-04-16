@@ -53,7 +53,7 @@ export class VLAN_802dot1Q extends BaseHeader {
                     this.instance.etherType.setValue(BufferToHex(this.readBytes(2, 2)))
                 },
                 encode: (): void => {
-                    let etherType: string = this.instance.etherType.getValue(UInt16ToHex(0x0000), (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                    const etherType: string = this.instance.etherType.getValue(UInt16ToHex(0x0000), (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const typeBuffer: Buffer = Buffer.from(etherType, 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
                     this.writeBytes(2, typeBuffer.subarray(0, 2))

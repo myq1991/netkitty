@@ -11,3 +11,10 @@ export {RawData} from './headers/RawData'
 export {TCP} from './headers/TCP'
 export {UDP} from './headers/UDP'
 export {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
+//阿才写的代码
+export {TLS_Alert} from './headers/TLS_Alert'
+export {TLS_ApplicationData} from './headers/TLS_ApplicationData'
+export {TLS_ChangeCipherSpec} from './headers/TLS_ChangeCipherSpec'
+export {TLS_Handshake} from './headers/TLS_Handshake'
+export {TLS_Heartbeat} from './headers/TLS_Heartbeat'
+//阿才写的代码
