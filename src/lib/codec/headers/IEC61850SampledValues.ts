@@ -124,7 +124,7 @@ export class IEC61850SampledValues extends BaseHeader {
                     let buffer: Buffer = Buffer.from([])
                     this.TLVChild.forEach(TLVItem => buffer = Buffer.concat([buffer, TLVItem.bTag, TLVItem.bLength, TLVItem.bValue]))
                     const svPduTLV: TLV = new TLV(0x60, buffer)
-                    let svPduBuffer: Buffer = Buffer.concat([svPduTLV.bTag, svPduTLV.bLength, svPduTLV.bValue])
+                    const svPduBuffer: Buffer = Buffer.concat([svPduTLV.bTag, svPduTLV.bLength, svPduTLV.bValue])
                     this.writeBytes(8, svPduBuffer)
                     /**
                      * Update the length only if it is not set

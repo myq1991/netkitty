@@ -56,7 +56,7 @@ export class EthernetII extends BaseHeader {
                     this.instance.etherType.setValue(this.readBytes(12, 2).toString('hex').padStart(4, '0'))
                 },
                 encode: (): void => {
-                    let etherType: string = this.instance.etherType.getValue(UInt16ToHex(0x0000), (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                    const etherType: string = this.instance.etherType.getValue(UInt16ToHex(0x0000), (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const typeBuffer: Buffer = Buffer.from(etherType, 'hex')
                     if (typeBuffer.length < 2) typeBuffer.fill(0, 0, 1)
                     this.writeBytes(12, typeBuffer.subarray(0, 2))

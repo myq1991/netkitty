@@ -21,7 +21,7 @@ export class IPv4 extends BaseHeader {
         const header: Uint8Array = Uint8Array.from(headerBuffer)
         let sum: number = 0
         for (let i: number = 0; i < header.length; i += 2) {
-            let word = (header[i] << 8) + (header[i + 1] || 0)
+            const word = (header[i] << 8) + (header[i + 1] || 0)
             sum += word
         }
         while (sum >>> 16) {
@@ -111,7 +111,7 @@ export class IPv4 extends BaseHeader {
                 },
                 encode: (): void => {
                     //This field's real value needs down stream codec invoke recode to fill
-                    let length: number = this.instance.length.getValue(0)
+                    const length: number = this.instance.length.getValue(0)
                     if (length) {
                         this.writeBytes(2, UInt16ToBuffer(length))
                     } else {

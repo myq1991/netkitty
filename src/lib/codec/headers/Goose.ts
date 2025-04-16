@@ -99,7 +99,7 @@ export class Goose extends BaseHeader {
                             this.instance.reserved1.reserved.setValue(this.readBits(4, 2, 1, 16))
                         },
                         encode: (): void => {
-                            let reserved: number = this.instance.reserved1.reserved.getValue(0)
+                            const reserved: number = this.instance.reserved1.reserved.getValue(0)
                             this.writeBits(4, 2, 1, 16, reserved)
                         }
                     }
@@ -312,7 +312,7 @@ export class Goose extends BaseHeader {
                             this.instance.goosePdu.simulation.setValue(!!simulationNum)
                         },
                         encode: (): void => {
-                            let simulationValue: boolean | undefined = this.instance.goosePdu.simulation.getValue(undefined, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                            const simulationValue: boolean | undefined = this.instance.goosePdu.simulation.getValue(undefined, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (simulationValue === undefined) return
                             const simulationNum: number = simulationValue ? 1 : 0
                             const simulationTLV: TLV = new TLV(0x87, Buffer.from(simulationNum.toString(16).padStart(2, '0'), 'hex'))
@@ -349,7 +349,7 @@ export class Goose extends BaseHeader {
                             this.instance.goosePdu.ndsCom.setValue(!!ndsComNum)
                         },
                         encode: (): void => {
-                            let ndsComValue: boolean | undefined = this.instance.goosePdu.ndsCom.getValue(undefined, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                            const ndsComValue: boolean | undefined = this.instance.goosePdu.ndsCom.getValue(undefined, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (ndsComValue === undefined) return
                             const ndsComNum: number = ndsComValue ? 1 : 0
                             const ndsComTLV: TLV = new TLV(0x89, Buffer.from(ndsComNum.toString(16).padStart(2, '0'), 'hex'))
@@ -365,7 +365,7 @@ export class Goose extends BaseHeader {
                             this.instance.goosePdu.numDatSetEntries.setValue(parseInt(numDatSetEntriesStr, 16))
                         },
                         encode: (): void => {
-                            let numDatSetEntriesValue: number | undefined = this.instance.goosePdu.numDatSetEntries.getValue(undefined, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                            const numDatSetEntriesValue: number | undefined = this.instance.goosePdu.numDatSetEntries.getValue(undefined, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (numDatSetEntriesValue === undefined) return
                             const numDatSetEntriesTLV: TLV = new TLV(0x8A, UInt32ToBERBuffer(numDatSetEntriesValue))
                             this.TLVChild.push(numDatSetEntriesTLV)
@@ -569,7 +569,7 @@ export class Goose extends BaseHeader {
                                             return new TLV(0x85, Buffer.from(Int32ToBERHex(intValue).padStart(5 * 2, '0'), 'hex'))
                                         }
                                         case'INT64': {
-                                            let intValue: bigint = BigInt(dataItem.value)
+                                            const intValue: bigint = BigInt(dataItem.value)
                                             if (intValue < BigInt('-9223372036854775808') || intValue > BigInt('9223372036854775807')) this.recordError(errorNodePath, 'Invalid INT64 value')
                                             return new TLV(0x85, Buffer.from(Int64ToBERHex(intValue).padStart(9 * 2, '0'), 'hex'))
                                         }
