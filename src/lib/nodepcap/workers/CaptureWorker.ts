@@ -11,7 +11,7 @@ const pcapWrite: PcapWriter = new PcapWriter({
 
 const bindingCapture: BindingCapture = new BindingCapture({
     iface: process.env.captureDevice!,
-    filter: process.env.captureFilter
+    filter: process.env.captureFilter ? process.env.captureFilter : ''
 })
 
 const pipeClient: PipeClient = new PipeClient({
