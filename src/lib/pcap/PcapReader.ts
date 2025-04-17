@@ -46,6 +46,8 @@ export class PcapReader extends EventEmitter {
 
     protected onError?: (err: Error) => void
 
+    protected paused: boolean = false
+
     protected get readStream(): ReadStream {
         return this.duplexPair.socket2
     }
@@ -67,6 +69,24 @@ export class PcapReader extends EventEmitter {
     }
 
     /**
+     * Pause read
+     * @protected
+     */
+    protected pauseRead(): void {
+        this.readStream.pause()
+        this.paused = true
+    }
+
+    /**
+     * Resume read
+     * @protected
+     */
+    protected resumeRead(): void {
+        this.readStream.resume()
+        this.paused = false
+    }
+
+    /**
      * Initialize reader
      * @protected
      */
@@ -78,9 +98,9 @@ export class PcapReader extends EventEmitter {
                 this.index = pcapPacketInfo.index
                 this.emit('packet', pcapPacketInfo)
                 if (this.onPacket) {
-                    this.readStream.pause()
+                    this.pauseRead()
                     await this.onPacket(pcapPacketInfo)
-                    this.readStream.resume()
+                    this.resumeRead()
                 }
             })
             .on('error', (err: Error): void => {
@@ -98,6 +118,7 @@ export class PcapReader extends EventEmitter {
         this.parser?.removeAllListeners()
         this.index = 0
         this.offset = 0
+        this.paused = false
         this.initReader()
     }
 
@@ -152,6 +173,10 @@ export class PcapReader extends EventEmitter {
             this.once('stop', (): boolean => read = false)
             let isReachEnd: boolean = false
             while (read || !isReachEnd) {
+                if (this.paused) {
+                    await new Promise(resolve => setTimeout(resolve, 1))
+                    continue
+                }
                 isReachEnd = await this.readBuffer()
                 if (isReachEnd) {
                     await new Promise(resolve => setTimeout(resolve, 1))
@@ -175,6 +200,10 @@ export class PcapReader extends EventEmitter {
             let stopped: boolean = false
             this.once('stop', (): boolean => stopped = true)
             while (!isReachEnd && !stopped) {
+                if (this.paused) {
+                    await new Promise(resolve => setTimeout(resolve, 1))
+                    continue
+                }
                 isReachEnd = await this.readBuffer()
             }
             this.readDone = true
