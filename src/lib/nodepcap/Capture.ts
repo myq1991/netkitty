@@ -1,7 +1,7 @@
 import {GetNetworkInterfaces} from './GetNetworkInterfaces'
 import {INetworkInterface} from './interfaces/INetworkInterface'
 import {ICaptureOptions} from './interfaces/ICaptureOptions'
-import {existsSync} from 'node:fs'
+import {existsSync, rmSync, writeFileSync} from 'node:fs'
 import {GetDeviceCaptureTemporaryFilename} from '../GetDeviceCaptureTemporaryFilename'
 import {ChildProcess} from 'node:child_process'
 import path from 'node:path'
@@ -16,6 +16,7 @@ import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 import {tmpdir} from 'node:os'
 import {IPcapPacketInfo} from '../pcap/interfaces/IPcapPacketInfo'
+import {GeneratePCAPHeader} from '../pcap/PCAPGenerator'
 
 export class Capture extends EventEmitter {
 
@@ -75,8 +76,10 @@ export class Capture extends EventEmitter {
             //Use origin worker module, check capture device is available
             if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.#device).length) throw new DeviceNotFoundError(`Device ${this.#device} not found`)
         }
-        this.#temporaryFilename = GetDeviceCaptureTemporaryFilename(this.#device, this.#tmpDir)
+        this.#temporaryFilename = options.temporaryFilename ? options.temporaryFilename : GetDeviceCaptureTemporaryFilename(this.#device, this.#tmpDir)
         this.#pipeServer = new PipeServer()
+        this.cleanTemporaryFile()
+        writeFileSync(this.#temporaryFilename, GeneratePCAPHeader())
     }
 
     /**
@@ -101,8 +104,6 @@ export class Capture extends EventEmitter {
             })
         })
         this.#worker = isElectron() ? utilityProcess.fork(this.#workerModule, [], {env: env}) : childProcess.fork(this.#workerModule, [], {env: env})
-
-
     }
 
     /**
@@ -157,13 +158,25 @@ export class Capture extends EventEmitter {
 
     /**
      * Clean resources before start capture
+     * @param removeTmpFile
      * @protected
      */
-    protected async cleanResources(): Promise<void> {
+    protected async cleanResources(removeTmpFile: boolean = true): Promise<void> {
         //Clean cached capture data
-        if (existsSync(this.#temporaryFilename)) await rm(this.#temporaryFilename, {recursive: true, force: true})
+        if (existsSync(this.#temporaryFilename) && removeTmpFile) this.cleanTemporaryFile()
         //Clean old worker resources
         if (this.#worker && this.#workerSocket) await this.destroyCaptureWorker()
+    }
+
+    /**
+     * Clean temporary pcap file
+     * @protected
+     */
+    protected cleanTemporaryFile(): void {
+        rmSync(this.#temporaryFilename, {
+            recursive: true,
+            force: true
+        })
     }
 
     /**
@@ -184,7 +197,7 @@ export class Capture extends EventEmitter {
         this.#operating = true
         try {
             this.#started = true
-            await this.cleanResources()
+            await this.cleanResources(false)
             this.createCaptureWorker()
             const workerSocket: PipeClientSocket = await this.getWorkerSocket()
             await workerSocket.invoke('start')

@@ -300,7 +300,7 @@ export class TLS_Handshake extends BaseHeader {
     }
     public id: string = 'tls-handshake'
     public name: string = 'Transport Layer Security(Handshake Protocol)'
-    public nickname: string = 'TLS'
+    public nickname: string = 'TLS-Handshake'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

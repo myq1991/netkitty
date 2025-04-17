@@ -3,6 +3,7 @@ import {PcapReader} from '../../lib/pcap/PcapReader'
 
 (async (): Promise<void> => {
     const capture = new Capture({device: 'en0'})
+    console.log(capture.temporaryFilename)
     const pcapReader: PcapReader = new PcapReader({filename: capture.temporaryFilename, watch: true})
     pcapReader.on('packet', async (info) => {
         // const buf = await pcapReader.readPacket(info.offset, info.length)

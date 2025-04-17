@@ -133,7 +133,7 @@ export class TLS_ChangeCipherSpec extends BaseHeader {
     }
     public id: string = 'tls-ccsp'
     public name: string = 'Transport Layer Security(ChangeCipherSpec Protocol)'
-    public nickname: string = 'TLS'
+    public nickname: string = 'TLS-ChangeCipherSpec'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

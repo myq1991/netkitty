@@ -176,7 +176,7 @@ export class TLS_Heartbeat extends BaseHeader {
     }
     public id: string = 'tls-heartbeat'
     public name: string = 'Transport Layer Security(Heartbeat Protocol)'
-    public nickname: string = 'TLS'
+    public nickname: string = 'TLS-Heartbeat'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false

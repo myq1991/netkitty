@@ -1,5 +1,5 @@
 import EventEmitter from 'events'
-import {createWriteStream, WriteStream} from 'node:fs'
+import {createWriteStream, existsSync, statSync, WriteStream} from 'node:fs'
 import {GeneratePCAPData, GeneratePCAPHeader} from './PCAPGenerator'
 import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
 
@@ -26,10 +26,15 @@ export class PcapWriter extends EventEmitter {
     constructor(options: IPcapWriterOptions) {
         super()
         this.filename = options.filename
-        this.writeStream = createWriteStream(this.filename, {autoClose: false, flags: 'w'})
-        const header: Buffer = GeneratePCAPHeader()
-        this.writeStream.write(header)
-        this.offset += header.length
+        if (!existsSync(this.filename)) {
+            this.writeStream = createWriteStream(this.filename, {autoClose: false, flags: 'w'})
+            const header: Buffer = GeneratePCAPHeader()
+            this.writeStream.write(header)
+            this.offset += header.length
+        } else {
+            this.writeStream = createWriteStream(this.filename, {autoClose: false, flags: 'a'})
+            this.offset += statSync(this.filename).size
+        }
     }
 
     /**

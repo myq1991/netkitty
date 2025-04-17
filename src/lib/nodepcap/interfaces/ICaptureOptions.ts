@@ -16,4 +16,9 @@ export interface ICaptureOptions {
      * The temporary folder path for storing captured pcap files
      */
     tmpDir?: string
+
+    /**
+     * Temporary filename
+     */
+    temporaryFilename?:string
 }

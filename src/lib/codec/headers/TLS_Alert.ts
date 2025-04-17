@@ -526,7 +526,7 @@ export class TLS_Alert extends BaseHeader {
     }
     public id: string = 'tls-alert'
     public name: string = 'Transport Layer Security(Alert Protocol)'
-    public nickname: string = 'TLS'
+    public nickname: string = 'TLS-Alert'
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
