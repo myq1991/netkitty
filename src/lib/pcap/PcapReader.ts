@@ -9,7 +9,7 @@ export interface IPcapReaderOptions {
     filename: string
     watch?: boolean
     chunkSize?: number
-    onPacket?: (capPacketInfo: IPcapPacketInfo) => Promise<void> | void
+    onPacket?: (pcapPacketInfo: IPcapPacketInfo) => Promise<void> | void
     onStart?: () => Promise<void> | void
     onStop?: () => Promise<void> | void
     onDone?: () => Promise<void> | void
@@ -36,7 +36,7 @@ export class PcapReader extends EventEmitter {
 
     protected readBufferFileHandle: FileHandle | null = null
 
-    protected onPacket?: (capPacketInfo: IPcapPacketInfo) => Promise<void> | void
+    protected onPacket?: (pcapPacketInfo: IPcapPacketInfo) => Promise<void> | void
 
     protected onStart?: () => Promise<void> | void
 
