@@ -9,6 +9,11 @@ export interface IPcapReaderOptions {
     filename: string
     watch?: boolean
     chunkSize?: number
+    onPacket?: (capPacketInfo: IPcapPacketInfo) => Promise<void> | void
+    onStart?: () => Promise<void> | void
+    onStop?: () => Promise<void> | void
+    onDone?: () => Promise<void> | void
+    onError?: (err: Error) => void
 }
 
 export class PcapReader extends EventEmitter {
@@ -31,6 +36,16 @@ export class PcapReader extends EventEmitter {
 
     protected readBufferFileHandle: FileHandle | null = null
 
+    protected onPacket?: (capPacketInfo: IPcapPacketInfo) => Promise<void> | void
+
+    protected onStart?: () => Promise<void> | void
+
+    protected onStop?: () => Promise<void> | void
+
+    protected onDone?: () => Promise<void> | void
+
+    protected onError?: (err: Error) => void
+
     protected get readStream(): ReadStream {
         return this.duplexPair.socket2
     }
@@ -44,6 +59,11 @@ export class PcapReader extends EventEmitter {
         this.filename = options.filename
         this.watch = !!options.watch
         this.chunkSize = options.chunkSize ? options.chunkSize : this.chunkSize
+        if (options.onPacket) this.onPacket = options.onPacket
+        if (options.onStart) this.onStart = options.onStart
+        if (options.onStop) this.onStop = options.onStop
+        if (options.onDone) this.onDone = options.onDone
+        if (options.onError) this.onError = options.onError
     }
 
     /**
@@ -54,11 +74,19 @@ export class PcapReader extends EventEmitter {
         this.duplexPair = new DuplexPair()
         this.parser = PcapParser.parse(this.readStream)
         this.parser
-            .on('packet', (pcapPacketInfo: IPcapPacketInfo): void => {
+            .on('packet', async (pcapPacketInfo: IPcapPacketInfo): Promise<void> => {
                 this.index = pcapPacketInfo.index
                 this.emit('packet', pcapPacketInfo)
+                if (this.onPacket) {
+                    this.readStream.pause()
+                    await this.onPacket(pcapPacketInfo)
+                    this.readStream.resume()
+                }
             })
-            .on('error', (err: Error): boolean => this.emit('error', err))
+            .on('error', (err: Error): void => {
+                this.emit('error', err)
+                if (this.onError) this.onError(err)
+            })
     }
 
     /**
@@ -133,6 +161,7 @@ export class PcapReader extends EventEmitter {
             this.readBufferFileHandle = null
             this.readDone = true
             this.emit('done')
+            if (this.onDone) await this.onDone()
         })
     }
 
@@ -153,6 +182,7 @@ export class PcapReader extends EventEmitter {
             await this.readBufferFileHandle?.close()
             this.readBufferFileHandle = null
             this.emit('done')
+            if (this.onDone) await this.onDone()
         })
     }
 
@@ -181,6 +211,7 @@ export class PcapReader extends EventEmitter {
     public async start(): Promise<void> {
         await this.reset()
         this.emit('start')
+        if (this.onStart) await this.onStart()
         if (this.watch) {
             this.continualRead()
         } else {
@@ -195,6 +226,7 @@ export class PcapReader extends EventEmitter {
         if (this.parser) {
             this.emit('stop')
             if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
+            if (this.onStop) await this.onStop()
         }
         if (this.duplexPair) {
             await new Promise<void>(resolve => {
