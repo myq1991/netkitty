@@ -180,6 +180,7 @@ export class PcapReader extends EventEmitter {
      */
     public async start(): Promise<void> {
         await this.reset()
+        this.emit('start')
         if (this.watch) {
             this.continualRead()
         } else {
@@ -222,6 +223,7 @@ export class PcapReader extends EventEmitter {
 
     public on(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
     public on(eventName: 'done', listener: (...args: any[]) => void): this
+    public on(eventName: 'start', listener: (...args: any[]) => void): this
     public on(eventName: 'stop', listener: (...args: any[]) => void): this
     public on(eventName: 'close', listener: (...args: any[]) => void): this
     public on(eventName: 'error', listener: (error: Error) => void): this
@@ -232,6 +234,7 @@ export class PcapReader extends EventEmitter {
 
     public once(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
     public once(eventName: 'done', listener: (...args: any[]) => void): this
+    public once(eventName: 'start', listener: (...args: any[]) => void): this
     public once(eventName: 'stop', listener: (...args: any[]) => void): this
     public once(eventName: 'close', listener: (...args: any[]) => void): this
     public once(eventName: 'error', listener: (error: Error) => void): this
