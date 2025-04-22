@@ -12,6 +12,7 @@ import {
     HexToUInt8
 } from '../../helper/HexToNumber'
 import {
+    Float32ToBERHex,
     Int16ToBERHex,
     Int32ToBERHex,
     Int64ToBERHex,
@@ -20,16 +21,107 @@ import {
     UInt32ToBERHex,
     UInt8ToBERHex
 } from '../../helper/NumberToBERHex'
-import {Float32ToHex, UInt16ToHex} from '../../helper/NumberToHex'
+import {UInt16ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {UInt32ToBERBuffer} from '../../helper/NumberToBERBuffer'
 import {BufferToUInt16} from '../../helper/BufferToNumber'
 import {UInt16ToBuffer} from '../../helper/NumberToBuffer'
+import {GetBERIntegerLengthFromBuffer} from '../lib/GetBERIntegerLengthFromBuffer'
 
-type AllDataItem = {
-    dataType: string
+enum ItemDataType {
+    Boolean = 'Boolean',
+    INT8 = 'INT8',
+    INT16 = 'INT16',
+    INT32 = 'INT32',
+    INT64 = 'INT64',
+    INT8U = 'INT8U',
+    INT16U = 'INT16U',
+    INT32U = 'INT32U',
+    FLOAT32 = 'FLOAT32',
+    CODEDENUM = 'CODED-ENUM',
+    OCTETSTRING = 'OCTET-STRING',
+    VISIBLESTRING = 'VISIBLE-STRING',
+    TimeStamp = 'TimeStamp',
+    Quality = 'Quality',
+    Structure = 'Structure'
+}
+
+type BooleanDataItem = {
+    dataType: ItemDataType.Boolean
+    value: boolean
+}
+type INT8DataItem = {
+    dataType: ItemDataType.INT8
+    value: number
+}
+type INT16DataItem = {
+    dataType: ItemDataType.INT16
+    value: number
+}
+type INT32DataItem = {
+    dataType: ItemDataType.INT32
+    value: number
+}
+type INT64DataItem = {
+    dataType: ItemDataType.INT64
+    value: bigint
+}
+type INT8UDataItem = {
+    dataType: ItemDataType.INT8U
+    value: number
+}
+type INT16UDataItem = {
+    dataType: ItemDataType.INT16U
+    value: number
+}
+type INT32UDataItem = {
+    dataType: ItemDataType.INT32U
+    value: number
+}
+type FLOAT32DataItem = {
+    dataType: ItemDataType.FLOAT32
+    value: number
+}
+type CODEDENUMDataItem = {
+    dataType: ItemDataType.CODEDENUM
+    value: number
+}
+type OCTETSTRINGDataItem = {
+    dataType: ItemDataType.OCTETSTRING
     value: string
 }
+type VISIBLESTRINGDataItem = {
+    dataType: ItemDataType.VISIBLESTRING
+    value: string
+}
+type TimeStampDataItem = {
+    dataType: ItemDataType.TimeStamp
+    value: string
+}
+type QualityDataItem = {
+    dataType: ItemDataType.Quality
+    value: string
+}
+type StructureDataItem = {
+    dataType: ItemDataType.Structure
+    value: DataItem[]
+}
+
+type DataItem = BooleanDataItem |
+    INT8DataItem |
+    INT16DataItem |
+    INT32DataItem |
+    INT64DataItem |
+    INT8UDataItem |
+    INT16UDataItem |
+    INT32UDataItem |
+    FLOAT32DataItem |
+    CODEDENUMDataItem |
+    OCTETSTRINGDataItem |
+    VISIBLESTRINGDataItem |
+    TimeStampDataItem |
+    QualityDataItem |
+    StructureDataItem
 
 export class Goose extends BaseHeader {
 
@@ -128,15 +220,18 @@ export class Goose extends BaseHeader {
                 type: 'object',
                 label: 'GOOSE PDU',
                 decode: (): void => {
-                    let redTLVBufferLength: number = (this.instance.length.getValue() as number) - 8
+                    let readTLVBufferLength: number = this.packet.length - this.startPos - 8
                     while (!this.TLVInstance) {
                         try {
-                            const buffer: Buffer = this.readBytes(8, redTLVBufferLength, true)
+                            const buffer: Buffer = this.readBytes(8, readTLVBufferLength, true)
                             this.TLVInstance = TLV.parse(buffer)
-                            this.readBytes(8, this.TLVInstance.length, false)//Update header length
+                            const tagWithLength: string[] = buffer.toString('hex').replace(this.TLVInstance.bValue.toString('hex'), '#').split('#')
+                            const tagWithLengthBytes: number = Math.max(...tagWithLength.map((value: string): number => Math.ceil(value.length / 2)))
+                            const TLVBufferLength: number = this.TLVInstance.bValue.length + tagWithLengthBytes
+                            this.TLVInstance = TLV.parse(this.readBytes(8, TLVBufferLength, false))
                         } catch (e) {
-                            redTLVBufferLength -= 1
-                            if (!redTLVBufferLength) break
+                            readTLVBufferLength -= 1
+                            if (!readTLVBufferLength) break
                         }
                     }
                     this.TLVChild = this.TLVInstance ? this.TLVInstance.getChild() : []
@@ -178,7 +273,7 @@ export class Goose extends BaseHeader {
                     },
                     timeAllowedtoLive: {
                         type: 'number',
-                        minimum: 1,
+                        minimum: 0,
                         maximum: 4294967295,
                         label: 'TimeAllowedtoLive',
                         decode: (): void => {
@@ -258,7 +353,7 @@ export class Goose extends BaseHeader {
                     },
                     stNum: {
                         type: 'integer',
-                        minimum: 1,
+                        minimum: 0,
                         maximum: 4294967295,
                         label: 'StNum',
                         decode: (): void => {
@@ -270,7 +365,7 @@ export class Goose extends BaseHeader {
                         encode: (): void => {
                             let stNumValue: number = this.instance.goosePdu.stNum.getValue(-1, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (stNumValue < 0) return
-                            if (stNumValue < 1 || stNumValue > 4294967295) {
+                            if (stNumValue > 4294967295) {
                                 stNumValue = 4294967295
                                 this.recordError(this.instance.goosePdu.stNum.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
                             }
@@ -292,7 +387,7 @@ export class Goose extends BaseHeader {
                         encode: (): void => {
                             let sqNumValue: number = this.instance.goosePdu.sqNum.getValue(-1, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             if (sqNumValue < 0) return
-                            if (sqNumValue < 0 || sqNumValue > 4294967295) {
+                            if (sqNumValue > 4294967295) {
                                 sqNumValue = 4294967295
                                 this.recordError(this.instance.goosePdu.sqNum.getPath(), 'This INTEGER value shall have a range of 1 to 4294967295')
                             }
@@ -375,36 +470,116 @@ export class Goose extends BaseHeader {
                         type: 'array',
                         label: 'AllData',
                         items: {
-                            type: 'object',
-                            label: 'Data',
-                            properties: {
-                                dataType: {
-                                    type: 'string',
-                                    label: 'DataType',
-                                    contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [
-                                        'Boolean',
-                                        'INT8',
-                                        'INT16',
-                                        'INT32',
-                                        'INT64',
-                                        'INT8U',
-                                        'INT16U',
-                                        'INT32U',
-                                        'FLOAT32',
-                                        'CODED-ENUM',
-                                        'OCTET-STRING',
-                                        'VISIBLE-STRING',
-                                        'TimeStamp',
-                                        'Quality'
-                                    ]
+                            anyOf: [
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.Boolean]},
+                                        value: {type: 'boolean'}
+                                    }
                                 },
-                                value: {
-                                    type: 'string',
-                                    contentEncoding: StringContentEncodingEnum.UTF8,
-                                    label: 'Value'
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.INT8]},
+                                        value: {type: 'integer'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.INT16]},
+                                        value: {type: 'integer'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.INT32]},
+                                        value: {type: 'integer'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.INT64]},
+                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.BIGINT}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.INT8U]},
+                                        value: {type: 'integer'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.INT16U]},
+                                        value: {type: 'integer'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.INT32U]},
+                                        value: {type: 'integer'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.FLOAT32]},
+                                        value: {type: 'number'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.CODEDENUM]},
+                                        value: {type: 'integer'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.OCTETSTRING]},
+                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.HEX}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.VISIBLESTRING]},
+                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.ASCII}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.TimeStamp]},
+                                        value: {type: 'string'}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.Quality]},
+                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.BINARY}
+                                    }
+                                },
+                                {
+                                    type: 'object',
+                                    properties: {
+                                        dataType: {type: 'string', enum: [ItemDataType.Structure]},
+                                        value: {
+                                            type: 'array',
+                                            $ref: '#/properties/goosePdu/properties/allData'
+                                        }
+                                    }
                                 }
-                            }
+                            ]
                         },
                         /**
                          * +-----------------------------------+-------------------+-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -430,226 +605,14 @@ export class Goose extends BaseHeader {
                         decode: (): void => {
                             const allDataTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0xAB)
                             const dataTLVs: TLV[] = allDataTLV ? allDataTLV.getChild() : []
-                            const allData: AllDataItem[] = []
-                            dataTLVs.forEach((dataTLV: TLV): void => {
-                                const length: number = dataTLV.getLength('number')
-                                const value: Buffer = dataTLV.getValue('buffer')
-                                const dataItem: AllDataItem = {
-                                    dataType: '',
-                                    value: ''
-                                }
-                                switch (dataTLV.getTag('number')) {
-                                    case 0x83: {
-                                        dataItem.dataType = 'Boolean'
-                                        dataItem.value = String(!!parseInt(value.toString('hex'), 16))
-                                    }
-                                        break
-                                    case 0x84: {
-                                        switch (length) {
-                                            case 2: {
-                                                dataItem.dataType = 'CODED-ENUM'
-                                                dataItem.value = parseInt(value.toString('hex'), 16).toString()
-                                            }
-                                                break
-                                            case 3: {
-                                                dataItem.dataType = 'Quality'
-                                                dataItem.value = parseInt(value.toString('hex'), 16).toString(2).padStart(24, '0')
-                                            }
-                                                break
-                                        }
-                                    }
-                                        break
-                                    case 0x85: {
-                                        if (length === 2) {
-                                            {
-                                                dataItem.dataType = 'INT8'
-                                                dataItem.value = HexToInt8(value.toString('hex')).toString()
-                                            }
-                                        } else if (length === 3) {
-                                            {
-                                                dataItem.dataType = 'INT16'
-                                                dataItem.value = HexToInt16(value.toString('hex')).toString()
-                                            }
-                                        } else if (length === 5) {
-                                            {
-                                                dataItem.dataType = 'INT32'
-                                                dataItem.value = HexToInt32(value.toString('hex')).toString()
-                                            }
-                                        } else if (length === 9) {
-                                            {
-                                                dataItem.dataType = 'INT64'
-                                                dataItem.value = HexToInt64(value.toString('hex')).toString()
-                                            }
-                                        }
-                                    }
-                                        break
-                                    case 0x86: {
-                                        switch (length) {
-                                            case 2: {
-                                                dataItem.dataType = 'INT8U'
-                                                dataItem.value = HexToUInt8(value.toString('hex')).toString()
-                                            }
-                                                break
-                                            case 3: {
-                                                dataItem.dataType = 'INT16U'
-                                                dataItem.value = HexToUInt16(value.toString('hex')).toString()
-                                            }
-                                                break
-                                            case 5: {
-                                                dataItem.dataType = 'INT32U'
-                                                dataItem.value = HexToUInt32(value.toString('hex')).toString()
-                                            }
-                                                break
-                                        }
-                                    }
-                                        break
-                                    case 0x87: {
-                                        dataItem.dataType = 'FLOAT32'
-                                        dataItem.value = HexToFloat32(value.toString('hex')).toString()
-                                    }
-                                        break
-                                    case 0x89: {
-                                        dataItem.dataType = 'OCTET-STRING'
-                                        dataItem.value = value.toString('ascii')
-                                    }
-                                        break
-                                    case 0x8a: {
-                                        dataItem.dataType = 'VISIBLE-STRING'
-                                        dataItem.value = value.toString('ascii')
-                                    }
-                                        break
-                                    case 0x91: {
-                                        dataItem.dataType = 'TimeStamp'
-                                        dataItem.value = parseInt(value.toString('hex'), 16).toString()
-                                    }
-                                        break
-                                }
-                                if (!dataItem.dataType) return
-                                allData.push(dataItem)
-                            })
+                            const allData: DataItem[] = this.decodeDataTLVItem(dataTLVs)
                             if (allData.length) this.instance.goosePdu.allData.setValue(allData)
                         },
                         encode: (): void => {
-                            const allData: AllDataItem[] = this.instance.goosePdu.allData.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
-                            const dataItemTLVs: TLV[] = allData
-                                .map((dataItem: AllDataItem, index: number): TLV | null => {
-                                    const errorNodePath: string = this.instance.goosePdu.allData.getPath(index)
-                                    dataItem.value = dataItem.value.trim()
-                                    switch (dataItem.dataType) {
-                                        case 'Boolean': {
-                                            const availableStringValues: string[] = ['FALSE', 'TRUE']
-                                            const stringValue: string = dataItem.value.toUpperCase()
-                                            let booleanIntValue: number = 0
-                                            if (availableStringValues.includes(stringValue)) {
-                                                booleanIntValue = availableStringValues.indexOf(stringValue)
-                                            } else {
-                                                this.recordError(errorNodePath, 'Invalid Boolean value')
-                                            }
-                                            return new TLV(0x83, Buffer.from(booleanIntValue.toString(16).padStart(2, '0'), 'hex'))
-                                        }
-                                        case 'INT8': {
-                                            let intValue: number = parseInt(dataItem.value)
-                                            if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid INT8 value')
-                                            intValue = intValue ? intValue : 0
-                                            if (intValue < -128 || intValue > 127) this.recordError(errorNodePath, 'Invalid INT8 value')
-                                            return new TLV(0x85, Buffer.from(Int8ToBERHex(intValue).padStart(2 * 2, '0'), 'hex'))
-                                        }
-                                        case 'INT16': {
-                                            let intValue: number = parseInt(dataItem.value)
-                                            if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid INT16 value')
-                                            intValue = intValue ? intValue : 0
-                                            if (intValue < -32768 || intValue > 32767) this.recordError(errorNodePath, 'Invalid INT16 value')
-                                            return new TLV(0x85, Buffer.from(Int16ToBERHex(intValue).padStart(3 * 2, '0'), 'hex'))
-                                        }
-                                        case'INT32': {
-                                            let intValue: number = parseInt(dataItem.value)
-                                            if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid INT32 value')
-                                            intValue = intValue ? intValue : 0
-                                            if (intValue < -2147483648 || intValue > 2147483647) this.recordError(errorNodePath, 'Invalid INT32 value')
-                                            return new TLV(0x85, Buffer.from(Int32ToBERHex(intValue).padStart(5 * 2, '0'), 'hex'))
-                                        }
-                                        case'INT64': {
-                                            const intValue: bigint = BigInt(dataItem.value)
-                                            if (intValue < BigInt('-9223372036854775808') || intValue > BigInt('9223372036854775807')) this.recordError(errorNodePath, 'Invalid INT64 value')
-                                            return new TLV(0x85, Buffer.from(Int64ToBERHex(intValue).padStart(9 * 2, '0'), 'hex'))
-                                        }
-                                        case'INT8U': {
-                                            let uintValue: number = parseInt(dataItem.value)
-                                            if (isNaN(uintValue)) this.recordError(errorNodePath, 'Invalid INT8U value')
-                                            uintValue = uintValue ? uintValue : 0
-                                            if (uintValue < 0 || uintValue > 255) this.recordError(errorNodePath, 'Invalid INT8U value')
-                                            return new TLV(0x86, Buffer.from(UInt8ToBERHex(uintValue).padStart(2 * 2, '0'), 'hex'))
-                                        }
-                                        case'INT16U': {
-                                            let uintValue: number = parseInt(dataItem.value)
-                                            if (isNaN(uintValue)) this.recordError(errorNodePath, 'Invalid INT16U value')
-                                            uintValue = uintValue ? uintValue : 0
-                                            if (uintValue < 0 || uintValue > 65535) this.recordError(errorNodePath, 'Invalid INT16U value')
-                                            return new TLV(0x86, Buffer.from(UInt16ToBERHex(uintValue).padStart(3 * 2, '0'), 'hex'))
-                                        }
-                                        case'INT32U': {
-                                            let uintValue: number = parseInt(dataItem.value)
-                                            if (isNaN(uintValue)) this.recordError(errorNodePath, 'Invalid INT32U value')
-                                            uintValue = uintValue ? uintValue : 0
-                                            if (uintValue < 0 || uintValue > 4294967295) this.recordError(errorNodePath, 'Invalid INT32U value')
-                                            return new TLV(0x86, Buffer.from(UInt32ToBERHex(uintValue).padStart(5 * 2, '0'), 'hex'))
-                                        }
-                                        case'FLOAT32': {
-                                            let float32Value: number = parseFloat(dataItem.value)
-                                            if (isNaN(float32Value)) this.recordError(errorNodePath, 'Invalid FLOAT32 value')
-                                            float32Value = float32Value ? float32Value : 0
-                                            return new TLV(0x86, Buffer.from(Float32ToHex(float32Value).padStart(4 * 2, '0'), 'hex'))
-                                        }
-                                        case'CODED-ENUM': {
-                                            let codedEnumValue: number = parseInt(dataItem.value)
-                                            if (isNaN(codedEnumValue)) this.recordError(errorNodePath, 'Invalid CODED-ENUM value')
-                                            codedEnumValue = codedEnumValue ? codedEnumValue : 0
-                                            return new TLV(0x84, Buffer.from(UInt16ToBERHex(codedEnumValue).padStart(2 * 2, '0'), 'hex'))
-                                        }
-                                        case'OCTET-STRING': {
-                                            const asciiText: string = dataItem.value
-                                            if (!asciiText) {
-                                                this.recordError(errorNodePath, 'Empty OCTET-STRING, ignored')
-                                                return null
-                                            }
-                                            if (asciiText.length > 20) this.recordError(errorNodePath, 'OCTET-STRING too long')
-                                            const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(20 * 2)
-                                            return new TLV(0x89, Buffer.from(hex, 'hex').subarray(0, 20))
-                                        }
-                                        case'VISIBLE-STRING': {
-                                            const asciiText: string = dataItem.value
-                                            if (!asciiText) {
-                                                this.recordError(errorNodePath, 'Empty VISIBLE-STRING, ignored')
-                                                return null
-                                            }
-                                            if (asciiText.length > 35) this.recordError(errorNodePath, 'VISIBLE-STRING too long')
-                                            const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(35 * 2)
-                                            return new TLV(0x8a, Buffer.from(hex, 'hex').subarray(0, 35))
-                                        }
-                                        case'TimeStamp': {
-                                            let timestamp: number = parseInt(dataItem.value)
-                                            if (isNaN(timestamp)) this.recordError(errorNodePath, 'Invalid TimeStamp value')
-                                            timestamp = timestamp ? timestamp : 0
-                                            return new TLV(0x91, Buffer.from(timestamp.toString(16).padStart(8 * 2, '0'), 'hex'))
-                                        }
-                                        case'Quality': {
-                                            const bitString: string = dataItem.value
-                                            let intValue: number = parseInt(bitString, 2)
-                                            if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid Quality value')
-                                            intValue = intValue ? intValue : 0
-                                            return new TLV(0x84, Buffer.from(intValue.toString(16).padStart(3 * 2, '0'), 'hex'))
-                                        }
-                                        default: {
-                                            this.recordError(errorNodePath, 'Invalid dataType, ignored')
-                                            return null
-                                        }
-                                    }
-                                })
-                                .filter((dataItemTLV: TLV | null): dataItemTLV is TLV => !!dataItemTLV)
+                            const allData: DataItem[] = this.instance.goosePdu.allData.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                            const dataItemTLVs: TLV[] = this.encodeDataTLVItem(allData)
                             if (dataItemTLVs.length) {
-                                let dataItemsHex: string = ''
-                                dataItemTLVs.forEach(dataItemTLV => dataItemsHex = `${dataItemsHex}${dataItemTLV.toString()}`)
-                                const allDataTLV: TLV = new TLV(0xAB, dataItemsHex)
+                                const allDataTLV: TLV = new TLV(0xAB, Buffer.concat(dataItemTLVs.map((dataItemTLV: TLV): Buffer => Buffer.concat([dataItemTLV.bTag, dataItemTLV.bLength, dataItemTLV.bValue]))))
                                 this.TLVChild.push(allDataTLV)
                             }
                         }
@@ -657,6 +620,253 @@ export class Goose extends BaseHeader {
                 }
             }
         }
+    }
+
+    /**
+     * Decode data TLV items
+     * @param dataTLVs
+     * @protected
+     */
+    protected decodeDataTLVItem(dataTLVs: TLV[]): DataItem[] {
+        const dataItems: DataItem[] = []
+        dataTLVs.forEach((dataTLV: TLV): void => {
+            const length: number = dataTLV.getLength('number')
+            const value: Buffer = dataTLV.getValue('buffer')
+            switch (dataTLV.getTag('number')) {
+                case 0x83: {
+                    dataItems.push({
+                        dataType: ItemDataType.Boolean,
+                        value: !!parseInt(value.toString('hex'), 16)
+                    })
+                }
+                    break
+                case 0x84: {
+                    switch (length) {
+                        case 2: {
+                            dataItems.push({
+                                dataType: ItemDataType.CODEDENUM,
+                                value: parseInt(value.toString('hex'), 16)
+                            })
+                        }
+                            break
+                        case 3: {
+                            dataItems.push({
+                                dataType: ItemDataType.Quality,
+                                value: parseInt(value.toString('hex'), 16).toString(2).padStart(24, '0')
+                            })
+                        }
+                            break
+                    }
+                }
+                    break
+                case 0x85: {
+                    const integerRealLength: number = GetBERIntegerLengthFromBuffer(value)
+                    if (integerRealLength === 1) {
+                        dataItems.push({
+                            dataType: ItemDataType.INT8,
+                            value: HexToInt8(value.toString('hex'))
+                        })
+                    } else if (integerRealLength === 2) {
+                        dataItems.push({
+                            dataType: ItemDataType.INT16,
+                            value: HexToInt16(value.toString('hex'))
+                        })
+                    } else if (integerRealLength === 4) {
+                        dataItems.push({
+                            dataType: ItemDataType.INT32,
+                            value: HexToInt32(value.toString('hex'))
+                        })
+                    } else if (integerRealLength === 8) {
+                        dataItems.push({
+                            dataType: ItemDataType.INT64,
+                            value: HexToInt64(value.toString('hex'))
+                        })
+                    }
+                }
+                    break
+                case 0x86: {
+                    const unsignedIntegerRealLength: number = GetBERIntegerLengthFromBuffer(value)
+                    switch (unsignedIntegerRealLength) {
+                        case 1: {
+                            dataItems.push({
+                                dataType: ItemDataType.INT8U,
+                                value: HexToUInt8(value.toString('hex'))
+                            })
+                        }
+                            break
+                        case 2: {
+                            dataItems.push({
+                                dataType: ItemDataType.INT16U,
+                                value: HexToUInt16(value.toString('hex'))
+                            })
+                        }
+                            break
+                        case 4: {
+                            dataItems.push({
+                                dataType: ItemDataType.INT32U,
+                                value: HexToUInt32(value.toString('hex'))
+                            })
+                        }
+                            break
+                    }
+                }
+                    break
+                case 0x87: {
+                    dataItems.push({
+                        dataType: ItemDataType.FLOAT32,
+                        value: HexToFloat32(value.toString('hex'))
+                    })
+                }
+                    break
+                case 0x89: {
+                    dataItems.push({
+                        dataType: ItemDataType.OCTETSTRING,
+                        value: value.toString('hex')
+                    })
+                }
+                    break
+                case 0x8a: {
+                    dataItems.push({
+                        dataType: ItemDataType.VISIBLESTRING,
+                        value: value.toString('ascii')
+                    })
+                }
+                    break
+                case 0x91: {
+                    dataItems.push({
+                        dataType: ItemDataType.TimeStamp,
+                        value: parseInt(value.toString('hex'), 16).toString()
+                    })
+                }
+                    break
+                case 0xa2: {
+                    const subDataTLVs: TLV[] = TLV.parseList(value)
+                    dataItems.push({
+                        dataType: ItemDataType.Structure,
+                        value: this.decodeDataTLVItem(subDataTLVs)
+                    })
+                }
+                    break
+            }
+        })
+        return dataItems
+    }
+
+    /**
+     * Encode data TLV items
+     * @param dataItems
+     * @protected
+     */
+    protected encodeDataTLVItem(dataItems: DataItem[]): TLV[] {
+        return dataItems
+            .map((dataItem: DataItem, index: number): TLV | null => {
+                const errorNodePath: string = this.instance.goosePdu.allData.getPath(index)
+                switch (dataItem.dataType) {
+                    case ItemDataType.Boolean: {
+                        const booleanIntValue: number = dataItem.value ? 1 : 0
+                        return new TLV(0x83, Buffer.from(booleanIntValue.toString(16).padStart(2, '0'), 'hex'))
+                    }
+                    case ItemDataType.INT8: {
+                        let intValue: number = dataItem.value
+                        if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid INT8 value')
+                        intValue = intValue ? intValue : 0
+                        if (intValue < -128 || intValue > 127) this.recordError(errorNodePath, 'Invalid INT8 value')
+                        return new TLV(0x85, Buffer.from(Int8ToBERHex(intValue), 'hex'))
+                    }
+                    case ItemDataType.INT16: {
+                        let intValue: number = dataItem.value
+                        if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid INT16 value')
+                        intValue = intValue ? intValue : 0
+                        if (intValue < -32768 || intValue > 32767) this.recordError(errorNodePath, 'Invalid INT16 value')
+                        return new TLV(0x85, Buffer.from(Int16ToBERHex(intValue), 'hex'))
+                    }
+                    case ItemDataType.INT32: {
+                        let intValue: number = dataItem.value
+                        if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid INT32 value')
+                        intValue = intValue ? intValue : 0
+                        if (intValue < -2147483648 || intValue > 2147483647) this.recordError(errorNodePath, 'Invalid INT32 value')
+                        return new TLV(0x85, Buffer.from(Int32ToBERHex(intValue), 'hex'))
+                    }
+                    case ItemDataType.INT64: {
+                        const intValue: bigint = BigInt(dataItem.value)
+                        if (intValue < BigInt('-9223372036854775808') || intValue > BigInt('9223372036854775807')) this.recordError(errorNodePath, 'Invalid INT64 value')
+                        return new TLV(0x85, Buffer.from(Int64ToBERHex(intValue), 'hex'))
+                    }
+                    case ItemDataType.INT8U: {
+                        let uintValue: number = dataItem.value
+                        if (isNaN(uintValue)) this.recordError(errorNodePath, 'Invalid INT8U value')
+                        uintValue = uintValue ? uintValue : 0
+                        if (uintValue < 0 || uintValue > 255) this.recordError(errorNodePath, 'Invalid INT8U value')
+                        return new TLV(0x86, Buffer.from(UInt8ToBERHex(uintValue), 'hex'))
+                    }
+                    case ItemDataType.INT16U: {
+                        let uintValue: number = dataItem.value
+                        if (isNaN(uintValue)) this.recordError(errorNodePath, 'Invalid INT16U value')
+                        uintValue = uintValue ? uintValue : 0
+                        if (uintValue < 0 || uintValue > 65535) this.recordError(errorNodePath, 'Invalid INT16U value')
+                        return new TLV(0x86, Buffer.from(UInt16ToBERHex(uintValue), 'hex'))
+                    }
+                    case ItemDataType.INT32U: {
+                        let uintValue: number = dataItem.value
+                        if (isNaN(uintValue)) this.recordError(errorNodePath, 'Invalid INT32U value')
+                        uintValue = uintValue ? uintValue : 0
+                        if (uintValue < 0 || uintValue > 4294967295) this.recordError(errorNodePath, 'Invalid INT32U value')
+                        return new TLV(0x86, Buffer.from(UInt32ToBERHex(uintValue), 'hex'))
+                    }
+                    case ItemDataType.FLOAT32: {
+                        let float32Value: number = dataItem.value
+                        if (isNaN(float32Value)) this.recordError(errorNodePath, 'Invalid FLOAT32 value')
+                        float32Value = float32Value ? float32Value : 0
+                        return new TLV(0x87, Buffer.from(Float32ToBERHex(float32Value), 'hex'))
+                    }
+                    case ItemDataType.CODEDENUM: {
+                        let codedEnumValue: number = dataItem.value
+                        if (isNaN(codedEnumValue)) this.recordError(errorNodePath, 'Invalid CODED-ENUM value')
+                        codedEnumValue = codedEnumValue ? codedEnumValue : 0
+                        return new TLV(0x84, Buffer.from(UInt16ToBERHex(codedEnumValue), 'hex'))
+                    }
+                    case ItemDataType.OCTETSTRING: {
+                        const hexText: string = dataItem.value
+                        if (!hexText) {
+                            this.recordError(errorNodePath, 'Empty OCTET-STRING, ignored')
+                            return null
+                        }
+                        if (hexText.length > 20) this.recordError(errorNodePath, 'OCTET-STRING too long')
+                        return new TLV(0x89, Buffer.from(hexText, 'hex').subarray(0, 20))
+                    }
+                    case ItemDataType.VISIBLESTRING: {
+                        const asciiText: string = dataItem.value
+                        if (!asciiText) {
+                            this.recordError(errorNodePath, 'Empty VISIBLE-STRING, ignored')
+                            return null
+                        }
+                        if (asciiText.length > 35) this.recordError(errorNodePath, 'VISIBLE-STRING too long')
+                        const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(35 * 2)
+                        return new TLV(0x8a, Buffer.from(hex, 'hex').subarray(0, 35))
+                    }
+                    case ItemDataType.TimeStamp: {
+                        let timestamp: number = parseInt(dataItem.value)
+                        if (isNaN(timestamp)) this.recordError(errorNodePath, 'Invalid TimeStamp value')
+                        timestamp = timestamp ? timestamp : 0
+                        return new TLV(0x91, Buffer.from(timestamp.toString(16), 'hex'))
+                    }
+                    case ItemDataType.Quality: {
+                        const bitString: string = dataItem.value
+                        let intValue: number = parseInt(bitString, 2)
+                        if (isNaN(intValue)) this.recordError(errorNodePath, 'Invalid Quality value')
+                        intValue = intValue ? intValue : 0
+                        return new TLV(0x84, Buffer.from(intValue.toString(16).padStart(3 * 2, '0'), 'hex'))
+                    }
+                    case ItemDataType.Structure: {
+                        return new TLV(0xa2, Buffer.concat(this.encodeDataTLVItem(dataItem.value).map((tlv: TLV): Buffer => Buffer.concat([tlv.bTag, tlv.bLength, tlv.bValue]))))
+                    }
+                    default: {
+                        this.recordError(errorNodePath, 'Invalid dataType, ignored')
+                        return null
+                    }
+                }
+            })
+            .filter((value: TLV | null): value is TLV => !!value)
     }
 
     public readonly id: string = 'goose'
