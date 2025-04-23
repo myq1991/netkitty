@@ -574,7 +574,6 @@ export class Goose extends BaseHeader {
                                     properties: {
                                         dataType: {type: 'string', enum: [ItemDataType.Structure]},
                                         value: {
-                                            type: 'array',
                                             $ref: '#/properties/goosePdu/properties/allData'
                                         }
                                     }
