@@ -17,4 +17,7 @@ export {TLS_ApplicationData} from './headers/TLS_ApplicationData'
 export {TLS_ChangeCipherSpec} from './headers/TLS_ChangeCipherSpec'
 export {TLS_Handshake} from './headers/TLS_Handshake'
 export {TLS_Heartbeat} from './headers/TLS_Heartbeat'
+export {IEC104_I_Frame} from './headers/IEC104_I_Frame'
+export {IEC104_S_Frame} from './headers/IEC104_S_Frame'
+export {IEC104_U_Frame} from './headers/IEC104_U_Frame'
 //阿才写的代码
