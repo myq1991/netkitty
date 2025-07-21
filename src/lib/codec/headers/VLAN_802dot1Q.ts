@@ -12,6 +12,7 @@ export class VLAN_802dot1Q extends BaseHeader {
                 minimum: 0,
                 maximum: 7,
                 default: 0,
+                label: 'Priority',
                 decode: (): void => {
                     this.instance.priority.setValue(this.readBits(0, 2, 0, 3))
                 },
@@ -23,6 +24,7 @@ export class VLAN_802dot1Q extends BaseHeader {
             },
             dei: {
                 type: 'boolean',
+                label: 'DEI',
                 decode: (): void => {
                     this.instance.dei.setValue(!!this.readBits(0, 2, 3, 1))
                 },
@@ -36,6 +38,7 @@ export class VLAN_802dot1Q extends BaseHeader {
                 type: 'integer',
                 minimum: 0,
                 maximum: 4095,
+                label: 'ID',
                 decode: (): void => {
                     this.instance.id.setValue(this.readBits(0, 2, 4, 12))
                 },
@@ -49,6 +52,7 @@ export class VLAN_802dot1Q extends BaseHeader {
                 type: 'string',
                 minLength: 4,
                 maxLength: 4,
+                label: 'EtherType',
                 decode: (): void => {
                     this.instance.etherType.setValue(BufferToHex(this.readBytes(2, 2)))
                 },
