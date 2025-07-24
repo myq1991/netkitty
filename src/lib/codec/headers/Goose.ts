@@ -569,6 +569,7 @@ export class Goose extends BaseHeader {
                                 },
                                 {
                                     type: 'object',
+                                    label: ItemDataType.TimeStamp,
                                     properties: {
                                         dataType: {type: 'string', enum: [ItemDataType.TimeStamp]},
                                         value: {type: 'string'}
