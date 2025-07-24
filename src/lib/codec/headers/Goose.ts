@@ -475,121 +475,228 @@ export class Goose extends BaseHeader {
                                     type: 'object',
                                     label: ItemDataType.Boolean,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.Boolean]},
-                                        value: {type: 'boolean'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.Boolean]
+                                        },
+                                        value: {
+                                            type: 'boolean',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.INT8,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.INT8]},
-                                        value: {type: 'integer'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.INT8]
+                                        },
+                                        value: {
+                                            type: 'integer',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.INT16,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.INT16]},
-                                        value: {type: 'integer'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.INT16]
+                                        },
+                                        value: {
+                                            type: 'integer',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.INT32,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.INT32]},
-                                        value: {type: 'integer'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.INT32]
+                                        },
+                                        value: {
+                                            type: 'integer',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.INT64,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.INT64]},
-                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.BIGINT}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.INT64]
+                                        },
+                                        value: {
+                                            type: 'string',
+                                            label: 'Value',
+                                            contentEncoding: StringContentEncodingEnum.BIGINT
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.INT8U,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.INT8U]},
-                                        value: {type: 'integer'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.INT8U]
+                                        },
+                                        value: {
+                                            type: 'integer',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.INT16U,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.INT16U]},
-                                        value: {type: 'integer'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.INT16U]
+                                        },
+                                        value: {
+                                            type: 'integer',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.INT32U,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.INT32U]},
-                                        value: {type: 'integer'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.INT32U]
+                                        },
+                                        value: {
+                                            type: 'integer',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.FLOAT32,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.FLOAT32]},
-                                        value: {type: 'number'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.FLOAT32]
+                                        },
+                                        value: {
+                                            type: 'number',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.CODEDENUM,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.CODEDENUM]},
-                                        value: {type: 'integer'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.CODEDENUM]
+                                        },
+                                        value: {
+                                            type: 'integer',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.OCTETSTRING,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.OCTETSTRING]},
-                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.HEX}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.OCTETSTRING]
+                                        },
+                                        value: {
+                                            type: 'string',
+                                            label: 'Value',
+                                            contentEncoding: StringContentEncodingEnum.HEX
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.VISIBLESTRING,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.VISIBLESTRING]},
-                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.ASCII}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.VISIBLESTRING]
+                                        },
+                                        value: {
+                                            type: 'string',
+                                            label: 'Value',
+                                            contentEncoding: StringContentEncodingEnum.ASCII
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.TimeStamp,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.TimeStamp]},
-                                        value: {type: 'string'}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.TimeStamp]
+                                        },
+                                        value: {
+                                            type: 'string',
+                                            label: 'Value'
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.Quality,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.Quality]},
-                                        value: {type: 'string', contentEncoding: StringContentEncodingEnum.BINARY}
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.Quality]
+                                        },
+                                        value: {
+                                            type: 'string',
+                                            label: 'Value',
+                                            contentEncoding: StringContentEncodingEnum.BINARY
+                                        }
                                     }
                                 },
                                 {
                                     type: 'object',
                                     label: ItemDataType.Structure,
                                     properties: {
-                                        dataType: {type: 'string', enum: [ItemDataType.Structure]},
+                                        dataType: {
+                                            type: 'string',
+                                            label: 'DataType',
+                                            enum: [ItemDataType.Structure]
+                                        },
                                         value: {
-                                            $ref: '#/properties/goosePdu/properties/allData'
+                                            $ref: '#/properties/goosePdu/properties/allData',
+                                            label: 'Value'
                                         }
                                     }
                                 }
