@@ -478,7 +478,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.Boolean]
+                                            enum: [ItemDataType.Boolean],
+                                            const: ItemDataType.Boolean,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'boolean',
@@ -493,7 +495,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.INT8]
+                                            enum: [ItemDataType.INT8],
+                                            const: ItemDataType.INT8,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'integer',
@@ -508,7 +512,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.INT16]
+                                            enum: [ItemDataType.INT16],
+                                            const: ItemDataType.INT16,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'integer',
@@ -523,7 +529,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.INT32]
+                                            enum: [ItemDataType.INT32],
+                                            const: ItemDataType.INT32,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'integer',
@@ -538,7 +546,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.INT64]
+                                            enum: [ItemDataType.INT64],
+                                            const: ItemDataType.INT64,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'string',
@@ -554,7 +564,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.INT8U]
+                                            enum: [ItemDataType.INT8U],
+                                            const: ItemDataType.INT8U,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'integer',
@@ -569,7 +581,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.INT16U]
+                                            enum: [ItemDataType.INT16U],
+                                            const: ItemDataType.INT16U,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'integer',
@@ -584,7 +598,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.INT32U]
+                                            enum: [ItemDataType.INT32U],
+                                            const: ItemDataType.INT32U,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'integer',
@@ -599,7 +615,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.FLOAT32]
+                                            enum: [ItemDataType.FLOAT32],
+                                            const: ItemDataType.FLOAT32,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'number',
@@ -614,7 +632,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.CODEDENUM]
+                                            enum: [ItemDataType.CODEDENUM],
+                                            const: ItemDataType.CODEDENUM,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'integer',
@@ -629,7 +649,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.OCTETSTRING]
+                                            enum: [ItemDataType.OCTETSTRING],
+                                            const: ItemDataType.OCTETSTRING,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'string',
@@ -645,7 +667,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.VISIBLESTRING]
+                                            enum: [ItemDataType.VISIBLESTRING],
+                                            const: ItemDataType.VISIBLESTRING,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'string',
@@ -661,7 +685,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.TimeStamp]
+                                            enum: [ItemDataType.TimeStamp],
+                                            const: ItemDataType.TimeStamp,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'string',
@@ -676,7 +702,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.Quality]
+                                            enum: [ItemDataType.Quality],
+                                            const: ItemDataType.Quality,
+                                            hidden: true
                                         },
                                         value: {
                                             type: 'string',
@@ -692,7 +720,9 @@ export class Goose extends BaseHeader {
                                         dataType: {
                                             type: 'string',
                                             label: 'DataType',
-                                            enum: [ItemDataType.Structure]
+                                            enum: [ItemDataType.Structure],
+                                            const: ItemDataType.Structure,
+                                            hidden: true
                                         },
                                         value: {
                                             $ref: '#/properties/goosePdu/properties/allData',

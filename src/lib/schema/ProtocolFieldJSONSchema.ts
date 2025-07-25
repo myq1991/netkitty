@@ -9,6 +9,8 @@ export interface ProtocolFieldJSONSchema extends JSONSchema7 {
 
     label?: string
 
+    hidden?: boolean
+
     $defs?: {
         [key: string]: ProtocolFieldJSONSchemaDefinition;
     } | undefined;

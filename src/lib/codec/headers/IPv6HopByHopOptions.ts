@@ -149,7 +149,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.PadN]
+                                    enum: [Type.PadN],
+                                    const: Type.PadN,
+                                    hidden: true
                                 },
                                 n: {
                                     type: 'integer',
@@ -166,7 +168,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.Tunnel_Encapsulation_Limit]
+                                    enum: [Type.Tunnel_Encapsulation_Limit],
+                                    const: Type.Tunnel_Encapsulation_Limit,
+                                    hidden: true
                                 },
                                 limit: {
                                     type: 'integer',
@@ -185,7 +189,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.Router_Alert]
+                                    enum: [Type.Router_Alert],
+                                    const: Type.Router_Alert,
+                                    hidden: true
                                 },
                                 alert: {
                                     type: 'string',
@@ -205,7 +211,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.CALIPSO]
+                                    enum: [Type.CALIPSO],
+                                    const: Type.CALIPSO,
+                                    hidden: true
                                 },
                                 tag: {
                                     type: 'string',
@@ -225,7 +233,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.SMF_DPD]
+                                    enum: [Type.SMF_DPD],
+                                    const: Type.SMF_DPD,
+                                    hidden: true
                                 },
                                 hash: {
                                     type: 'string',
@@ -243,7 +253,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.MPL_Option]
+                                    enum: [Type.MPL_Option],
+                                    const: Type.MPL_Option,
+                                    hidden: true
                                 },
                                 value: {
                                     type: 'string',
@@ -261,7 +273,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.ILNP_Nonce]
+                                    enum: [Type.ILNP_Nonce],
+                                    const: Type.ILNP_Nonce,
+                                    hidden: true
                                 },
                                 nonce: {
                                     type: 'string',
@@ -281,7 +295,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.Line_Identification_Option]
+                                    enum: [Type.Line_Identification_Option],
+                                    const: Type.Line_Identification_Option,
+                                    hidden: true
                                 },
                                 id: {
                                     type: 'string',
@@ -301,7 +317,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.IPv6_DFF_Header]
+                                    enum: [Type.IPv6_DFF_Header],
+                                    const: Type.IPv6_DFF_Header,
+                                    hidden: true
                                 },
                                 message: {
                                     type: 'string',
@@ -319,7 +337,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                     type: 'string',
                                     label: 'Type',
                                     contentEncoding: StringContentEncodingEnum.UTF8,
-                                    enum: [Type.Endpoint_Identification]
+                                    enum: [Type.Endpoint_Identification],
+                                    const: Type.Endpoint_Identification,
+                                    hidden: true
                                 },
                                 id: {
                                     type: 'string',

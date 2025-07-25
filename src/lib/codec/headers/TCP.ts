@@ -469,7 +469,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.End_of_Option_List]
+                                    enum: [TCPOption.End_of_Option_List],
+                                    const: TCPOption.End_of_Option_List,
+                                    hidden: true
                                 }
                             }
                         },
@@ -481,7 +483,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.No_Operation]
+                                    enum: [TCPOption.No_Operation],
+                                    const: TCPOption.No_Operation,
+                                    hidden: true
                                 }
                             }
                         },
@@ -493,7 +497,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.Maximum_Segment_Size]
+                                    enum: [TCPOption.Maximum_Segment_Size],
+                                    const: TCPOption.Maximum_Segment_Size,
+                                    hidden: true
                                 },
                                 mss: {
                                     type: 'integer',
@@ -511,7 +517,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.Window_Scale]
+                                    enum: [TCPOption.Window_Scale],
+                                    const: TCPOption.Window_Scale,
+                                    hidden: true
                                 },
                                 shift: {
                                     type: 'integer',
@@ -529,7 +537,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.Selective_Acknowledgment_Permitted]
+                                    enum: [TCPOption.Selective_Acknowledgment_Permitted],
+                                    const: TCPOption.Selective_Acknowledgment_Permitted,
+                                    hidden: true
                                 }
                             }
                         },
@@ -541,7 +551,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.Selective_Acknowledgment]
+                                    enum: [TCPOption.Selective_Acknowledgment],
+                                    const: TCPOption.Selective_Acknowledgment,
+                                    hidden: true
                                 },
                                 blocks: {
                                     type: 'array',
@@ -563,7 +575,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.Timestamp]
+                                    enum: [TCPOption.Timestamp],
+                                    const: TCPOption.Timestamp,
+                                    hidden: true
                                 },
                                 tsval: {
                                     type: 'integer',
@@ -587,7 +601,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.User_Timeout]
+                                    enum: [TCPOption.User_Timeout],
+                                    const: TCPOption.User_Timeout,
+                                    hidden: true
                                 },
                                 timeout: {
                                     type: 'integer',
@@ -610,7 +626,9 @@ export class TCP extends BaseHeader {
                                 option: {
                                     type: 'string',
                                     label: 'Option',
-                                    enum: [TCPOption.TCP_Authentication_Option]
+                                    enum: [TCPOption.TCP_Authentication_Option],
+                                    const: TCPOption.TCP_Authentication_Option,
+                                    hidden: true
                                 },
                                 data: {
                                     type: 'string',
