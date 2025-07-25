@@ -31,6 +31,7 @@
     "build:js": "npm run clean:js && tsc",
     "build:cpp": "npm run clean:cpp && node-gyp-build",
     "rebuild": "npm run clean && npm run build:cpp && npm run build:js",
+    "release": "npm run rebuild && release-it --no-push",
     "test": "npm run rebuild && node dist/tests/Test.spec.js"
   },
   "repository": {
@@ -67,6 +68,7 @@
     "eslint": "^8.56.0",
     "inquirer": "^12.5.0",
     "reflect-metadata": "^0.2.2",
+    "release-it": "^19.0.4",
     "shx": "^0.3.4",
     "tslib": "^2.8.1",
     "typescript": "^5.8.2"
