@@ -13,6 +13,7 @@ import {RawData} from './headers/RawData'
 import {NextLayer, ConsistencyIssue} from './types/LayerGraph'
 import {DissectionField, DissectionLayer} from './types/Dissection'
 import {FieldByteRange} from './abstracts/BaseHeader'
+import {ProtocolJSONSchema} from '../schema/ProtocolJSONSchema'
 import * as packetHeaders from './PacketHeaders'
 
 /**
@@ -433,5 +434,30 @@ export class Codec {
             fields.push(field)
         }
         return fields
+    }
+
+    /**
+     * One-line human summary of a decoded packet (Wireshark's Info column). The innermost layer that
+     * declares a `summary` template in its schema wins (the most specific layer describes the packet);
+     * the template's ${dotted.field} placeholders are filled from that layer's decoded data. Falls back
+     * to the innermost non-raw layer's name when no template is declared. Read-only projection.
+     * @param decoded
+     */
+    public summary(decoded: CodecDecodeResult[]): string {
+        for (let i: number = decoded.length - 1; i >= 0; i--) {
+            const schema: ProtocolJSONSchema | undefined = this.#codecSchemas.find((codecSchema: CodecSchema): boolean => codecSchema.id === decoded[i].id)?.schema
+            if (schema && schema.summary) return this.#renderSummary(schema.summary, decoded[i].data)
+        }
+        for (let i: number = decoded.length - 1; i >= 0; i--) {
+            if (decoded[i].id !== this.#rawDataCodec.PROTOCOL_ID) return decoded[i].name
+        }
+        return decoded.length ? decoded[decoded.length - 1].name : ''
+    }
+
+    #renderSummary(template: string, data: any): string {
+        return template.replace(/\$\{([^}]+)\}/g, (_match: string, path: string): string => {
+            const value: any = path.split('.').reduce((object: any, key: string): any => (object == null ? undefined : object[key]), data)
+            return value === undefined || value === null ? '' : String(value)
+        })
     }
 }

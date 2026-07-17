@@ -2,6 +2,10 @@ import {JSONSchema7, JSONSchema7Definition} from 'json-schema'
 import {ProtocolFieldJSONSchemaDefinition} from './ProtocolFieldJSONSchemaDefinition'
 
 export interface ProtocolJSONSchema extends JSONSchema7 {
+    //Optional one-line Info template for a header (Wireshark's Info column). ${dotted.field}
+    //placeholders are substituted from the decoded data. Serializable (survives PROTOCOL_SCHEMA
+    //stripping); read-only, never affects decode/encode.
+    summary?: string
     $defs?: {
         [key: string]: JSONSchema7Definition;
     } | undefined;

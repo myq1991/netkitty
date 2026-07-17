@@ -142,6 +142,7 @@ export class TCP extends BaseHeader {
 
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
+        summary: '${srcport} → ${dstport} Seq=${seq} Ack=${ack} Win=${window}',
         properties: {
             //Migrated to the declarative field building block (byte-identical; golden/round-trip unchanged).
             srcport: this.fieldUInt('srcport', 0, 2, 'Source Port'),

@@ -32,6 +32,7 @@ export class IPv4 extends BaseHeader {
 
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
+        summary: '${sip} → ${dip}',
         properties: {
             version: {
                 type: 'integer',
