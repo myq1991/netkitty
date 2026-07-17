@@ -3,6 +3,7 @@ import {BufferToUInt8} from '../../helper/BufferToNumber'
 import {BufferToHex} from '../../helper/BufferToHex'
 import {HexToBuffer} from '../../helper/HexToBuffer'
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {CodecModule} from '../types/CodecModule'
 import {UInt8ToBuffer} from '../../helper/NumberToBuffer'
 
 
@@ -83,6 +84,9 @@ export class IEC104_S_Frame extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModules) return false
+        //IEC 104 always rides on TCP port 2404 (see IEC104_I_Frame.match for rationale).
+        if (!this.prevCodecModules.some((module: CodecModule): boolean =>
+            module.id === 'tcp' && (module.instance.srcport.getValue() === 2404 || module.instance.dstport.getValue() === 2404))) return false
         if (BufferToUInt8(this.readBytes(0, 1)) != 104) return false
         const type: number = this.readBits(2, 1, 6, 2)
         switch (type) {

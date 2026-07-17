@@ -45,7 +45,7 @@ enum Description_type {
     code_115 = 'Unknown PSK identity (used in TLS-PSK and TLS-SRP)',
     code_116 = 'Certificate required',
     code_120 = 'No application protocol',
-    code_255 = 'No application protocol',
+    code_255 = 'Unknown (255)',
 }
 
 export class TLS_Alert extends BaseHeader {

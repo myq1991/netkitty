@@ -90,6 +90,13 @@ export class TCP extends BaseHeader {
      */
     protected calculateTCPChecksum(tcpHeaderBuffer: Buffer): number {
         const tcpHeaderLength: number = tcpHeaderBuffer.length
+        //The checksum needs the IP pseudo-header from the layer below. Building a malformed
+        //stack (e.g. TCP with no IP beneath) is a legitimate use case, so record an error and
+        //skip the checksum rather than dereferencing a missing previous layer and throwing.
+        if (!this.prevCodecModule) {
+            this.recordError(this.instance.checksum.getPath(), 'Cannot compute TCP checksum: no IP layer beneath TCP')
+            return 0
+        }
         const ipVersion: number = this.prevCodecModule.instance.version.getValue()
         let pseudoHeaderBuffer: Buffer = Buffer.from([])
         const sourceIp: string = this.prevCodecModule.instance.sip.getValue()
@@ -927,10 +934,10 @@ export class TCP extends BaseHeader {
                         }
                     })
                     if (this.length > 60) return this.recordError(this.instance.options.getPath(), 'Options too large')
-                    const headerBitLength: number = this.length * 8
-                    if (headerBitLength % 4) {
+                    const padLength: number = (4 - this.length % 4) % 4
+                    if (padLength) {
                         //Add Padding
-                        this.writeBytes(this.length, Buffer.from([0x00]))
+                        this.writeBytes(this.length, Buffer.alloc(padLength, 0))
                     }
                 }
             }

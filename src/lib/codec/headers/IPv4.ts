@@ -309,7 +309,7 @@ export class IPv4 extends BaseHeader {
                              * IPv4 Header should have a length that a multiple of 32 bits
                              * @see https://learningnetwork.cisco.com/s/question/0D53i00000Kt6hHCAR/padding-field-on-ipv4-header
                              */
-                            optionsBuffer = Buffer.concat([optionsBuffer, Buffer.from([0x00])])
+                            optionsBuffer = Buffer.concat([optionsBuffer, Buffer.alloc((4 - estimateHdrLen % 4) % 4, 0)])
                         }
                         this.writeBytes(this.length, optionsBuffer)
                     }

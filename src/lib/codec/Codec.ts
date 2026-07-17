@@ -186,7 +186,10 @@ export class Codec {
         const codecModules: CodecModule[] = []
         for (const input of inputs) {
             const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
-            if (!codecModuleConstructor) continue
+            if (!codecModuleConstructor) {
+                errors.push({id: input.id, path: '', message: `Unknown protocol id: ${input.id}`})
+                continue
+            }
             const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
             codecModule.instance = new FlexibleObject(codecModule.validate(input.data))
             await codecModule.encode()

@@ -3,6 +3,8 @@ import {BufferToUInt32, BufferToUInt16, BufferToUInt8} from '../../helper/Buffer
 import {BufferToHex} from '../../helper/BufferToHex'
 import {HexToBuffer} from '../../helper/HexToBuffer'
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {CodecModule} from '../types/CodecModule'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {
     Float32ToBuffer,
     Int32ToBuffer,
@@ -13,6 +15,19 @@ import {
 
 
 export class IEC104_I_Frame extends BaseHeader {
+
+    /**
+     * True when decode preserved an unparsed ASDU (unknown/unsupported type id) and no
+     * structured IOA content is present. Encode then re-emits the raw ASDU bytes verbatim;
+     * supplying structured IOA turns this false and encode rebuilds from fields.
+     */
+    protected asduRawFallbackActive(): boolean {
+        if (this.instance.raw.isUndefined()) return false
+        if (!this.instance.raw.getValue('')) return false
+        const ioa: any = this.instance.IOA.isUndefined() ? [] : this.instance.IOA.getValue([])
+        return !Array.isArray(ioa) || ioa.length === 0
+    }
+
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
         properties: {
@@ -3541,7 +3556,7 @@ export class IEC104_I_Frame extends BaseHeader {
                     const ioaLength: number = ioaTotalLength / numberOfObject
                     const IOA_arr: any[] = []
                     Loop: for (let i = 1; i <= numberOfObject; i++) {
-                        const address: number = this.readBytes(12 + (i - 1) * ioaLength, 3).readUInt16LE()
+                        const address: number = this.readBytes(12 + (i - 1) * ioaLength, 3).readUIntLE(0, 3)
                         const buffer: Buffer = Buffer.alloc(3)
                         buffer.writeUintBE(address, 0, 3)
                         if (!(0 <= address && address <= 16777215)) {
@@ -3582,10 +3597,10 @@ export class IEC104_I_Frame extends BaseHeader {
                             //双点信息 M_DP_NA_1 : DIQ
                             case 3: {
                                 const DPI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
+                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
+                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
+                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
+                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
                                 const M_DP_NA_1: {
                                     address: number,
                                     DPI: number,
@@ -5839,8 +5854,11 @@ export class IEC104_I_Frame extends BaseHeader {
                             default: {
                                 this.recordError(this.instance.IOA.getPath(), 'Illegal Type Id')
                                 const Data_length: number = apduLength - 4
-                                const Data: string = BufferToHex(this.readBytes(6, Data_length))
-                                IOA_arr.push(Data)
+                                //Unknown/unsupported type id: the ASDU cannot be structured. Preserve
+                                //the raw ASDU bytes as a visible `raw` field (rather than an untyped
+                                //string inside IOA, which fails Ajv validation on re-encode) so the
+                                //analyst sees them and encode can reproduce them verbatim.
+                                this.instance.raw.setValue(BufferToHex(this.readBytes(6, Data_length)))
                                 break Loop
                             }
                         }
@@ -5850,6 +5868,11 @@ export class IEC104_I_Frame extends BaseHeader {
                 },
 
                 encode: (): void => {
+                    if (this.asduRawFallbackActive()) {
+                        //Re-emit the unparsed ASDU (from the type-id octet onward) exactly as captured.
+                        this.writeBytes(6, HexToBuffer(this.instance.raw.getValue().toString()))
+                        return
+                    }
                     const numberOfObject: number = this.instance.numberOfObject.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const typeId: number = this.instance.messageTypeId.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const apduLength: number = this.instance.apduLength.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
@@ -7346,6 +7369,11 @@ export class IEC104_I_Frame extends BaseHeader {
                     }
 
                 }
+            },
+            raw: {
+                type: 'string',
+                contentEncoding: StringContentEncodingEnum.HEX,
+                label: 'Unparsed ASDU'
             }
 
         }
@@ -7356,6 +7384,11 @@ export class IEC104_I_Frame extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModules) return false
+        //IEC 104 always rides on TCP port 2404. As a content-heuristic codec (no MATCH_KEYS)
+        //this is offered every TCP payload, so without the port gate any payload starting with
+        //0x68 and an even control octet (e.g. ASCII "http...") would be misread as an I-frame.
+        if (!this.prevCodecModules.some((module: CodecModule): boolean =>
+            module.id === 'tcp' && (module.instance.srcport.getValue() === 2404 || module.instance.dstport.getValue() === 2404))) return false
         if (BufferToUInt8(this.readBytes(0, 1)) != 104) return false
         const type: number = this.readBits(2, 1, 6, 2)
         switch (type) {

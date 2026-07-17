@@ -77,7 +77,7 @@ test('custom codec without matchKeys is still reachable via heuristic fallback',
 
 // KNOWN BUG: encode silently skips inputs whose id matches no registered codec -
 // the layer is missing from the output packet and no error is recorded.
-test('encode with unknown protocol id must record an error', {todo: true}, async (): Promise<void> => {
+test('encode with unknown protocol id must record an error', async (): Promise<void> => {
     const codec: Codec = new Codec()
     const result = await codec.encode([{id: 'no-such-protocol', data: {}} as any])
     assert.ok(result.errors.length > 0, 'silently dropping a layer is not acceptable')
@@ -87,7 +87,7 @@ test('encode with unknown protocol id must record an error', {todo: true}, async
 // beneath it) throws inside the checksum post-handler, which assumes a previous
 // layer exists (this.prevCodecModule.instance.version). Building error packets
 // on purpose is a legitimate use case; it must accumulate errors, not throw.
-test('encode a malformed stack (TCP with no IP below) must not throw', {todo: true}, async (): Promise<void> => {
+test('encode a malformed stack (TCP with no IP below) must not throw', async (): Promise<void> => {
     const codec: Codec = new Codec()
     await assert.doesNotReject(async (): Promise<void> => {
         void await codec.encode([{id: 'tcp', data: {srcport: 80, dstport: 443}} as any])

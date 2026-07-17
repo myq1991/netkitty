@@ -79,6 +79,10 @@ export class IPv6HopByHopOptions extends BaseHeader {
 
     protected itemTLVs: TLV[]
 
+    //Byte length of the encoded options area after 8-octet alignment padding.
+    //Set during items encode, consumed by the len recompute handler.
+    protected paddedOptionsLength: number = 0
+
     protected items: (
         PadN |
         Tunnel_Encapsulation_Limit |
@@ -124,11 +128,12 @@ export class IPv6HopByHopOptions extends BaseHeader {
                     this.writeBytes(1, UInt8ToBuffer(len))
                     if (!len) {
                         this.addPostSelfEncodeHandler((): void => {
-                            let rawLength: number = 0
-                            this.itemTLVs
-                                .map(tlv => Buffer.from(tlv.getTLV(), 'hex').length)
-                                .forEach(itemLength => rawLength += itemLength)
-                            const calcLength: number = Math.floor(rawLength / 8)
+                            //Total header = 2 (nxt+len) + options area, and must be an integral
+                            //multiple of 8 octets (RFC 8200 §4.3). items encode already padded the
+                            //options area to alignment, so (2 + paddedOptionsLength) is a multiple
+                            //of 8 and HdrExtLen = totalOctets/8 - 1.
+                            const totalOctets: number = 2 + this.paddedOptionsLength
+                            const calcLength: number = Math.max(0, Math.ceil(totalOctets / 8) - 1)
                             this.instance.len.setValue(calcLength)
                             this.writeBytes(1, UInt8ToBuffer(calcLength))
                         })
@@ -519,7 +524,7 @@ export class IPv6HopByHopOptions extends BaseHeader {
                                 break
                             case Type.Endpoint_Identification: {
                                 const typedItem: Endpoint_Identification = {...item}
-                                this.itemTLVs.push(new TLV(0x0C, Buffer.from(typedItem.id.padStart(32, '0'), 'hex')))
+                                this.itemTLVs.push(new TLV(0x8A, Buffer.from(typedItem.id.padStart(32, '0'), 'hex')))
                             }
                                 break
                             default: {
@@ -529,7 +534,19 @@ export class IPv6HopByHopOptions extends BaseHeader {
                             }
                         }
                     })
-                    const itemsBuffer: Buffer = Buffer.from(this.itemTLVs.map(value => value.getTLV()).join(''), 'hex')
+                    let itemsBuffer: Buffer = Buffer.from(this.itemTLVs.map(value => value.getTLV()).join(''), 'hex')
+                    //Pad the options area so the whole header (2 header bytes + options) is an
+                    //integral multiple of 8 octets (RFC 8200 §4.3). Use a PadN option (type 0x01)
+                    //for >=2 bytes so it re-decodes as a PadN, and a single Pad1 (0x00) for 1 byte.
+                    const pad: number = (8 - (2 + itemsBuffer.length) % 8) % 8
+                    if (pad === 1) {
+                        itemsBuffer = Buffer.concat([itemsBuffer, Buffer.from([0x00])])
+                    } else if (pad >= 2) {
+                        const padN: TLV = new TLV(0x01, Buffer.alloc(pad - 2, 0))
+                        this.itemTLVs.push(padN)
+                        itemsBuffer = Buffer.concat([itemsBuffer, Buffer.from(padN.getTLV(), 'hex')])
+                    }
+                    this.paddedOptionsLength = itemsBuffer.length
                     this.writeBytes(2, itemsBuffer)
                 }
             }

@@ -1,9 +1,3 @@
 import {CodecDecodeResult} from './CodecDecodeResult'
-import {CodecErrorInfo} from './CodecErrorInfo'
 
-export type CodecEncodeInput = {
-    name?: string
-    nickname?: string
-    protocol?: boolean
-    errors?: CodecErrorInfo[]
-} & CodecDecodeResult
+export type CodecEncodeInput = Pick<CodecDecodeResult, 'id' | 'data'> & Partial<Omit<CodecDecodeResult, 'id' | 'data'>>

@@ -25,6 +25,7 @@ import {UInt16ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {UInt32ToBERBuffer} from '../../helper/NumberToBERBuffer'
 import {BufferToUInt16} from '../../helper/BufferToNumber'
+import {BufferToHex} from '../../helper/BufferToHex'
 import {UInt16ToBuffer} from '../../helper/NumberToBuffer'
 import {GetBERIntegerLengthFromBuffer} from '../lib/GetBERIntegerLengthFromBuffer'
 
@@ -129,6 +130,26 @@ export class Goose extends BaseHeader {
 
     protected TLVChild: TLV[] = []
 
+    /**
+     * True when at least one structured goosePdu field decoded/was supplied. Used to
+     * decide whether the raw-passthrough fallback applies.
+     */
+    protected goosePduHasStructuredContent(): boolean {
+        const fields: string[] = ['gocbRef', 'timeAllowedtoLive', 'datSet', 'goID', 't', 'stNum', 'sqNum', 'simulation', 'confRev', 'ndsCom', 'numDatSetEntries', 'allData']
+        return fields.some((field: string): boolean => !this.instance.goosePdu[field].isUndefined())
+    }
+
+    /**
+     * True when decode preserved an unparsed goosePdu region and no structured field is
+     * present: encode then re-emits the raw bytes verbatim. Setting any structured field
+     * turns this false and encode rebuilds the PDU from fields instead.
+     */
+    protected goosePduRawFallbackActive(): boolean {
+        if (this.instance.goosePdu.raw.isUndefined()) return false
+        if (!this.instance.goosePdu.raw.getValue('')) return false
+        return !this.goosePduHasStructuredContent()
+    }
+
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
         properties: {
@@ -188,11 +209,11 @@ export class Goose extends BaseHeader {
                         maximum: 32767,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved1.reserved.setValue(this.readBits(4, 2, 1, 16))
+                            this.instance.reserved1.reserved.setValue(this.readBits(4, 2, 1, 15))
                         },
                         encode: (): void => {
                             const reserved: number = this.instance.reserved1.reserved.getValue(0)
-                            this.writeBits(4, 2, 1, 16, reserved)
+                            this.writeBits(4, 2, 1, 15, reserved)
                         }
                     }
                 }
@@ -207,11 +228,11 @@ export class Goose extends BaseHeader {
                         maximum: 65535,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved2.reserved.setValue(this.readBits(4, 2, 0, 16))
+                            this.instance.reserved2.reserved.setValue(this.readBits(6, 2, 0, 16))
                         },
                         encode: (): void => {
                             const reserved: number = this.instance.reserved2.reserved.getValue(0)
-                            this.writeBits(4, 2, 0, 16, reserved)
+                            this.writeBits(6, 2, 0, 16, reserved)
                         }
                     }
                 }
@@ -235,8 +256,31 @@ export class Goose extends BaseHeader {
                         }
                     }
                     this.TLVChild = this.TLVInstance ? this.TLVInstance.getChild() : []
+                    //Capture the exact goosePdu region so it can be surfaced/reproduced if the PDU
+                    //turns out to be unparseable. Use the parsed outer TLV's byte span when we have
+                    //it, else the remaining buffer.
+                    const goosePduByteLength: number = this.TLVInstance
+                        ? this.TLVInstance.bTag.length + this.TLVInstance.bLength.length + this.TLVInstance.bValue.length
+                        : this.packet.length - this.startPos - 8
+                    const goosePduRawHex: string = BufferToHex(this.readBytes(8, goosePduByteLength, true))
+                    //Runs after every child field decode: if none produced structured content, the
+                    //PDU is effectively unparsed - expose the raw bytes as a visible field so the
+                    //analyst sees the malformed region instead of a deceptively-empty PDU.
+                    this.addPostSelfDecodeHandler((): void => {
+                        if (this.goosePduHasStructuredContent()) return
+                        this.instance.goosePdu.raw.setValue(goosePduRawHex)
+                    })
                 },
                 encode: (): void => {
+                    if (this.goosePduRawFallbackActive()) {
+                        //Re-emit the unparsed goosePdu bytes exactly as captured. length is kept as
+                        //decoded (it may itself be inconsistent in a malformed frame).
+                        const rawBuffer: Buffer = Buffer.from(this.instance.goosePdu.raw.getValue().toString(), 'hex')
+                        this.writeBytes(8, rawBuffer)
+                        if (this.instance.length.getValue() > 0) return
+                        this.instance.length.setValue(8 + rawBuffer.length)
+                        return
+                    }
                     let buffers: Buffer = Buffer.from([])
                     this.TLVChild.forEach(item => buffers = Buffer.concat([buffers, item.bTag, item.bLength, item.bValue]))
                     const goosePduTLV: TLV = new TLV(0x61, buffers)
@@ -767,6 +811,11 @@ export class Goose extends BaseHeader {
                                 this.TLVChild.push(allDataTLV)
                             }
                         }
+                    },
+                    raw: {
+                        type: 'string',
+                        contentEncoding: StringContentEncodingEnum.HEX,
+                        label: 'Unparsed Raw'
                     }
                 }
             }
@@ -886,7 +935,8 @@ export class Goose extends BaseHeader {
                 case 0x91: {
                     dataItems.push({
                         dataType: ItemDataType.TimeStamp,
-                        value: parseInt(value.toString('hex'), 16).toString()
+                        //BigInt to preserve full 64-bit precision (parseInt would round above 2^53).
+                        value: value.length ? BigInt(`0x${value.toString('hex')}`).toString() : '0'
                     })
                 }
                     break
@@ -982,7 +1032,7 @@ export class Goose extends BaseHeader {
                             this.recordError(errorNodePath, 'Empty OCTET-STRING, ignored')
                             return null
                         }
-                        if (hexText.length > 20) this.recordError(errorNodePath, 'OCTET-STRING too long')
+                        if (hexText.length > 40) this.recordError(errorNodePath, 'OCTET-STRING too long')
                         return new TLV(0x89, Buffer.from(hexText, 'hex').subarray(0, 20))
                     }
                     case ItemDataType.VISIBLESTRING: {
@@ -992,14 +1042,23 @@ export class Goose extends BaseHeader {
                             return null
                         }
                         if (asciiText.length > 35) this.recordError(errorNodePath, 'VISIBLE-STRING too long')
-                        const hex: string = Buffer.from(asciiText, 'ascii').toString('hex').padStart(35 * 2)
-                        return new TLV(0x8a, Buffer.from(hex, 'hex').subarray(0, 35))
+                        //VISIBLE-STRING is variable length (max 35 ASCII bytes); emit the ASCII
+                        //bytes directly. The previous padStart(35*2) used a space fill, so
+                        //Buffer.from(<space-prefixed hex>,'hex') stopped at the first space and
+                        //produced an empty buffer for any string shorter than 35 chars.
+                        return new TLV(0x8a, Buffer.from(asciiText, 'ascii').subarray(0, 35))
                     }
                     case ItemDataType.TimeStamp: {
-                        let timestamp: number = parseInt(dataItem.value)
-                        if (isNaN(timestamp)) this.recordError(errorNodePath, 'Invalid TimeStamp value')
-                        timestamp = timestamp ? timestamp : 0
-                        return new TLV(0x91, Buffer.from(timestamp.toString(16), 'hex'))
+                        //Use BigInt + padStart(16,'0') like the top-level goosePdu.t field: a
+                        //64-bit TimeStamp exceeds Number precision, and Number.toString(16) can
+                        //produce odd-length hex that Buffer.from(...,'hex') would truncate.
+                        let timestamp: bigint = 0n
+                        try {
+                            timestamp = BigInt(dataItem.value)
+                        } catch (e) {
+                            this.recordError(errorNodePath, 'Invalid TimeStamp value')
+                        }
+                        return new TLV(0x91, Buffer.from(timestamp.toString(16).padStart(8 * 2, '0'), 'hex'))
                     }
                     case ItemDataType.Quality: {
                         const bitString: string = dataItem.value

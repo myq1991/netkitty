@@ -6,6 +6,7 @@ import {UInt16ToBERHex} from '../../helper/NumberToBERHex'
 import {UInt16ToHex, UInt32ToHex, UInt8ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../../helper/BufferToNumber'
+import {BufferToHex} from '../../helper/BufferToHex'
 import {UInt16ToBuffer} from '../../helper/NumberToBuffer'
 
 type ASDUItem = {
@@ -25,6 +26,20 @@ export class IEC61850SampledValues extends BaseHeader {
     protected TLVInstance: TLV
 
     protected TLVChild: TLV[] = []
+
+    /**
+     * True when decode preserved an unparsed raw svPdu region and the caller has not
+     * supplied any structured PDU content. In that state encode re-emits the raw bytes
+     * verbatim (faithful passthrough of a malformed capture); the moment a structured
+     * field is set, this turns false and encode rebuilds the PDU from fields instead.
+     */
+    protected svPduRawFallbackActive(): boolean {
+        if (this.instance.svPdu.raw.isUndefined()) return false
+        if (!this.instance.svPdu.raw.getValue('')) return false
+        if (!this.instance.svPdu.noASDU.isUndefined()) return false
+        const seqASDU: any = this.instance.svPdu.seqASDU.isUndefined() ? [] : this.instance.svPdu.seqASDU.getValue([])
+        return !Array.isArray(seqASDU) || seqASDU.length === 0
+    }
 
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
@@ -83,11 +98,11 @@ export class IEC61850SampledValues extends BaseHeader {
                         maximum: 32767,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved1.reserved.setValue(this.readBits(4, 2, 1, 16))
+                            this.instance.reserved1.reserved.setValue(this.readBits(4, 2, 1, 15))
                         },
                         encode: (): void => {
                             const reserved: number = this.instance.reserved1.reserved.getValue(0)
-                            this.writeBits(4, 2, 1, 16, reserved)
+                            this.writeBits(4, 2, 1, 15, reserved)
                         }
                     }
                 }
@@ -102,11 +117,11 @@ export class IEC61850SampledValues extends BaseHeader {
                         maximum: 65535,
                         label: 'Reserved',
                         decode: (): void => {
-                            this.instance.reserved2.reserved.setValue(this.readBits(4, 2, 0, 16))
+                            this.instance.reserved2.reserved.setValue(this.readBits(6, 2, 0, 16))
                         },
                         encode: (): void => {
                             const reserved: number = this.instance.reserved2.reserved.getValue(0)
-                            this.writeBits(4, 2, 0, 16, reserved)
+                            this.writeBits(6, 2, 0, 16, reserved)
                         }
                     }
                 }
@@ -115,12 +130,33 @@ export class IEC61850SampledValues extends BaseHeader {
                 type: 'object',
                 label: 'Sampled Values PDU',
                 decode: (): void => {
-                    const buffer: Buffer = this.readBytes(8, (this.instance.length.getValue()) - 8)
-                    this.TLVInstance = TLV.parse(buffer)
-                    this.TLVChild = this.TLVInstance.getChild()
                     this.instance.svPdu.setValue({})
+                    //Decode must never throw (error-accumulation contract): a truncated or
+                    //non-standard SV PDU whose BER cannot be parsed is recorded as an error.
+                    const buffer: Buffer = this.readBytes(8, (this.instance.length.getValue()) - 8)
+                    try {
+                        this.TLVInstance = TLV.parse(buffer)
+                        this.TLVChild = this.TLVInstance.getChild()
+                    } catch (e) {
+                        this.TLVChild = []
+                        //Surface the bytes we could not parse as a visible `raw` field rather than
+                        //an empty-looking PDU, so a capture analyst SEES the malformed region (and
+                        //so encode can reproduce it verbatim).
+                        this.instance.svPdu.raw.setValue(BufferToHex(buffer))
+                        this.recordError(this.instance.svPdu.getPath(), `Failed to parse Sampled Values PDU: ${(e as Error).message}`)
+                    }
                 },
                 encode: (): void => {
+                    if (this.svPduRawFallbackActive()) {
+                        //Re-emit the unparsed bytes exactly as captured. length is preserved as
+                        //decoded (it may itself be inconsistent in a malformed frame — reproducing
+                        //the original bytes means keeping it).
+                        const rawBuffer: Buffer = Buffer.from(this.instance.svPdu.raw.getValue().toString(), 'hex')
+                        this.writeBytes(8, rawBuffer)
+                        if (this.instance.length.getValue() > 0) return
+                        this.instance.length.setValue(8 + rawBuffer.length)
+                        return
+                    }
                     let buffer: Buffer = Buffer.from([])
                     this.TLVChild.forEach(TLVItem => buffer = Buffer.concat([buffer, TLVItem.bTag, TLVItem.bLength, TLVItem.bValue]))
                     const svPduTLV: TLV = new TLV(0x60, buffer)
@@ -147,6 +183,7 @@ export class IEC61850SampledValues extends BaseHeader {
                             this.instance.svPdu.noASDU.setValue(noASDUNum)
                         },
                         encode: (): void => {
+                            if (this.svPduRawFallbackActive()) return
                             const noASDU: number = this.instance.svPdu.noASDU.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'noASDU is not set'))
                             this.TLVChild.push(new TLV(0x80, UInt16ToBERHex(noASDU)))
                         }
@@ -270,8 +307,8 @@ export class IEC61850SampledValues extends BaseHeader {
                                 } else {
                                     this.recordError(errorNodePath, 'sample Not Found')
                                 }
-                                //smpMod (optional)
-                                const smpModTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x86)
+                                //smpMod (optional) - tag 0x88; 0x86 is smpRate's tag
+                                const smpModTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x88)
                                 if (smpModTLV) {
                                     smpMod = BufferToUInt16(smpModTLV.getValue('buffer'))
                                 }
@@ -290,6 +327,7 @@ export class IEC61850SampledValues extends BaseHeader {
                             this.instance.svPdu.seqASDU.setValue(seqASDU)
                         },
                         encode: (): void => {
+                            if (this.svPduRawFallbackActive()) return
                             const seqASDU: ASDUItem[] = this.instance.svPdu.seqASDU.isUndefined() ? [] : this.instance.svPdu.seqASDU.getValue()
                             const seqASDUTLVs: TLV[] = []
                             seqASDU.forEach((seqASDUItem: ASDUItem, index: number): void => {
@@ -342,6 +380,11 @@ export class IEC61850SampledValues extends BaseHeader {
                             seqASDUTLVs.forEach(seqASDUTLV => seqASDUBuffer = Buffer.concat([seqASDUBuffer, seqASDUTLV.bTag, seqASDUTLV.bLength, seqASDUTLV.bValue]))
                             this.TLVChild.push(new TLV(0xa2, seqASDUBuffer))
                         }
+                    },
+                    raw: {
+                        type: 'string',
+                        contentEncoding: StringContentEncodingEnum.HEX,
+                        label: 'Unparsed Raw'
                     }
                 }
             }

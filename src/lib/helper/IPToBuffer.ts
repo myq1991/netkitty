@@ -18,7 +18,13 @@ export function IPv4ToBuffer(ipv4: string): Buffer {
  */
 export function IPv6ToBuffer(ipv6: string): Buffer {
     try {
-        return Buffer.from(new Address6(ipv6).toByteArray())
+        const bytes: number[] = new Address6(ipv6).toByteArray()
+        const buffer: Buffer = Buffer.alloc(16, 0)
+        //ip-address toByteArray() returns the shortest byte array, so compressed
+        //addresses (::1, ::ffff:...) yield fewer than 16 bytes. Right-align them so
+        //the low-order octets land at the end of the 16-byte field.
+        Buffer.from(bytes).copy(buffer, 16 - bytes.length)
+        return buffer
     } catch (e) {
         return Buffer.alloc(16, 0)
     }
