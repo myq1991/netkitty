@@ -4,3 +4,5 @@
  */
 export {FlowAnalyzer} from './lib/analysis/FlowAnalyzer'
 export type {AnalysisPacket, Conversation, Endpoint, FlowAnalysis} from './lib/analysis/FlowAnalyzer'
+export {TcpStreamAnalyzer} from './lib/analysis/TcpStreamAnalyzer'
+export type {RttSample, TcpAnalysis, TcpStreamDiagnostic} from './lib/analysis/TcpStreamAnalyzer'
