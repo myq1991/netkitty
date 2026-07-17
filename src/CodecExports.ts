@@ -21,6 +21,7 @@ export {type HeaderTreeNode} from './lib/codec/types/HeaderTreeNode'
 export {type CodecModuleConstructor} from './lib/codec/types/CodecModuleConstructor'
 export {type CodecModule} from './lib/codec/types/CodecModule'
 export {type CodecErrorInfo} from './lib/codec/types/CodecErrorInfo'
+export {type NextLayer, type ConsistencyIssue} from './lib/codec/types/LayerGraph'
 /**
  * Schemas
  */

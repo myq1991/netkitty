@@ -10,7 +10,18 @@ import {CodecSchema} from './types/CodecSchema'
 import {ProcessPacketDecodePostHandlers, ProcessPacketEncodePostHandlers} from './lib/ProcessPacketPostHandlers'
 import {CodecEncodeResult} from './types/CodecEncodeResult'
 import {RawData} from './headers/RawData'
+import {NextLayer, ConsistencyIssue} from './types/LayerGraph'
 import * as packetHeaders from './PacketHeaders'
+
+/**
+ * Producer fields whose value decides the next layer, mirroring computeDemuxKeys: a layer whose
+ * schema declares one of these can be followed by any codec registered under that demux namespace.
+ */
+const DEMUX_PRODUCERS: {field: string, namespace: string, numeric: boolean}[] = [
+    {field: 'etherType', namespace: 'ethertype', numeric: false},
+    {field: 'protocol', namespace: 'ipproto', numeric: true},
+    {field: 'nxt', namespace: 'ipproto', numeric: true}
+]
 
 export class Codec {
 
@@ -261,5 +272,94 @@ export class Codec {
             packet: codecData.packet,
             errors: errors
         }
+    }
+
+    /**
+     * Producer fields a layer's schema declares (etherType / protocol / nxt) — the fields whose
+     * value decode uses to pick the next layer. Basis for walking the parent→child graph forward.
+     * @param layerId
+     * @private
+     */
+    #producersOf(layerId: string): {field: string, namespace: string, numeric: boolean}[] {
+        const schema: CodecSchema | undefined = this.#codecSchemas.find((codecSchema: CodecSchema): boolean => codecSchema.id === layerId)
+        const properties: any = schema ? (schema.schema as any).properties : undefined
+        if (!properties) return []
+        return DEMUX_PRODUCERS.filter((producer: {field: string, namespace: string, numeric: boolean}): boolean => producer.field in properties)
+    }
+
+    /**
+     * Editor helper (read-only projection over the same demux graph decode uses): the layers that
+     * may follow `parentLayerId`, each tagged with the {field,value} to set on the parent so decode
+     * would route to it. Derived by reversing the dispatch table over the parent's producer fields.
+     * RawData is always appended as the custom/fallback layer that may follow anything.
+     * @param parentLayerId
+     */
+    public allowedNextLayers(parentLayerId: string): NextLayer[] {
+        const result: NextLayer[] = []
+        const seen: Set<string> = new Set()
+        for (const producer of this.#producersOf(parentLayerId)) {
+            const prefix: string = `${producer.namespace}:`
+            for (const [key, constructors] of this.#dispatchTable) {
+                if (!key.startsWith(prefix)) continue
+                const raw: string = key.substring(prefix.length)
+                const value: string | number = producer.numeric ? Number(raw) : raw
+                for (const codecModuleConstructor of constructors) {
+                    const dedup: string = `${codecModuleConstructor.PROTOCOL_ID}@${producer.field}=${value}`
+                    if (seen.has(dedup)) continue
+                    seen.add(dedup)
+                    result.push({id: codecModuleConstructor.PROTOCOL_ID, name: codecModuleConstructor.PROTOCOL_NAME, discriminator: {field: producer.field, value: value}})
+                }
+            }
+        }
+        result.push({id: this.#rawDataCodec.PROTOCOL_ID, name: this.#rawDataCodec.PROTOCOL_NAME, discriminator: null})
+        return result
+    }
+
+    /**
+     * The {field,value} to set on `parentLayerId` so `childLayerId` follows it — used to auto-fill
+     * the parent discriminator when a child is added, and to suggest a fix for a consistency issue.
+     * Null when the child is not reachable from that parent via the demux graph (RawData, or a
+     * content-heuristic child such as TLS/IEC104 whose match is port/content based).
+     * @param parentLayerId
+     * @param childLayerId
+     */
+    public childDiscriminator(parentLayerId: string, childLayerId: string): {field: string, value: string | number} | null {
+        for (const next of this.allowedNextLayers(parentLayerId)) {
+            if (next.id === childLayerId && next.discriminator) return next.discriminator
+        }
+        return null
+    }
+
+    /**
+     * Editor helper: report parent layers whose discriminator field does not point at the child that
+     * actually follows (e.g. eth.etherType says IPv6 but the next layer is IPv4). This is advisory
+     * only — encode never blocks on it, since a deliberately-inconsistent packet is a valid crafted
+     * packet. Only demux-based relationships are checked; content-heuristic children (TLS/IEC104) are
+     * not flagged. RawData may follow anything and is never flagged.
+     * @param decoded
+     */
+    public checkConsistency(decoded: CodecDecodeResult[]): ConsistencyIssue[] {
+        const issues: ConsistencyIssue[] = []
+        for (let i: number = 0; i < decoded.length - 1; i++) {
+            const parent: CodecDecodeResult = decoded[i]
+            const child: CodecDecodeResult = decoded[i + 1]
+            if (child.id === this.#rawDataCodec.PROTOCOL_ID) continue
+            for (const producer of this.#producersOf(parent.id)) {
+                const actual: any = (parent.data as any)[producer.field]
+                if (actual === undefined || actual === null) continue
+                const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(`${producer.namespace}:${actual}`)
+                if (bucket && bucket.some((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.PROTOCOL_ID === child.id)) continue
+                issues.push({
+                    index: i,
+                    parentId: parent.id,
+                    childId: child.id,
+                    field: producer.field,
+                    actual: actual,
+                    suggestion: this.childDiscriminator(parent.id, child.id),
+                    message: `${parent.id}.${producer.field}=${actual} 与下一层 '${child.id}' 不符`
+                })
+            }
+        }
+        return issues
     }
 }
