@@ -164,6 +164,8 @@ export class IPv6 extends BaseHeader {
 
     public id: string = 'ipv6'
 
+    public readonly matchKeys: string[] = ['ethertype:86dd']
+
     public name: string = 'Internet Protocol Version 6'
 
     public nickname: string = 'IPv6'

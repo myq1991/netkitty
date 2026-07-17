@@ -4,6 +4,12 @@ node_modules
 /build
 /bindings
 
+# packet capture samples for test-fixture extraction (local only)
+/pcaps
+
+# local AI assistant guidance (not committed)
+CLAUDE.md
+
 # local env files
 .env.local
 .env.*.local

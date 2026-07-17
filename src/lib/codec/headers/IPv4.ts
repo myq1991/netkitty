@@ -320,6 +320,8 @@ export class IPv4 extends BaseHeader {
 
     public readonly id: string = 'ipv4'
 
+    public readonly matchKeys: string[] = ['ethertype:0800']
+
     public readonly name: string = 'Internet Protocol Version 4'
 
     public readonly nickname: string = 'IPv4'

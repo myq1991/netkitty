@@ -56,7 +56,7 @@ export class IEC104_I_Frame extends BaseHeader {
                 minimum: 0,
                 maximum: 3,
                 decode: (): void => {
-                    const controlType: number = this.readBits(5, 1, 7, 1)
+                    const controlType: number = this.readBits(2, 1, 7, 1)
                     switch (controlType) {
                         case 0: {
                             this.instance.apciType.setValue('I-Format')
@@ -64,7 +64,7 @@ export class IEC104_I_Frame extends BaseHeader {
                             break
                         default: {
                             this.recordError(this.instance.apciType.getPath(), 'Illegal acpiType!')
-                            this.instance.apciType.setValue(this.readBits(5, 1, 7, 1))
+                            this.instance.apciType.setValue(this.readBits(2, 1, 7, 1))
                         }
                     }
 
@@ -74,7 +74,7 @@ export class IEC104_I_Frame extends BaseHeader {
                     const controlType: string = this.instance.apciType.getValue('0', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     switch (controlType) {
                         case 'I-Format': {
-                            this.writeBits(5, 1, 7, 1, 0)
+                            this.writeBits(2, 1, 7, 1, 0)
                         }
                             break
                         default: {
@@ -113,7 +113,7 @@ export class IEC104_I_Frame extends BaseHeader {
                 },
                 encode: (): void => {
                     const bit: number = this.instance.sqBit.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
-                    this.writeBits(1, 1, 0, 1, bit)
+                    this.writeBits(7, 1, 0, 1, bit)
                 }
             },
             numberOfObject: {

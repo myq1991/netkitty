@@ -134,3 +134,6 @@ bindings
 !build
 !dist
 
+
+# packet capture samples for test-fixture extraction (local only)
+pcaps

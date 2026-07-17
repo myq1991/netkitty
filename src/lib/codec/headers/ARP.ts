@@ -208,6 +208,8 @@ export class ARP extends BaseHeader {
 
     public readonly id: string = 'arp'
 
+    public readonly matchKeys: string[] = ['ethertype:0806']
+
     public readonly name: string = 'Address Resolution Protocol'
 
     public readonly nickname: string = 'ARP'

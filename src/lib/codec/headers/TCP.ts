@@ -939,6 +939,8 @@ export class TCP extends BaseHeader {
 
     public readonly id: string = 'tcp'
 
+    public readonly matchKeys: string[] = ['ipproto:6']
+
     public readonly name: string = 'Transmission Control Protocol'
 
     public readonly nickname: string = 'TCP'

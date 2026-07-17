@@ -117,6 +117,8 @@ export class ICMPv6 extends BaseHeader {
 
     public id: string = 'icmpv6'
 
+    public readonly matchKeys: string[] = ['ipproto:58']
+
     public name: string = 'Internet Control Message Protocol v6'
 
     public nickname: string = 'ICMPv6'

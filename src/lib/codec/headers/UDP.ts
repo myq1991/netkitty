@@ -55,7 +55,7 @@ export class UDP extends BaseHeader {
         let sum: number = 0
         for (let i: number = 0; i < data.length; i += 2) sum += (data[i] << 8) + (data[i + 1] || 0)
         while (sum > 0xFFFF) sum = (sum & 0xFFFF) + (sum >>> 16)
-        return (~sum) & 0xFFFF
+        const _cs = (~sum) & 0xFFFF; return _cs === 0 ? 0xFFFF : _cs
     }
 
     public SCHEMA: ProtocolJSONSchema = {
@@ -168,6 +168,8 @@ export class UDP extends BaseHeader {
     }
 
     public readonly id: string = 'udp'
+
+    public readonly matchKeys: string[] = ['ipproto:17']
 
     public readonly name: string = 'User Datagram Protocol'
 

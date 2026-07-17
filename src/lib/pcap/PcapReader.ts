@@ -216,7 +216,29 @@ export class PcapReader extends EventEmitter {
     }
 
     /**
+     * Read packet data by packet info (format-agnostic: works for pcap and pcapng,
+     * uses the packetOffset/packetLength the parser reported)
+     * @param pcapPacketInfo
+     */
+    public async readPacketData(pcapPacketInfo: IPcapPacketInfo): Promise<Buffer> {
+        if (pcapPacketInfo.packetLength <= 0) return Buffer.from([])
+        const fileHandle: FileHandle = await this.initReadPacketFileHandle()
+        try {
+            const result: FileReadResult<Buffer> = await fileHandle.read({
+                buffer: Buffer.alloc(pcapPacketInfo.packetLength),
+                offset: 0,
+                length: pcapPacketInfo.packetLength,
+                position: pcapPacketInfo.packetOffset
+            })
+            return result.buffer.subarray(0, result.bytesRead)
+        } finally {
+            await fileHandle.close()
+        }
+    }
+
+    /**
      * Read packet data by record's offset and record's length
+     * @deprecated only valid for classic pcap files (assumes a 16-byte record header), use readPacketData instead
      * @param offset
      * @param length
      */

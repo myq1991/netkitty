@@ -1,102 +1,95 @@
+import {test} from 'node:test'
+import assert from 'node:assert'
+import {LoadPacket} from '../lib/Fixtures'
+import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer} from '../lib/RoundTrip'
 import {Codec} from '../../lib/codec/Codec'
-import {FlexibleObject} from '../../lib/codec/lib/FlexibleObject'
-import {UInt8ToHex} from '../../lib/helper/NumberToHex'
-import {PcapWriter} from '../../lib/pcap/PcapWriter'
+import {ARP} from '../../lib/codec/PacketHeaders'
+import {BaseHeader} from '../../lib/codec/abstracts/BaseHeader'
+import {ProtocolJSONSchema} from '../../lib/schema/ProtocolJSONSchema'
+import {CodecDecodeResult} from '../../lib/codec/types/CodecDecodeResult'
 
-async function DecodeAndEncode(packet: string): Promise<void> {
-    const packetBuffer: Buffer = Buffer.from(packet, 'base64')
-    console.log('packetBuffer:', packetBuffer.toString('hex'))
-    const codec = new Codec()
-    const decodeResult = await codec.decode(packetBuffer)
-    // console.log(JSON.stringify(decodeResult, null, 2))
-    // for (let i = 0; i < 100000; i++) {
-    //     const encodeResult = await codec.encode(decodeResult)
-    // }
-    const encodeResult = await codec.encode(decodeResult)
+test('unknown ethertype falls to raw layer + round-trip', async (): Promise<void> => {
+    const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('codec/unknown-ethertype').buffer)
+    AssertLayers(decoded, ['eth', 'raw'])
+})
 
-    // const pw=new PcapWriter({filename:`/Users/alex/Desktop/genPcap${Date.now()}.pcap`})
-    // pw.write(Buffer.from(packet,'base64'),0,0)
-    // pw.write(encodeResult.packet,1,0)
-    // await pw.close()
+test('garbage input: decode never fails, everything lands in eth+raw', async (): Promise<void> => {
+    const decoded: CodecDecodeResult[] = await AssertDecodeSurvives(Buffer.alloc(60, 0xff))
+    AssertLayers(decoded, ['eth', 'raw'])
+})
 
-    console.log('encodeResult:', encodeResult.packet.toString('hex'))
-    console.log('packetBuffer===encodeResult', packetBuffer.toString('hex') === encodeResult.packet.toString('hex'))
-    const decodeResult1 = await codec.decode(encodeResult.packet)
-    console.log(JSON.stringify(decodeResult1, null, 2))
-}
+test('custom codec with same PROTOCOL_ID overrides the built-in one', async (): Promise<void> => {
+    class CustomARP extends ARP {
+        public readonly name: string = 'Custom ARP'
+    }
 
-async function GOOSE_Codec(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+    const codec: Codec = new Codec([CustomARP as any])
+    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('arp/baseline').buffer)
+    const arp: CodecDecodeResult = Layer(decoded, 'arp')
+    assert.strictEqual(arp.name, 'Custom ARP')
+})
 
-async function IEC61850SampleValues_Codec(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+// A custom codec that declares a demux key registers in the dispatch table and
+// is reachable during decode (the RawData catch-all no longer shadows it).
+test('newly added custom codec is reachable during decode', async (): Promise<void> => {
+    class Proto88B5 extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {
+            type: 'object',
+            properties: {}
+        }
+        public readonly id: string = 'proto88b5'
+        public readonly name: string = 'Experimental 0x88B5'
+        public readonly nickname: string = 'EXP1'
+        public readonly matchKeys: string[] = ['ethertype:88b5']
 
-async function IPv4_Codec(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+        public match(): boolean {
+            if (!this.prevCodecModule) return false
+            return this.prevCodecModule.instance.etherType.getValue() === '88b5'
+        }
+    }
 
-async function IPv6_Codec(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+    const codec: Codec = new Codec([Proto88B5 as any])
+    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('codec/unknown-ethertype').buffer)
+    Layer(decoded, 'proto88b5')
+})
 
-async function ARP_Codec(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+// A custom codec WITHOUT a demux key still works via the heuristic fallback list.
+test('custom codec without matchKeys is still reachable via heuristic fallback', async (): Promise<void> => {
+    class Proto88B5Heuristic extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {
+            type: 'object',
+            properties: {}
+        }
+        public readonly id: string = 'proto88b5h'
+        public readonly name: string = 'Experimental 0x88B5 (heuristic)'
+        public readonly nickname: string = 'EXP2'
 
-async function TCP_Codec(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+        public match(): boolean {
+            if (!this.prevCodecModule) return false
+            return this.prevCodecModule.instance.etherType.getValue() === '88b5'
+        }
+    }
 
-async function UDP_Codec(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+    const codec: Codec = new Codec([Proto88B5Heuristic as any])
+    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('codec/unknown-ethertype').buffer)
+    Layer(decoded, 'proto88b5h')
+})
 
-async function IEC104(packet: string): Promise<void> {
-    await DecodeAndEncode(packet)
-}
+// KNOWN BUG: encode silently skips inputs whose id matches no registered codec -
+// the layer is missing from the output packet and no error is recorded.
+test('encode with unknown protocol id must record an error', {todo: true}, async (): Promise<void> => {
+    const codec: Codec = new Codec()
+    const result = await codec.encode([{id: 'no-such-protocol', data: {}} as any])
+    assert.ok(result.errors.length > 0, 'silently dropping a layer is not acceptable')
+})
 
-(async (): Promise<void> => {
-    console.time('GOOSE')
-    await GOOSE_Codec('AaD0CC93AKD0CC93iLgAAQCRAAAAAGGBhoAaR0VEZXZpY2VGNjUwL0xMTjAkR08kZ2NiMDGBAwCcQIIYR0VEZXZpY2VGNjUwL0xMTjAkR09PU0UxgwtGNjUwX0dPT1NFMYQIOG6780IXKAqFAQGGAQuHAQCIAQGJAQCKAQirIIMBAIQDAwAAgwEAhAMDAACDAQCEAwMAAIMBAIQDAwAA')
-    await GOOSE_Codec('AQzNAQNVABAAAANVgQAABoi4A1UAlgAAAABhgYuAGlBMMTEwMVBJR08wMS9MTE4wJEdPJGdvY2IwgQInEIIZUEwxMTAxUElHTzAxL0xMTjAkZHNHT09TRYMXUEwxMTAxUElHTzAxL0xMTjAuZ28AA1AAAA///wAApdAQcA==')
-    await GOOSE_Codec('AQzNARACABQ7WwNyiLgQAgDXAAAAAGGBzIAYUENTMDAyUElHTy9MTE4wJEdPJGdvY2IxgQIBkIIYUENTMDAyUElHTy9MTE4wJGRzR09PU0UxgxhQQ1MwMDJQSUdPL0xMTjAkR08kZ29jYjGECGf88cRG/rQAhQMOWIGGAQCHAQCIAQGJAQCKAQ6rWocFCEScQACHBQg+0OVhhQEChwUIAAAAAIcFCEKSmZqHBQhEu4AAhwUIRLuAAIcFCEScQACHBQg+1P30hQEChwUIAAAAAIcFCEJlmZqHBQhEu4AAhwUIRLuAAA==')
-    await GOOSE_Codec('AQzNAQH/ABEiM0RVgQCgzIi4EjQAcwAAAABhaYASRGV2MS9MTE4wJEdPJGdjYjAxgQEUghFEZXYxL0xMTjAkRGF0U2V0MYMIR1NfZ2NiMDGECAAAAAAAAAAAhQEAhgEAhwEAiAEBiQEAigEDqxeFAQuiC4MBAYkGESIzRFVmhwUIwEhfww==')
-    console.timeEnd('GOOSE')
-    //
-    // console.time('IEC61850SampleValues')
-    // await IEC61850SampleValues_Codec('AQzNBAAByv7A/+5piLpAAQBmAAAAAGBcgAEBolcwVYAENDAwMYICCDaDBAAAAAGFAQKHQAADpBwAAAAAAAAgrAAAAAD//DyAAAAAAAAAAUgAACAAAPOi+AAAAAAAC1wyAAAAAP8BRogAAAAAAABFsgAAIAA=')
-    // console.timeEnd('IEC61850SampleValues')
-
-    // await IPv4_Codec('AQBeAAD7RvyxjrRvCABFAABDFi9AAP8Rwg7AqAHI4AAA+61EFOkALwQ6AAAAAAABAAAAAAAACl9seXJhLW1kbnMEX3VkcAVsb2NhbAAADIAB')
-    // console.time('IPv4')
-    // await IPv4_Codec('AAAAAAAAAAAAAAAACABLAABseDcAAEABdS1/AAABfwAAAYYWAAAAAgIQAAIAAAACAAQABQAGAO8AAAAAKVCMCgABkk2uRRMODAAICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc=')
-    // await IPv4_Codec('AAABAAABAAECAwQFgQAHAQgARQAD73UOAAD//cCqwFUBAsAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAo1jALb5b3GR/EWXIj8AcbMw8pHUAAAEAAAEAAQIDBAWBAAcCCABFAAHvdQ8AAP/9wqnAVQECwAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoikeAWYiHtu0w+Ilen5pPcowdgE=')
-    // await IPv4_Codec('jrqXwYfpMsUZ/NE3CABFAABU9jEAAEABAIjAqAGewKgBAQgAVeFhQwAAZ+gRVAAC3JkICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc=')
-    // console.timeEnd('IPv4')
-    //
-    // console.time('ARP')
-    // await ARP_Codec('////////AFDCV7MQCAYAAQgABgQAAQBQwlezEMCorNcAAAAAAADAqKwBAAAAAAAAAAAAAAAWOgAFAgAA')
-    // console.timeEnd('ARP')
-    //
-    // // await TCP_Codec('jrqXwYfpMsUZ/NE3CABFAABAAABAAEAG7RnAqAGf3LWuof8nAbtj7USXAAAAALAC//8W3wAAAgQFtAEDAwYBAQgKrHN8owAAAAAEAgAA')
-    // console.time('TCP')
-    // await TCP_Codec('MsUZ/NE3jrqXwYfpCABFAAJtAABAADMGCAYr+E9GwKgBnwBQxWyUVlJ28OAPzYAYAf/ikQAAAQEICu648gfnwk9J+s/+/j/vP/v7/uz/7O/72352Oswm1bo1vf3hf+t/9vf8CRLU/Od/3l/1X/49/yCJC4U2G3u23cjEvL4q2un8J8mR/z0kh/7ZG/ILfmG2WOl67ld1+dnvvvdM/VjS/nm9zEqiLcsVyZhIHfokx4F6iHXqBsfc0VBOtoXhIKYQx/K//EP/esL9v/gr/jzAuQUY0AhOI6A5Kn109O03b16+fk8YIPQvojT7dbYsswl7mx8dHZ8RYhSz/ed/xJ9NM/o1INb5rLjI63FWELRX/+hfzX9RzEmD/a/+qj/IgY1xAsCanqbV6pqXCYnkPNP/1d//N1KQm/4jf/Xezt79lKj2n/89fypNA6lJfLBDy4whQoTPJKfhjRdF0ZJ3fTmeLgnW3/LXnJ28/M//sj9y52Bn99P9g4f/+Z/4dwKdNKVv/vM//K+jWf3P/4Y/mr5P7+3u7FJURotwuw/2PuVmwM9D3CgV+tX+/viu6BL8avUQfT+sJDltSOZi9pJ0LSmhO+P1JJPfbeKjq9joIzzwsNLPxQFts4t064L+peDgjjj9ikAs6MBMiedKbyyyJanRmjkAECja+D1IK36+/el3Hj57svfqwbN9WFWB5uDSb1gpZlcYDvdzoEzqu/cR+8Y0AC+Vh24oi2fbiONMzgKn3po7h5ze4VYf/3RDyTvYhKdkQ7bugBTuS1q+PC8uqMHHPrpsLTyMiVY0Q5Nqdk1/PL47bxfwDQpiDQqC/h9WtstCH04AAA0KMA0KDQo=')
-    // console.timeEnd('TCP')
-    //
-    // // await TCP_Codec('MsUZ/NE3jrqXwYfpCABFAAAoAABAAEAG4N0NQoppwKgBnwG7wHisAGbXAAAAAFAEAACA4gAA')
-    // console.time('UDP')
-    // await UDP_Codec('////////CAAnzP1BCABFAAD/uTJAAEAR+6XAqAHGwKgB/wCKAIoA62oQEQp9csCoAcYAigDVAAAgRkFGRUZEQ0FDQUNBQ0FDQUNBQ0FDQUNBQ0FDQUNBQUEAIEZIRVBGQ0VMRUhGQ0VQRkZGQUNBQ0FDQUNBQ0FDQUJOAP9TTUIlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEQAAOwAAAAAAAAAAAAAAAAAAAAAAAAA7AFYAAwABAAEAAgBMAFxNQUlMU0xPVFxCUk9XU0UAAe2A/AoAUFRTAAAAAAAAAAAAAAAAAAYBA5qBAA8BVapwdHMgc2VydmVyIChTYW1iYSwgVWJ1bnR1KQA=')
-    // console.timeEnd('UDP')
-
-    // console.time('IPv6')
-    // await IPv6_Codec('xAI6RAAAxAA6RAAAht1gAAAAADw6QP6AAAAAAAAAxgA6//5EAAD+gAAAAAAAAMYCOv/+RAAAgQDIrxOKAAEBAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0')
-    // await IPv6_Codec('MzMAAAAWxAI6RAAAht1uAAAAACQAAf6AAAAAAAAAxgI6//5EAAD/AgAAAAAAAAAAAAAAAAAWOgAFAgAAAQCPAHDCAAAAAQQAAAD/AgAAAAAAAAAAAAAAAAAC')
-    // console.timeEnd('IPv6')
-
-    // console.time('IEC104')
-    // // await IEC104('ACIVVgtUABbRAAkFCABFAAHcOlYAAP8GoTAKFGRsChRmAQlktU0AnlnKzdq0t1AYCDQZSAAAaB4IAAQABQQUAAoAAQAAAAACAAAAAAMAAAAABAAAAABoKgoABAAHBBQACgABAAAAAAAAAAIAAAAAAAAAAwAAAAAAAAAEAAAAAAAAAGgiDAAEAAkEFAAKAAEAAAAAAAIAAAAAAAMAAAAAAAQAAAAAAGgiDgAEAAsEFAAKAAEAAAAAAAIAAAAAAAMAAAAAAAQAAAAAAGgqEAAEAA0EFAAKAAEAAAAAAAAAAgAAAAAAAAADAAAAAAAAAAQAAAAAAAAAaDYSAAQAHgQUAAoACwAAADEQFwiEBw0MAAAAMRAXCIQHDQ0AAAAxEBcIhAcNDgAAADEQFwiEBw1oNhQABAAfBBQACgALAAAAMRAXCIQHDQwAAAAxEBcIhAcNDQAAADEQFwiEBw0OAAAAMRAXCIQHDWg6FgAEACAEFAAKAAsAAAAAMRAXCIQHDQwAAAAAMRAXCIQHDQ0AAAAAMRAXCIQHDQ4AAAAAMRAXCIQHDWhGGAAEACEEFAAKAAsAAAAAAAAAMRAXCIQHDQwAAAAAAAAAMRAXCIQHDQ0AAAAAAAAAMRAXCIQHDQ4AAAAAAAAAMRAXCIQHDQ==')
-    // await IEC104('ACIVVgtUABbRAAkFCABFAABwOlUAAP8Gop0KFGRsChRmAQlktU0AnlmCzdq0t1AYCDQZ9gAAaA4CAAIAZAEHAAoAAAAAFGgaBAACAAEEFAAKAAEAAAACAAAAAwAAAAQAAABoGgYAAgADBBQACgABAAAAAgAAAAMAAAAEAAAA')
-    // console.timeEnd('IEC104')
-})()
+// KNOWN BUG: encoding a deliberately malformed stack (e.g. TCP with no IP layer
+// beneath it) throws inside the checksum post-handler, which assumes a previous
+// layer exists (this.prevCodecModule.instance.version). Building error packets
+// on purpose is a legitimate use case; it must accumulate errors, not throw.
+test('encode a malformed stack (TCP with no IP below) must not throw', {todo: true}, async (): Promise<void> => {
+    const codec: Codec = new Codec()
+    await assert.doesNotReject(async (): Promise<void> => {
+        void await codec.encode([{id: 'tcp', data: {srcport: 80, dstport: 443}} as any])
+    })
+})

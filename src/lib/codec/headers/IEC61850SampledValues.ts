@@ -350,6 +350,8 @@ export class IEC61850SampledValues extends BaseHeader {
 
     public readonly id: string = 'sv'
 
+    public readonly matchKeys: string[] = ['ethertype:88ba']
+
     public readonly name: string = 'IEC61850 Sampled Values'
 
     public readonly nickname: string = 'SV'

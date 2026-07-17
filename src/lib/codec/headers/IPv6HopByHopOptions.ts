@@ -538,6 +538,8 @@ export class IPv6HopByHopOptions extends BaseHeader {
 
     public id: string = 'ipv6-hopopt'
 
+    public readonly matchKeys: string[] = ['ipproto:0']
+
     public name: string = 'IPv6 Hop-by-Hop Option'
 
     public nickname: string = 'HopOpt'

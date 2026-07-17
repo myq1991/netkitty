@@ -30,6 +30,15 @@ export abstract class BaseHeader {
         return this.CODEC_INSTANCE.name
     }
 
+    /**
+     * Demux keys this header registers in the codec dispatch table.
+     * Empty (the default) means the header is matched by its content-heuristic
+     * match() instead of by an upper-layer demultiplexing value.
+     */
+    public static get MATCH_KEYS(): string[] {
+        return this.CODEC_INSTANCE.matchKeys
+    }
+
     public static get PROTOCOL_SCHEMA(): ProtocolJSONSchema {
         const schema: ProtocolJSONSchema = JSON.parse(JSON.stringify(this.CODEC_INSTANCE.SCHEMA))
         if (!Object.hasOwn(this, CONSTRUCTOR_VALIDATE_KEY)) {
@@ -79,6 +88,15 @@ export abstract class BaseHeader {
      * Current header is a protocol or not
      */
     public readonly isProtocol: boolean = true
+
+    /**
+     * Upper-layer demultiplexing keys that select this header, e.g.
+     * ['ethertype:0800'] or ['ipproto:6']. Registered in the codec dispatch
+     * table for O(1) selection during decode. Leave empty for headers that
+     * must inspect their own bytes to match (TLS, IEC104, tunnels); those fall
+     * back to the content-heuristic match() list.
+     */
+    public readonly matchKeys: string[] = []
 
     /**
      * Encode/Decode error info objects

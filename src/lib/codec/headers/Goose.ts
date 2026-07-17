@@ -1022,6 +1022,8 @@ export class Goose extends BaseHeader {
 
     public readonly id: string = 'goose'
 
+    public readonly matchKeys: string[] = ['ethertype:88b8']
+
     public readonly name: string = 'IEC61850 GOOSE'
 
     public readonly nickname: string = 'GOOSE'

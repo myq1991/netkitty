@@ -68,6 +68,8 @@ export class VLAN_802dot1Q extends BaseHeader {
 
     public readonly id: string = 'vlan'
 
+    public readonly matchKeys: string[] = ['ethertype:8100']
+
     public readonly name: string = '802.1Q Virtual LAN'
 
     public readonly nickname: string = 'VLAN'

@@ -139,6 +139,8 @@ export class ICMP extends BaseHeader {
 
     public id: string = 'icmp'
 
+    public readonly matchKeys: string[] = ['ipproto:1']
+
     public name: string = 'Internet Control Message Protocol'
 
     public nickname: string = 'ICMP'
