@@ -425,12 +425,23 @@ export abstract class BaseHeader {
     public async decode(): Promise<void> {
         const decodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'decode', true)
         for (const decode of decodes) {
-            await decode()
+            //Decode must never throw (error-accumulation contract): a truncated/corrupt packet can
+            //make a field's byte read run past the buffer or hit an invalid value. Contain that to a
+            //recorded error so the remaining fields and layers still decode best-effort.
+            try {
+                await decode()
+            } catch (e) {
+                this.recordError('', `Decode error: ${(e as Error).message}`)
+            }
         }
         const postSelfDecodeHandlers: PostHandlerItem[] = SortPostHandlers(this.postSelfDecodeHandlers)
         let postDecodeHandler: PostHandlerItem | undefined = postSelfDecodeHandlers.shift()
         while (postDecodeHandler) {
-            await postDecodeHandler.handler()
+            try {
+                await postDecodeHandler.handler()
+            } catch (e) {
+                this.recordError('', `Decode error: ${(e as Error).message}`)
+            }
             postDecodeHandler = postSelfDecodeHandlers.shift()
         }
     }
@@ -441,12 +452,24 @@ export abstract class BaseHeader {
     public async encode(): Promise<void> {
         const encodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'encode', false)
         for (const encode of encodes) {
-            await encode()
+            //Shape validation is the deliberate fast-fail at the encode entry point (Ajv, in
+            //Codec.#encode); it runs before we get here. Past that, a field's encode closure must
+            //not crash the whole encode on an edge-case value — contain it to a recorded error so
+            //the packet still assembles best-effort (matches the decode contract).
+            try {
+                await encode()
+            } catch (e) {
+                this.recordError('', `Encode error: ${(e as Error).message}`)
+            }
         }
         const postSelfEncodeHandlers: PostHandlerItem[] = SortPostHandlers(this.postSelfEncodeHandlers)
         let postEncodeHandler: PostHandlerItem | undefined = postSelfEncodeHandlers.shift()
         while (postEncodeHandler) {
-            await postEncodeHandler.handler()
+            try {
+                await postEncodeHandler.handler()
+            } catch (e) {
+                this.recordError('', `Encode error: ${(e as Error).message}`)
+            }
             postEncodeHandler = postSelfEncodeHandlers.shift()
         }
     }

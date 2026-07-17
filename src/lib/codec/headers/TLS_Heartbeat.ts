@@ -170,6 +170,27 @@ export class TLS_Heartbeat extends BaseHeader {
                     this.writeBytes(8, HexToBuffer(payloadMessage))
                 }
 
+            },
+            padding: {
+                type: 'string',
+                contentEncoding: 'hex',
+                label: 'Padding',
+                //RFC 6520 §4: HeartbeatMessage ends with random padding of at least 16 octets.
+                //It fills the record after type(1)+payload_length(2)+payload, i.e.
+                //paddingLength = recordLength - 3 - payloadLength. Preserving it is required both
+                //for a faithful decode view and for a byte-exact re-encode.
+                decode: (): void => {
+                    const recordLength: number = this.instance.length.getValue(0)
+                    const payloadLength: number = this.instance.payloadLength.getValue(0)
+                    const paddingLength: number = recordLength - 3 - payloadLength
+                    if (paddingLength <= 0) return
+                    this.instance.padding.setValue(BufferToHex(this.readBytes(8 + payloadLength, paddingLength)))
+                },
+                encode: (): void => {
+                    if (this.instance.padding.isUndefined()) return
+                    const payloadLength: number = this.instance.payloadLength.getValue(0)
+                    this.writeBytes(8 + payloadLength, HexToBuffer(this.instance.padding.getValue('')))
+                }
             }
 
         }

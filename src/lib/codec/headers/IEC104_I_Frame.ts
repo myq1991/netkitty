@@ -28,6 +28,17 @@ export class IEC104_I_Frame extends BaseHeader {
         return !Array.isArray(ioa) || ioa.length === 0
     }
 
+    /**
+     * Write an information object's 3-octet address. SQ=0 frames carry a per-object address; SQ=1
+     * frames carry a single base address (before the first element) with the rest implied by
+     * incrementing, so only object 1 writes it.
+     */
+    protected writeIOAAddress(offset: number, buffer: Buffer, i: number): void {
+        const sq: number = this.instance.sqBit.getValue(0)
+        if (sq === 1 && i > 1) return
+        this.writeBytes(offset, buffer)
+    }
+
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
         properties: {
@@ -63,6 +74,23 @@ export class IEC104_I_Frame extends BaseHeader {
                 },
                 encode: (): void => {
                     this.writeBytes(2, HexToBuffer(this.instance.controlField.getValue('0', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))))
+                }
+            },
+            //Send/receive sequence numbers carried in the control field: each is a 15-bit value
+            //stored little-endian and left-shifted by 1 (the low bit is the frame-format flag).
+            //Exposed read-only for analysis; the authoritative bytes are in controlField above.
+            txSequence: {
+                type: 'integer',
+                label: 'Tx Sequence Number N(S)',
+                decode: (): void => {
+                    this.instance.txSequence.setValue(this.readBytes(2, 2).readUInt16LE() >> 1)
+                }
+            },
+            rxSequence: {
+                type: 'integer',
+                label: 'Rx Sequence Number N(R)',
+                decode: (): void => {
+                    this.instance.rxSequence.setValue(this.readBytes(4, 2).readUInt16LE() >> 1)
                 }
             },
             apciType: {
@@ -3554,9 +3582,18 @@ export class IEC104_I_Frame extends BaseHeader {
                     const apduLength: number = this.instance.apduLength.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const ioaTotalLength: number = apduLength - 10
                     const ioaLength: number = ioaTotalLength / numberOfObject
+                    //SQ=0: each object is [IOA(3)][element]. SQ=1: a single [IOA(3)] followed by N
+                    //addressless elements whose addresses increment from that base. objectOffset is the
+                    //per-object base; for SQ=1 it advances by the element size (no per-object address),
+                    //so element fields (objectOffset+3+…) still land correctly.
+                    const sq: number = this.instance.sqBit.getValue(0)
+                    const objectStride: number = sq === 1 ? (ioaTotalLength - 3) / numberOfObject : ioaLength
                     const IOA_arr: any[] = []
                     Loop: for (let i = 1; i <= numberOfObject; i++) {
-                        const address: number = this.readBytes(12 + (i - 1) * ioaLength, 3).readUIntLE(0, 3)
+                        const objectOffset: number = 12 + (i - 1) * objectStride
+                        const address: number = sq === 1
+                            ? this.readBytes(12, 3).readUIntLE(0, 3) + (i - 1)
+                            : this.readBytes(objectOffset, 3).readUIntLE(0, 3)
                         const buffer: Buffer = Buffer.alloc(3)
                         buffer.writeUintBE(address, 0, 3)
                         if (!(0 <= address && address <= 16777215)) {
@@ -3565,11 +3602,11 @@ export class IEC104_I_Frame extends BaseHeader {
                         switch (typeId) {
                             //单点信息 M_SP_NA_1 : SIQ
                             case 1: {
-                                const SPI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
+                                const SPI: number = this.readBits(objectOffset + 3, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 3, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 3, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 3, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 3, 1, 0, 1)
                                 const M_SP_NA_1: {
                                     address: number,
                                     SPI: number,
@@ -3596,11 +3633,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //双点信息 M_DP_NA_1 : DIQ
                             case 3: {
-                                const DPI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
+                                const DPI: number = this.readBits(objectOffset + 3, 1, 6, 2)
+                                const BL: number = this.readBits(objectOffset + 3, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 3, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 3, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 3, 1, 0, 1)
                                 const M_DP_NA_1: {
                                     address: number,
                                     DPI: number,
@@ -3627,13 +3664,13 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //步位置信息 M_ST_NA_1 : VTI + QDS
                             case 5: {
-                                const VTI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 7)
-                                const T: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 0, 1)
+                                const VTI: number = this.readBits(objectOffset + 3, 1, 1, 7)
+                                const T: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const OV: number = this.readBits(objectOffset + 4, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 4, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 4, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 4, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 4, 1, 0, 1)
                                 const M_ST_NA_1: {
                                     address: number,
                                     VTI: number,
@@ -3666,12 +3703,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //32比特串 M_BO_NA_1 : BSI + QDS
                             case 7: {
-                                const BSI: number = BufferToUInt32(this.readBytes(12 + (i - 1) * ioaLength + 3, 4))
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
+                                const BSI: number = this.readBytes(objectOffset + 3, 4).readUInt32LE()
+                                const OV: number = this.readBits(objectOffset + 7, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 7, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 7, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
                                 const M_BO_NA_1: {
                                     address: number,
                                     BSI: number,
@@ -3701,12 +3738,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //归一化测量值 M_ME_NA_1 : NVA + QDS
                             case 9: {
-                                const NVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
+                                const NVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const OV: number = this.readBits(objectOffset + 5, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 5, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 5, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 5, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 5, 1, 0, 1)
                                 const M_ME_NA_1: {
                                     address: number,
                                     NVA: number,
@@ -3736,12 +3773,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //标量化测量值 M_ME_NB_1 : SVA + QDS
                             case 11: {
-                                const SVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
+                                const SVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const OV: number = this.readBits(objectOffset + 5, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 5, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 5, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 5, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 5, 1, 0, 1)
                                 const M_ME_NB_1: {
                                     address: number,
                                     SVA: number,
@@ -3771,12 +3808,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //浮点型测量值 M_ME_NC_1 : IEEE STD 754 + QDS
                             case 13: {
-                                const IEEE_STD_754: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 4).readFloatLE()
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
+                                const IEEE_STD_754: number = this.readBytes(objectOffset + 3, 4).readFloatLE()
+                                const OV: number = this.readBits(objectOffset + 7, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 7, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 7, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
                                 const M_ME_NC_1: {
                                     address: number,
                                     IEEE_STD_754: number,
@@ -3806,11 +3843,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //累计值 M_IT_NA_1 : BCR
                             case 15: {
-                                const BCR: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 4).readInt32LE()
-                                const SQ: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const CA: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const CY: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1)
+                                const BCR: number = this.readBytes(objectOffset + 3, 4).readInt32LE()
+                                const SQ: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const CA: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const CY: number = this.readBits(objectOffset + 7, 1, 2, 1)
                                 const M_IT_NA_1: {
                                     address: number,
                                     BCR: number,
@@ -3837,12 +3874,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带状态检出的成组单点信息 M_PS_NA_1 : SCD + QDS
                             case 20: {
-                                const SCD: number = BufferToUInt32(this.readBytes(12 + (i - 1) * ioaLength + 3, 4))
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
+                                const SCD: number = this.readBytes(objectOffset + 3, 4).readUInt32LE()
+                                const OV: number = this.readBits(objectOffset + 7, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 7, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 7, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
                                 const M_PS_NA_1: {
                                     address: number,
                                     SCD: number,
@@ -3872,7 +3909,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //不带品质描述的归一化测量值 M_ME_ND_1 : NVA
                             case 21: {
-                                const NVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
+                                const NVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
                                 const M_ME_ND_1: {
                                     address: number,
                                     NVA: number,
@@ -3887,21 +3924,21 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的单点信息 M_SP_TB_1 : SIQ + CP56Time2a
                             case 30: {
-                                const SPI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7)
+                                const SPI: number = this.readBits(objectOffset + 3, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 3, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 3, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 3, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 6, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 6, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 6, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 8, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 8, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 9, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 10, 1, 1, 7)
                                 const M_SP_TB_1: {
                                     address: number,
                                     SPI: number,
@@ -3958,21 +3995,23 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的双点信息 M_DP_TB_1 : DIQ + CP56Time2a
                             case 31: {
-                                const DPI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7)
+                                const DPI: number = this.readBits(objectOffset + 3, 1, 6, 2)
+                                //DIQ quality bits (same layout as SIQ/type 1 and DIQ/type 3):
+                                //BL=IEC bit4 (pos3), SB=bit5 (pos2), NT=bit6 (pos1), IV=bit7 (pos0).
+                                const BL: number = this.readBits(objectOffset + 3, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 3, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 3, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 6, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 6, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 6, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 8, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 8, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 9, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 10, 1, 1, 7)
                                 const M_DP_TB_1: {
                                     address: number,
                                     DPI: number,
@@ -4029,23 +4068,23 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的步位置信息 M_ST_TB_1 : VTI + QDS + CP56Time2a
                             case 32: {
-                                const VTI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 7)
-                                const T: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 5, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 1, 7)
+                                const VTI: number = this.readBits(objectOffset + 3, 1, 1, 7)
+                                const T: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const OV: number = this.readBits(objectOffset + 4, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 4, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 4, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 4, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 4, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 5, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 7, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 8, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 8, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 9, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 9, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 10, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 11, 1, 1, 7)
                                 const M_ST_TB_1: {
                                     address: number,
                                     VTI: number,
@@ -4108,22 +4147,22 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的32比特串 M_BO_TB_1 : BSI + QDS + CP56Time2a
                             case 33: {
-                                const BSI: number = BufferToUInt32(this.readBytes(12 + (i - 1) * ioaLength + 3, 4))
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 8, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7)
+                                const BSI: number = this.readBytes(objectOffset + 3, 4).readUInt32LE()
+                                const OV: number = this.readBits(objectOffset + 7, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 7, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 7, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 8, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 10, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 10, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 10, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 11, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 11, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 12, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 12, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 13, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 14, 1, 1, 7)
                                 const M_BO_TB_1: {
                                     address: number,
                                     BSI: number,
@@ -4183,22 +4222,22 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的归一化测量值 M_ME_TD_1 = NVA + QDS +CP56Time2a
                             case 34: {
-                                const NVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 6, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7)
+                                const NVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const OV: number = this.readBits(objectOffset + 5, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 5, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 5, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 5, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 5, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 6, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 8, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 8, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 8, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 9, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 10, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 11, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 12, 1, 1, 7)
                                 const M_ME_TD_1: {
                                     address: number,
                                     NVA: number,
@@ -4258,22 +4297,22 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的标量化测量值 M_ME_TE_1 = SVA + QDS +CP56Time2a
                             case 35: {
-                                const SVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 6, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7)
+                                const SVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const OV: number = this.readBits(objectOffset + 5, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 5, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 5, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 5, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 5, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 6, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 8, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 8, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 8, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 9, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 10, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 11, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 12, 1, 1, 7)
                                 const M_ME_TE_1: {
                                     address: number,
                                     SVA: number,
@@ -4333,22 +4372,22 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的浮点型测量值 M_ME_TF_1 = IEEE STD 754 + QDS +CP56Time2a
                             case 36: {
-                                const IEEE_STD_754: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 4).readFloatLE()
-                                const OV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 8, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7)
+                                const IEEE_STD_754: number = this.readBytes(objectOffset + 3, 4).readFloatLE()
+                                const OV: number = this.readBits(objectOffset + 7, 1, 7, 1)
+                                const BL: number = this.readBits(objectOffset + 7, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 7, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 8, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 10, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 10, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 10, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 11, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 11, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 12, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 12, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 13, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 14, 1, 1, 7)
                                 const M_ME_TF_1: {
                                     address: number,
                                     IEEE_STD_754: number,
@@ -4408,21 +4447,21 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的累计值 M_IT_TB_1 = BCR + CP56Time2a
                             case 37: {
-                                const BCR: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 4).readInt32LE()
-                                const SQ: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const CA: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const CY: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 8, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7)
+                                const BCR: number = this.readBytes(objectOffset + 3, 4).readInt32LE()
+                                const SQ: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const IV: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const CA: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const CY: number = this.readBits(objectOffset + 7, 1, 2, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 8, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 10, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 10, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 10, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 11, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 11, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 12, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 12, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 13, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 14, 1, 1, 7)
                                 const M_IT_TB_1: {
                                     address: number,
                                     BCR: number,
@@ -4479,23 +4518,23 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的继电器保护装置事件 M_EP_TD_1 = SEP + CP16Time2a +CP56Time2a
                             case 38: {
-                                const ES: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const EI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const Milliseconds_16: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Milliseconds_56: number = this.readBytes(12 + (i - 1) * ioaLength + 6, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7)
+                                const ES: number = this.readBits(objectOffset + 3, 1, 6, 2)
+                                const EI: number = this.readBits(objectOffset + 3, 1, 4, 1)
+                                const BL: number = this.readBits(objectOffset + 3, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 3, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 3, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const Milliseconds_16: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Milliseconds_56: number = this.readBytes(objectOffset + 6, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 8, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 8, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 8, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 9, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 10, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 11, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 12, 1, 1, 7)
                                 const M_EP_TD_1: {
                                     address: number,
                                     ES: number,
@@ -4558,28 +4597,28 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的继电器保护装置成组启动事件 M_EP_TE_1 = SPE + QDP + CP16Time2a +CP56Time2a
                             case 39: {
-                                const GS: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1)
-                                const SL1: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1)
-                                const SL2: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 5, 1)
-                                const SL3: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1)
-                                const SIE: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const SIF: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const EI: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 4, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 4, 1, 0, 1)
-                                const Milliseconds_16: number = this.readBytes(12 + (i - 1) * ioaLength + 5, 2).readUInt16LE()
-                                const Milliseconds_56: number = this.readBytes(12 + (i - 1) * ioaLength + 7, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 13, 1, 1, 7)
+                                const GS: number = this.readBits(objectOffset + 3, 1, 7, 1)
+                                const SL1: number = this.readBits(objectOffset + 3, 1, 6, 1)
+                                const SL2: number = this.readBits(objectOffset + 3, 1, 5, 1)
+                                const SL3: number = this.readBits(objectOffset + 3, 1, 4, 1)
+                                const SIE: number = this.readBits(objectOffset + 3, 1, 3, 1)
+                                const SIF: number = this.readBits(objectOffset + 3, 1, 2, 1)
+                                const EI: number = this.readBits(objectOffset + 4, 1, 4, 1)
+                                const BL: number = this.readBits(objectOffset + 4, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 4, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 4, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 4, 1, 0, 1)
+                                const Milliseconds_16: number = this.readBytes(objectOffset + 5, 2).readUInt16LE()
+                                const Milliseconds_56: number = this.readBytes(objectOffset + 7, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 9, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 9, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 10, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 11, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 11, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 12, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 13, 1, 1, 7)
                                 const M_EP_TE_1: {
                                     address: number,
                                     GS: number,
@@ -4657,26 +4696,26 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的继电器保护装置成组输出电路信息 M_EP_TF_1 = OCI + CP16Time2a +CP56Time2a
                             case 40: {
-                                const GC: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1)
-                                const CL1: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1)
-                                const CL2: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 5, 1)
-                                const CL3: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1)
-                                const EI: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1)
-                                const BL: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1)
-                                const SB: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1)
-                                const NT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1)
-                                const IV: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const Milliseconds_16: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Milliseconds_56: number = this.readBytes(12 + (i - 1) * ioaLength + 6, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7)
+                                const GC: number = this.readBits(objectOffset + 3, 1, 7, 1)
+                                const CL1: number = this.readBits(objectOffset + 3, 1, 6, 1)
+                                const CL2: number = this.readBits(objectOffset + 3, 1, 5, 1)
+                                const CL3: number = this.readBits(objectOffset + 3, 1, 4, 1)
+                                const EI: number = this.readBits(objectOffset + 3, 1, 4, 1)
+                                const BL: number = this.readBits(objectOffset + 3, 1, 3, 1)
+                                const SB: number = this.readBits(objectOffset + 3, 1, 2, 1)
+                                const NT: number = this.readBits(objectOffset + 3, 1, 1, 1)
+                                const IV: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const Milliseconds_16: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Milliseconds_56: number = this.readBytes(objectOffset + 6, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 8, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 8, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 8, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 9, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 10, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 11, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 12, 1, 1, 7)
                                 const M_EP_TF_1: {
                                     address: number,
                                     GC: number,
@@ -4748,9 +4787,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //单命令 C_SC_NA_1 = SCO
                             case 45: {
-                                const SCS: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1)
-                                const QU: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
+                                const SCS: number = this.readBits(objectOffset + 3, 1, 7, 1)
+                                const QU: number = this.readBits(objectOffset + 3, 1, 1, 5)
+                                const S_OR_E: number = this.readBits(objectOffset + 3, 1, 0, 1)
                                 const C_SC_NA_1: {
                                     address: number,
                                     SCS: number,
@@ -4771,8 +4810,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //双命令 C_DC_NA_1 = DCO
                             case 46: {
-                                const DCS: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
+                                const DCS: number = this.readBits(objectOffset + 3, 1, 6, 2)
+                                const S_OR_E: number = this.readBits(objectOffset + 3, 1, 0, 1)
                                 const C_DC_NA_1: {
                                     address: number,
                                     DCS: number,
@@ -4790,8 +4829,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //步调节命令 C_RC_NA_1 = RCO
                             case 47: {
-                                const RCS: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
+                                const RCS: number = this.readBits(objectOffset + 3, 1, 6, 2)
+                                const S_OR_E: number = this.readBits(objectOffset + 3, 1, 0, 1)
                                 const C_RC_NA_1: {
                                     address: number,
                                     RCS: number,
@@ -4809,9 +4848,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //设点命令，归一化值 C_SE_NA_1 = NVA + QOS
                             case 48: {
-                                const NVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const QL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
+                                const NVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const QL: number = this.readBits(objectOffset + 5, 1, 1, 7)
+                                const S_OR_E: number = this.readBits(objectOffset + 5, 1, 0, 1)
                                 const C_SE_NA_1: {
                                     address: number,
                                     NVA: number,
@@ -4832,9 +4871,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //设点命令，标量值 C_SE_NB_1 = SVA + QOS
                             case 49: {
-                                const SVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const QL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
+                                const SVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const QL: number = this.readBits(objectOffset + 5, 1, 1, 7)
+                                const S_OR_E: number = this.readBits(objectOffset + 5, 1, 0, 1)
                                 const C_SE_NB_1: {
                                     address: number,
                                     SVA: number,
@@ -4855,9 +4894,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //设点命令，短浮点值 C_SE_NC_1 = IEEE STD 754 + QOS
                             case 50: {
-                                const IEEE_STD_754: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 4).readFloatLE()
-                                const QL: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 7)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
+                                const IEEE_STD_754: number = this.readBytes(objectOffset + 3, 4).readFloatLE()
+                                const QL: number = this.readBits(objectOffset + 7, 1, 1, 7)
+                                const S_OR_E: number = this.readBits(objectOffset + 7, 1, 0, 1)
                                 const C_SE_NC_1: {
                                     address: number,
                                     IEEE_STD_754: number,
@@ -4878,7 +4917,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //32比特串 C_BO_NA_1 = BSI
                             case 51: {
-                                const BSI: number = BufferToUInt32(this.readBytes(12 + (i - 1) * ioaLength + 3, 4))
+                                const BSI: number = this.readBytes(objectOffset + 3, 4).readUInt32LE()
                                 const C_BO_NA_1: {
                                     address: number,
                                     BSI: number,
@@ -4893,19 +4932,19 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的单命令 C_SC_TA_1 = SCO + CP56Time2a
                             case 58: {
-                                const SCS: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1)
-                                const QU: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7)
+                                const SCS: number = this.readBits(objectOffset + 3, 1, 7, 1)
+                                const QU: number = this.readBits(objectOffset + 3, 1, 1, 5)
+                                const S_OR_E: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 6, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 6, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 6, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 8, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 8, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 9, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 10, 1, 1, 7)
                                 const C_SC_TA_1: {
                                     address: number,
                                     SCS: number,
@@ -4956,18 +4995,18 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的双命令 C_DC_TA_1 = DCO + CP56Time2a
                             case 59: {
-                                const DCS: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7)
+                                const DCS: number = this.readBits(objectOffset + 3, 1, 6, 2)
+                                const S_OR_E: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 6, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 6, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 6, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 8, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 8, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 9, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 10, 1, 1, 7)
                                 const C_DC_TA_1: {
                                     address: number,
                                     DCS: number,
@@ -5015,18 +5054,18 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的步调节命令 C_RC_TA_1 = RCO + CP56Time2a
                             case 60: {
-                                const RCS: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7)
+                                const RCS: number = this.readBits(objectOffset + 3, 1, 6, 2)
+                                const S_OR_E: number = this.readBits(objectOffset + 3, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 6, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 6, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 6, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 8, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 8, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 9, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 10, 1, 1, 7)
                                 const C_RC_TA_1: {
                                     address: number,
                                     RCS: number,
@@ -5074,19 +5113,19 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的设点命令，归一化值 C_SE_TA_1 = NVA + QOS + CP56Time2a
                             case 61: {
-                                const NVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const QL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 6, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7)
+                                const NVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const QL: number = this.readBits(objectOffset + 5, 1, 1, 7)
+                                const S_OR_E: number = this.readBits(objectOffset + 5, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 6, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 8, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 8, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 8, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 9, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 10, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 11, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 12, 1, 1, 7)
                                 const C_SE_TA_1: {
                                     address: number,
                                     NVA: number,
@@ -5137,19 +5176,19 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的设点命令，标量值 C_SE_TB_1 = SVA + QOS + CP56Time2a
                             case 62: {
-                                const SVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const QL: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 6, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7)
+                                const SVA: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const QL: number = this.readBits(objectOffset + 5, 1, 1, 7)
+                                const S_OR_E: number = this.readBits(objectOffset + 5, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 6, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 8, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 8, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 8, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 9, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 10, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 11, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 12, 1, 1, 7)
                                 const C_SE_TB_1: {
                                     address: number,
                                     SVA: number,
@@ -5200,19 +5239,19 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的设点命令，短浮点值 C_SE_TC_1 = IEEE STD 754 + QOS + CP56Time2a
                             case 63: {
-                                const IEEE_STD_754: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 4).readFloatLE()
-                                const QL: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 7)
-                                const S_OR_E: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 8, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7)
+                                const IEEE_STD_754: number = this.readBytes(objectOffset + 3, 4).readFloatLE()
+                                const QL: number = this.readBits(objectOffset + 7, 1, 1, 7)
+                                const S_OR_E: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Milliseconds: number = this.readBytes(objectOffset + 8, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 10, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 10, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 10, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 11, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 11, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 12, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 12, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 13, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 14, 1, 1, 7)
                                 const C_SE_TC_1: {
                                     address: number,
                                     IEEE_STD_754: number,
@@ -5263,17 +5302,17 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的32比特串 C_BO_TA_1 = BSI + CP56Time2a
                             case 64: {
-                                const BSI: number = BufferToUInt32(this.readBytes(12 + (i - 1) * ioaLength + 3, 4))
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 7, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 13, 1, 1, 7)
+                                const BSI: number = this.readBytes(objectOffset + 3, 4).readUInt32LE()
+                                const Milliseconds: number = this.readBytes(objectOffset + 7, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 9, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 9, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 10, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 11, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 11, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 12, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 13, 1, 1, 7)
                                 const C_SE_TC_1: {
                                     address: number,
                                     BSI: number,
@@ -5318,8 +5357,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //初始化结束 M_EI_NA_1 = COI
                             case 70: {
-                                const COI_R: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 1, 7)
-                                const COI_I: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1)
+                                const COI_R: number = this.readBits(objectOffset + 3, 1, 1, 7)
+                                const COI_I: number = this.readBits(objectOffset + 3, 1, 0, 1)
                                 const M_EI_NA_1: {
                                     address: number,
                                     COI_R: number,
@@ -5338,7 +5377,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //总召唤命令 C_IC_NA_1 = QOI
                             case 100: {
-                                const QOI: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 3, 1))
+                                const QOI: number = BufferToUInt8(this.readBytes(objectOffset + 3, 1))
                                 const C_IC_NA_1: {
                                     address: number,
                                     QOI: number,
@@ -5353,8 +5392,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //电能脉冲召唤命令 C_CI_NA_1 = QCC
                             case 101: {
-                                const RQT: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 2, 6)
-                                const FRZ: number = this.readBits(12 + (i - 1) * ioaLength + 3, 1, 0, 2)
+                                const RQT: number = this.readBits(objectOffset + 3, 1, 2, 6)
+                                const FRZ: number = this.readBits(objectOffset + 3, 1, 0, 2)
                                 const C_CI_NA_1: {
                                     address: number,
                                     RQT: number,
@@ -5373,7 +5412,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //读命令 C_RD_NA_1 = NULL
                             case 102: {
-                                const READ: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 3, 1))
+                                const READ: number = BufferToUInt8(this.readBytes(objectOffset + 3, 1))
                                 const C_CI_NA_1: {
                                     address: number,
                                     READ: number,
@@ -5389,16 +5428,16 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //时钟同步命令 C_CS_NA_1 = CP56Time2a
                             case 103: {
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 1, 7)
+                                const Milliseconds: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 5, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 5, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 5, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 6, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 6, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 7, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 8, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 9, 1, 1, 7)
                                 const C_CS_NA_1: {
                                     address: number,
                                     Milliseconds: number,
@@ -5440,7 +5479,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //(IEC101)Test Command C_TS_NA_1 = FBP
                             case 104: {
-                                const FBP: number = BufferToUInt16(this.readBytes(12 + (i - 1) * ioaLength + 3, 2))
+                                const FBP: number = BufferToUInt16(this.readBytes(objectOffset + 3, 2))
                                 const C_TS_NA_1: {
                                     address: number,
                                     FBP: number,
@@ -5455,7 +5494,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //复位进程命令 C_RP_NA_1 = QRP
                             case 105: {
-                                const QRP: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 3, 1))
+                                const QRP: number = BufferToUInt8(this.readBytes(objectOffset + 3, 1))
                                 const C_RP_NA_1: {
                                     address: number,
                                     QRP: number,
@@ -5470,17 +5509,17 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //带时标CP56time2a的测试命令 C_TS_TA_1 = TSC + CP56time2a
                             case 107: {
-                                const TSC: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 3, 1))
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 4, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7)
+                                const TSC: number = BufferToUInt8(this.readBytes(objectOffset + 3, 1))
+                                const Milliseconds: number = this.readBytes(objectOffset + 4, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 6, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 6, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 6, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 7, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 7, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 8, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 8, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 9, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 10, 1, 1, 7)
                                 const C_TS_TA_1: {
                                     address: number,
                                     TSC: number,
@@ -5525,10 +5564,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //归一化测量值 P_ME_NA_1 = NVA + QPM
                             case 110: {
-                                const NVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const KPA: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 2, 6)
-                                const POP: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1)
-                                const LPC: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
+                                const NVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const KPA: number = this.readBits(objectOffset + 5, 1, 2, 6)
+                                const POP: number = this.readBits(objectOffset + 5, 1, 1, 1)
+                                const LPC: number = this.readBits(objectOffset + 5, 1, 0, 1)
                                 const P_ME_NA_1: {
                                     address: number,
                                     NVA: number,
@@ -5552,10 +5591,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //标量化测量值 P_ME_NB_1 = SVA + QPM
                             case 111: {
-                                const SVA: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const KPA: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 2, 6)
-                                const POP: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1)
-                                const LPC: number = this.readBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1)
+                                const SVA: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const KPA: number = this.readBits(objectOffset + 5, 1, 2, 6)
+                                const POP: number = this.readBits(objectOffset + 5, 1, 1, 1)
+                                const LPC: number = this.readBits(objectOffset + 5, 1, 0, 1)
                                 const P_ME_NB_1: {
                                     address: number,
                                     SVA: number,
@@ -5579,10 +5618,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //浮点测量值 P_ME_NC_1 = IEEE STD 754 + QPM
                             case 112: {
-                                const IEEE_STD_754: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 4).readFloatLE()
-                                const KPA: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 2, 6)
-                                const POP: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1)
-                                const LPC: number = this.readBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1)
+                                const IEEE_STD_754: number = this.readBytes(objectOffset + 3, 4).readFloatLE()
+                                const KPA: number = this.readBits(objectOffset + 7, 1, 2, 6)
+                                const POP: number = this.readBits(objectOffset + 7, 1, 1, 1)
+                                const LPC: number = this.readBits(objectOffset + 7, 1, 0, 1)
                                 const P_ME_NC_1: {
                                     address: number,
                                     IEEE_STD_754: number,
@@ -5606,7 +5645,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //参数激活 P_AC_NA_1 = QPA
                             case 113: {
-                                const QPA: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 3, 1))
+                                const QPA: number = BufferToUInt8(this.readBytes(objectOffset + 3, 1))
                                 const P_AC_NA_1: {
                                     address: number,
                                     QPA: number,
@@ -5621,9 +5660,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //文件已准备好 F_FR_NA_1 = NOF + LOF + FRQ
                             case 120: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUInt16LE()
-                                const LOF: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 5, 1))
-                                const FRQ: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 6, 1))
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUInt16LE()
+                                const LOF: number = BufferToUInt8(this.readBytes(objectOffset + 5, 1))
+                                const FRQ: number = BufferToUInt8(this.readBytes(objectOffset + 6, 1))
                                 const F_FR_NA_1: {
                                     address: number,
                                     NOF: number,
@@ -5644,10 +5683,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //节点已准备好 F_SR_NA_1 = NOF + NOS + LOF + SRQ
                             case 121: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const NOS: number = this.readBytes(12 + (i - 1) * ioaLength + 5, 2).readUint16LE()
-                                const LOF: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 7, 1))
-                                const SRQ: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 8, 1))
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const NOS: number = this.readBytes(objectOffset + 5, 2).readUint16LE()
+                                const LOF: number = BufferToUInt8(this.readBytes(objectOffset + 7, 1))
+                                const SRQ: number = BufferToUInt8(this.readBytes(objectOffset + 8, 1))
                                 const F_SR_NA_1: {
                                     address: number,
                                     NOF: number,
@@ -5671,9 +5710,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //召唤目录，选择文件，召唤文件，选择节 F_SC_NA_1 = NOF + NOS + SCQ
                             case 122: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const NOS: number = this.readBytes(12 + (i - 1) * ioaLength + 5, 2).readUint16LE()
-                                const SCQ: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 7, 1))
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const NOS: number = this.readBytes(objectOffset + 5, 2).readUint16LE()
+                                const SCQ: number = BufferToUInt8(this.readBytes(objectOffset + 7, 1))
                                 const F_SC_NA_1: {
                                     address: number,
                                     NOF: number,
@@ -5694,10 +5733,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //最后的节，最后的段 F_LS_NA_1 = NOF + NOS + LSQ + CHS
                             case 123: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const NOS: number = this.readBytes(12 + (i - 1) * ioaLength + 5, 2).readUint16LE()
-                                const LSQ: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 7, 1))
-                                const CHS: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 8, 1))
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const NOS: number = this.readBytes(objectOffset + 5, 2).readUint16LE()
+                                const LSQ: number = BufferToUInt8(this.readBytes(objectOffset + 7, 1))
+                                const CHS: number = BufferToUInt8(this.readBytes(objectOffset + 8, 1))
                                 const F_LS_NA_1: {
                                     address: number,
                                     NOF: number,
@@ -5721,9 +5760,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //确认文件，确认节 F_FA_NA_1 = NOF + NOS + AFQ
                             case 124: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const NOS: number = this.readBytes(12 + (i - 1) * ioaLength + 5, 2).readUint16LE()
-                                const AFQ: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 7, 1))
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const NOS: number = this.readBytes(objectOffset + 5, 2).readUint16LE()
+                                const AFQ: number = BufferToUInt8(this.readBytes(objectOffset + 7, 1))
                                 const F_FA_NA_1: {
                                     address: number,
                                     NOF: number,
@@ -5744,10 +5783,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //段 F_SG_NA_1 = NOF + NOS + LOS + Segment
                             case 125: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const NOS: number = this.readBytes(12 + (i - 1) * ioaLength + 5, 2).readUint16LE()
-                                const LOS: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 7, 1))
-                                const Segment: string = BufferToHex(this.readBytes(12 + (i - 1) * ioaLength + 8, LOS))
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const NOS: number = this.readBytes(objectOffset + 5, 2).readUint16LE()
+                                const LOS: number = BufferToUInt8(this.readBytes(objectOffset + 7, 1))
+                                const Segment: string = BufferToHex(this.readBytes(objectOffset + 8, LOS))
                                 const F_SG_NA_1: {
                                     address: number,
                                     NOF: number,
@@ -5771,19 +5810,19 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //目录 F_DR_TA_1 = NOF + LOF + SOF + CP56Time2a
                             case 126: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const LOF: number = BufferToUInt16(this.readBytes(12 + (i - 1) * ioaLength + 5, 1))
-                                const SOF: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 6, 1))
-                                const Milliseconds: number = this.readBytes(12 + (i - 1) * ioaLength + 7, 2).readUInt16LE()
-                                const Minutes: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 2, 6)
-                                const GEN: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 1, 1)
-                                const MIN_IV: number = this.readBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1)
-                                const Hours: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5)
-                                const SU: number = this.readBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1)
-                                const Day: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5)
-                                const DOW: number = this.readBits(12 + (i - 1) * ioaLength + 11, 1, 0, 3)
-                                const Month: number = this.readBits(12 + (i - 1) * ioaLength + 12, 1, 4, 4)
-                                const Year: number = this.readBits(12 + (i - 1) * ioaLength + 13, 1, 1, 7)
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const LOF: number = BufferToUInt16(this.readBytes(objectOffset + 5, 1))
+                                const SOF: number = BufferToUInt8(this.readBytes(objectOffset + 6, 1))
+                                const Milliseconds: number = this.readBytes(objectOffset + 7, 2).readUInt16LE()
+                                const Minutes: number = this.readBits(objectOffset + 9, 1, 2, 6)
+                                const GEN: number = this.readBits(objectOffset + 9, 1, 1, 1)
+                                const MIN_IV: number = this.readBits(objectOffset + 9, 1, 0, 1)
+                                const Hours: number = this.readBits(objectOffset + 10, 1, 3, 5)
+                                const SU: number = this.readBits(objectOffset + 10, 1, 0, 1)
+                                const Day: number = this.readBits(objectOffset + 11, 1, 3, 5)
+                                const DOW: number = this.readBits(objectOffset + 11, 1, 0, 3)
+                                const Month: number = this.readBits(objectOffset + 12, 1, 4, 4)
+                                const Year: number = this.readBits(objectOffset + 13, 1, 1, 7)
                                 const F_DR_TA_1: {
                                     address: number,
                                     NOF: number,
@@ -5834,8 +5873,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 break
                             //日志查询，请求存档文件 F_SC_NB_1 = NOF + SCQ
                             case 127: {
-                                const NOF: number = this.readBytes(12 + (i - 1) * ioaLength + 3, 2).readUint16LE()
-                                const SCQ: number = BufferToUInt8(this.readBytes(12 + (i - 1) * ioaLength + 5, 1))
+                                const NOF: number = this.readBytes(objectOffset + 3, 2).readUint16LE()
+                                const SCQ: number = BufferToUInt8(this.readBytes(objectOffset + 5, 1))
                                 const F_SC_NB_1: {
                                     address: number,
                                     NOF: number,
@@ -5878,7 +5917,10 @@ export class IEC104_I_Frame extends BaseHeader {
                     const apduLength: number = this.instance.apduLength.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     const ioaTotalLength: number = apduLength - 10
                     const ioaLength: number = ioaTotalLength / numberOfObject
+                    const sq: number = this.instance.sqBit.getValue(0)
+                    const objectStride: number = sq === 1 ? (ioaTotalLength - 3) / numberOfObject : ioaLength
                     Loop: for (let i = 1; i <= numberOfObject; i++) {
+                        const objectOffset: number = 12 + (i - 1) * objectStride
                         switch (typeId) {
                             //单点信息 M_SP_NA_1 : SIQ
                             case 1: {
@@ -5893,12 +5935,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1, IOA_message[i - 1].SPI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SPI)
+                                this.writeBits(objectOffset + 3, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 3, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 3, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //双点信息 M_DP_NA_1 : DIQ
@@ -5914,12 +5956,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2, IOA_message[i - 1].DPI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DPI)
+                                this.writeBits(objectOffset + 3, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 3, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 3, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //步位置信息 M_ST_NA_1 : VTI + QDS
@@ -5937,14 +5979,14 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 7, IOA_message[i - 1].VTI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].T)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 1, 7, IOA_message[i - 1].VTI)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].T)
+                                this.writeBits(objectOffset + 4, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 4, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 4, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 4, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 4, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //32比特串 M_BO_NA_1 : BSI + QDS
@@ -5961,13 +6003,13 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt32ToBuffer(IOA_message[i - 1].BSI))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
+                                this.writeBits(objectOffset + 7, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 7, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 7, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //归一化测量值 M_ME_NA_1 : NVA + QDS
@@ -5984,14 +6026,14 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 5, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 5, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 5, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //标量化测量值 M_ME_NB_1 : SVA + QDS
@@ -6008,14 +6050,14 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 5, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 5, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 5, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //浮点型测量值 M_ME_NC_1 : IEEE STD 754 + QDS
@@ -6032,13 +6074,13 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
+                                this.writeBits(objectOffset + 7, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 7, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 7, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //累计值 M_IT_NA_1 : BCR
@@ -6054,12 +6096,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, Int32ToBuffer(Int32ToBuffer(IOA_message[i - 1].BCR).readInt32LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].SQ)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1, IOA_message[i - 1].CY)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].CA)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, Int32ToBuffer(Int32ToBuffer(IOA_message[i - 1].BCR).readInt32LE()))
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].SQ)
+                                this.writeBits(objectOffset + 7, 1, 2, 1, IOA_message[i - 1].CY)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].CA)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //带状态检出的成组单点信息 M_PS_NA_1 : SCD + QDS
@@ -6076,13 +6118,13 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt32ToBuffer(IOA_message[i - 1].SCD))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].SCD).readUInt32LE()))
+                                this.writeBits(objectOffset + 7, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 7, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 7, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].IV)
                             }
                                 break
                             //不带品质描述的归一化测量值 M_ME_ND_1 : NVA
@@ -6094,9 +6136,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
                             }
                                 break
                             //带时标CP56time2a的单点信息 M_SP_TB_1 : SIQ + CP56Time2a
@@ -6122,23 +6164,23 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1, IOA_message[i - 1].SPI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SPI)
+                                this.writeBits(objectOffset + 3, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 3, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 3, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 6, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 8, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 8, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 9, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 10, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的双点信息 M_DP_TB_1 : DIQ + CP56Time2a
@@ -6164,23 +6206,23 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2, IOA_message[i - 1].DPI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DPI)
+                                this.writeBits(objectOffset + 3, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 3, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 3, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 6, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 8, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 8, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 9, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 10, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的步位置信息 M_ST_TB_1 : VTI + QDS + CP56Time2a
@@ -6208,25 +6250,25 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 7, IOA_message[i - 1].VTI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].T)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 1, 7, IOA_message[i - 1].VTI)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].T)
+                                this.writeBits(objectOffset + 4, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 4, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 4, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 4, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 4, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 5, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 7, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 8, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 8, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 9, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 9, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 10, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 11, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的32比特串 M_BO_TB_1 : BSI + QDS + CP56Time2a
@@ -6253,24 +6295,24 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt32ToBuffer(IOA_message[i - 1].BSI))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
+                                this.writeBits(objectOffset + 7, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 7, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 7, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 10, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 11, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 11, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 12, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 12, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 13, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 14, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的归一化测量值 M_ME_TD_1 = NVA + QDS +CP56Time2a
@@ -6297,25 +6339,25 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 5, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 5, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 5, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 8, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 9, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 10, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 11, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 12, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的标量化测量值 M_ME_TE_1 = SVA + QDS +CP56Time2a
@@ -6342,25 +6384,25 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 5, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 5, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 5, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 8, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 9, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 10, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 11, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 12, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的浮点型测量值 M_ME_TF_1 = IEEE STD 754 + QDS +CP56Time2a
@@ -6387,24 +6429,24 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 7, 1, IOA_message[i - 1].OV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
+                                this.writeBits(objectOffset + 7, 1, 7, 1, IOA_message[i - 1].OV)
+                                this.writeBits(objectOffset + 7, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 7, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 10, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 11, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 11, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 12, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 12, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 13, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 14, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的累计值 M_IT_TB_1 = BCR + CP56Time2a
@@ -6430,23 +6472,23 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, Int32ToBuffer(Int32ToBuffer(IOA_message[i - 1].BCR).readInt32LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].SQ)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 1, IOA_message[i - 1].CY)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].CA)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, Int32ToBuffer(Int32ToBuffer(IOA_message[i - 1].BCR).readInt32LE()))
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].SQ)
+                                this.writeBits(objectOffset + 7, 1, 2, 1, IOA_message[i - 1].CY)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].CA)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 10, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 11, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 11, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 12, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 12, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 13, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 14, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的继电器保护装置事件 M_EP_TD_1 = QDP + CP16Time2a +CP56Time2a
@@ -6474,26 +6516,26 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2, IOA_message[i - 1].ES)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1, IOA_message[i - 1].EI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].ES)
+                                this.writeBits(objectOffset + 3, 1, 4, 1, IOA_message[i - 1].EI)
+                                this.writeBits(objectOffset + 3, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 3, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 3, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_16_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds_16)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_16_buffer.readUInt16LE()))
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_16_buffer.readUInt16LE()))
                                 const Milliseconds_56_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds_56)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt16ToBuffer(Milliseconds_56_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 6, UInt16ToBuffer(Milliseconds_56_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 8, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 9, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 10, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 11, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 12, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             ////带时标CP56time2a的继电器保护装置成组启动事件 M_EP_TE_1 = SPE + QDP + CP16Time2a +CP56Time2a
@@ -6526,31 +6568,31 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1, IOA_message[i - 1].GS)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1, IOA_message[i - 1].SL1)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 5, 1, IOA_message[i - 1].SL2)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1, IOA_message[i - 1].SL3)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1, IOA_message[i - 1].SIE)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1, IOA_message[i - 1].SIF)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 4, 1, IOA_message[i - 1].EI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 4, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].GS)
+                                this.writeBits(objectOffset + 3, 1, 6, 1, IOA_message[i - 1].SL1)
+                                this.writeBits(objectOffset + 3, 1, 5, 1, IOA_message[i - 1].SL2)
+                                this.writeBits(objectOffset + 3, 1, 4, 1, IOA_message[i - 1].SL3)
+                                this.writeBits(objectOffset + 3, 1, 3, 1, IOA_message[i - 1].SIE)
+                                this.writeBits(objectOffset + 3, 1, 2, 1, IOA_message[i - 1].SIF)
+                                this.writeBits(objectOffset + 4, 1, 4, 1, IOA_message[i - 1].EI)
+                                this.writeBits(objectOffset + 4, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 4, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 4, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 4, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_16_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds_16)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt16ToBuffer(Milliseconds_16_buffer.readUInt16LE()))
+                                this.writeBytes(objectOffset + 5, UInt16ToBuffer(Milliseconds_16_buffer.readUInt16LE()))
                                 const Milliseconds_56_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds_56)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt16ToBuffer(Milliseconds_56_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 13, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 7, UInt16ToBuffer(Milliseconds_56_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 9, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 9, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 10, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 11, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 11, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 12, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 13, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的继电器保护装置成组输出电路信息 M_EP_TF_1 = OCI + CP16Time2a +CP56Time2a
@@ -6581,29 +6623,29 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1, IOA_message[i - 1].GC)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1, IOA_message[i - 1].CL1)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 5, 1, IOA_message[i - 1].CL2)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1, IOA_message[i - 1].CL3)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 4, 1, IOA_message[i - 1].EI)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 3, 1, IOA_message[i - 1].BL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 1, IOA_message[i - 1].SB)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 1, IOA_message[i - 1].NT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].IV)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].GC)
+                                this.writeBits(objectOffset + 3, 1, 6, 1, IOA_message[i - 1].CL1)
+                                this.writeBits(objectOffset + 3, 1, 5, 1, IOA_message[i - 1].CL2)
+                                this.writeBits(objectOffset + 3, 1, 4, 1, IOA_message[i - 1].CL3)
+                                this.writeBits(objectOffset + 3, 1, 4, 1, IOA_message[i - 1].EI)
+                                this.writeBits(objectOffset + 3, 1, 3, 1, IOA_message[i - 1].BL)
+                                this.writeBits(objectOffset + 3, 1, 2, 1, IOA_message[i - 1].SB)
+                                this.writeBits(objectOffset + 3, 1, 1, 1, IOA_message[i - 1].NT)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].IV)
                                 const Milliseconds_16_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds_16)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_16_buffer.readUInt16LE()))
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_16_buffer.readUInt16LE()))
                                 const Milliseconds_56_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds_56)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt16ToBuffer(Milliseconds_56_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 6, UInt16ToBuffer(Milliseconds_56_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 8, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 9, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 10, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 11, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 12, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //单命令 C_SC_NA_1 = SCO
@@ -6617,10 +6659,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1, IOA_message[i - 1].SCS)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1, IOA_message[i - 1].QU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SCS)
+                                this.writeBits(objectOffset + 3, 1, 1, 5, IOA_message[i - 1].QU)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                             }
                                 break
                             //双命令 C_DC_NA_1 = DCO
@@ -6633,9 +6675,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2, IOA_message[i - 1].DCS)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DCS)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                             }
                                 break
                             //步调节命令 C_RC_NA_1 = RCO
@@ -6648,9 +6690,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2, IOA_message[i - 1].RCS)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].RCS)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                             }
                                 break
                             //设点命令，归一化值 C_SE_NA_1 = NVA + QOS
@@ -6664,11 +6706,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7, IOA_message[i - 1].QL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 1, 7, IOA_message[i - 1].QL)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                             }
                                 break
                             //设点命令，标量值 C_SE_NB_1 = SVA + QOS
@@ -6682,11 +6724,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7, IOA_message[i - 1].QL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 1, 7, IOA_message[i - 1].QL)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                             }
                                 break
                             //设点命令，短浮点值 C_SE_NC_1 = IEEE STD 754 + QOS
@@ -6700,10 +6742,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 7, IOA_message[i - 1].QL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
+                                this.writeBits(objectOffset + 7, 1, 1, 7, IOA_message[i - 1].QL)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                             }
                                 break
                             //32比特串 C_BO_NA_1 = BSI
@@ -6715,8 +6757,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt32ToBuffer(IOA_message[i - 1].BSI))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
                             }
                                 break
                             //带时标CP56time2a的单命令 C_SC_TA_1 = SCO + CP56Time2a
@@ -6740,21 +6782,21 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 7, 1, IOA_message[i - 1].SCS)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 1, IOA_message[i - 1].QU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SCS)
+                                this.writeBits(objectOffset + 3, 1, 1, 5, IOA_message[i - 1].QU)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 6, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 8, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 8, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 9, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 10, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的双命令 C_DC_TA_1 = DCO + CP56Time2a
@@ -6777,20 +6819,20 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2, IOA_message[i - 1].DCS)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DCS)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 6, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 8, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 8, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 9, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 10, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的步调节命令 C_RC_TA_1 = RCO + CP56Time2a
@@ -6813,20 +6855,20 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 6, 2, IOA_message[i - 1].RCS)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].RCS)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 6, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 8, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 8, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 9, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 10, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的设点命令，归一化值 C_SE_TA_1 = NVA + QOS + CP56Time2a
@@ -6850,22 +6892,22 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7, IOA_message[i - 1].QL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 1, 7, IOA_message[i - 1].QL)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 8, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 9, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 10, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 11, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 12, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的设点命令，标量值 C_SE_TB_1 = SVA + QOS + CP56Time2a
@@ -6889,22 +6931,22 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 7, IOA_message[i - 1].QL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 1, 7, IOA_message[i - 1].QL)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 6, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 8, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 8, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 8, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 9, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 10, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 11, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 12, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的设点命令，短浮点值 C_SE_TC_1 = IEEE STD 754 + QOS + CP56Time2a
@@ -6928,21 +6970,21 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 7, IOA_message[i - 1].QL)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].S_OR_E)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
+                                this.writeBits(objectOffset + 7, 1, 1, 7, IOA_message[i - 1].QL)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].S_OR_E)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 13, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 14, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 8, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 10, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 10, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 10, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 11, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 11, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 12, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 12, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 13, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 14, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //带时标CP56time2a的32比特串 C_BO_TA_1 = BSI + CP56Time2a
@@ -6964,19 +7006,19 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt32ToBuffer(IOA_message[i - 1].BSI))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 13, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 7, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 9, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 9, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 10, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 11, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 11, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 12, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 13, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //初始化结束 M_EI_NA_1 = COI
@@ -6989,9 +7031,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 1, 7, IOA_message[i - 1].COI_R)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 1, IOA_message[i - 1].COI_I)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 1, 7, IOA_message[i - 1].COI_R)
+                                this.writeBits(objectOffset + 3, 1, 0, 1, IOA_message[i - 1].COI_I)
                             }
                                 break
                             //总召唤命令 C_IC_NA_1 = QOI
@@ -7003,8 +7045,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt8ToBuffer(IOA_message[i - 1].QOI))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].QOI))
                             }
                                 break
                             //电能脉冲召唤命令 C_CI_NA_1 = QCC
@@ -7017,9 +7059,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 2, 6, IOA_message[i - 1].RQT)
-                                this.writeBits(12 + (i - 1) * ioaLength + 3, 1, 0, 2, IOA_message[i - 1].FRZ)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBits(objectOffset + 3, 1, 2, 6, IOA_message[i - 1].RQT)
+                                this.writeBits(objectOffset + 3, 1, 0, 2, IOA_message[i - 1].FRZ)
                             }
                                 break
                             //读命令 C_RD_NA_1 = NULL
@@ -7031,8 +7073,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt8ToBuffer(IOA_message[i - 1].READ))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].READ))
                             }
                                 break
                             //时钟同步命令 C_CS_NA_1 = CP56Time2a
@@ -7053,18 +7095,18 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 5, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 6, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 7, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 8, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 9, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //(IEC101)Test Command C_TS_NA_1 = FBP
@@ -7076,8 +7118,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(IOA_message[i - 1].FBP))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(IOA_message[i - 1].FBP))
                             }
                                 break
                             //复位进程命令 C_RP_NA_1 = QRP
@@ -7089,8 +7131,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt8ToBuffer(IOA_message[i - 1].QRP))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].QRP))
                             }
                                 break
                             //带时标CP56time2a的测试命令 C_TS_TA_1 = TSC + CP56time2a
@@ -7112,19 +7154,19 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt8ToBuffer(IOA_message[i - 1].TSC))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].TSC))
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 8, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 4, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 6, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 6, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 6, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 7, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 8, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 8, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 9, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 10, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //归一化测量值 P_ME_NA_1 = NVA + QPM
@@ -7139,12 +7181,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 2, 6, IOA_message[i - 1].KPA)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1, IOA_message[i - 1].POP)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].LPC)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(NVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 2, 6, IOA_message[i - 1].KPA)
+                                this.writeBits(objectOffset + 5, 1, 1, 1, IOA_message[i - 1].POP)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].LPC)
                             }
                                 break
                             //标量化测量值 P_ME_NB_1 = SVA + QPM
@@ -7159,12 +7201,12 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
+                                this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 2, 6, IOA_message[i - 1].KPA)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 1, 1, IOA_message[i - 1].POP)
-                                this.writeBits(12 + (i - 1) * ioaLength + 5, 1, 0, 1, IOA_message[i - 1].LPC)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(SVA_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 5, 1, 2, 6, IOA_message[i - 1].KPA)
+                                this.writeBits(objectOffset + 5, 1, 1, 1, IOA_message[i - 1].POP)
+                                this.writeBits(objectOffset + 5, 1, 0, 1, IOA_message[i - 1].LPC)
                             }
                                 break
                             //浮点测量值 P_ME_NC_1 = IEEE STD 754 + QPM
@@ -7179,11 +7221,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 2, 6, IOA_message[i - 1].KPA)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 1, 1, IOA_message[i - 1].POP)
-                                this.writeBits(12 + (i - 1) * ioaLength + 7, 1, 0, 1, IOA_message[i - 1].LPC)
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
+                                this.writeBits(objectOffset + 7, 1, 2, 6, IOA_message[i - 1].KPA)
+                                this.writeBits(objectOffset + 7, 1, 1, 1, IOA_message[i - 1].POP)
+                                this.writeBits(objectOffset + 7, 1, 0, 1, IOA_message[i - 1].LPC)
                             }
                                 break
                             //参数激活 P_AC_NA_1 = QPA
@@ -7195,8 +7237,8 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt8ToBuffer(IOA_message[i - 1].QPA))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].QPA))
                             }
                                 break
                             //文件已准备好 F_FR_NA_1 = NOF + LOF + FRQ
@@ -7210,10 +7252,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt8ToBuffer(IOA_message[i - 1].LOF))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt8ToBuffer(IOA_message[i - 1].FRQ))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
+                                this.writeBytes(objectOffset + 5, UInt8ToBuffer(IOA_message[i - 1].LOF))
+                                this.writeBytes(objectOffset + 6, UInt8ToBuffer(IOA_message[i - 1].FRQ))
                             }
                                 break
                             //节点已准备好 F_SR_NA_1 = NOF + NOS + LOF + SRQ
@@ -7228,11 +7270,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt8ToBuffer(IOA_message[i - 1].LOF))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 8, UInt8ToBuffer(IOA_message[i - 1].SRQ))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
+                                this.writeBytes(objectOffset + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
+                                this.writeBytes(objectOffset + 7, UInt8ToBuffer(IOA_message[i - 1].LOF))
+                                this.writeBytes(objectOffset + 8, UInt8ToBuffer(IOA_message[i - 1].SRQ))
                             }
                                 break
                             //召唤目录，选择文件，召唤文件，选择节 F_SC_NA_1 = NOF + NOS + SCQ
@@ -7246,10 +7288,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(IOA_message[i - 1].NOF))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt8ToBuffer(IOA_message[i - 1].SCQ))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(IOA_message[i - 1].NOF))
+                                this.writeBytes(objectOffset + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
+                                this.writeBytes(objectOffset + 7, UInt8ToBuffer(IOA_message[i - 1].SCQ))
                             }
                                 break
                             //最后的节，最后的段 F_LS_NA_1 = NOF + NOS + LSQ + CHS
@@ -7264,11 +7306,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt16ToBuffer(IOA_message[i - 1].NOS))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt8ToBuffer(IOA_message[i - 1].LSQ))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 8, UInt8ToBuffer(IOA_message[i - 1].CHS))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
+                                this.writeBytes(objectOffset + 5, UInt16ToBuffer(IOA_message[i - 1].NOS))
+                                this.writeBytes(objectOffset + 7, UInt8ToBuffer(IOA_message[i - 1].LSQ))
+                                this.writeBytes(objectOffset + 8, UInt8ToBuffer(IOA_message[i - 1].CHS))
                             }
                                 break
                             //确认文件，确认节 F_FA_NA_1 = NOF + NOS + AFQ
@@ -7282,10 +7324,10 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt8ToBuffer(IOA_message[i - 1].AFQ))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
+                                this.writeBytes(objectOffset + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
+                                this.writeBytes(objectOffset + 7, UInt8ToBuffer(IOA_message[i - 1].AFQ))
                             }
                                 break
                             //段 F_SG_NA_1 = NOF + NOS + LOS + Segment
@@ -7300,11 +7342,11 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt8ToBuffer(IOA_message[i - 1].LOS))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 8, HexToBuffer(IOA_message[i - 1].Segment))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
+                                this.writeBytes(objectOffset + 5, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOS).readUInt16LE()))
+                                this.writeBytes(objectOffset + 7, UInt8ToBuffer(IOA_message[i - 1].LOS))
+                                this.writeBytes(objectOffset + 8, HexToBuffer(IOA_message[i - 1].Segment))
                             }
                                 break
                             //目录 F_DR_TA_1 = NOF + LOF + SOF + CP56Time2a
@@ -7328,21 +7370,21 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 5, UInt8ToBuffer(IOA_message[i - 1].LOF))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 6, UInt8ToBuffer(IOA_message[i - 1].SOF))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
+                                this.writeBytes(objectOffset + 5, UInt8ToBuffer(IOA_message[i - 1].LOF))
+                                this.writeBytes(objectOffset + 6, UInt8ToBuffer(IOA_message[i - 1].SOF))
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 7, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 2, 6, IOA_message[i - 1].Minutes)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 1, 1, IOA_message[i - 1].GEN)
-                                this.writeBits(12 + (i - 1) * ioaLength + 9, 1, 0, 1, IOA_message[i - 1].MIN_IV)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 3, 5, IOA_message[i - 1].Hours)
-                                this.writeBits(12 + (i - 1) * ioaLength + 10, 1, 0, 1, IOA_message[i - 1].SU)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 3, 5, IOA_message[i - 1].Day)
-                                this.writeBits(12 + (i - 1) * ioaLength + 11, 1, 0, 3, IOA_message[i - 1].DOW)
-                                this.writeBits(12 + (i - 1) * ioaLength + 12, 1, 4, 4, IOA_message[i - 1].Month)
-                                this.writeBits(12 + (i - 1) * ioaLength + 13, 1, 1, 7, IOA_message[i - 1].Year)
+                                this.writeBytes(objectOffset + 7, UInt16ToBuffer(Milliseconds_buffer.readUInt16LE()))
+                                this.writeBits(objectOffset + 9, 1, 2, 6, IOA_message[i - 1].Minutes)
+                                this.writeBits(objectOffset + 9, 1, 1, 1, IOA_message[i - 1].GEN)
+                                this.writeBits(objectOffset + 9, 1, 0, 1, IOA_message[i - 1].MIN_IV)
+                                this.writeBits(objectOffset + 10, 1, 3, 5, IOA_message[i - 1].Hours)
+                                this.writeBits(objectOffset + 10, 1, 0, 1, IOA_message[i - 1].SU)
+                                this.writeBits(objectOffset + 11, 1, 3, 5, IOA_message[i - 1].Day)
+                                this.writeBits(objectOffset + 11, 1, 0, 3, IOA_message[i - 1].DOW)
+                                this.writeBits(objectOffset + 12, 1, 4, 4, IOA_message[i - 1].Month)
+                                this.writeBits(objectOffset + 13, 1, 1, 7, IOA_message[i - 1].Year)
                             }
                                 break
                             //日志查询，请求存档文件 F_SC_NB_1 = NOF + SCQ
@@ -7355,9 +7397,9 @@ export class IEC104_I_Frame extends BaseHeader {
                                 const address_LE: number = IOA_message[i - 1].address
                                 const buf = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
-                                this.writeBytes(12 + (i - 1) * ioaLength, buf)
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readInt16LE()))
-                                this.writeBytes(12 + (i - 1) * ioaLength + 3, UInt8ToBuffer(IOA_message[i - 1].SCQ))
+                                this.writeIOAAddress(objectOffset, buf, i)
+                                this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readInt16LE()))
+                                this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].SCQ))
                             }
                                 break
                             default: {

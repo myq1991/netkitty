@@ -3,7 +3,7 @@ import {BaseHeader} from '../abstracts/BaseHeader'
 import {UInt16ToHex, UInt8ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {HexToUInt16} from '../../helper/HexToNumber'
-import {BufferToInt16, BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
+import {BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
 import {BufferToHex} from '../../helper/BufferToHex'
 import {UInt16ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
 import {BufferToIPv4} from '../../helper/BufferToIP'
@@ -24,7 +24,9 @@ export class ARP extends BaseHeader {
                         minimum: 0,
                         maximum: 65535,
                         decode: (): void => {
-                            this.instance.hardware.type.setValue(BufferToInt16(this.readBytes(0, 2)))
+                            //Hardware type is an unsigned 16-bit field (RFC 826); a signed read would
+                            //turn values >= 0x8000 negative and mismatch the unsigned encode path.
+                            this.instance.hardware.type.setValue(BufferToUInt16(this.readBytes(0, 2)))
                         },
                         encode: (): void => {
                             let hwType: number = this.instance.hardware.type.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))

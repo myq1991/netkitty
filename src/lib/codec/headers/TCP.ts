@@ -616,7 +616,7 @@ export class TCP extends BaseHeader {
                                     type: 'integer',
                                     label: 'Timeout',
                                     minimum: 0,
-                                    maximum: 65535
+                                    maximum: 32767
                                 },
                                 granularity: {
                                     type: 'integer',
@@ -764,17 +764,17 @@ export class TCP extends BaseHeader {
                                 break
                             //Kind = 28 (User Timeout, UTO)
                             case 28: {
+                                //RFC 5482: Kind=28, Length=4, then a single 16-bit value whose top
+                                //bit is Granularity (G) and low 15 bits are the User Timeout.
                                 let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
-                                if (length !== 5) this.recordError(this.instance.options.getPath(index), 'UTO option TLV length should be 5')
-                                let timeout: number = BufferToUInt16(this.readBytes(optionOffset, 2))
+                                if (length !== 4) this.recordError(this.instance.options.getPath(index), 'UTO option TLV length should be 4')
+                                const value: number = BufferToUInt16(this.readBytes(optionOffset, 2))
                                 optionOffset += 2
-                                let granularity: number = BufferToUInt8(this.readBytes(optionOffset, 1))
-                                optionOffset += 1
                                 options.push({
                                     option: TCPOption.User_Timeout,
-                                    timeout: timeout,
-                                    granularity: granularity
+                                    granularity: (value >> 15) & 0x01,
+                                    timeout: value & 0x7fff
                                 })
                             }
                                 break
@@ -901,12 +901,15 @@ export class TCP extends BaseHeader {
                                 return
                             }
                             case TCPOption.User_Timeout: {
+                                //RFC 5482: Kind=28, Length=4, value = G(top bit) | User Timeout(15 bits).
                                 const optionUTO: OPTION_UTO = optionItem as OPTION_UTO
+                                const granularity: number = optionUTO.granularity ? optionUTO.granularity : 0
+                                const timeout: number = optionUTO.timeout ? optionUTO.timeout : 0
+                                const value: number = ((granularity & 0x01) << 15) | (timeout & 0x7fff)
                                 const utoBuffer: Buffer = Buffer.concat([
                                     UInt8ToBuffer(28),
-                                    UInt8ToBuffer(5),
-                                    UInt16ToBuffer(optionUTO.timeout ? optionUTO.timeout : 0),
-                                    UInt8ToBuffer(optionUTO.granularity ? optionUTO.granularity : 0)
+                                    UInt8ToBuffer(4),
+                                    UInt16ToBuffer(value)
                                 ])
                                 this.writeBytes(optionOffset, utoBuffer)
                                 optionOffset += utoBuffer.length

@@ -45,6 +45,16 @@ export class IEC104_S_Frame extends BaseHeader {
                     this.writeBytes(2, HexToBuffer(this.instance.controlField.getValue('0', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))))
                 }
             },
+            //Receive sequence number N(R): a 15-bit value in control octets 3-4, stored
+            //little-endian and left-shifted by 1. Exposed read-only for analysis (S-frames exist
+            //precisely to acknowledge this sequence number); controlField holds the authoritative bytes.
+            rxSequence: {
+                type: 'integer',
+                label: 'Rx Sequence Number N(R)',
+                decode: (): void => {
+                    this.instance.rxSequence.setValue(this.readBytes(4, 2).readUInt16LE() >> 1)
+                }
+            },
             apciType: {
                 type: 'string',
                 label: 'APCI Type',

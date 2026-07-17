@@ -18,6 +18,7 @@ import {HexToUInt16, HexToUInt32, HexToUInt64, HexToUInt8} from '../../helper/He
 //Type=138 Endpoint Identification
 
 enum Type {
+    Pad1 = 'Pad1',
     PadN = 'PadN',
     Tunnel_Encapsulation_Limit = 'Tunnel-Encapsulation-Limit',
     Router_Alert = 'Router-Alert',
@@ -30,6 +31,9 @@ enum Type {
     Endpoint_Identification = 'Endpoint-Identification'
 }
 
+type Pad1 = {
+    type: Type.Pad1
+}
 type PadN = {
     type: Type.PadN
     n: number
@@ -77,13 +81,32 @@ type Custom = {
 
 export class IPv6HopByHopOptions extends BaseHeader {
 
-    protected itemTLVs: TLV[]
-
     //Byte length of the encoded options area after 8-octet alignment padding.
     //Set during items encode, consumed by the len recompute handler.
     protected paddedOptionsLength: number = 0
 
+    /**
+     * Map a decoded Hop-by-Hop option (type + length + hex value) to its structured item.
+     * Unknown types become a Custom item so they still round-trip.
+     */
+    protected decodeHbhOption(type: number, length: number, valueHex: string): IPv6HopByHopOptions['items'][number] {
+        switch (type) {
+            case 0x01: return {type: Type.PadN, n: length}
+            case 0x04: return {type: Type.Tunnel_Encapsulation_Limit, limit: HexToUInt8(valueHex)}
+            case 0x05: return {type: Type.Router_Alert, alert: valueHex}
+            case 0x07: return {type: Type.CALIPSO, tag: valueHex}
+            case 0x08: return {type: Type.SMF_DPD, hash: valueHex}
+            case 0x0B: return {type: Type.MPL_Option, value: valueHex}
+            case 0x0C: return {type: Type.ILNP_Nonce, nonce: valueHex}
+            case 0x0D: return {type: Type.Line_Identification_Option, id: valueHex}
+            case 0x1E: return {type: Type.IPv6_DFF_Header, message: valueHex}
+            case 0x8A: return {type: Type.Endpoint_Identification, id: valueHex}
+            default: return {type: type, data: valueHex}
+        }
+    }
+
     protected items: (
+        Pad1 |
         PadN |
         Tunnel_Encapsulation_Limit |
         Router_Alert |
@@ -145,6 +168,21 @@ export class IPv6HopByHopOptions extends BaseHeader {
                 label: 'Option Items',
                 items: {
                     anyOf: [
+                        //Type=0 Pad1 (single octet, no length/value)
+                        {
+                            type: 'object',
+                            label: 'Pad1',
+                            properties: {
+                                type: {
+                                    type: 'string',
+                                    label: 'Type',
+                                    contentEncoding: StringContentEncodingEnum.UTF8,
+                                    enum: [Type.Pad1],
+                                    const: Type.Pad1,
+                                    hidden: true
+                                }
+                            }
+                        },
                         //Type=1 PadN
                         {
                             type: 'object',
@@ -374,167 +412,101 @@ export class IPv6HopByHopOptions extends BaseHeader {
                     ]
                 },
                 decode: (): void => {
-                    let length: number = this.instance.len.getValue(0) * 8 + 7
-                    while (!this.itemTLVs) {
-                        try {
-                            const itemTLVs: TLV[] = TLV.parseList(this.readBytes(2, length, true))
-                            const joinedHex: string = itemTLVs.map(value => value.getTLV()).join('')
-                            if (this.readBytes(2, length, true).toString('hex').padStart(length * 2, '0').toUpperCase() !== joinedHex.toUpperCase()) {
-                                length -= 1
-                                if (!length) break
-                                continue
-                            }
-                            this.itemTLVs = TLV.parseList(this.readBytes(2, length))
-                        } catch (e) {
-                            length -= 1
-                            if (!length) break
+                    //Options area length = (HdrExtLen+1)*8 - 2 = len*8 + 6 octets, bounded to the
+                    //bytes actually present.
+                    const optionsLength: number = this.instance.len.getValue(0) * 8 + 6
+                    const buffer: Buffer = this.readBytes(2, optionsLength)
+                    this.items = []
+                    //Walk the options manually (RFC 8200 §4.2): Pad1 (type 0) is a single octet with
+                    //no Length/Value; every other option is type(1)+length(1)+value(length). Bounds
+                    //are checked so a truncated area records what it can rather than throwing (and so
+                    //an interior Pad1 no longer desyncs a length-prefix TLV parser).
+                    let p: number = 0
+                    while (p < buffer.length) {
+                        const type: number = buffer[p]
+                        if (type === 0x00) {
+                            this.items.push({type: Type.Pad1})
+                            p += 1
+                            continue
                         }
+                        if (p + 2 > buffer.length) break
+                        const optionLength: number = buffer[p + 1]
+                        if (p + 2 + optionLength > buffer.length) break
+                        const valueHex: string = buffer.subarray(p + 2, p + 2 + optionLength).toString('hex')
+                        this.items.push(this.decodeHbhOption(type, optionLength, valueHex))
+                        p += 2 + optionLength
                     }
-                    this.itemTLVs.forEach((itemTLV: TLV): void => {
-                        switch (itemTLV.getTag('number')) {
-                            case 0x01: {
-                                this.items.push({
-                                    type: Type.PadN,
-                                    n: itemTLV.getLength('number')
-                                })
-                            }
-                                break
-                            case 0x04: {
-                                this.items.push({
-                                    type: Type.Tunnel_Encapsulation_Limit,
-                                    limit: HexToUInt8(itemTLV.getValue('hex'))
-                                })
-                            }
-                                break
-                            case 0x05: {
-                                this.items.push({
-                                    type: Type.Router_Alert,
-                                    alert: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            case 0x07: {
-                                this.items.push({
-                                    type: Type.CALIPSO,
-                                    tag: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            case 0x08: {
-                                this.items.push({
-                                    type: Type.SMF_DPD,
-                                    hash: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            case 0x0B: {
-                                this.items.push({
-                                    type: Type.MPL_Option,
-                                    value: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            case 0x0C: {
-                                this.items.push({
-                                    type: Type.ILNP_Nonce,
-                                    nonce: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            case 0x0D: {
-                                this.items.push({
-                                    type: Type.Line_Identification_Option,
-                                    id: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            case 0x1E: {
-                                this.items.push({
-                                    type: Type.IPv6_DFF_Header,
-                                    message: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            case 0x8A: {
-                                this.items.push({
-                                    type: Type.Endpoint_Identification,
-                                    id: itemTLV.getValue('hex')
-                                })
-                            }
-                                break
-                            default: {
-                                this.items.push({
-                                    type: itemTLV.getTag('number'),
-                                    data: itemTLV.getValue('hex')
-                                })
-                            }
-                        }
-                    })
-                    this.instance.items.setValue(this.items.length ? this.items : [])
+                    this.instance.items.setValue(this.items)
                 },
                 encode: (): void => {
                     this.items = this.instance.items.getValue([])
-                    this.itemTLVs = []
+                    const parts: Buffer[] = []
+                    const tlvBytes: (tlv: TLV) => Buffer = (tlv: TLV): Buffer => Buffer.from(tlv.getTLV(), 'hex')
                     this.items.forEach(item => {
                         switch (item.type) {
+                            case Type.Pad1: {
+                                //Pad1 is a single zero octet with no Length/Value.
+                                parts.push(Buffer.from([0x00]))
+                            }
+                                break
                             case Type.PadN: {
                                 const typedItem: PadN = {...item}
-                                this.itemTLVs.push(new TLV(0x01, Buffer.alloc(typedItem.n, 0)))
+                                parts.push(tlvBytes(new TLV(0x01, Buffer.alloc(typedItem.n, 0))))
                             }
                                 break
                             case Type.Tunnel_Encapsulation_Limit: {
                                 const typedItem: Tunnel_Encapsulation_Limit = {...item}
-                                this.itemTLVs.push(new TLV(0x04, UInt8ToBuffer(typedItem.limit)))
+                                parts.push(tlvBytes(new TLV(0x04, UInt8ToBuffer(typedItem.limit))))
                             }
                                 break
                             case Type.Router_Alert: {
                                 const typedItem: Router_Alert = {...item}
-                                this.itemTLVs.push(new TLV(0x05, UInt16ToBuffer(HexToUInt16(typedItem.alert))))
+                                parts.push(tlvBytes(new TLV(0x05, UInt16ToBuffer(HexToUInt16(typedItem.alert)))))
                             }
                                 break
                             case Type.CALIPSO: {
                                 const typedItem: CALIPSO = {...item}
-                                this.itemTLVs.push(new TLV(0x07, UInt64ToBuffer(HexToUInt64(typedItem.tag))))
+                                parts.push(tlvBytes(new TLV(0x07, UInt64ToBuffer(HexToUInt64(typedItem.tag)))))
                             }
                                 break
                             case Type.SMF_DPD: {
                                 const typedItem: SMF_DPD = {...item}
-                                this.itemTLVs.push(new TLV(0x08, Buffer.from(typedItem.hash, 'hex')))
+                                parts.push(tlvBytes(new TLV(0x08, Buffer.from(typedItem.hash, 'hex'))))
                             }
                                 break
                             case Type.MPL_Option: {
                                 const typedItem: MPL_Option = {...item}
-                                this.itemTLVs.push(new TLV(0x0B, Buffer.from(typedItem.value, 'hex')))
+                                parts.push(tlvBytes(new TLV(0x0B, Buffer.from(typedItem.value, 'hex'))))
                             }
                                 break
                             case Type.ILNP_Nonce: {
                                 const typedItem: ILNP_Nonce = {...item}
-                                this.itemTLVs.push(new TLV(0x0C, Buffer.from(typedItem.nonce.padStart(12, '0'), 'hex')))
+                                parts.push(tlvBytes(new TLV(0x0C, Buffer.from(typedItem.nonce.padStart(12, '0'), 'hex'))))
                             }
                                 break
                             case Type.Line_Identification_Option: {
                                 const typedItem: Line_Identification_Option = {...item}
-                                this.itemTLVs.push(new TLV(0x0D, UInt32ToBuffer(HexToUInt32(typedItem.id))))
+                                parts.push(tlvBytes(new TLV(0x0D, UInt32ToBuffer(HexToUInt32(typedItem.id)))))
                             }
                                 break
                             case Type.IPv6_DFF_Header: {
                                 const typedItem: IPv6_DFF_Header = {...item}
-                                this.itemTLVs.push(new TLV(0x1E, Buffer.from(typedItem.message, 'hex')))
+                                parts.push(tlvBytes(new TLV(0x1E, Buffer.from(typedItem.message, 'hex'))))
                             }
                                 break
                             case Type.Endpoint_Identification: {
                                 const typedItem: Endpoint_Identification = {...item}
-                                this.itemTLVs.push(new TLV(0x8A, Buffer.from(typedItem.id.padStart(32, '0'), 'hex')))
+                                parts.push(tlvBytes(new TLV(0x8A, Buffer.from(typedItem.id.padStart(32, '0'), 'hex'))))
                             }
                                 break
                             default: {
                                 if (typeof item.type !== 'number') return
                                 const customItem: Custom = {...item}
-                                this.itemTLVs.push(new TLV(customItem.type, Buffer.from(customItem.data, 'hex')))
+                                parts.push(tlvBytes(new TLV(customItem.type, Buffer.from(customItem.data, 'hex'))))
                             }
                         }
                     })
-                    let itemsBuffer: Buffer = Buffer.from(this.itemTLVs.map(value => value.getTLV()).join(''), 'hex')
+                    let itemsBuffer: Buffer = Buffer.concat(parts)
                     //Pad the options area so the whole header (2 header bytes + options) is an
                     //integral multiple of 8 octets (RFC 8200 §4.3). Use a PadN option (type 0x01)
                     //for >=2 bytes so it re-decodes as a PadN, and a single Pad1 (0x00) for 1 byte.
@@ -543,7 +515,6 @@ export class IPv6HopByHopOptions extends BaseHeader {
                         itemsBuffer = Buffer.concat([itemsBuffer, Buffer.from([0x00])])
                     } else if (pad >= 2) {
                         const padN: TLV = new TLV(0x01, Buffer.alloc(pad - 2, 0))
-                        this.itemTLVs.push(padN)
                         itemsBuffer = Buffer.concat([itemsBuffer, Buffer.from(padN.getTLV(), 'hex')])
                     }
                     this.paddedOptionsLength = itemsBuffer.length
