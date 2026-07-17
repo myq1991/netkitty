@@ -22,6 +22,10 @@
     "./helper": {
       "types": "./dist/HelperExports.d.ts",
       "require": "./dist/HelperExports.js"
+    },
+    "./analysis": {
+      "types": "./dist/AnalysisExports.d.ts",
+      "require": "./dist/AnalysisExports.js"
     }
   },
   "scripts": {
