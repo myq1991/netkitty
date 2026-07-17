@@ -14,6 +14,9 @@ import {UInt8ToBuffer, UInt16ToBuffer, UInt32ToBuffer} from '../../helper/Number
 
 const CONSTRUCTOR_VALIDATE_KEY: string = '__validate'
 
+/** Absolute byte span a field occupies in the packet, collected during a dissect pass. */
+export type FieldByteRange = {offset: number, length: number}
+
 export abstract class BaseHeader {
 
     protected static get CODEC_INSTANCE(): CodecModule {
@@ -109,6 +112,26 @@ export abstract class BaseHeader {
      * Header schema instance
      */
     public instance: FlexibleObject = new FlexibleObject()
+
+    //Dissect-only instrumentation: when #byteRanges is non-null, each field read records the packet
+    //span it covered (keyed by the field being decoded). Off (null) during normal decode/encode, so
+    //the hot path is untouched. See enableByteRangeTracking() / getByteRanges().
+    #byteRanges: Map<string, FieldByteRange> | null = null
+
+    #currentFieldPath: string = ''
+
+    /**
+     * Turn on byte-range collection for a dissect pass (call before decode()). Additive and
+     * read-only: it changes nothing about the decoded values, only records where each field lives.
+     */
+    public enableByteRangeTracking(): void {
+        this.#byteRanges = new Map()
+    }
+
+    /** The byte span each field occupied, or null if this header was not dissected. */
+    public getByteRanges(): Map<string, FieldByteRange> | null {
+        return this.#byteRanges
+    }
 
     /**
      * Entire packet buffer data getter
@@ -246,6 +269,18 @@ export abstract class BaseHeader {
         }
         const headerLength: number = readEndPos - this.startPos
         if (changeHeaderLength) this.headerLength = this.headerLength < headerLength ? headerLength : this.headerLength
+        //Dissect instrumentation: attribute this read's absolute span to the field being decoded,
+        //extending the field's range if it reads more than once (e.g. an address + its value).
+        if (this.#byteRanges && this.#currentFieldPath) {
+            const existing: FieldByteRange | undefined = this.#byteRanges.get(this.#currentFieldPath)
+            if (existing) {
+                const start: number = Math.min(existing.offset, packetOffset)
+                const end: number = Math.max(existing.offset + existing.length, packetOffset + length)
+                this.#byteRanges.set(this.#currentFieldPath, {offset: start, length: end - start})
+            } else {
+                this.#byteRanges.set(this.#currentFieldPath, {offset: packetOffset, length: length})
+            }
+        }
         return this.packet.subarray(packetOffset, packetOffset + length)
     }
 
@@ -373,17 +408,25 @@ export abstract class BaseHeader {
      * @param codecs
      * @protected
      */
-    protected getFieldCodecs(schema: ProtocolFieldJSONSchema, codecName: string, execBeforeSubCodecs: boolean, codecs: (() => void | Promise<void>)[] = []): (() => void | Promise<void>)[] {
+    protected getFieldCodecs(schema: ProtocolFieldJSONSchema, codecName: string, execBeforeSubCodecs: boolean, codecs: (() => void | Promise<void>)[] = [], paths: string[] | null = null, pathPrefix: string = ''): (() => void | Promise<void>)[] {
         if (!schema.properties) return codecs
         for (const propertyName of Object.keys(schema.properties)) {
             const fieldSchema: ProtocolFieldJSONSchema = schema.properties[propertyName]
             const codec: (() => void | Promise<void>) | undefined = fieldSchema[codecName]
             //Push the raw closure (no async double-wrap) and skip fields with no codec entirely, so
-            //decode/encode can call each synchronously and only await genuine Promises. A missing
-            //codec was previously a no-op thunk that only cost an await turn per field.
-            if (execBeforeSubCodecs && codec) codecs.push(codec)
-            if (fieldSchema.properties) this.getFieldCodecs(fieldSchema, codecName, execBeforeSubCodecs, codecs)
-            if (!execBeforeSubCodecs && codec) codecs.push(codec)
+            //decode/encode call each synchronously and only await genuine Promises. When `paths` is
+            //provided (dissect only) a dotted field path is collected in parallel; otherwise there is
+            //zero extra cost on the hot path (no per-field object, no string concat).
+            const path: string = paths ? (pathPrefix ? `${pathPrefix}.${propertyName}` : propertyName) : ''
+            if (execBeforeSubCodecs && codec) {
+                codecs.push(codec)
+                if (paths) paths.push(path)
+            }
+            if (fieldSchema.properties) this.getFieldCodecs(fieldSchema, codecName, execBeforeSubCodecs, codecs, paths, path)
+            if (!execBeforeSubCodecs && codec) {
+                codecs.push(codec)
+                if (paths) paths.push(path)
+            }
         }
         return codecs
     }
@@ -484,20 +527,25 @@ export abstract class BaseHeader {
      * Decode packet header field by field
      */
     public async decode(): Promise<void> {
-        const decodes: (() => void | Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'decode', true)
-        for (const decode of decodes) {
+        const paths: string[] | null = this.#byteRanges ? [] : null
+        const decodes: (() => void | Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'decode', true, [], paths)
+        for (let i: number = 0; i < decodes.length; i++) {
             //Decode must never throw (error-accumulation contract): a truncated/corrupt packet can
             //make a field's byte read run past the buffer or hit an invalid value. Contain that to a
             //recorded error so the remaining fields and layers still decode best-effort.
             //Call synchronously and only await genuine Promises — the vast majority of field
             //closures are synchronous, so this avoids a promise allocation + scheduler turn per field.
+            if (paths) this.#currentFieldPath = paths[i]
             try {
-                const result: void | Promise<void> = decode()
+                const result: void | Promise<void> = decodes[i]()
                 if (result && typeof (result as {then?: unknown}).then === 'function') await result
             } catch (e) {
                 this.recordError('', `Decode error: ${(e as Error).message}`)
             }
         }
+        //Post-handler reads (cross-field/cross-layer fixups) are not a single field's bytes — clear
+        //the tracked path so they are not attributed to whichever field decoded last.
+        this.#currentFieldPath = ''
         const postSelfDecodeHandlers: PostHandlerItem[] = SortPostHandlers(this.postSelfDecodeHandlers)
         let postDecodeHandler: PostHandlerItem | undefined = postSelfDecodeHandlers.shift()
         while (postDecodeHandler) {

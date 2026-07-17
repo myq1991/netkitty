@@ -22,6 +22,7 @@ export {type CodecModuleConstructor} from './lib/codec/types/CodecModuleConstruc
 export {type CodecModule} from './lib/codec/types/CodecModule'
 export {type CodecErrorInfo} from './lib/codec/types/CodecErrorInfo'
 export {type NextLayer, type ConsistencyIssue} from './lib/codec/types/LayerGraph'
+export {type DissectionField, type DissectionLayer} from './lib/codec/types/Dissection'
 /**
  * Schemas
  */

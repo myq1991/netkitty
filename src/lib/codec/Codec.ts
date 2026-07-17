@@ -11,6 +11,8 @@ import {ProcessPacketDecodePostHandlers, ProcessPacketEncodePostHandlers} from '
 import {CodecEncodeResult} from './types/CodecEncodeResult'
 import {RawData} from './headers/RawData'
 import {NextLayer, ConsistencyIssue} from './types/LayerGraph'
+import {DissectionField, DissectionLayer} from './types/Dissection'
+import {FieldByteRange} from './abstracts/BaseHeader'
 import * as packetHeaders from './PacketHeaders'
 
 /**
@@ -217,14 +219,16 @@ export class Codec {
      * @param codecModules
      * @private
      */
-    async #decode(codecData: CodecData, codecModules: CodecModule[] = []): Promise<void> {
+    async #decode(codecData: CodecData, codecModules: CodecModule[] = [], collectRanges: boolean = false): Promise<void> {
         const codecModuleConstructor: CodecModuleConstructor = this.selectCodec(codecData, codecModules)
         const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
+        //Dissect pass: record each field's byte span. Off for normal decode, so the hot path is untouched.
+        if (collectRanges) codecModule.enableByteRangeTracking()
         await codecModule.decode()
         codecData.startPos = codecModule.endPos
         codecModules.push(codecModule)
         if (codecData.startPos >= codecData.packet.length) return
-        return this.#decode(codecData, codecModules)
+        return this.#decode(codecData, codecModules, collectRanges)
     }
 
     /**
@@ -361,5 +365,73 @@ export class Codec {
             }
         }
         return issues
+    }
+
+    /**
+     * Wireshark-style dissection: decode the packet with byte-range tracking on, then project each
+     * layer into a field tree carrying the value, the schema label, the exact packet bytes the field
+     * occupies, and an error/ok severity. A read-only view over the SAME decode — not a second
+     * parser. Normal decode() is untouched (ranges are collected only here).
+     * @param packet
+     */
+    public async dissect(packet: Buffer): Promise<DissectionLayer[]> {
+        const codecData: CodecData = {packet: packet, startPos: 0, postHandlers: []}
+        const codecModules: CodecModule[] = []
+        await this.#decode(codecData, codecModules, true)
+        const postDecodeHandlers: PostHandlerItem[] = ProcessPacketDecodePostHandlers(codecData.postHandlers)
+        let postDecodeHandler: PostHandlerItem | undefined = postDecodeHandlers.shift()
+        while (postDecodeHandler) {
+            await postDecodeHandler.handler()
+            postDecodeHandler = postDecodeHandlers.shift()
+        }
+        return codecModules.map((codecModule: CodecModule): DissectionLayer => {
+            const schema: CodecSchema | undefined = this.#codecSchemas.find((codecSchema: CodecSchema): boolean => codecSchema.id === codecModule.id)
+            const ranges: Map<string, FieldByteRange> = codecModule.getByteRanges() ? codecModule.getByteRanges()! : new Map()
+            const errorPaths: Set<string> = new Set(codecModule.errors.map((e: CodecErrorInfo): string => e.path))
+            return {
+                id: codecModule.id,
+                name: codecModule.name,
+                errors: codecModule.errors,
+                fields: this.#dissectFields(codecModule.instance.getValue(), schema ? (schema.schema as any) : undefined, '', ranges, errorPaths, packet)
+            }
+        })
+    }
+
+    /**
+     * Recursively project a decoded value tree + its schema (for labels) + the collected byte ranges
+     * into dissection fields. Scalar leaves carry their byte span; objects/arrays nest as children.
+     * @private
+     */
+    #dissectFields(data: any, schema: any, pathPrefix: string, ranges: Map<string, FieldByteRange>, errorPaths: Set<string>, packet: Buffer): DissectionField[] {
+        const fields: DissectionField[] = []
+        if (data === null || typeof data !== 'object') return fields
+        const properties: any = schema ? schema.properties : undefined
+        for (const key of Object.keys(data)) {
+            const node: any = properties ? properties[key] : undefined
+            const value: any = data[key]
+            const path: string = pathPrefix ? `${pathPrefix}.${key}` : key
+            const range: FieldByteRange | undefined = ranges.get(path)
+            const field: DissectionField = {name: key, severity: errorPaths.has(path) ? 'error' : 'ok'}
+            if (node && node.label) field.label = node.label
+            if (range) {
+                field.offset = range.offset
+                field.length = range.length
+                field.rawBytes = packet.subarray(range.offset, range.offset + range.length).toString('hex')
+            }
+            if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+                field.children = this.#dissectFields(value, node, path, ranges, errorPaths, packet)
+            } else if (Array.isArray(value)) {
+                field.children = value.map((item: any, index: number): DissectionField => {
+                    if (item !== null && typeof item === 'object') {
+                        return {name: `${index}`, severity: 'ok', children: this.#dissectFields(item, node ? node.items : undefined, `${path}.${index}`, ranges, errorPaths, packet)}
+                    }
+                    return {name: `${index}`, severity: 'ok', value: item}
+                })
+            } else {
+                field.value = value
+            }
+            fields.push(field)
+        }
+        return fields
     }
 }
