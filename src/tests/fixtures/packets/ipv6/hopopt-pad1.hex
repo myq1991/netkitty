@@ -1,0 +1,3 @@
+# IPv6 Hop-by-Hop with an interior Pad1 (type 0, single octet): Router-Alert + Pad1 + Pad1,
+# then ICMPv6 MLDv2 (type 143). Interior Pad1 must not desync option parsing.
+33330000001600112233445586dd6000000000100000fe800000000000000000000000000001ff0200000000000000000000000000163a000502000000008f00732200000000

@@ -1,0 +1,3 @@
+# IPv6 Hop-by-Hop options header carrying an Endpoint Identification option (type 138 / 0x8A) + PadN
+# constructed: eth/ipv6(nxt=0)/hopopt(nxt=0x3b no-next-header, HdrExtLen=2, 24 bytes); option 8a 10 <16B> then PadN 01 02 0000
+333300000016f8e43b3d0ffa86dd6000000000180001fe80000000000000d7540b32a0b03646ff0200000000000000000000000000163b028a10000102030405060708090a0b0c0d0e0f01020000

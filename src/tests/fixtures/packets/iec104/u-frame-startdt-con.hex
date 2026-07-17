@@ -1,0 +1,3 @@
+# IEC 60870-5-104 U-format STARTDT con frame (regression: decode case-sensitivity bug)
+# source: pcaps/iec104.pcap frame 8 (filter: manual)
+002215560b540016d100090508004500002e3a530000ff06a2e10a14646c0a1466010964b54d009e596ccddab49750180854baaa000068040b000000

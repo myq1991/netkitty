@@ -1,0 +1,3 @@
+# TLS 1.2 HeartbeatRequest (RFC 6520): payload 'deadbeef' + 16-byte mandatory padding.
+# Built via the codec; exercises padding preservation.
+ffffffffffff00112233445508004500004400004000400626b20a0000010a000002303901bb00000001000000015018ffff3cb500001803030017010004deadbeefabababababababababababababababab
