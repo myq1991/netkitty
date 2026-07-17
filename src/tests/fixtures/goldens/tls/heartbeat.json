@@ -1,0 +1,75 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "ff:ff:ff:ff:ff:ff",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 68,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 9906,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 12345,
+      "dstport": 443,
+      "seq": 1,
+      "ack": 1,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 65535,
+      "checksum": 15541,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "tls-heartbeat",
+    "data": {
+      "contentType": 24,
+      "version": "TLS1.2",
+      "length": 23,
+      "heartbeatType": "HeartbeatRequest",
+      "payloadLength": 4,
+      "payloadMessage": "deadbeef",
+      "padding": "abababababababababababababababab"
+    },
+    "errors": []
+  }
+]

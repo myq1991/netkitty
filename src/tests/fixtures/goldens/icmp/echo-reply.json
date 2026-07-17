@@ -1,0 +1,48 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "32:c5:19:fc:d1:37",
+      "smac": "8e:ba:97:c1:87:e9",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 84,
+      "id": 1293,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 1,
+      "checksum": 61868,
+      "sip": "192.168.1.1",
+      "dip": "192.168.1.158"
+    },
+    "errors": []
+  },
+  {
+    "id": "icmp",
+    "data": {
+      "type": 0,
+      "code": 0,
+      "checksum": 24033,
+      "ident": 24899,
+      "seq": 0,
+      "message": "67e811540002dc9908090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637"
+    },
+    "errors": []
+  }
+]

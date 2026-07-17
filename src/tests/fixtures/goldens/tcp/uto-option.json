@@ -1,0 +1,69 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "ff:ff:ff:ff:ff:ff",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 44,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 9930,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 12345,
+      "dstport": 80,
+      "seq": 1,
+      "ack": 1,
+      "hdrLen": 24,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": true,
+        "fin": false
+      },
+      "window": 65535,
+      "checksum": 48872,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "UTO",
+          "granularity": 1,
+          "timeout": 100
+        }
+      ]
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "33:33:00:00:00:16",
+      "smac": "f8:e4:3b:3d:0f:fa",
+      "etherType": "86dd"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6",
+    "data": {
+      "version": 6,
+      "tclass": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "flow": 0,
+      "plen": 24,
+      "nxt": 0,
+      "hllm": 1,
+      "sip": "fe80:0000:0000:0000:d754:0b32:a0b0:3646",
+      "dip": "ff02:0000:0000:0000:0000:0000:0000:0016"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6-hopopt",
+    "data": {
+      "nxt": 59,
+      "len": 2,
+      "items": [
+        {
+          "type": "Endpoint-Identification",
+          "id": "000102030405060708090a0b0c0d0e0f"
+        },
+        {
+          "type": "PadN",
+          "n": 2
+        }
+      ]
+    },
+    "errors": []
+  }
+]

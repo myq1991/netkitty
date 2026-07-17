@@ -1,0 +1,78 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:0c:cd:01:01:ff",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "8100"
+    },
+    "errors": []
+  },
+  {
+    "id": "vlan",
+    "data": {
+      "priority": 5,
+      "dei": false,
+      "id": 204,
+      "etherType": "88b8"
+    },
+    "errors": []
+  },
+  {
+    "id": "goose",
+    "data": {
+      "appid": 4660,
+      "length": 115,
+      "reserved1": {
+        "simulated": false,
+        "reserved": 0
+      },
+      "reserved2": {
+        "reserved": 0
+      },
+      "goosePdu": {
+        "gocbRef": "Dev1/LLN0$GO$gcb01",
+        "timeAllowedtoLive": 20,
+        "datSet": "Dev1/LLN0$DatSet1",
+        "goID": "GS_gcb01",
+        "t": "0",
+        "stNum": 0,
+        "sqNum": 0,
+        "simulation": false,
+        "confRev": 1,
+        "ndsCom": false,
+        "numDatSetEntries": 3,
+        "allData": [
+          {
+            "dataType": "INT8",
+            "value": 11
+          },
+          {
+            "dataType": "Structure",
+            "value": [
+              {
+                "dataType": "Boolean",
+                "value": true
+              },
+              {
+                "dataType": "OCTET-STRING",
+                "value": "112233445566"
+              }
+            ]
+          },
+          {
+            "dataType": "FLOAT32",
+            "value": -3.130844831466675
+          }
+        ]
+      }
+    },
+    "errors": [
+      {
+        "id": "goose",
+        "path": "goosePdu.stNum",
+        "message": "This INTEGER value shall have a range of 1 to 4294967295"
+      }
+    ]
+  }
+]
