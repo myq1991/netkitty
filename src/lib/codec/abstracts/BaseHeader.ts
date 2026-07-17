@@ -281,8 +281,15 @@ export abstract class BaseHeader {
      */
     protected readBits(offset: number, length: number, bitOffset: number, bitLength: number): number {
         const buffer: Buffer = this.#readBytes(offset, length, false, true)
-        const bitString: string = parseInt(buffer.toString('hex'), 16).toString(2).padStart(length * 8, '0')
-        return parseInt(bitString.substring(bitOffset, bitOffset + bitLength), 2)
+        //MSB-first bit extraction over a `length`-octet window, done with BigInt so wide windows
+        //keep full precision (parseInt(hex) lost bits past ~2^53) and no per-call string allocation.
+        //Available bytes occupy the low end of the window; missing (truncated) high bits read as 0.
+        let value: bigint = 0n
+        for (const byte of buffer) value = (value << 8n) | BigInt(byte)
+        const shift: number = length * 8 - bitOffset - bitLength
+        if (shift < 0) return 0
+        const mask: bigint = (1n << BigInt(bitLength)) - 1n
+        return Number((value >> BigInt(shift)) & mask)
     }
 
     /**
@@ -296,14 +303,22 @@ export abstract class BaseHeader {
      */
     protected writeBits(offset: number, length: number, bitOffset: number, bitLength: number, value: number): void {
         const buffer: Buffer = this.#readBytes(offset, length, true, true)
-        let bitArray: string[] = Array.from(parseInt(buffer.toString('hex'), 16).toString(2).padStart(buffer.length * 8, '0'))
-        const valueBitArray: string[] = Array.from(value.toString(2).padStart(bitLength, '0'))
-        bitArray = bitArray.map((bit: string, index: number): string => {
-            if (index < bitOffset) return bit
-            if (index >= (bitOffset + bitLength)) return bit
-            return valueBitArray[index - bitOffset]
-        })
-        this.writeBytes(offset, Buffer.from(parseInt(bitArray.join(''), 2).toString(16).padStart(buffer.length * 2, '0'), 'hex'))
+        //Overlay `bitLength` bits of `value` at `bitOffset` (MSB-first) into the octet window, using
+        //BigInt so any window width is exact. Only the low `bitLength` bits of value are written
+        //(out-of-range values wrap, matching a fixed-width field), and encode never crashes.
+        let current: bigint = 0n
+        for (const byte of buffer) current = (current << 8n) | BigInt(byte)
+        const shift: bigint = BigInt(buffer.length * 8 - bitOffset - bitLength)
+        const fieldMask: bigint = (1n << BigInt(bitLength)) - 1n
+        const field: bigint = (BigInt(Math.trunc(Number(value)) || 0) & fieldMask) << shift
+        const written: bigint = (current & ~(fieldMask << shift)) | field
+        const out: Buffer = Buffer.alloc(buffer.length)
+        let v: bigint = written
+        for (let i: number = buffer.length - 1; i >= 0; i--) {
+            out[i] = Number(v & 0xFFn)
+            v >>= 8n
+        }
+        this.writeBytes(offset, out)
     }
 
     /**
@@ -314,15 +329,17 @@ export abstract class BaseHeader {
      * @param codecs
      * @protected
      */
-    protected getFieldCodecs(schema: ProtocolFieldJSONSchema, codecName: string, execBeforeSubCodecs: boolean, codecs: (() => Promise<void>)[] = []): (() => Promise<void>)[] {
+    protected getFieldCodecs(schema: ProtocolFieldJSONSchema, codecName: string, execBeforeSubCodecs: boolean, codecs: (() => void | Promise<void>)[] = []): (() => void | Promise<void>)[] {
         if (!schema.properties) return codecs
         for (const propertyName of Object.keys(schema.properties)) {
             const fieldSchema: ProtocolFieldJSONSchema = schema.properties[propertyName]
-            let codec: (() => void | Promise<void>) | undefined = fieldSchema[codecName]
-            if (!codec) codec = async (): Promise<void> => (void (0))
-            if (execBeforeSubCodecs) codecs.push(async (): Promise<void> => await codec())
+            const codec: (() => void | Promise<void>) | undefined = fieldSchema[codecName]
+            //Push the raw closure (no async double-wrap) and skip fields with no codec entirely, so
+            //decode/encode can call each synchronously and only await genuine Promises. A missing
+            //codec was previously a no-op thunk that only cost an await turn per field.
+            if (execBeforeSubCodecs && codec) codecs.push(codec)
             if (fieldSchema.properties) this.getFieldCodecs(fieldSchema, codecName, execBeforeSubCodecs, codecs)
-            if (!execBeforeSubCodecs) codecs.push(async (): Promise<void> => await codec())
+            if (!execBeforeSubCodecs && codec) codecs.push(codec)
         }
         return codecs
     }
@@ -423,13 +440,16 @@ export abstract class BaseHeader {
      * Decode packet header field by field
      */
     public async decode(): Promise<void> {
-        const decodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'decode', true)
+        const decodes: (() => void | Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'decode', true)
         for (const decode of decodes) {
             //Decode must never throw (error-accumulation contract): a truncated/corrupt packet can
             //make a field's byte read run past the buffer or hit an invalid value. Contain that to a
             //recorded error so the remaining fields and layers still decode best-effort.
+            //Call synchronously and only await genuine Promises — the vast majority of field
+            //closures are synchronous, so this avoids a promise allocation + scheduler turn per field.
             try {
-                await decode()
+                const result: void | Promise<void> = decode()
+                if (result && typeof (result as {then?: unknown}).then === 'function') await result
             } catch (e) {
                 this.recordError('', `Decode error: ${(e as Error).message}`)
             }
@@ -450,14 +470,16 @@ export abstract class BaseHeader {
      * Encode packet header field by field
      */
     public async encode(): Promise<void> {
-        const encodes: (() => Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'encode', false)
+        const encodes: (() => void | Promise<void>)[] = this.getFieldCodecs(this.SCHEMA as ProtocolFieldJSONSchema, 'encode', false)
         for (const encode of encodes) {
             //Shape validation is the deliberate fast-fail at the encode entry point (Ajv, in
             //Codec.#encode); it runs before we get here. Past that, a field's encode closure must
             //not crash the whole encode on an edge-case value — contain it to a recorded error so
             //the packet still assembles best-effort (matches the decode contract).
+            //Synchronous fast-path (see decode): only await a genuinely returned Promise.
             try {
-                await encode()
+                const result: void | Promise<void> = encode()
+                if (result && typeof (result as {then?: unknown}).then === 'function') await result
             } catch (e) {
                 this.recordError('', `Encode error: ${(e as Error).message}`)
             }
