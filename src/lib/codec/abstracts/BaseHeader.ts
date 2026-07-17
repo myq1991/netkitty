@@ -9,6 +9,8 @@ import {FlexibleObject} from '../lib/FlexibleObject'
 import {Ajv, ErrorObject, ValidateFunction} from 'ajv'
 import {HeaderTreeNode} from '../types/HeaderTreeNode'
 import {CodecSchemaValidateError} from '../../../errors/CodecSchemaValidateError'
+import {BufferToUInt8, BufferToUInt16, BufferToUInt32} from '../../helper/BufferToNumber'
+import {UInt8ToBuffer, UInt16ToBuffer, UInt32ToBuffer} from '../../helper/NumberToBuffer'
 
 const CONSTRUCTOR_VALIDATE_KEY: string = '__validate'
 
@@ -319,6 +321,48 @@ export abstract class BaseHeader {
             v >>= 8n
         }
         this.writeBytes(offset, out)
+    }
+
+    // ===== Field building blocks =====
+    // Declarative field factories: one call yields the whole {type,label,min,max,decode,encode}
+    // schema field, generating the decode/encode twin from a single declaration so the byte offset
+    // and width live in one place (not duplicated across two hand-mirrored closures — the source of
+    // the historical decode≠encode bugs). Closures re-resolve this.instance[name] at run time because
+    // encode swaps in a fresh instance. Irregular fields keep their hand-written closures (escape hatch).
+
+    /**
+     * An unsigned big-endian integer field of `byteLength` octets at `offset`. Decode reads it into
+     * `name`; encode clamps to the field's range (recording an error, never throwing) and writes it —
+     * byte-for-byte identical to the hand-written pattern it replaces.
+     * @protected
+     */
+    protected fieldUInt(name: string, offset: number, byteLength: number, label: string): ProtocolFieldJSONSchema {
+        const maximum: number = byteLength === 1 ? 255 : byteLength === 2 ? 65535 : 4294967295
+        const read: (buffer: Buffer) => number = byteLength === 1 ? BufferToUInt8 : byteLength === 2 ? BufferToUInt16 : BufferToUInt32
+        const write: (value: number) => Buffer = byteLength === 1 ? UInt8ToBuffer : byteLength === 2 ? UInt16ToBuffer : UInt32ToBuffer
+        return {
+            type: 'integer',
+            label: label,
+            minimum: 0,
+            maximum: maximum,
+            decode: (): void => {
+                (this.instance as any)[name].setValue(read(this.readBytes(offset, byteLength)))
+            },
+            encode: (): void => {
+                const node: any = (this.instance as any)[name]
+                let value: number = node.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                if (value > maximum) {
+                    this.recordError(node.getPath(), `Maximum value is ${maximum}`)
+                    value = maximum
+                }
+                if (value < 0) {
+                    this.recordError(node.getPath(), 'Minimum value is 0')
+                    value = 0
+                }
+                node.setValue(value)
+                this.writeBytes(offset, write(value))
+            }
+        }
     }
 
     /**

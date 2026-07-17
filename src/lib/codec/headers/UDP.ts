@@ -61,50 +61,10 @@ export class UDP extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',
         properties: {
-            srcport: {
-                type: 'integer',
-                label: 'Source Port',
-                minimum: 0,
-                maximum: 65535,
-                decode: (): void => {
-                    this.instance.srcport.setValue(BufferToUInt16(this.readBytes(0, 2)))
-                },
-                encode: (): void => {
-                    let srcport: number = this.instance.srcport.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
-                    if (srcport > 65535) {
-                        this.recordError(this.instance.srcport.getPath(), 'Maximum value is 65535')
-                        srcport = 65535
-                    }
-                    if (srcport < 0) {
-                        this.recordError(this.instance.srcport.getPath(), 'Minimum value is 0')
-                        srcport = 0
-                    }
-                    this.instance.srcport.setValue(srcport)
-                    this.writeBytes(0, UInt16ToBuffer(srcport))
-                }
-            },
-            dstport: {
-                type: 'integer',
-                label: 'Destination Port',
-                minimum: 0,
-                maximum: 65535,
-                decode: (): void => {
-                    this.instance.dstport.setValue(BufferToUInt16(this.readBytes(2, 2)))
-                },
-                encode: (): void => {
-                    let dstport: number = this.instance.dstport.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
-                    if (dstport > 65535) {
-                        this.recordError(this.instance.dstport.getPath(), 'Maximum value is 65535')
-                        dstport = 65535
-                    }
-                    if (dstport < 0) {
-                        this.recordError(this.instance.dstport.getPath(), 'Minimum value is 0')
-                        dstport = 0
-                    }
-                    this.instance.dstport.setValue(dstport)
-                    this.writeBytes(2, UInt16ToBuffer(dstport))
-                }
-            },
+            //Migrated to the declarative field building block: one call replaces the hand-mirrored
+            //decode/encode twin, byte-for-byte identical (proven by the unchanged golden + round-trip).
+            srcport: this.fieldUInt('srcport', 0, 2, 'Source Port'),
+            dstport: this.fieldUInt('dstport', 2, 2, 'Destination Port'),
             length: {
                 type: 'integer',
                 label: 'Length',
