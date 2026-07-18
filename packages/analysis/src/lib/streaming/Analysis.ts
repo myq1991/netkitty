@@ -43,9 +43,8 @@ export class Analysis {
 
     /** Read a bounded capture: build the frame index, emit 'complete'. Resolves once indexing finishes. */
     public async open(source: AnalysisSource): Promise<void> {
-        const path: string = this.#sourcePath(source)
         const channel: IWorkerChannel = this.#start()
-        const result: {frameCount: number} = await channel.request<{frameCount: number}>('open', {source: path})
+        const result: {frameCount: number} = await channel.request<{frameCount: number}>('open', {source: source})
         this.#frameCount = result.frameCount
     }
 
@@ -55,7 +54,6 @@ export class Analysis {
      * with phase 'live'. Never emits 'complete'. Index memory is bounded by AnalysisOptions.maxFrames.
      */
     public async watch(source: AnalysisSource): Promise<void> {
-        const path: string = this.#sourcePath(source)
         const channel: IWorkerChannel = this.#start()
         channel.on('frame', (payload: unknown): void => {
             const frame: Frame = payload as Frame
@@ -66,7 +64,7 @@ export class Analysis {
                 reducer.update(frame, {index: frame.index, total: this.#frameCount, phase: 'live'})
             }
         })
-        const result: {frameCount: number} = await channel.request<{frameCount: number}>('watch', {source: path, maxFrames: this.#options.maxFrames})
+        const result: {frameCount: number} = await channel.request<{frameCount: number}>('watch', {source: source, maxFrames: this.#options.maxFrames})
         if (result.frameCount > this.#frameCount) this.#frameCount = result.frameCount
     }
 
@@ -160,11 +158,6 @@ export class Analysis {
     #require(): IWorkerChannel {
         if (!this.#channel) throw new Error('Analysis has no open source; call open() or watch() first')
         return this.#channel
-    }
-
-    #sourcePath(source: AnalysisSource): string {
-        if (typeof source === 'string') return source
-        throw new Error('Analysis v1 only supports a filesystem path source; buffer/File sources are not yet implemented')
     }
 
     #emit(event: string, ...args: unknown[]): void {
