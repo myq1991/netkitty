@@ -14,6 +14,9 @@ packages/*/bindings
 # local AI assistant guidance (not committed)
 CLAUDE.md
 
+# local design drafts (not committed; per-package README + docs are the real deliverables)
+/design
+
 # local env files
 .env.local
 .env.*.local
