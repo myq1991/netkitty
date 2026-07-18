@@ -1,7 +1,6 @@
 import {BindingCapture} from '../lib/BindingCapture'
 import {PipeClient} from '../../pipe/PipeClient'
-import {PcapWriter} from '../../pcap/PcapWriter'
-import {IPcapPacketInfo} from '../../pcap/interfaces/IPcapPacketInfo'
+import {PcapWriter, IPcapPacketInfo} from '@netkitty/pcap'
 
 const captureTemporaryFilename: string = process.env.captureTemporaryFilename!
 

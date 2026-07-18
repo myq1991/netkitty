@@ -15,8 +15,7 @@ import {cp} from 'node:fs/promises'
 import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 import {tmpdir} from 'node:os'
-import {IPcapPacketInfo} from '../pcap/interfaces/IPcapPacketInfo'
-import {GeneratePCAPHeader} from '../pcap/PCAPGenerator'
+import {IPcapPacketInfo, GeneratePCAPHeader} from '@netkitty/pcap'
 
 export class Capture extends EventEmitter {
 
