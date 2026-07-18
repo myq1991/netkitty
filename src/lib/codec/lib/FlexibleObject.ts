@@ -2,7 +2,11 @@ export class FlexibleObject {
 
     readonly #parent: FlexibleObject | undefined
 
-    readonly #paths: string[]
+    //This node's key within its parent (root = ''). The dotted path is reconstructed lazily by walking
+    //parents in getPath(), instead of storing a per-node paths array. The `[...paths, key]` copy on
+    //every child node was a major allocation on the encode input-tree deep-clone (setValue) and the
+    //decode field tree; getPath is only called on the cold error-recording path.
+    readonly #key: string
 
     #data: any
 
@@ -14,15 +18,15 @@ export class FlexibleObject {
         if (this.#parent) this.#parent.#markFlexibleObjectDefined()
     }
 
-    constructor(data?: object, parent?: FlexibleObject, paths?: string[]) {
+    constructor(data?: object, parent?: FlexibleObject, key?: string) {
         this.#parent = parent
         this.#data = {}
-        this.#paths = paths ? paths : []
+        this.#key = key !== undefined ? key : ''
         if (data !== undefined) this.setValue(data)
         return new Proxy(this, {
             get: (target: FlexibleObject, p: string): any => {
                 if (this[p]) return (...args: any[]): any => (this[p] as any)(...args)
-                if (target.#data[p] === undefined) target.#data[p] = new FlexibleObject(target.#data[p], this, [...this.#paths, p])
+                if (target.#data[p] === undefined) target.#data[p] = new FlexibleObject(target.#data[p], this, p)
                 return target.#data[p]
             },
             set: (target: FlexibleObject, p: string, newValue: any): boolean => {
@@ -39,7 +43,7 @@ export class FlexibleObject {
     public setValue(value: any): void {
         if (typeof value === 'object' && !Array.isArray(value)) {
             Object.keys(value).forEach(key => {
-                this.#data[key] = new FlexibleObject(this.#data[key], this, [...this.#paths, key])
+                this.#data[key] = new FlexibleObject(this.#data[key], this, key)
                 this.#data[key].setValue(value[key])
             })
         } else {
@@ -91,7 +95,14 @@ export class FlexibleObject {
      */
     // @ts-ignore
     public getPath(index?: number): string {
-        const objPath: string = this.#paths.join('.')
+        //Walk parents to rebuild the dotted path (cold path: only error recording calls this).
+        const parts: string[] = []
+        let node: FlexibleObject | undefined = this
+        while (node !== undefined && node.#parent !== undefined) {
+            parts.unshift(node.#key)
+            node = node.#parent
+        }
+        const objPath: string = parts.join('.')
         if (index === undefined) return objPath
         return `${objPath}[${index}]`
     }
