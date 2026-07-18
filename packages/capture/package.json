@@ -22,7 +22,8 @@
     "build": "npm run clean && tsc -p tsconfig.json",
     "build:cpp": "npm run clean:cpp && node-gyp-build",
     "build:test": "tsc -p tsconfig.test.json",
-    "test": "npm run build:test && node --test \"dist-test/**/*.spec.js\"",
+    "test": "echo \"@netkitty/capture: integration-only tests (need a real network device + privileges) — run 'npm run test:integration'\"",
+    "test:integration": "npm run build:test && node --test \"dist-test/**/*.spec.js\"",
     "test:only": "node --test \"dist-test/**/*.spec.js\""
   },
   "keywords": [
