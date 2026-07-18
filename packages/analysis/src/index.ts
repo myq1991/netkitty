@@ -8,8 +8,9 @@ export {TcpStreamAnalyzer} from './lib/analysis/TcpStreamAnalyzer'
 export type {RttSample, TcpAnalysis, TcpStreamDiagnostic} from './lib/analysis/TcpStreamAnalyzer'
 
 /**
- * Streaming capture-file analysis (v1, in progress) — the Analysis facade plus pluggable reducers and
- * the backend seams. Signatures are frozen here; implementations land incrementally.
+ * Streaming capture-file analysis — the Analysis facade over a single worker, pluggable reducers, a
+ * display filter, and the pluggable backend seams. node (worker_threads) and browser (Web Worker)
+ * share one environment-agnostic API, verified field-for-field in both (see BROWSER_VERIFY.md).
  */
 export {Analysis} from './lib/streaming/Analysis'
 export type {AnalysisOptions} from './lib/streaming/types/AnalysisOptions'
