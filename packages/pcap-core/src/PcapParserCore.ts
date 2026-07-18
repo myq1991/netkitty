@@ -1,6 +1,3 @@
-import EventEmitter from 'events'
-import {createReadStream, ReadStream} from 'node:fs'
-import {format} from 'node:util'
 import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
 
 const PCAP_GLOBAL_HEADER_LENGTH: number = 24 //bytes
@@ -29,9 +26,50 @@ type PcapNgInterface = {
 
 export type PcapFileFormat = 'pcap' | 'pcapng'
 
-export class PcapParser extends EventEmitter {
+export type PcapGlobalHeader = {
+    magicNumber: number
+    majorVersion: number
+    minorVersion: number
+    gmtOffset: number
+    timestampAccuracy: number
+    snapshotLength: number
+    linkLayerType: number
+}
 
-    protected stream: ReadStream
+export type PcapSectionHeader = {
+    majorVersion: number
+    minorVersion: number
+}
+
+export type PcapRecordHeader = {
+    timestampSeconds: number
+    timestampMicroseconds: number
+    capturedLength: number
+    originalLength: number
+}
+
+/**
+ * Injectable result sinks, replacing the EventEmitter of the streaming shell.
+ * Each callback maps one-to-one to the parser's original events.
+ */
+export interface PcapParserCoreHandlers {
+    onGlobalHeader?: (header: PcapGlobalHeader) => void
+    onSectionHeader?: (header: PcapSectionHeader) => void
+    onPacketHeader?: (header: PcapRecordHeader) => void
+    onPacketData?: (data: Buffer) => void
+    onPacket?: (pcapPacketInfo: IPcapPacketInfo) => void
+    onEnd?: () => void
+    onError?: (error: Error) => void
+}
+
+/**
+ * Pure, browser-safe pcap/pcapng parsing state machine.
+ * Feed bytes with write(chunk); results are delivered through the injected handlers.
+ * No node:fs / events / node:util dependencies (Buffer only).
+ */
+export class PcapParserCore {
+
+    protected readonly handlers: PcapParserCoreHandlers
 
     protected buffer: Buffer | null
 
@@ -52,32 +90,35 @@ export class PcapParser extends EventEmitter {
 
     protected ngInterfaces: PcapNgInterface[] = []
 
-    protected currentPacketHeader: {
-        timestampSeconds: number
-        timestampMicroseconds: number
-        capturedLength: number
-        originalLength: number
-    }
+    protected currentPacketHeader: PcapRecordHeader
 
     public get format(): PcapFileFormat | null {
         return this.fileFormat
     }
 
-    public static parse(input: string | ReadStream): PcapParser {
-        return new PcapParser(input)
-    }
-
-    constructor(input: string | ReadStream) {
-        super()
-        this.stream = (typeof input === 'string') ? createReadStream(input) : input
-        this.stream.pause()
-        this.stream.on('data', (data: string | Buffer): void => this.onData(data as Buffer))
-        this.stream.on('error', (err: Error): void => this.onError(err))
-        this.stream.on('end', (): void => this.onEnd())
+    constructor(handlers: PcapParserCoreHandlers = {}) {
+        this.handlers = handlers
         this.buffer = null
         this.state = (): boolean => this.detectFormat()
         this.endianness = null
-        process.nextTick(this.stream.resume.bind(this.stream))
+    }
+
+    /**
+     * Feed a chunk of capture-file bytes into the parser and drain the state machine
+     * @param data
+     */
+    public write(data: Buffer): void {
+        if (this.errored) return
+        this.updateBuffer(data)
+        while (this.state()) {
+        }
+    }
+
+    /**
+     * Signal end of input
+     */
+    public end(): void {
+        this.handlers.onEnd?.()
     }
 
     protected updateBuffer(data: Buffer): void {
@@ -111,9 +152,8 @@ export class PcapParser extends EventEmitter {
      */
     protected fail(message: string): false {
         this.errored = true
-        this.stream.pause()
-        this.emit('error', new Error(message))
-        this.onEnd()
+        this.handlers.onError?.(new Error(message))
+        this.end()
         return false
     }
 
@@ -153,7 +193,7 @@ export class PcapParser extends EventEmitter {
                 this.state = (): boolean => this.parseNgBlock()
                 return true
             default:
-                return this.fail(format('unknown magic number: %s', magicNumber))
+                return this.fail(`unknown magic number: ${magicNumber}`)
         }
         this.state = (): boolean => this.parseGlobalHeader()
         return true
@@ -166,15 +206,7 @@ export class PcapParser extends EventEmitter {
     protected parseGlobalHeader(): boolean {
         const buffer: Buffer = this.buffer!
         if (buffer.length >= PCAP_GLOBAL_HEADER_LENGTH) {
-            const header: {
-                magicNumber: number
-                majorVersion: number
-                minorVersion: number
-                gmtOffset: number
-                timestampAccuracy: number
-                snapshotLength: number
-                linkLayerType: number
-            } = {
+            const header: PcapGlobalHeader = {
                 magicNumber: this.readUInt32(buffer, 0),
                 majorVersion: this.readUInt16(buffer, 4),
                 minorVersion: this.readUInt16(buffer, 6),
@@ -184,9 +216,9 @@ export class PcapParser extends EventEmitter {
                 linkLayerType: this.readUInt32(buffer, 20)
             }
             if (header.majorVersion !== 2) {
-                return this.fail(format('unsupported version %d.%d, only libpcap file format 2.x is supported', header.majorVersion, header.minorVersion))
+                return this.fail(`unsupported version ${header.majorVersion}.${header.minorVersion}, only libpcap file format 2.x is supported`)
             }
-            this.emit('globalHeader', header)
+            this.handlers.onGlobalHeader?.(header)
             this.buffer = buffer.subarray(PCAP_GLOBAL_HEADER_LENGTH)
             this.state = (): boolean => this.parsePacketHeader()
             this.offset = PCAP_GLOBAL_HEADER_LENGTH
@@ -203,17 +235,17 @@ export class PcapParser extends EventEmitter {
         const buffer: Buffer = this.buffer!
         if (buffer.length >= PCAP_PACKET_HEADER_LENGTH) {
             const timestampFraction: number = this.readUInt32(buffer, 4)
-            const header: PcapParser['currentPacketHeader'] = {
+            const header: PcapRecordHeader = {
                 timestampSeconds: this.readUInt32(buffer, 0),
                 timestampMicroseconds: this.timestampNanosecond ? Math.floor(timestampFraction / 1000) : timestampFraction,
                 capturedLength: this.readUInt32(buffer, 8),
                 originalLength: this.readUInt32(buffer, 12)
             }
             if (header.capturedLength > MAX_CAPTURED_LENGTH) {
-                return this.fail(format('corrupt capture file: captured length %d exceeds sane limit %d', header.capturedLength, MAX_CAPTURED_LENGTH))
+                return this.fail(`corrupt capture file: captured length ${header.capturedLength} exceeds sane limit ${MAX_CAPTURED_LENGTH}`)
             }
             this.currentPacketHeader = header
-            this.emit('packetHeader', header)
+            this.handlers.onPacketHeader?.(header)
             this.buffer = buffer.subarray(PCAP_PACKET_HEADER_LENGTH)
             this.state = (): boolean => this.parsePacketBody()
             this.index += 1
@@ -245,8 +277,8 @@ export class PcapParser extends EventEmitter {
                 microseconds: this.currentPacketHeader.timestampMicroseconds,
                 packet: data.toString('base64')
             }
-            this.emit('packetData', data)
-            this.emit('packet', pcapPacketInfo)
+            this.handlers.onPacketData?.(data)
+            this.handlers.onPacket?.(pcapPacketInfo)
             this.buffer = buffer.subarray(this.currentPacketHeader.capturedLength)
             this.state = (): boolean => this.parsePacketHeader()
             this.offset += recordLength
@@ -323,14 +355,14 @@ export class PcapParser extends EventEmitter {
      */
     protected ngEmitPacket(blockOffset: number, blockTotalLength: number, recordHeaderLength: number, data: Buffer, seconds: number, microseconds: number, originalLength: number): void {
         this.index += 1
-        const header: PcapParser['currentPacketHeader'] = {
+        const header: PcapRecordHeader = {
             timestampSeconds: seconds,
             timestampMicroseconds: microseconds,
             capturedLength: data.length,
             originalLength: originalLength
         }
         this.currentPacketHeader = header
-        this.emit('packetHeader', header)
+        this.handlers.onPacketHeader?.(header)
         const pcapPacketInfo: IPcapPacketInfo = {
             index: this.index,
             offset: blockOffset,
@@ -343,8 +375,8 @@ export class PcapParser extends EventEmitter {
             microseconds: microseconds,
             packet: data.toString('base64')
         }
-        this.emit('packetData', data)
-        this.emit('packet', pcapPacketInfo)
+        this.handlers.onPacketData?.(data)
+        this.handlers.onPacket?.(pcapPacketInfo)
     }
 
     /**
@@ -364,17 +396,17 @@ export class PcapParser extends EventEmitter {
             } else if (byteOrderMagic === '4d3c2b1a') {
                 this.endianness = 'LE'
             } else {
-                return this.fail(format('corrupt pcapng: unknown byte-order magic %s', byteOrderMagic))
+                return this.fail(`corrupt pcapng: unknown byte-order magic ${byteOrderMagic}`)
             }
         }
         if (!this.endianness) return this.fail('corrupt pcapng: block appears before section header')
 
         const blockTotalLength: number = this.readUInt32(buffer, 4)
         if (blockTotalLength < 12 || blockTotalLength % 4 !== 0) {
-            return this.fail(format('corrupt pcapng: invalid block total length %d', blockTotalLength))
+            return this.fail(`corrupt pcapng: invalid block total length ${blockTotalLength}`)
         }
         if (blockTotalLength > MAX_BLOCK_LENGTH) {
-            return this.fail(format('corrupt pcapng: block length %d exceeds sane limit %d', blockTotalLength, MAX_BLOCK_LENGTH))
+            return this.fail(`corrupt pcapng: block length ${blockTotalLength} exceeds sane limit ${MAX_BLOCK_LENGTH}`)
         }
         if (buffer.length < blockTotalLength) return false
 
@@ -384,7 +416,7 @@ export class PcapParser extends EventEmitter {
             case PCAPNG_BLOCK_SECTION_HEADER: {
                 //New section: interfaces reset (endianness already handled above)
                 this.ngInterfaces = []
-                this.emit('sectionHeader', {
+                this.handlers.onSectionHeader?.({
                     majorVersion: this.readUInt16(buffer, 12),
                     minorVersion: this.readUInt16(buffer, 14)
                 })
@@ -409,7 +441,7 @@ export class PcapParser extends EventEmitter {
                 const capturedLength: number = this.readUInt32(buffer, 20)
                 const originalLength: number = this.readUInt32(buffer, 24)
                 if (capturedLength > MAX_CAPTURED_LENGTH || PCAPNG_EPB_HEADER_LENGTH + capturedLength > blockTotalLength - 4) {
-                    return this.fail(format('corrupt pcapng: captured length %d does not fit its block (%d)', capturedLength, blockTotalLength))
+                    return this.fail(`corrupt pcapng: captured length ${capturedLength} does not fit its block (${blockTotalLength})`)
                 }
                 const data: Buffer = buffer.subarray(PCAPNG_EPB_HEADER_LENGTH, PCAPNG_EPB_HEADER_LENGTH + capturedLength)
                 const timestamp: { seconds: number, microseconds: number } = this.ngTimestamp(this.ngInterface(interfaceId), timestampHigh, timestampLow)
@@ -422,7 +454,7 @@ export class PcapParser extends EventEmitter {
                 const snapshotLength: number = this.ngInterface(0).snapshotLength
                 const capturedLength: number = Math.min(originalLength, dataAreaLength, snapshotLength > 0 ? snapshotLength : MAX_CAPTURED_LENGTH)
                 if (capturedLength < 0 || capturedLength > MAX_CAPTURED_LENGTH) {
-                    return this.fail(format('corrupt pcapng: simple packet length %d is invalid', capturedLength))
+                    return this.fail(`corrupt pcapng: simple packet length ${capturedLength} is invalid`)
                 }
                 const data: Buffer = buffer.subarray(PCAPNG_SPB_HEADER_LENGTH, PCAPNG_SPB_HEADER_LENGTH + capturedLength)
                 this.ngEmitPacket(blockOffset, blockTotalLength, PCAPNG_SPB_HEADER_LENGTH, data, 0, 0, originalLength)
@@ -435,20 +467,5 @@ export class PcapParser extends EventEmitter {
         this.buffer = buffer.subarray(blockTotalLength)
         this.offset += blockTotalLength
         return true
-    }
-
-    protected onData(data: Buffer): void {
-        if (this.errored) return
-        this.updateBuffer(data)
-        while (this.state()) {
-        }
-    }
-
-    protected onError(err: Error): void {
-        this.emit('error', err)
-    }
-
-    protected onEnd(): void {
-        this.emit('end')
     }
 }

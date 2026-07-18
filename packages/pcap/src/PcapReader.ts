@@ -3,7 +3,7 @@ import {FileHandle, FileReadResult, open} from 'node:fs/promises'
 import {ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './PcapParser'
-import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
+import {IPcapPacketInfo} from '@netkitty/pcap-core'
 
 export interface IPcapReaderOptions {
     filename: string

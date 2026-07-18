@@ -2,9 +2,9 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {Readable} from 'node:stream'
 import {LoadPacket, FixtureCapturePath} from '../lib/Fixtures'
-import {PcapReader} from '../../lib/pcap/PcapReader'
-import {PcapParser} from '../../lib/pcap/PcapParser'
-import {IPcapPacketInfo} from '../../lib/pcap/interfaces/IPcapPacketInfo'
+import {PcapReader} from '../../src/PcapReader'
+import {PcapParser} from '../../src/PcapParser'
+import {IPcapPacketInfo} from '@netkitty/pcap-core'
 
 /**
  * Read every packet of a capture file (resolves on 'done', rejects on 'error')

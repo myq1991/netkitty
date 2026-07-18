@@ -1,7 +1,6 @@
 import EventEmitter from 'events'
 import {createWriteStream, existsSync, statSync, WriteStream} from 'node:fs'
-import {GeneratePCAPData, GeneratePCAPHeader} from './PCAPGenerator'
-import {IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
+import {GeneratePCAPData, GeneratePCAPHeader, IPcapPacketInfo} from '@netkitty/pcap-core'
 
 export interface IPcapWriterOptions {
     filename: string
