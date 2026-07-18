@@ -32,3 +32,4 @@ export {ConversationsReducer} from './lib/streaming/reducers/ConversationsReduce
 export type {ConversationSummary} from './lib/streaming/reducers/ConversationsReducer'
 export {EndpointsReducer} from './lib/streaming/reducers/EndpointsReducer'
 export type {EndpointSummary} from './lib/streaming/reducers/EndpointsReducer'
+export {reduceReducer, groupByReducer} from './lib/streaming/reducers/ReducerFactories'

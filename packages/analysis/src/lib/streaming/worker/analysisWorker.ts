@@ -51,13 +51,16 @@ endpoint.handle('getFrames', (payload: unknown): FrameRow[] => {
     return store.range(from, to).map(frameRow)
 })
 
-async function materializeFrame(index: number): Promise<unknown | null> {
+async function materializeFrame(index: number, needs?: string[]): Promise<unknown | null> {
     const record: FrameIndexRecord | null = store.get(index)
     if (!record || !backend) return null
     const bytes: Uint8Array = await backend.read(record.fileOffset, record.capturedLength)
     const layers: CodecDecodeResult[] = await codec.decode(Buffer.from(bytes))
     //JSON round-trip strips the FlexibleObject proxy / closures so the layer tree is structured-cloneable.
-    return {...frameRow(record), capturedLength: record.capturedLength, layers: JSON.parse(JSON.stringify(layers))}
+    const plain: CodecDecodeResult[] = JSON.parse(JSON.stringify(layers))
+    //Projection: a reducer that declares `needs` only receives those layers, cutting cross-thread bytes.
+    const projected: CodecDecodeResult[] = needs ? plain.filter((layer: CodecDecodeResult): boolean => needs.includes(layer.id)) : plain
+    return {...frameRow(record), capturedLength: record.capturedLength, layers: projected}
 }
 
 endpoint.handle('getFrame', async (payload: unknown): Promise<unknown> => {
@@ -65,13 +68,14 @@ endpoint.handle('getFrame', async (payload: unknown): Promise<unknown> => {
     return materializeFrame(index)
 })
 
-//Batch of fully-materialized frames (with layers), for reducer replay. v1 re-decodes each frame;
-//a v2 optimization runs built-in reducers inside the worker over the index columns instead.
+//Batch of materialized frames (with layers, optionally projected to `needs`), for reducer replay.
+//v1 re-decodes each frame; a v2 optimization runs built-in reducers inside the worker over the index
+//columns instead.
 endpoint.handle('getFrameBatch', async (payload: unknown): Promise<unknown[]> => {
-    const {from, to}: {from: number, to: number} = payload as {from: number, to: number}
+    const {from, to, needs}: {from: number, to: number, needs?: string[]} = payload as {from: number, to: number, needs?: string[]}
     const out: unknown[] = []
     for (let index: number = from; index < to; index++) {
-        const frame: unknown | null = await materializeFrame(index)
+        const frame: unknown | null = await materializeFrame(index, needs)
         if (frame !== null) out.push(frame)
     }
     return out

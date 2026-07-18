@@ -92,10 +92,11 @@ export class Analysis {
     public async attachReducer(reducer: IAnalysisReducer<unknown>): Promise<void> {
         const channel: IWorkerChannel = this.#require()
         this.#reducers.add(reducer)
+        const needs: string[] | undefined = reducer.needs
         const total: number = this.#frameCount
         for (let from: number = 0; from < total; from += REPLAY_BATCH) {
             const to: number = Math.min(from + REPLAY_BATCH, total)
-            const frames: Frame[] = await channel.request<Frame[]>('getFrameBatch', {from: from, to: to})
+            const frames: Frame[] = await channel.request<Frame[]>('getFrameBatch', {from: from, to: to, needs: needs})
             for (const frame of frames) {
                 const context: UpdateContext = {index: frame.index, total: total, phase: 'replay'}
                 reducer.update(frame, context)
