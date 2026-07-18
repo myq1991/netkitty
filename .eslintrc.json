@@ -1,4 +1,10 @@
 {
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/dist-test/**",
+    "**/build/**",
+    "**/bindings/**"
+  ],
   "env": {
     "browser": true,
     "es6": true,
