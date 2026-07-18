@@ -52,6 +52,7 @@ type PendingSegment = {endSeq: number, timestamp: number, index: number}
 /** Per-direction running state within one conversation. */
 type HalfStream = {
     maxEndSeq: number
+    hasMaxEndSeq: boolean
     seenSyn: boolean
     lastPureAck: number | null
     pending: PendingSegment[]
@@ -59,6 +60,12 @@ type HalfStream = {
 
 function find(layers: CodecDecodeResult[], id: string): CodecDecodeResult | undefined {
     return layers.find((l: CodecDecodeResult): boolean => l.id === id)
+}
+
+//RFC 1982 serial-number comparison over the 32-bit TCP sequence space (which wraps at 2^32). Returns
+//true when `a` is at or before `b` in sequence order — correct across the wrap that a naive a<=b breaks.
+function seqLte(a: number, b: number): boolean {
+    return ((b - a) >>> 0) < 0x80000000
 }
 
 /** Project a packet to the TCP fields the analyzer needs, or null if it is not TCP-over-IP. */
@@ -72,7 +79,9 @@ function tcpViewOf(packet: AnalysisPacket, index: number): TcpView | null {
     const tcpHeaderBytes: number = Number(tcpData.hdrLen) || 20
     let payload: number
     if (ip.id === 'ipv4') payload = Number(ipData.length) - (Number(ipData.hdrLen) || 20) - tcpHeaderBytes
-    else payload = Number(ipData.length) - tcpHeaderBytes
+    //IPv6's payload-length field is `plen` (bytes after the fixed 40-byte header), not `length`. This
+    //over-counts if extension headers sit between IPv6 and TCP — acceptable for the common direct case.
+    else payload = Number(ipData.plen) - tcpHeaderBytes
     if (!(payload >= 0)) payload = 0
     const flags: any = tcpData.flags || {}
     return {
@@ -121,15 +130,22 @@ export class TcpStreamAnalyzer {
             const consumed: number = view.segmentLength + (view.syn ? 1 : 0) + (view.fin ? 1 : 0)
             const endSeq: number = view.seq + consumed
 
-            //Retransmission: this segment carries sequence space we've already sent.
+            //Retransmission: this segment carries sequence space we've already sent (RFC 1982 comparison
+            //so long-lived streams that wrap past 2^32 are handled correctly).
             if (consumed > 0) {
-                if (endSeq <= forwardHalf.maxEndSeq || (view.syn && forwardHalf.seenSyn)) {
+                const alreadySent: boolean = forwardHalf.hasMaxEndSeq && seqLte(endSeq, forwardHalf.maxEndSeq)
+                if (alreadySent || (view.syn && forwardHalf.seenSyn)) {
                     stream.retransmissions.push(index)
                 } else {
-                    //Only genuinely new data becomes an RTT candidate (retransmits would bias RTT low).
+                    //Only genuinely new data becomes an RTT candidate. Known simplification: if this data
+                    //is later retransmitted, the original segment stays pending and its (larger) RTT is
+                    //still used — no Karn's-algorithm invalidation of retransmitted samples.
                     forwardHalf.pending.push({endSeq: endSeq, timestamp: view.timestamp, index: index})
                 }
-                if (endSeq > forwardHalf.maxEndSeq) forwardHalf.maxEndSeq = endSeq
+                if (!forwardHalf.hasMaxEndSeq || seqLte(forwardHalf.maxEndSeq, endSeq)) {
+                    forwardHalf.maxEndSeq = endSeq
+                    forwardHalf.hasMaxEndSeq = true
+                }
                 if (view.syn) forwardHalf.seenSyn = true
             }
 
@@ -145,8 +161,12 @@ export class TcpStreamAnalyzer {
             if (view.ackFlag && reverseHalf.pending.length > 0) {
                 const remaining: PendingSegment[] = []
                 for (const segment of reverseHalf.pending) {
-                    if (view.ack >= segment.endSeq) {
-                        stream.rttSamples.push({segmentIndex: segment.index, ackIndex: index, rtt: view.timestamp - segment.timestamp})
+                    if (seqLte(segment.endSeq, view.ack)) {
+                        //ACK covers this segment (consume it either way). Only record a positive sample —
+                        //out-of-order capture timestamps could otherwise yield a negative RTT.
+                        if (view.timestamp >= segment.timestamp) {
+                            stream.rttSamples.push({segmentIndex: segment.index, ackIndex: index, rtt: view.timestamp - segment.timestamp})
+                        }
                     } else {
                         remaining.push(segment)
                     }
@@ -162,7 +182,7 @@ export class TcpStreamAnalyzer {
     #half(halves: Map<string, HalfStream>, key: string): HalfStream {
         let half: HalfStream | undefined = halves.get(key)
         if (!half) {
-            half = {maxEndSeq: -1, seenSyn: false, lastPureAck: null, pending: []}
+            half = {maxEndSeq: 0, hasMaxEndSeq: false, seenSyn: false, lastPureAck: null, pending: []}
             halves.set(key, half)
         }
         return half

@@ -71,3 +71,39 @@ test('tcp: non-TCP packets are ignored', (): void => {
     const arp: AnalysisPacket = {layers: [layer('eth', {}), layer('arp', {})], timestamp: 0, length: 60}
     assert.strictEqual(analyzer.analyze([arp]).streams.length, 0)
 })
+
+// IPv6 TCP: payload must derive from the IPv6 `plen` field (not `length`, which IPv6 has no such field
+// for). Regression for the bug where IPv6 payload came out NaN→0, making data segments look like pure
+// ACKs so retransmissions/RTT were never detected.
+function seg6(sip: string, sport: number, dip: string, dport: number, seq: number, ack: number, flags: Flags, payload: number, timestamp: number): AnalysisPacket {
+    return {
+        layers: [
+            layer('eth', {}),
+            layer('ipv6', {sip: sip, dip: dip, plen: 20 + payload}),
+            layer('tcp', {srcport: sport, dstport: dport, seq: seq, ack: ack, hdrLen: 20, flags: {syn: !!flags.syn, fin: !!flags.fin, ack: !!flags.ack, push: !!flags.push}})
+        ],
+        timestamp: timestamp,
+        length: 74 + payload
+    }
+}
+
+test('tcp: IPv6 payload derives from plen (retransmission detected over IPv6)', (): void => {
+    const packets: AnalysisPacket[] = [
+        seg6('2001::1', 1234, '2001::2', 80, 1, 1, {ack: true, push: true}, 100, 0.1),
+        seg6('2001::1', 1234, '2001::2', 80, 1, 1, {ack: true, push: true}, 100, 0.3), // retransmission
+        seg6('2001::2', 80, '2001::1', 1234, 1, 101, {ack: true}, 0, 0.4)              // ACK covering the data
+    ]
+    const stream: TcpStreamDiagnostic = analyzer.analyze(packets).streams[0]
+    assert.deepStrictEqual(stream.retransmissions, [1], 'IPv6 data segment #1 replays #0')
+    assert.strictEqual(stream.rttSamples.length, 1, 'the IPv6 data segment is RTT-matched by its ACK')
+})
+
+test('tcp: sequence wraparound past 2^32 is not misread as retransmission', (): void => {
+    // First segment ends near the 32-bit ceiling; the next segment's seq has wrapped to a small value.
+    // A naive seq<=maxEndSeq comparison would flag the wrapped (genuinely new) segment as a retransmit.
+    const packets: AnalysisPacket[] = [
+        seg('10.0.0.1', 1234, '10.0.0.2', 80, 4294967200, 1, {ack: true, push: true}, 100, 0.1),
+        seg('10.0.0.1', 1234, '10.0.0.2', 80, 4, 1, {ack: true, push: true}, 100, 0.2)
+    ]
+    assert.deepStrictEqual(analyzer.analyze(packets).streams[0].retransmissions, [])
+})
