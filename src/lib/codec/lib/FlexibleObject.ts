@@ -42,7 +42,7 @@ export class FlexibleObject {
     // @ts-ignore
     public setValue(value: any): void {
         if (typeof value === 'object' && !Array.isArray(value)) {
-            Object.keys(value).forEach(key => {
+            Object.keys(value).forEach((key: string): void => {
                 this.#data[key] = new FlexibleObject(this.#data[key], this, key)
                 this.#data[key].setValue(value[key])
             })

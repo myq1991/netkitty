@@ -85,7 +85,7 @@ export class PcapParser extends EventEmitter {
         if (this.buffer === null) {
             this.buffer = data
         } else {
-            let extendedBuffer: Buffer = Buffer.alloc(this.buffer.length + data.length)
+            const extendedBuffer: Buffer = Buffer.alloc(this.buffer.length + data.length)
             this.buffer.copy(extendedBuffer)
             data.copy(extendedBuffer, this.buffer.length)
             this.buffer = extendedBuffer

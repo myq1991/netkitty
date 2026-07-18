@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {CodecDecodeResult} from '../../lib/codec/types/CodecDecodeResult'
 import {AnalysisPacket} from '../../lib/analysis/FlowAnalyzer'
-import {TcpAnalysis, TcpStreamAnalyzer, TcpStreamDiagnostic} from '../../lib/analysis/TcpStreamAnalyzer'
+import {RttSample, TcpAnalysis, TcpStreamAnalyzer, TcpStreamDiagnostic} from '../../lib/analysis/TcpStreamAnalyzer'
 
 const analyzer: TcpStreamAnalyzer = new TcpStreamAnalyzer()
 
@@ -55,13 +55,13 @@ test('tcp: duplicate ACK is flagged (server repeats ack=101)', (): void => {
 test('tcp: RTT samples pair segments with the ACK that covers them', (): void => {
     const stream: TcpStreamDiagnostic = analyzer.analyze(scenario()).streams[0]
     // SYN→SYN,ACK (0.1), SYN,ACK→ACK (0.05), data→server ACK (0.4). Retransmit #4 is not an RTT source.
-    const rtts: number[] = stream.rttSamples.map((s): number => Math.round(s.rtt * 1000) / 1000)
-    assert.deepStrictEqual(rtts.sort((a, b): number => a - b), [0.05, 0.1, 0.4])
+    const rtts: number[] = stream.rttSamples.map((s: RttSample): number => Math.round(s.rtt * 1000) / 1000)
+    assert.deepStrictEqual(rtts.sort((a: number, b: number): number => a - b), [0.05, 0.1, 0.4])
     assert.ok(stream.rttMin !== null && stream.rttMin > 0 && stream.rttMax !== null && stream.rttMax < 1)
 })
 
 test('tcp: a clean stream reports no retransmissions or duplicate ACKs', (): void => {
-    const clean: AnalysisPacket[] = scenario().filter((_p, i): boolean => i !== 4 && i !== 6)
+    const clean: AnalysisPacket[] = scenario().filter((_p: AnalysisPacket, i: number): boolean => i !== 4 && i !== 6)
     const stream: TcpStreamDiagnostic = analyzer.analyze(clean).streams[0]
     assert.deepStrictEqual(stream.retransmissions, [])
     assert.deepStrictEqual(stream.duplicateAcks, [])

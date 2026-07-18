@@ -80,7 +80,7 @@ export class ARP extends BaseHeader {
                             this.instance.protocol.type.setValue(BufferToHex(this.readBytes(2, 2)))
                         },
                         encode: (): void => {
-                            let protoTypeHex: string = this.instance.protocol.type.getValue('0000', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                            const protoTypeHex: string = this.instance.protocol.type.getValue('0000', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                             let protoType: number = HexToUInt16(protoTypeHex)
                             if (isNaN(protoType)) {
                                 this.recordError(this.instance.protocol.type.getPath(), 'Invalid hex value')
@@ -123,7 +123,7 @@ export class ARP extends BaseHeader {
                     if (![1, 2, 3, 4].includes(this.instance.opcode.getValue())) this.recordError(this.instance.opcode.getPath(), 'Opcode should be 1, 2, 3 or 4')
                 },
                 encode: (): void => {
-                    let opcode: number = this.instance.opcode.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                    const opcode: number = this.instance.opcode.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                     if (![1, 2, 3, 4].includes(opcode)) this.recordError(this.instance.opcode.getPath(), 'Opcode should be 1, 2, 3 or 4')
                     this.instance.opcode.setValue(opcode)
                     this.writeBytes(6, UInt16ToBuffer(opcode))
@@ -144,7 +144,7 @@ export class ARP extends BaseHeader {
                             this.instance.sender.mac.setValue(Array.from(macAddrBuffer).map((value: number): string => UInt8ToHex(value)).join(':'))
                         },
                         encode: (): void => {
-                            let macStr: string = this.instance.sender.mac.getValue()
+                            const macStr: string = this.instance.sender.mac.getValue()
                             const rawMacBuffer: Buffer = Buffer.from(macStr.split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0))
                             if (rawMacBuffer.length !== 6) this.recordError(this.instance.sender.mac.getPath(), 'Invalid MAC address length')
                             this.writeBytes(8, Buffer.alloc(6, rawMacBuffer))
@@ -161,7 +161,7 @@ export class ARP extends BaseHeader {
                             this.instance.sender.ipv4.setValue(BufferToIPv4(ipv4Buffer))
                         },
                         encode: (): void => {
-                            let ipv4Str: string = this.instance.sender.ipv4.getValue()
+                            const ipv4Str: string = this.instance.sender.ipv4.getValue()
                             this.writeBytes(14, IPv4ToBuffer(ipv4Str))
                         }
                     }
@@ -182,7 +182,7 @@ export class ARP extends BaseHeader {
                             this.instance.target.mac.setValue(Array.from(macAddrBuffer).map((value: number): string => UInt8ToHex(value)).join(':'))
                         },
                         encode: (): void => {
-                            let macStr: string = this.instance.target.mac.getValue()
+                            const macStr: string = this.instance.target.mac.getValue()
                             const rawMacBuffer: Buffer = Buffer.from(macStr.split(':').map((value: string): number => parseInt(value, 16)).map((value: number): number => value ? value : 0))
                             if (rawMacBuffer.length !== 6) this.recordError(this.instance.target.mac.getPath(), 'Invalid MAC address length')
                             this.writeBytes(18, Buffer.alloc(6, rawMacBuffer))
@@ -199,7 +199,7 @@ export class ARP extends BaseHeader {
                             this.instance.target.ipv4.setValue(BufferToIPv4(ipv4Buffer))
                         },
                         encode: (): void => {
-                            let ipv4Str: string = this.instance.target.ipv4.getValue()
+                            const ipv4Str: string = this.instance.target.ipv4.getValue()
                             this.writeBytes(24, IPv4ToBuffer(ipv4Str))
                         }
                     }

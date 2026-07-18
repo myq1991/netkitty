@@ -83,7 +83,7 @@ export class UDP extends BaseHeader {
                     this.instance.length.setValue(BufferToUInt16(this.readBytes(4, 2)))
                 },
                 encode: function (this: UDP): void {
-                    let length: number = this.instance.length.getValue(0)
+                    const length: number = this.instance.length.getValue(0)
                     if (length) {
                         this.instance.length.setValue(length)
                         this.writeBytes(4, UInt16ToBuffer(length))

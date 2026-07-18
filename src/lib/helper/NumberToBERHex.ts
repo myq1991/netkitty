@@ -6,7 +6,7 @@ function toBERHex(rawHex: string): string {
 }
 
 function toSignedBERHex(value: number | bigint): string {
-    let v: bigint = BigInt(value)
+    const v: bigint = BigInt(value)
     if (v >= 0n) {
         let hex: string = v.toString(16)
         if (hex.length % 2) hex = `0${hex}`
@@ -16,7 +16,7 @@ function toSignedBERHex(value: number | bigint): string {
     let bytes: number = 1
     while (v < -(1n << (BigInt(bytes) * 8n - 1n))) bytes++
     const mask: bigint = (1n << (BigInt(bytes) * 8n)) - 1n
-    return (v & mask).toString(16).padStart(bytes * 2, "0")
+    return (v & mask).toString(16).padStart(bytes * 2, '0')
 }
 
 export const Int8ToBERHex: (value: number) => string = (value: number): string => toSignedBERHex(value)

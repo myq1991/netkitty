@@ -6,7 +6,7 @@ import {BufferToIPv4} from '../../lib/helper/BufferToIP'
 // Direct tests for the native Buffer↔number/IP read helpers (previously untested — the codec's
 // scalar-field reads all flow through these). Pins full-width, short/truncated, empty, signed, and
 // the one deliberate over-wide semantic (big-endian high bytes).
-const hex = (s: string): Buffer => Buffer.from(s, 'hex')
+const hex: (s: string) => Buffer = (s: string): Buffer => Buffer.from(s, 'hex')
 
 test('BufferToUInt: full-width big-endian reads', (): void => {
     assert.strictEqual(BufferToUInt8(hex('7f')), 0x7f)

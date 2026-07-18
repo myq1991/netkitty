@@ -209,7 +209,7 @@ export class TCP extends BaseHeader {
                     this.instance.hdrLen.setValue(this.readBits(12, 1, 0, 4) * 4)
                 },
                 encode: function (this: TCP): void {
-                    let hdrLen: number = this.instance.hdrLen.getValue(0)
+                    const hdrLen: number = this.instance.hdrLen.getValue(0)
                     if (hdrLen) {
                         this.instance.hdrLen.setValue(hdrLen)
                         this.writeBits(12, 1, 0, 4, hdrLen ? Math.floor(hdrLen / 4) : 0)
@@ -388,7 +388,7 @@ export class TCP extends BaseHeader {
                     this.instance.checksum.setValue(BufferToUInt16(this.readBytes(16, 2)))
                 },
                 encode: function (this: TCP): void {
-                    let checksum: number = this.instance.checksum.getValue(0)
+                    const checksum: number = this.instance.checksum.getValue(0)
                     if (checksum) {
                         this.instance.checksum.setValue(checksum)
                         this.writeBytes(16, UInt16ToBuffer(checksum))
@@ -658,10 +658,10 @@ export class TCP extends BaseHeader {
                                 break
                             //Kind = 2 (Maximum Segment Size, MSS)
                             case 2: {
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 if (length !== 4) this.recordError(this.instance.options.getPath(index), 'MSS option TLV length should be 4')
                                 optionOffset += 1
-                                let value: number = BufferToUInt16(this.readBytes(optionOffset, 2))
+                                const value: number = BufferToUInt16(this.readBytes(optionOffset, 2))
                                 optionOffset += 2
                                 options.push({
                                     option: TCPOption.Maximum_Segment_Size,
@@ -671,10 +671,10 @@ export class TCP extends BaseHeader {
                                 break
                             //Kind = 3 (Window Scale)
                             case 3: {
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 if (length !== 3) this.recordError(this.instance.options.getPath(index), 'Window Scale option TLV length should be 3')
                                 optionOffset += 1
-                                let value: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const value: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
                                 if (value < 0 || value > 14) this.recordError(this.instance.options.getPath(index), 'Window Scale option TLV value should between 0 and 14')
                                 options.push({
@@ -685,7 +685,7 @@ export class TCP extends BaseHeader {
                                 break
                             //Kind = 4 (Selective Acknowledgment Permitted, SACK-Permitted)
                             case 4: {
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
                                 if (length !== 2) this.recordError(this.instance.options.getPath(index), 'SACK-Permitted option TLV length should be 2')
                                 options.push({
@@ -695,7 +695,7 @@ export class TCP extends BaseHeader {
                                 break
                             //Kind = 5 (Selective Acknowledgment, SACK)
                             case 5: {
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
                                 let sackBlockTotalLength: number = length - 2
                                 if (sackBlockTotalLength < 0) {
@@ -717,12 +717,12 @@ export class TCP extends BaseHeader {
                                 break
                             //Kind = 8 (Timestamp, TS)
                             case 8: {
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
                                 if (length !== 10) this.recordError(this.instance.options.getPath(index), 'Timestamp option TLV length should be 10')
-                                let tsval: number = BufferToUInt32(this.readBytes(optionOffset, 4))
+                                const tsval: number = BufferToUInt32(this.readBytes(optionOffset, 4))
                                 optionOffset += 4
-                                let tsecr: number = BufferToUInt32(this.readBytes(optionOffset, 4))
+                                const tsecr: number = BufferToUInt32(this.readBytes(optionOffset, 4))
                                 optionOffset += 4
                                 options.push({
                                     option: TCPOption.Timestamp,
@@ -735,7 +735,7 @@ export class TCP extends BaseHeader {
                             case 28: {
                                 //RFC 5482: Kind=28, Length=4, then a single 16-bit value whose top
                                 //bit is Granularity (G) and low 15 bits are the User Timeout.
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
                                 if (length !== 4) this.recordError(this.instance.options.getPath(index), 'UTO option TLV length should be 4')
                                 const value: number = BufferToUInt16(this.readBytes(optionOffset, 2))
@@ -749,7 +749,7 @@ export class TCP extends BaseHeader {
                                 break
                             //Kind = 29 (TCP Authentication Option, TCP-AO)
                             case 29: {
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 optionOffset += 1
                                 let dataLength: number = length - 2
                                 if (dataLength < 0) {
@@ -770,7 +770,7 @@ export class TCP extends BaseHeader {
                             }
                                 break
                             default: {
-                                let length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
                                 let dataLength: number = length - 2
                                 if (dataLength < 0) {
                                     this.recordError(this.instance.options.getPath(index), 'Option TLV length should not less than 2')
@@ -847,7 +847,7 @@ export class TCP extends BaseHeader {
                             case TCPOption.Selective_Acknowledgment: {
                                 const optionSack: OPTION_SACK = optionItem as OPTION_SACK
                                 const kindBuffer: Buffer = UInt8ToBuffer(5)
-                                let length: number = 2
+                                const length: number = 2
                                 let blocksBuffer: Buffer = Buffer.from([])
                                 optionSack.blocks.forEach((block: string): void => {
                                     blocksBuffer = Buffer.concat([blocksBuffer, UInt64ToBuffer(HexToUInt64(block))])

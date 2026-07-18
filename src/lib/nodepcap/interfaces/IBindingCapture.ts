@@ -3,6 +3,9 @@ import {IBindingCaptureOptions} from './IBindingCaptureOptions'
 
 export interface IBindingCapture extends EventEmitter {
 
+    //Describes the native addon's constructor signature (this interface types a C++ class exposed by
+    //the binding), so the `new(...)` member is intentional.
+    // eslint-disable-next-line @typescript-eslint/no-misused-new
     new(options: IBindingCaptureOptions): IBindingCapture
 
     start(): void
