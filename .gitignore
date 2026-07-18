@@ -3,6 +3,9 @@ node_modules
 /dist
 /build
 /bindings
+packages/*/dist
+packages/*/build
+packages/*/bindings
 
 # packet capture samples for test-fixture extraction (local only)
 /pcaps
@@ -32,5 +35,3 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
-
-package-lock.json

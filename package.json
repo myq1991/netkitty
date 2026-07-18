@@ -2,6 +2,9 @@
   "name": "netkitty",
   "version": "0.0.35",
   "description": "Network tools kit",
+  "workspaces": [
+    "packages/*"
+  ],
   "exports": {
     "./network": {
       "types": "./dist/NetworkExports.d.ts",
@@ -79,6 +82,7 @@
     "electron": "^35.0.1",
     "eslint": "^8.56.0",
     "inquirer": "^12.5.0",
+    "lerna": "^9.0.7",
     "reflect-metadata": "^0.2.2",
     "release-it": "^19.0.4",
     "shx": "^0.3.4",
