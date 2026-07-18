@@ -14,8 +14,8 @@ class FieldTestHeader extends BaseHeader {
     public readonly SCHEMA: ProtocolJSONSchema = {
         type: 'object',
         properties: {
-            val: this.fieldUInt('val', 0, 2, 'Value'),
-            byte: this.fieldUInt('byte', 2, 1, 'Byte')
+            val: FieldTestHeader.fieldUInt('val', 0, 2, 'Value'),
+            byte: FieldTestHeader.fieldUInt('byte', 2, 1, 'Byte')
         }
     }
     public readonly id: string = 'field-test'
@@ -36,8 +36,8 @@ function makeHeader(packet: Buffer): FieldTestHeader {
 
 test('fieldUInt: decode reads a big-endian unsigned integer into its field', async (): Promise<void> => {
     const header: FieldTestHeader = makeHeader(Buffer.from('123407', 'hex'))
-    await header.field('val').decode!()
-    await header.field('byte').decode!()
+    await header.field('val').decode!.call(header)
+    await header.field('byte').decode!.call(header)
     assert.strictEqual((header.instance as any).val.getValue(), 0x1234)
     assert.strictEqual((header.instance as any).byte.getValue(), 0x07)
 })
@@ -45,7 +45,7 @@ test('fieldUInt: decode reads a big-endian unsigned integer into its field', asy
 test('fieldUInt: encode writes the value and clamps out-of-range to the field maximum', async (): Promise<void> => {
     const header: FieldTestHeader = makeHeader(Buffer.alloc(3))
     ;(header.instance as any).val.setValue(70000) // > 65535
-    await header.field('val').encode!()
+    await header.field('val').encode!.call(header)
     assert.strictEqual((header.instance as any).val.getValue(), 65535, 'value must be clamped to the 16-bit max')
     assert.strictEqual(header.packet.subarray(0, 2).toString('hex'), 'ffff')
     assert.ok(header.errors.some((e): boolean => e.message.includes('Maximum value is 65535')), 'an out-of-range error must be recorded')
@@ -54,6 +54,6 @@ test('fieldUInt: encode writes the value and clamps out-of-range to the field ma
 test('fieldUInt: encode round-trips an in-range value byte-for-byte', async (): Promise<void> => {
     const header: FieldTestHeader = makeHeader(Buffer.alloc(3))
     ;(header.instance as any).val.setValue(0xABCD)
-    await header.field('val').encode!()
+    await header.field('val').encode!.call(header)
     assert.strictEqual(header.packet.subarray(0, 2).toString('hex'), 'abcd')
 })

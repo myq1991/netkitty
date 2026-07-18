@@ -140,7 +140,16 @@ export class TCP extends BaseHeader {
         return (~sum) & 0xFFFF
     }
 
-    public SCHEMA: ProtocolJSONSchema = {
+    static #schemaCache: ProtocolJSONSchema | undefined
+
+    //Class-cached SCHEMA (④): field closures are functions taking dynamic `this` via .call(this).
+    //fieldUInt is a static factory, so `this.fieldUInt` below resolves against the class.
+    public get SCHEMA(): ProtocolJSONSchema {
+        return (TCP.#schemaCache ??= TCP.#buildSchema())
+    }
+
+    static #buildSchema(): ProtocolJSONSchema {
+        return {
         type: 'object',
         summary: '${srcport} → ${dstport} Seq=${seq} Ack=${ack} Win=${window}',
         properties: {
@@ -152,10 +161,10 @@ export class TCP extends BaseHeader {
                 label: 'Sequence Number',
                 minimum: 0,
                 maximum: 4294967295,
-                decode: (): void => {
+                decode: function (this: TCP): void {
                     this.instance.seq.setValue(BufferToUInt32(this.readBytes(4, 4)))
                 },
-                encode: (): void => {
+                encode: function (this: TCP): void {
                     let seqNum: number = this.instance.seq.getValue(0)
                     if (seqNum > 4294967295) {
                         this.recordError(this.instance.seq.getPath(), 'Maximum value is 4294967295')
@@ -174,10 +183,10 @@ export class TCP extends BaseHeader {
                 label: 'Acknowledgment Number',
                 minimum: 0,
                 maximum: 4294967295,
-                decode: (): void => {
+                decode: function (this: TCP): void {
                     this.instance.ack.setValue(BufferToUInt32(this.readBytes(8, 4)))
                 },
-                encode: (): void => {
+                encode: function (this: TCP): void {
                     let ackNum: number = this.instance.ack.getValue(0)
                     if (ackNum > 4294967295) {
                         this.recordError(this.instance.ack.getPath(), 'Maximum value is 4294967295')
@@ -196,10 +205,10 @@ export class TCP extends BaseHeader {
                 label: 'Header Length',
                 minimum: 0,
                 maximum: 60,
-                decode: (): void => {
+                decode: function (this: TCP): void {
                     this.instance.hdrLen.setValue(this.readBits(12, 1, 0, 4) * 4)
                 },
-                encode: (): void => {
+                encode: function (this: TCP): void {
                     let hdrLen: number = this.instance.hdrLen.getValue(0)
                     if (hdrLen) {
                         this.instance.hdrLen.setValue(hdrLen)
@@ -221,10 +230,10 @@ export class TCP extends BaseHeader {
                         label: 'Reserved',
                         minimum: 0,
                         maximum: 7,
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.res.setValue(this.readBits(12, 1, 4, 3))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             let reserved: number = this.instance.flags.res.getValue(0)
                             if (reserved > 7) {
                                 this.recordError(this.instance.flags.res.getPath(), 'Maximum value is 7')
@@ -241,10 +250,10 @@ export class TCP extends BaseHeader {
                     ae: {
                         type: 'boolean',
                         label: 'Accurate ECN',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.ae.setValue(!!this.readBits(12, 1, 7, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const accurateECN: boolean = !!this.instance.flags.ae.getValue()
                             this.instance.flags.ae.setValue(accurateECN)
                             this.writeBits(12, 1, 7, 1, accurateECN ? 1 : 0)
@@ -253,10 +262,10 @@ export class TCP extends BaseHeader {
                     cwr: {
                         type: 'boolean',
                         label: 'Congestion Window Reduced',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.cwr.setValue(!!this.readBits(13, 1, 0, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const congestionWindowReduced: boolean = !!this.instance.flags.cwr.getValue()
                             this.instance.flags.cwr.setValue(congestionWindowReduced)
                             this.writeBits(13, 1, 0, 1, congestionWindowReduced ? 1 : 0)
@@ -265,10 +274,10 @@ export class TCP extends BaseHeader {
                     ece: {
                         type: 'boolean',
                         label: 'ECN-Echo',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.ece.setValue(!!this.readBits(13, 1, 1, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const ECNEcho: boolean = !!this.instance.flags.ece.getValue()
                             this.instance.flags.ece.setValue(ECNEcho)
                             this.writeBits(13, 1, 1, 1, ECNEcho ? 1 : 0)
@@ -277,10 +286,10 @@ export class TCP extends BaseHeader {
                     urg: {
                         type: 'boolean',
                         label: 'Urgent',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.urg.setValue(!!this.readBits(13, 1, 2, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const urgent: boolean = !!this.instance.flags.urg.getValue()
                             this.instance.flags.urg.setValue(urgent)
                             this.writeBits(13, 1, 2, 1, urgent ? 1 : 0)
@@ -289,10 +298,10 @@ export class TCP extends BaseHeader {
                     ack: {
                         type: 'boolean',
                         label: 'Acknowledgment',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.ack.setValue(!!this.readBits(13, 1, 3, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const acknowledgment: boolean = !!this.instance.flags.ack.getValue()
                             this.instance.flags.ack.setValue(acknowledgment)
                             this.writeBits(13, 1, 3, 1, acknowledgment ? 1 : 0)
@@ -301,10 +310,10 @@ export class TCP extends BaseHeader {
                     push: {
                         type: 'boolean',
                         label: 'Push',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.push.setValue(!!this.readBits(13, 1, 4, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const push: boolean = !!this.instance.flags.push.getValue()
                             this.instance.flags.push.setValue(push)
                             this.writeBits(13, 1, 4, 1, push ? 1 : 0)
@@ -313,10 +322,10 @@ export class TCP extends BaseHeader {
                     rst: {
                         type: 'boolean',
                         label: 'Reset',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.rst.setValue(!!this.readBits(13, 1, 5, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const reset: boolean = !!this.instance.flags.rst.getValue()
                             this.instance.flags.rst.setValue(reset)
                             this.writeBits(13, 1, 5, 1, reset ? 1 : 0)
@@ -325,10 +334,10 @@ export class TCP extends BaseHeader {
                     syn: {
                         type: 'boolean',
                         label: 'Syn',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.syn.setValue(!!this.readBits(13, 1, 6, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const syn: boolean = !!this.instance.flags.syn.getValue()
                             this.instance.flags.syn.setValue(syn)
                             this.writeBits(13, 1, 6, 1, syn ? 1 : 0)
@@ -337,10 +346,10 @@ export class TCP extends BaseHeader {
                     fin: {
                         type: 'boolean',
                         label: 'Fin',
-                        decode: (): void => {
+                        decode: function (this: TCP): void {
                             this.instance.flags.fin.setValue(!!this.readBits(13, 1, 7, 1))
                         },
-                        encode: (): void => {
+                        encode: function (this: TCP): void {
                             const fin: boolean = !!this.instance.flags.fin.getValue()
                             this.instance.flags.fin.setValue(fin)
                             this.writeBits(13, 1, 7, 1, fin ? 1 : 0)
@@ -353,10 +362,10 @@ export class TCP extends BaseHeader {
                 label: 'Window Size',
                 minimum: 0,
                 maximum: 65535,
-                decode: (): void => {
+                decode: function (this: TCP): void {
                     this.instance.window.setValue(BufferToUInt16(this.readBytes(14, 2)))
                 },
-                encode: (): void => {
+                encode: function (this: TCP): void {
                     let windowSize: number = this.instance.window.getValue(0)
                     if (windowSize > 65535) {
                         this.recordError(this.instance.window.getPath(), 'Maximum value is 65535')
@@ -375,10 +384,10 @@ export class TCP extends BaseHeader {
                 label: 'Checksum',
                 minimum: 0,
                 maximum: 65535,
-                decode: (): void => {
+                decode: function (this: TCP): void {
                     this.instance.checksum.setValue(BufferToUInt16(this.readBytes(16, 2)))
                 },
-                encode: (): void => {
+                encode: function (this: TCP): void {
                     let checksum: number = this.instance.checksum.getValue(0)
                     if (checksum) {
                         this.instance.checksum.setValue(checksum)
@@ -406,10 +415,10 @@ export class TCP extends BaseHeader {
                 label: 'Urgent Pointer',
                 minimum: 0,
                 maximum: 65535,
-                decode: (): void => {
+                decode: function (this: TCP): void {
                     this.instance.urgPtr.setValue(BufferToUInt16(this.readBytes(18, 2)))
                 },
-                encode: (): void => {
+                encode: function (this: TCP): void {
                     let urgPtr: number = this.instance.urgPtr.getValue(0)
                     if (urgPtr > 65535) {
                         this.recordError(this.instance.urgPtr.getPath(), 'Maximum value is 65535')
@@ -622,7 +631,7 @@ export class TCP extends BaseHeader {
                         }
                     ]
                 },
-                decode: (): void => {
+                decode: function (this: TCP): void {
                     const hdrLen: number = this.instance.hdrLen.getValue()
                     const optionsLength: number = hdrLen - this.length
                     if (!optionsLength) return
@@ -784,7 +793,7 @@ export class TCP extends BaseHeader {
                     }
                     this.instance.options.setValue(options)
                 },
-                encode: (): void => {
+                encode: function (this: TCP): void {
                     const options: (OptionItem[]) | undefined = this.instance.options.getValue()
                     if (!options) return
                     let optionOffset: number = this.length
@@ -905,6 +914,7 @@ export class TCP extends BaseHeader {
                 }
             }
         }
+    }
     }
 
     public readonly id: string = 'tcp'

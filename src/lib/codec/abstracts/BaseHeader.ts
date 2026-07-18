@@ -423,7 +423,7 @@ export abstract class BaseHeader {
      * byte-for-byte identical to the hand-written pattern it replaces.
      * @protected
      */
-    protected fieldUInt(name: string, offset: number, byteLength: number, label: string): ProtocolFieldJSONSchema {
+    protected static fieldUInt(name: string, offset: number, byteLength: number, label: string): ProtocolFieldJSONSchema {
         const maximum: number = byteLength === 1 ? 255 : byteLength === 2 ? 65535 : 4294967295
         const read: (buffer: Buffer) => number = byteLength === 1 ? BufferToUInt8 : byteLength === 2 ? BufferToUInt16 : BufferToUInt32
         const write: (value: number) => Buffer = byteLength === 1 ? UInt8ToBuffer : byteLength === 2 ? UInt16ToBuffer : UInt32ToBuffer
@@ -432,10 +432,10 @@ export abstract class BaseHeader {
             label: label,
             minimum: 0,
             maximum: maximum,
-            decode: (): void => {
+            decode: function (this: BaseHeader): void {
                 (this.instance as any)[name].setValue(read(this.readBytes(offset, byteLength)))
             },
-            encode: (): void => {
+            encode: function (this: BaseHeader): void {
                 const node: any = (this.instance as any)[name]
                 let value: number = node.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                 if (value > maximum) {

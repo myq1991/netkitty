@@ -58,7 +58,16 @@ export class UDP extends BaseHeader {
         const _cs = (~sum) & 0xFFFF; return _cs === 0 ? 0xFFFF : _cs
     }
 
-    public SCHEMA: ProtocolJSONSchema = {
+    static #schemaCache: ProtocolJSONSchema | undefined
+
+    //Class-cached SCHEMA (④): field closures are functions taking dynamic `this` via .call(this).
+    //fieldUInt is a static factory, so `this.fieldUInt` below resolves against the class.
+    public get SCHEMA(): ProtocolJSONSchema {
+        return (UDP.#schemaCache ??= UDP.#buildSchema())
+    }
+
+    static #buildSchema(): ProtocolJSONSchema {
+        return {
         type: 'object',
         properties: {
             //Migrated to the declarative field building block: one call replaces the hand-mirrored
@@ -70,10 +79,10 @@ export class UDP extends BaseHeader {
                 label: 'Length',
                 minimum: 0,
                 maximum: 65535,
-                decode: (): void => {
+                decode: function (this: UDP): void {
                     this.instance.length.setValue(BufferToUInt16(this.readBytes(4, 2)))
                 },
-                encode: (): void => {
+                encode: function (this: UDP): void {
                     let length: number = this.instance.length.getValue(0)
                     if (length) {
                         this.instance.length.setValue(length)
@@ -99,10 +108,10 @@ export class UDP extends BaseHeader {
                 label: 'Checksum',
                 minimum: 0,
                 maximum: 65535,
-                decode: (): void => {
+                decode: function (this: UDP): void {
                     this.instance.checksum.setValue(BufferToUInt16(this.readBytes(6, 2)))
                 },
-                encode: (): void => {
+                encode: function (this: UDP): void {
                     const checksum: number = this.instance.checksum.getValue(0)
                     if (checksum) {
                         this.instance.checksum.setValue(checksum)
@@ -125,6 +134,7 @@ export class UDP extends BaseHeader {
                 }
             }
         }
+    }
     }
 
     public readonly id: string = 'udp'
