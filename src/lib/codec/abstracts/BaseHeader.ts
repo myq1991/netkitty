@@ -343,13 +343,20 @@ export abstract class BaseHeader {
      */
     protected readBits(offset: number, length: number, bitOffset: number, bitLength: number): number {
         const buffer: Buffer = this.#readBytes(offset, length, false, true)
-        //MSB-first bit extraction over a `length`-octet window, done with BigInt so wide windows
-        //keep full precision (parseInt(hex) lost bits past ~2^53) and no per-call string allocation.
-        //Available bytes occupy the low end of the window; missing (truncated) high bits read as 0.
-        let value: bigint = 0n
-        for (const byte of buffer) value = (value << 8n) | BigInt(byte)
+        //MSB-first bit extraction over a `length`-octet window. Available bytes occupy the low end;
+        //missing (truncated) high bits read as 0.
         const shift: number = length * 8 - bitOffset - bitLength
         if (shift < 0) return 0
+        if (length <= 4) {
+            //A window of ≤4 octets (≤32 bits) fits a JS number exactly — skip BigInt boxing. Use
+            //arithmetic (not <</>>, which are 32-bit-signed in JS) so 32-bit widths stay correct.
+            let narrow: number = 0
+            for (const byte of buffer) narrow = narrow * 256 + byte
+            return Math.floor(narrow / 2 ** shift) % (2 ** bitLength)
+        }
+        //Wider windows (48/64-bit GOOSE/SV fields) keep full precision via BigInt.
+        let value: bigint = 0n
+        for (const byte of buffer) value = (value << 8n) | BigInt(byte)
         const mask: bigint = (1n << BigInt(bitLength)) - 1n
         return Number((value >> BigInt(shift)) & mask)
     }
@@ -365,16 +372,36 @@ export abstract class BaseHeader {
      */
     protected writeBits(offset: number, length: number, bitOffset: number, bitLength: number, value: number): void {
         const buffer: Buffer = this.#readBytes(offset, length, true, true)
-        //Overlay `bitLength` bits of `value` at `bitOffset` (MSB-first) into the octet window, using
-        //BigInt so any window width is exact. Only the low `bitLength` bits of value are written
-        //(out-of-range values wrap, matching a fixed-width field), and encode never crashes.
+        //Overlay `bitLength` bits of `value` at `bitOffset` (MSB-first) into the octet window. Only
+        //the low `bitLength` bits of value are written (out-of-range values wrap, matching a
+        //fixed-width field), and encode never crashes.
+        const out: Buffer = Buffer.alloc(buffer.length)
+        if (length <= 4) {
+            //≤32-bit window: plain number arithmetic, no BigInt boxing. Split the window into the
+            //untouched high part, the target field, and the low part, then reassemble — all via
+            //multiply/divide/modulo to stay correct at 32-bit widths (JS bit-ops are 32-bit-signed).
+            let current: number = 0
+            for (const byte of buffer) current = current * 256 + byte
+            const shift: number = buffer.length * 8 - bitOffset - bitLength
+            const modulo: number = 2 ** bitLength
+            const divisor: number = 2 ** shift
+            const field: number = (((Math.trunc(Number(value)) || 0) % modulo) + modulo) % modulo
+            const blockSize: number = modulo * divisor
+            let written: number = Math.floor(current / blockSize) * blockSize + field * divisor + current % divisor
+            for (let i: number = buffer.length - 1; i >= 0; i--) {
+                out[i] = written % 256
+                written = Math.floor(written / 256)
+            }
+            this.writeBytes(offset, out)
+            return
+        }
+        //Wider windows keep exact via BigInt.
         let current: bigint = 0n
         for (const byte of buffer) current = (current << 8n) | BigInt(byte)
         const shift: bigint = BigInt(buffer.length * 8 - bitOffset - bitLength)
         const fieldMask: bigint = (1n << BigInt(bitLength)) - 1n
         const field: bigint = (BigInt(Math.trunc(Number(value)) || 0) & fieldMask) << shift
         const written: bigint = (current & ~(fieldMask << shift)) | field
-        const out: Buffer = Buffer.alloc(buffer.length)
         let v: bigint = written
         for (let i: number = buffer.length - 1; i >= 0; i--) {
             out[i] = Number(v & 0xFFn)
