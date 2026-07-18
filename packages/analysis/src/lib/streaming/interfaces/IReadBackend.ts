@@ -10,4 +10,6 @@ export interface IReadBackend {
     createStream(): AsyncIterable<Uint8Array>
     //Tail a growing file; returns an unsubscribe function. Absent when the source can't be watched.
     watch?(onChange: () => void): () => void
+    //Release any held handle. Absent for sources that need no teardown (e.g. in-memory buffers).
+    close?(): void | Promise<void>
 }
