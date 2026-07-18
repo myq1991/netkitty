@@ -28,6 +28,12 @@
       "require": "./dist/AnalysisExports.js"
     }
   },
+  "files": [
+    "dist",
+    "!dist/tests",
+    "cpp",
+    "binding.gyp"
+  ],
   "scripts": {
     "clean": "npm run clean:js && npm run clean:cpp",
     "clean:js": "shx rm -rf ./build && shx rm -rf ./dist",
