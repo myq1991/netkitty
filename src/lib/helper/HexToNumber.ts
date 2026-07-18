@@ -18,8 +18,8 @@ export const HexToUInt64: (hex: string) => bigint = (hex: string): bigint => {
     return bigIntValue
 }
 export const HexToFloat32: (hex: string) => number = (hex: string): number => {
-    const buffer = new ArrayBuffer(4)
-    const dataView = new DataView(buffer)
+    const buffer: ArrayBuffer = new ArrayBuffer(4)
+    const dataView: DataView = new DataView(buffer)
     dataView.setUint32(0, parseInt(hex, 16), false)
     return dataView.getFloat32(0, false)
 }

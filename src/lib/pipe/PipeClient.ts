@@ -49,7 +49,7 @@ export class PipeClient extends EventEmitter {
      * @param args
      */
     public async invoke(act: string, ...args: any[]): Promise<any> {
-        return new Promise((resolve, reject): void => {
+        return new Promise((resolve: (value: any) => void, reject: (reason?: any) => void): void => {
             const pipeMessage: PipeMessage = new PipeMessage()
             pipeMessage.type = PipeMessageType.REQUEST
             pipeMessage.payload = [act, ...args]

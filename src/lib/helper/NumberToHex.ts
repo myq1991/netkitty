@@ -8,8 +8,8 @@ export const UInt32ToHex: (value: number) => string = (value: number): string =>
 export const UInt64ToHex: (value: bigint) => string = (value: bigint): string => BigInt(value).toString(16).padStart(16, '0')
 
 export const Float32ToHex: (value: number) => string = (value: number): string => {
-    const buffer = new ArrayBuffer(4)
-    const dataView = new DataView(buffer)
+    const buffer: ArrayBuffer = new ArrayBuffer(4)
+    const dataView: DataView = new DataView(buffer)
     dataView.setFloat32(0, value, false)
     return dataView.getUint32(0, false).toString(16).padStart(8, '0')
 }

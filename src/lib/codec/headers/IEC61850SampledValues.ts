@@ -158,7 +158,7 @@ export class IEC61850SampledValues extends BaseHeader {
                         return
                     }
                     let buffer: Buffer = Buffer.from([])
-                    this.TLVChild.forEach(TLVItem => buffer = Buffer.concat([buffer, TLVItem.bTag, TLVItem.bLength, TLVItem.bValue]))
+                    this.TLVChild.forEach((TLVItem: TLV): Buffer => buffer = Buffer.concat([buffer, TLVItem.bTag, TLVItem.bLength, TLVItem.bValue]))
                     const svPduTLV: TLV = new TLV(0x60, buffer)
                     const svPduBuffer: Buffer = Buffer.concat([svPduTLV.bTag, svPduTLV.bLength, svPduTLV.bValue])
                     this.writeBytes(8, svPduBuffer)
@@ -176,7 +176,7 @@ export class IEC61850SampledValues extends BaseHeader {
                         maximum: 65535,
                         label: 'Number of ASDU',
                         decode: (): void => {
-                            const noASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0x80)
+                            const noASDUTLV: TLV | undefined = this.TLVChild.find((tlv: TLV): boolean => tlv.getTag('number') === 0x80)
                             if (!noASDUTLV) return this.recordError(this.instance.svPdu.noASDU.getPath(), 'Not Found')
                             const noASDUNum: number = HexToUInt16(noASDUTLV.getValue('hex'))
                             if (!noASDUNum) this.recordError(this.instance.svPdu.noASDU.getPath(), 'Number of ASDU should be greater or equal to 1')
@@ -238,7 +238,7 @@ export class IEC61850SampledValues extends BaseHeader {
                         },
                         decode: (): void => {
                             const seqASDU: ASDUItem[] = []
-                            const seqASDUTLV: TLV | undefined = this.TLVChild.find(tlv => tlv.getTag('number') === 0xa2)
+                            const seqASDUTLV: TLV | undefined = this.TLVChild.find((tlv: TLV): boolean => tlv.getTag('number') === 0xa2)
                             if (!seqASDUTLV) {
                                 this.instance.svPdu.seqASDU.setValue(seqASDU)
                                 return
@@ -258,57 +258,57 @@ export class IEC61850SampledValues extends BaseHeader {
                                 let sample: string
                                 let smpMod: number
                                 //svID
-                                const svIDTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x80)
+                                const svIDTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x80)
                                 if (svIDTLV) {
                                     svID = svIDTLV.getValue('buffer').toString('ascii')
                                 } else {
                                     this.recordError(errorNodePath, 'svID Not Found')
                                 }
                                 //dataSet (optional)
-                                const dataSetTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x81)
+                                const dataSetTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x81)
                                 if (dataSetTLV) {
                                     dataSet = dataSetTLV.getValue('buffer').toString('ascii')
                                 }
                                 //smpCnt
-                                const smpCntTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x82)
+                                const smpCntTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x82)
                                 if (smpCntTLV) {
                                     smpCnt = BufferToUInt16(smpCntTLV.getValue('buffer'))
                                 } else {
                                     this.recordError(errorNodePath, 'smpCnt Not Found')
                                 }
                                 //confRev
-                                const confRevTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x83)
+                                const confRevTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x83)
                                 if (confRevTLV) {
                                     confRev = BufferToUInt32(confRevTLV.getValue('buffer'))
                                 } else {
                                     this.recordError(errorNodePath, 'confRev Not Found')
                                 }
                                 //refrTm (optional)
-                                const refrTmTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x84)
+                                const refrTmTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x84)
                                 if (refrTmTLV) {
                                     refrTm = BufferToUInt64(refrTmTLV.getValue('buffer')).toString()
                                 }
                                 //smpSynch
-                                const smpSynchTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x85)
+                                const smpSynchTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x85)
                                 if (smpSynchTLV) {
                                     smpSynch = BufferToUInt8(smpSynchTLV.getValue('buffer'))
                                 } else {
                                     this.recordError(errorNodePath, 'smpSynch Not Found')
                                 }
                                 //smpRate (optional)
-                                const smpRateTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x86)
+                                const smpRateTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x86)
                                 if (smpRateTLV) {
                                     smpRate = BufferToUInt16(smpRateTLV.getValue('buffer'))
                                 }
                                 //sample
-                                const sampleTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x87)
+                                const sampleTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x87)
                                 if (sampleTLV) {
                                     sample = sampleTLV.getValue('hex')
                                 } else {
                                     this.recordError(errorNodePath, 'sample Not Found')
                                 }
                                 //smpMod (optional) - tag 0x88; 0x86 is smpRate's tag
-                                const smpModTLV: TLV | undefined = ASDUAttributeTLVs.find(tlv => tlv.getTag('number') === 0x88)
+                                const smpModTLV: TLV | undefined = ASDUAttributeTLVs.find((tlv: TLV): boolean => tlv.getTag('number') === 0x88)
                                 if (smpModTLV) {
                                     smpMod = BufferToUInt16(smpModTLV.getValue('buffer'))
                                 }
@@ -373,11 +373,11 @@ export class IEC61850SampledValues extends BaseHeader {
                                 if (seqASDUItem.smpMod !== undefined) seqASDUItemTLVs.push(new TLV(0x88, UInt16ToHex(seqASDUItem.smpMod)))
                                 if (!seqASDUItemTLVs.length) return
                                 let seqASDUItemBuffer: Buffer = Buffer.from([])
-                                seqASDUItemTLVs.forEach(seqASDUItemTLV => seqASDUItemBuffer = Buffer.concat([seqASDUItemBuffer, seqASDUItemTLV.bTag, seqASDUItemTLV.bLength, seqASDUItemTLV.bValue]))
+                                seqASDUItemTLVs.forEach((seqASDUItemTLV: TLV): Buffer => seqASDUItemBuffer = Buffer.concat([seqASDUItemBuffer, seqASDUItemTLV.bTag, seqASDUItemTLV.bLength, seqASDUItemTLV.bValue]))
                                 seqASDUTLVs.push(new TLV(0x30, seqASDUItemBuffer))
                             })
                             let seqASDUBuffer: Buffer = Buffer.from([])
-                            seqASDUTLVs.forEach(seqASDUTLV => seqASDUBuffer = Buffer.concat([seqASDUBuffer, seqASDUTLV.bTag, seqASDUTLV.bLength, seqASDUTLV.bValue]))
+                            seqASDUTLVs.forEach((seqASDUTLV: TLV): Buffer => seqASDUBuffer = Buffer.concat([seqASDUBuffer, seqASDUTLV.bTag, seqASDUTLV.bLength, seqASDUTLV.bValue]))
                             this.TLVChild.push(new TLV(0xa2, seqASDUBuffer))
                         }
                     },

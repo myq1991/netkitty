@@ -166,7 +166,15 @@ export class PcapParser extends EventEmitter {
     protected parseGlobalHeader(): boolean {
         const buffer: Buffer = this.buffer!
         if (buffer.length >= PCAP_GLOBAL_HEADER_LENGTH) {
-            const header = {
+            const header: {
+                magicNumber: number
+                majorVersion: number
+                minorVersion: number
+                gmtOffset: number
+                timestampAccuracy: number
+                snapshotLength: number
+                linkLayerType: number
+            } = {
                 magicNumber: this.readUInt32(buffer, 0),
                 majorVersion: this.readUInt16(buffer, 4),
                 minorVersion: this.readUInt16(buffer, 6),
@@ -195,7 +203,7 @@ export class PcapParser extends EventEmitter {
         const buffer: Buffer = this.buffer!
         if (buffer.length >= PCAP_PACKET_HEADER_LENGTH) {
             const timestampFraction: number = this.readUInt32(buffer, 4)
-            const header = {
+            const header: PcapParser['currentPacketHeader'] = {
                 timestampSeconds: this.readUInt32(buffer, 0),
                 timestampMicroseconds: this.timestampNanosecond ? Math.floor(timestampFraction / 1000) : timestampFraction,
                 capturedLength: this.readUInt32(buffer, 8),
@@ -315,7 +323,7 @@ export class PcapParser extends EventEmitter {
      */
     protected ngEmitPacket(blockOffset: number, blockTotalLength: number, recordHeaderLength: number, data: Buffer, seconds: number, microseconds: number, originalLength: number): void {
         this.index += 1
-        const header = {
+        const header: PcapParser['currentPacketHeader'] = {
             timestampSeconds: seconds,
             timestampMicroseconds: microseconds,
             capturedLength: data.length,

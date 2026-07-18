@@ -27,9 +27,9 @@ export class ICMP extends BaseHeader {
             ]) : icmpHeader
 
         // 4. 计算 checksum
-        let checksum = 0
-        for (let i = 0; i < paddedBuffer.length; i += 2) {
-            const word = (paddedBuffer[i] << 8) | (paddedBuffer[i + 1] || 0)
+        let checksum: number = 0
+        for (let i: number = 0; i < paddedBuffer.length; i += 2) {
+            const word: number = (paddedBuffer[i] << 8) | (paddedBuffer[i + 1] || 0)
             checksum += word
 
             // 处理溢出

@@ -79,8 +79,8 @@ export class PcapWriter extends EventEmitter {
      */
     public async close(): Promise<void> {
         this.closed = true
-        return new Promise((resolve, reject): void => {
-            this.writeStream.close(err => err ? reject(err) : resolve())
+        return new Promise((resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void): void => {
+            this.writeStream.close((err: NodeJS.ErrnoException | null | undefined): void => err ? reject(err) : resolve())
         })
     }
 

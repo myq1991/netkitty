@@ -24,7 +24,7 @@ export class EthernetII extends BaseHeader {
                 label: 'Destination',
                 contentEncoding: StringContentEncodingEnum.MAC,
                 decode: function (this: EthernetII): void {
-                    this.instance.dmac.setValue(Array.from(this.readBytes(0, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
+                    this.instance.dmac.setValue(Array.from(this.readBytes(0, 6)).map((value: number): string => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: function (this: EthernetII): void {
                     const dmac: number[] = this.instance.dmac
@@ -43,7 +43,7 @@ export class EthernetII extends BaseHeader {
                 label: 'Source',
                 contentEncoding: StringContentEncodingEnum.MAC,
                 decode: function (this: EthernetII): void {
-                    this.instance.smac.setValue(Array.from(this.readBytes(6, 6)).map(value => value.toString(16).padStart(2, '0')).join(':'))
+                    this.instance.smac.setValue(Array.from(this.readBytes(6, 6)).map((value: number): string => value.toString(16).padStart(2, '0')).join(':'))
                 },
                 encode: function (this: EthernetII): void {
                     const smac: number[] = this.instance.smac

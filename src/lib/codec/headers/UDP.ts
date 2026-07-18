@@ -55,7 +55,7 @@ export class UDP extends BaseHeader {
         let sum: number = 0
         for (let i: number = 0; i < data.length; i += 2) sum += (data[i] << 8) + (data[i + 1] || 0)
         while (sum > 0xFFFF) sum = (sum & 0xFFFF) + (sum >>> 16)
-        const _cs = (~sum) & 0xFFFF; return _cs === 0 ? 0xFFFF : _cs
+        const _cs: number = (~sum) & 0xFFFF; return _cs === 0 ? 0xFFFF : _cs
     }
 
     static #schemaCache: ProtocolJSONSchema | undefined

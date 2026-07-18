@@ -45,7 +45,7 @@ export class PipeMessageHandler extends EventEmitter {
                 const action: (...args: any[]) => Promise<any> = this.#owner.actions[actionName]
                 if (action) {
                     action.call(this.#owner, ...args)
-                        .then(response => {
+                        .then((response: any): void => {
                             pipeMessage.type = PipeMessageType.RESPONSE_OK
                             pipeMessage.payload = response
                             this.#socket.send(pipeMessage.serialize())
@@ -61,7 +61,7 @@ export class PipeMessageHandler extends EventEmitter {
                         })
                 } else {
                     pipeMessage.type = PipeMessageType.RESPONSE_ERR
-                    const actionNotFoundError = new ActionNotFoundError(`Action ${actionName} not found`)
+                    const actionNotFoundError: ActionNotFoundError = new ActionNotFoundError(`Action ${actionName} not found`)
                     pipeMessage.payload = {
                         message: actionNotFoundError.message,
                         errno: actionNotFoundError.errno,

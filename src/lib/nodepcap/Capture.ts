@@ -113,11 +113,11 @@ export class Capture extends EventEmitter {
     protected async destroyCaptureWorker(): Promise<void> {
         if (!this.#hasWorker) return
         if (this.#workerDestroying) {
-            while (this.#workerDestroying) await new Promise(resolve => setTimeout(resolve, 10))
+            while (this.#workerDestroying) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
             return
         }
         this.#workerDestroying = true
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve: (value: void | PromiseLike<void>) => void): void => {
             if (this.#workerSocket && this.#worker) {
                 const disconnectHandler: () => void = (): void => {
                     clearTimeout(notifyExitTimeout)
@@ -144,7 +144,7 @@ export class Capture extends EventEmitter {
      * @protected
      */
     protected async getWorkerSocket(): Promise<PipeClientSocket> {
-        return new Promise(resolve => {
+        return new Promise((resolve: (value: PipeClientSocket | PromiseLike<PipeClientSocket>) => void): void => {
             if (!this.#workerSocket) {
                 this.#pipeServer.once('connect', (clientSocket: PipeClientSocket): void => {
                     this.#workerSocket = clientSocket
@@ -184,7 +184,7 @@ export class Capture extends EventEmitter {
      * @protected
      */
     protected async waitOperationDone(): Promise<void> {
-        while (this.#operating) await new Promise(resolve => setTimeout(resolve, 10))
+        while (this.#operating) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
     }
 
     /**
@@ -219,7 +219,7 @@ export class Capture extends EventEmitter {
         this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
-        while (await workerSocket.invoke('count') !== this.count) await new Promise(resolve => setTimeout(resolve, 10))
+        while (await workerSocket.invoke('count') !== this.count) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
         await this.destroyCaptureWorker()
         this.#started = false
         this.#operating = false
@@ -236,7 +236,7 @@ export class Capture extends EventEmitter {
         this.#operating = true
         const workerSocket: PipeClientSocket = await this.getWorkerSocket()
         await workerSocket.invoke('stop')
-        while (await workerSocket.invoke('count') !== this.count) await new Promise(resolve => setTimeout(resolve, 10))
+        while (await workerSocket.invoke('count') !== this.count) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
         this.#paused = true
         this.#operating = false
     }

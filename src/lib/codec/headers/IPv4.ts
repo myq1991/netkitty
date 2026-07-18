@@ -21,7 +21,7 @@ export class IPv4 extends BaseHeader {
         const header: Uint8Array = Uint8Array.from(headerBuffer)
         let sum: number = 0
         for (let i: number = 0; i < header.length; i += 2) {
-            const word = (header[i] << 8) + (header[i + 1] || 0)
+            const word: number = (header[i] << 8) + (header[i + 1] || 0)
             sum += word
         }
         while (sum >>> 16) {

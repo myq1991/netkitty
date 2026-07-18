@@ -3589,7 +3589,7 @@ export class IEC104_I_Frame extends BaseHeader {
                     const sq: number = this.instance.sqBit.getValue(0)
                     const objectStride: number = sq === 1 ? (ioaTotalLength - 3) / numberOfObject : ioaLength
                     const IOA_arr: any[] = []
-                    Loop: for (let i = 1; i <= numberOfObject; i++) {
+                    Loop: for (let i: number = 1; i <= numberOfObject; i++) {
                         const objectOffset: number = 12 + (i - 1) * objectStride
                         const address: number = sq === 1
                             ? this.readBytes(12, 3).readUIntLE(0, 3) + (i - 1)
@@ -5919,7 +5919,7 @@ export class IEC104_I_Frame extends BaseHeader {
                     const ioaLength: number = ioaTotalLength / numberOfObject
                     const sq: number = this.instance.sqBit.getValue(0)
                     const objectStride: number = sq === 1 ? (ioaTotalLength - 3) / numberOfObject : ioaLength
-                    Loop: for (let i = 1; i <= numberOfObject; i++) {
+                    Loop: for (let i: number = 1; i <= numberOfObject; i++) {
                         const objectOffset: number = 12 + (i - 1) * objectStride
                         switch (typeId) {
                             //单点信息 M_SP_NA_1 : SIQ
@@ -5933,7 +5933,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SPI)
@@ -5954,7 +5954,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DPI)
@@ -5977,7 +5977,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 1, 7, IOA_message[i - 1].VTI)
@@ -6001,7 +6001,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
@@ -6024,7 +6024,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
@@ -6048,7 +6048,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
@@ -6072,7 +6072,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
@@ -6094,7 +6094,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, Int32ToBuffer(Int32ToBuffer(IOA_message[i - 1].BCR).readInt32LE()))
@@ -6116,7 +6116,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     IV: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].SCD).readUInt32LE()))
@@ -6134,7 +6134,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     NVA: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
@@ -6162,7 +6162,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SPI)
@@ -6204,7 +6204,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DPI)
@@ -6248,7 +6248,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 1, 7, IOA_message[i - 1].VTI)
@@ -6293,7 +6293,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
@@ -6337,7 +6337,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
@@ -6382,7 +6382,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
@@ -6427,7 +6427,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
@@ -6470,7 +6470,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, Int32ToBuffer(Int32ToBuffer(IOA_message[i - 1].BCR).readInt32LE()))
@@ -6514,7 +6514,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].ES)
@@ -6566,7 +6566,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].GS)
@@ -6621,7 +6621,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].GC)
@@ -6657,7 +6657,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     S_OR_E: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SCS)
@@ -6673,7 +6673,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     S_OR_E: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DCS)
@@ -6688,7 +6688,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     S_OR_E: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].RCS)
@@ -6704,7 +6704,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     S_OR_E: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
@@ -6722,7 +6722,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     S_OR_E: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
@@ -6740,7 +6740,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     S_OR_E: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
@@ -6755,7 +6755,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     BSI: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
@@ -6780,7 +6780,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 7, 1, IOA_message[i - 1].SCS)
@@ -6817,7 +6817,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].DCS)
@@ -6853,7 +6853,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 6, 2, IOA_message[i - 1].RCS)
@@ -6890,7 +6890,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
@@ -6929,7 +6929,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
@@ -6968,7 +6968,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
@@ -7004,7 +7004,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt32ToBuffer(UInt32ToBuffer(IOA_message[i - 1].BSI).readUInt32LE()))
@@ -7029,7 +7029,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     COI_I: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 1, 7, IOA_message[i - 1].COI_R)
@@ -7043,7 +7043,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     QOI: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].QOI))
@@ -7057,7 +7057,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     FRZ: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBits(objectOffset + 3, 1, 2, 6, IOA_message[i - 1].RQT)
@@ -7071,7 +7071,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     READ: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].READ))
@@ -7093,7 +7093,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const Milliseconds_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].Milliseconds)
@@ -7116,7 +7116,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     FBP: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(IOA_message[i - 1].FBP))
@@ -7129,7 +7129,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     QRP: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].QRP))
@@ -7152,7 +7152,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].TSC))
@@ -7179,7 +7179,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     LPC: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const NVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].NVA)
@@ -7199,7 +7199,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     LPC: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 const SVA_buffer: Buffer = UInt16ToBuffer(IOA_message[i - 1].SVA)
@@ -7219,7 +7219,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     LPC: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, Float32ToBuffer(Float32ToBuffer(IOA_message[i - 1].IEEE_STD_754).readFloatLE()))
@@ -7235,7 +7235,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     QPA: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt8ToBuffer(IOA_message[i - 1].QPA))
@@ -7250,7 +7250,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     FRQ: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
@@ -7268,7 +7268,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     SRQ: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
@@ -7286,7 +7286,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     SCQ: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(IOA_message[i - 1].NOF))
@@ -7304,7 +7304,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     CHS: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
@@ -7322,7 +7322,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     AFQ: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
@@ -7340,7 +7340,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Segment: string,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
@@ -7368,7 +7368,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     Year: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readUInt16LE()))
@@ -7395,7 +7395,7 @@ export class IEC104_I_Frame extends BaseHeader {
                                     SCQ: number,
                                 }[] = this.instance.IOA.getValue([], (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
                                 const address_LE: number = IOA_message[i - 1].address
-                                const buf = Buffer.alloc(3)
+                                const buf: Buffer = Buffer.alloc(3)
                                 buf.writeUIntLE(address_LE, 0, 3)
                                 this.writeIOAAddress(objectOffset, buf, i)
                                 this.writeBytes(objectOffset + 3, UInt16ToBuffer(UInt16ToBuffer(IOA_message[i - 1].NOF).readInt16LE()))

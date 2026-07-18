@@ -50,7 +50,7 @@ function generate(packets: GeneratePCAPPacket[]): Buffer {
  * @param ms
  */
 function convertMillisecond2Microsecond(ms: number): [number, number] {
-    const [seconds, microseconds] = new BigNumber(ms).dividedBy(1000).toFixed(6).split('.').map(value => parseInt(value))
+    const [seconds, microseconds] = new BigNumber(ms).dividedBy(1000).toFixed(6).split('.').map((value: string): number => parseInt(value))
     return [seconds, microseconds]
 }
 

@@ -174,12 +174,12 @@ export class PcapReader extends EventEmitter {
             let isReachEnd: boolean = false
             while (read || !isReachEnd) {
                 if (this.paused) {
-                    await new Promise(resolve => setTimeout(resolve, 1))
+                    await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 1))
                     continue
                 }
                 isReachEnd = await this.readBuffer()
                 if (isReachEnd) {
-                    await new Promise(resolve => setTimeout(resolve, 1))
+                    await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 1))
                 }
             }
             await this.readBufferFileHandle?.close()
@@ -201,7 +201,7 @@ export class PcapReader extends EventEmitter {
             this.once('stop', (): boolean => stopped = true)
             while (!isReachEnd && !stopped) {
                 if (this.paused) {
-                    await new Promise(resolve => setTimeout(resolve, 1))
+                    await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 1))
                     continue
                 }
                 isReachEnd = await this.readBuffer()
@@ -276,20 +276,20 @@ export class PcapReader extends EventEmitter {
     public async stop(): Promise<void> {
         if (this.parser) {
             this.emit('stop')
-            if (!this.readDone) await new Promise(resolve => this.once('done', resolve))
+            if (!this.readDone) await new Promise((resolve: (value: unknown) => void): PcapReader => this.once('done', resolve))
             if (this.onStop) await this.onStop()
         }
         if (this.duplexPair) {
-            await new Promise<void>(resolve => {
+            await new Promise<void>((resolve: (value: void | PromiseLike<void>) => void): void => {
                 if (this.writeStream.closed) return resolve()
                 this.writeStream.once('close', () => resolve())
-                this.writeStream.once('error', err => !!err)
+                this.writeStream.once('error', (err: Error): boolean => !!err)
                 this.writeStream.destroy()
             })
-            await new Promise<void>(resolve => {
+            await new Promise<void>((resolve: (value: void | PromiseLike<void>) => void): void => {
                 if (this.readStream.closed) return resolve()
                 this.readStream.once('close', () => resolve())
-                this.readStream.once('error', err => !!err)
+                this.readStream.once('error', (err: Error): boolean => !!err)
                 this.readStream.destroy()
             })
         }

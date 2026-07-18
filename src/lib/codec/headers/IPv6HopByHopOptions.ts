@@ -442,7 +442,7 @@ export class IPv6HopByHopOptions extends BaseHeader {
                     this.items = this.instance.items.getValue([])
                     const parts: Buffer[] = []
                     const tlvBytes: (tlv: TLV) => Buffer = (tlv: TLV): Buffer => Buffer.from(tlv.getTLV(), 'hex')
-                    this.items.forEach(item => {
+                    this.items.forEach((item: IPv6HopByHopOptions['items'][number]): void => {
                         switch (item.type) {
                             case Type.Pad1: {
                                 //Pad1 is a single zero octet with no Length/Value.
