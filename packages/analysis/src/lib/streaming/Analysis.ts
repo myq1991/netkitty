@@ -49,10 +49,25 @@ export class Analysis {
         this.#frameCount = result.frameCount
     }
 
-    /** Tail a capture being written live: index continuously, never emit 'complete'. */
-    public watch(source: AnalysisSource): Promise<void> {
-        void source
-        throw new Error('Analysis.watch not implemented yet')
+    /**
+     * Tail a capture being written live: the worker indexes appended frames continuously and pushes
+     * each one here, where it updates frameCount, emits a 'frame' row, and feeds every attached reducer
+     * with phase 'live'. Never emits 'complete'. Index memory is bounded by AnalysisOptions.maxFrames.
+     */
+    public async watch(source: AnalysisSource): Promise<void> {
+        const path: string = this.#sourcePath(source)
+        const channel: IWorkerChannel = this.#start()
+        channel.on('frame', (payload: unknown): void => {
+            const frame: Frame = payload as Frame
+            if (frame.index + 1 > this.#frameCount) this.#frameCount = frame.index + 1
+            const row: FrameRow = {index: frame.index, timestamp: frame.timestamp, length: frame.length, topProtocol: frame.topProtocol, conversationKey: frame.conversationKey, info: frame.info}
+            this.#emit('frame', row)
+            for (const reducer of this.#reducers) {
+                reducer.update(frame, {index: frame.index, total: this.#frameCount, phase: 'live'})
+            }
+        })
+        const result: {frameCount: number} = await channel.request<{frameCount: number}>('watch', {source: path, maxFrames: this.#options.maxFrames})
+        if (result.frameCount > this.#frameCount) this.#frameCount = result.frameCount
     }
 
     /** Terminate the worker and release the index, cache, and parse state in one shot. */

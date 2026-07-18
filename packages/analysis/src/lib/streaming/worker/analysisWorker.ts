@@ -1,5 +1,6 @@
 import {parentPort, MessagePort} from 'node:worker_threads'
 import {Codec, CodecDecodeResult} from '@netkitty/codec'
+import {IPcapPacketInfo, PcapParserCore} from '@netkitty/pcap-core'
 import {WorkerEndpoint} from './WorkerEndpoint'
 import {NodeFileReadBackend} from '../backends/NodeFileReadBackend'
 import {ColumnarIndexStore} from '../stores/ColumnarIndexStore'
@@ -79,4 +80,69 @@ endpoint.handle('getFrameBatch', async (payload: unknown): Promise<unknown[]> =>
         if (frame !== null) out.push(frame)
     }
     return out
+})
+
+//--- watch (tail) --------------------------------------------------------------------------------
+//Incremental tail: keep one long-lived parser, pread newly-appended bytes at a tracked position,
+//index each new frame and push it (with layers) to the main thread as a 'frame' notify for live
+//reducer feeding. maxFrames caps the index via FIFO eviction so watch memory stays bounded.
+type PendingFrame = {info: IPcapPacketInfo, data: Buffer}
+let watchParser: PcapParserCore | null = null
+let watchPosition: number = 0
+let watchLastData: Buffer = Buffer.alloc(0)
+let watchPending: PendingFrame[] = []
+let watchMaxFrames: number = Number.POSITIVE_INFINITY
+let pumping: boolean = false
+let pumpAgain: boolean = false
+let watchTimer: ReturnType<typeof setInterval> | null = null
+
+async function drainWatch(): Promise<void> {
+    for (const frame of watchPending) {
+        const layers: CodecDecodeResult[] = await codec.decode(frame.data)
+        const timestamp: number = frame.info.seconds + frame.info.microseconds / 1_000_000
+        const index: number = indexer.add(layers, frame.info.packetOffset, frame.info.packetLength, frame.info.packetLength, timestamp)
+        const record: FrameIndexRecord | null = store.get(index)
+        if (record) {
+            endpoint.notify('frame', {...frameRow(record), capturedLength: record.capturedLength, layers: JSON.parse(JSON.stringify(layers))})
+        }
+        if (store.count() > watchMaxFrames) store.evictOldest(store.count() - watchMaxFrames)
+    }
+    watchPending = []
+}
+
+async function pumpWatch(): Promise<void> {
+    if (pumping) {pumpAgain = true; return}
+    pumping = true
+    do {
+        pumpAgain = false
+        if (!backend || !watchParser) break
+        const size: number = await backend.size()
+        while (watchPosition < size) {
+            const length: number = Math.min(65536, size - watchPosition)
+            const bytes: Uint8Array = await backend.read(watchPosition, length)
+            if (bytes.length === 0) break
+            watchPosition += bytes.length
+            watchParser.write(Buffer.from(bytes))
+            await drainWatch()
+        }
+    } while (pumpAgain)
+    pumping = false
+}
+
+endpoint.handle('watch', async (payload: unknown): Promise<{frameCount: number}> => {
+    const {source, maxFrames}: {source: string, maxFrames?: number} = payload as {source: string, maxFrames?: number}
+    backend = new NodeFileReadBackend(source)
+    watchMaxFrames = maxFrames !== undefined ? maxFrames : Number.POSITIVE_INFINITY
+    watchPosition = 0
+    watchPending = []
+    watchParser = new PcapParserCore({
+        onPacketData: (data: Buffer): void => {watchLastData = data},
+        onPacket: (info: IPcapPacketInfo): void => {watchPending.push({info: info, data: watchLastData})}
+    })
+    await pumpWatch()
+    //Active polling rather than fs.watch events: a self-driven timer tails reliably even under load
+    //(where fs.watch/watchFile change events can arrive late). The worker owns the loop; terminate stops it.
+    if (watchTimer !== null) clearInterval(watchTimer)
+    watchTimer = setInterval((): void => {void pumpWatch()}, 100)
+    return {frameCount: store.count()}
 })
