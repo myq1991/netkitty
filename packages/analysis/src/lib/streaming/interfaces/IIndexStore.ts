@@ -10,7 +10,10 @@ export interface IIndexStore {
     get(index: number): FrameIndexRecord | null
     range(from: number, to: number): FrameIndexRecord[]
     scan(predicate: (record: FrameIndexRecord) => boolean): number[]
+    //Number of frames currently retained (physical length, not the running total of appends).
     count(): number
+    //Global frame number of the oldest still-retained frame (advances as evictOldest drops frames).
+    firstIndex(): number
     //Drop the oldest `count` frames (watch FIFO governance).
     evictOldest(count: number): void
     clear(): void
