@@ -4,6 +4,7 @@ node_modules
 /build
 /bindings
 packages/*/dist
+packages/*/dist-test
 packages/*/build
 packages/*/bindings
 

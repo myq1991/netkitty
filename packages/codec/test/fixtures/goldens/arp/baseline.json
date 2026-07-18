@@ -1,0 +1,41 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "ff:ff:ff:ff:ff:ff",
+      "smac": "50:7b:9d:9d:40:e1",
+      "etherType": "0806"
+    },
+    "errors": []
+  },
+  {
+    "id": "arp",
+    "data": {
+      "hardware": {
+        "type": 1,
+        "size": 6
+      },
+      "protocol": {
+        "type": "0800",
+        "size": 4
+      },
+      "opcode": 1,
+      "sender": {
+        "mac": "cb:d3:87:fa:59:2f",
+        "ipv4": "171.81.157.212"
+      },
+      "target": {
+        "mac": "a2:de:2f:59:24:d9",
+        "ipv4": "108.247.1.1"
+      }
+    },
+    "errors": []
+  },
+  {
+    "id": "raw",
+    "data": {
+      "data": "d9610493"
+    },
+    "errors": []
+  }
+]

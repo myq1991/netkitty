@@ -1,0 +1,75 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "22:1a:95:d6:7a:23",
+      "smac": "86:93:23:d3:37:8e",
+      "etherType": "86dd"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6",
+    "data": {
+      "version": 6,
+      "tclass": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "flow": 878666,
+      "plen": 40,
+      "nxt": 6,
+      "hllm": 64,
+      "sip": "fc00:0002:0000:0002:0000:0000:0000:0001",
+      "dip": "fc00:0002:0000:0001:0000:0000:0000:0001"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 43424,
+      "dstport": 8080,
+      "seq": 35349388,
+      "ack": 0,
+      "hdrLen": 40,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": true,
+        "fin": false
+      },
+      "window": 26460,
+      "checksum": 36537,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "MSS",
+          "mss": 2940
+        },
+        {
+          "option": "SACK-Permitted"
+        },
+        {
+          "option": "TS",
+          "tsval": 2149426466,
+          "tsecr": 0
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "Window-Scale",
+          "shift": 7
+        }
+      ]
+    },
+    "errors": []
+  }
+]

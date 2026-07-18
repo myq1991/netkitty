@@ -1,0 +1,3 @@
+# TCP SYN with a User Timeout option (RFC 5482): Kind=28, Length=4, G=1, timeout=100
+# (wire value 0x8064). Built via the codec.
+ffffffffffff00112233445508004500002c00004000400626ca0a0000010a0000023039005000000001000000016002ffffbee800001c048064

@@ -1,0 +1,141 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:0c:cd:01:00:00",
+      "smac": "0a:bb:fe:10:c9:06",
+      "etherType": "88b8"
+    },
+    "errors": []
+  },
+  {
+    "id": "goose",
+    "data": {
+      "appid": 12289,
+      "length": 227,
+      "reserved1": {
+        "simulated": false,
+        "reserved": 0
+      },
+      "reserved2": {
+        "reserved": 0
+      },
+      "goosePdu": {
+        "gocbRef": "AA1C1Q05A1LD0/LLN0$GO$gcb_A",
+        "timeAllowedtoLive": 15000,
+        "datSet": "AA1C1Q05A1LD0/LLN0$InterlockingA",
+        "goID": "InterlockingA",
+        "t": "5224331042680209447",
+        "stNum": 115,
+        "sqNum": 140071,
+        "simulation": false,
+        "confRev": 5,
+        "ndsCom": false,
+        "numDatSetEntries": 25,
+        "allData": [
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1600
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1600
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1600
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1664
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1664
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1600
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1600
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1600
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "CODED-ENUM",
+            "value": 1600
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          }
+        ]
+      }
+    },
+    "errors": []
+  }
+]

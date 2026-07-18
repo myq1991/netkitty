@@ -1,0 +1,73 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:a0:f4:08:2f:77",
+      "smac": "00:a0:f4:08:2f:77",
+      "etherType": "88b8"
+    },
+    "errors": []
+  },
+  {
+    "id": "goose",
+    "data": {
+      "appid": 1,
+      "length": 145,
+      "reserved1": {
+        "simulated": false,
+        "reserved": 0
+      },
+      "reserved2": {
+        "reserved": 0
+      },
+      "goosePdu": {
+        "gocbRef": "GEDeviceF650/LLN0$GO$gcb01",
+        "timeAllowedtoLive": 40000,
+        "datSet": "GEDeviceF650/LLN0$GOOSE1",
+        "goID": "F650_GOOSE1",
+        "t": "4066394167022397450",
+        "stNum": 1,
+        "sqNum": 10,
+        "simulation": false,
+        "confRev": 1,
+        "ndsCom": false,
+        "numDatSetEntries": 8,
+        "allData": [
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          },
+          {
+            "dataType": "Boolean",
+            "value": false
+          },
+          {
+            "dataType": "Quality",
+            "value": "000000110000000000000000"
+          }
+        ]
+      }
+    },
+    "errors": []
+  }
+]
