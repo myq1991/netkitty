@@ -50,12 +50,13 @@ test('read backend: watch() fires when the file grows (tail)', async (): Promise
     const changed: Promise<void> = new Promise<void>((resolve: () => void): void => {
         const started: number = Date.now()
         const poll: () => void = (): void => {
-            if (fired > 0 || Date.now() - started > 3000) return resolve()
-            setTimeout(poll, 20)
+            if (fired > 0 || Date.now() - started > 8000) return resolve()
+            //Keep growing the file so a watchFile stat tick is guaranteed regardless of OS timing.
+            appendFileSync(temp, Buffer.from([0]))
+            setTimeout(poll, 100)
         }
         poll()
     })
-    appendFileSync(temp, GOLDEN.subarray(100, 200))
     await changed
     stop()
     await backend.close()

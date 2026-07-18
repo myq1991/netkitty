@@ -24,3 +24,11 @@ export type {IAnalysisReducer} from './lib/streaming/interfaces/IAnalysisReducer
 export type {IReadBackend} from './lib/streaming/interfaces/IReadBackend'
 export type {IWorkerChannel} from './lib/streaming/interfaces/IWorkerChannel'
 export type {IIndexStore} from './lib/streaming/interfaces/IIndexStore'
+
+/**
+ * Built-in reducers (exported, not baked into Analysis) — attach them for Wireshark-style stats.
+ */
+export {ConversationsReducer} from './lib/streaming/reducers/ConversationsReducer'
+export type {ConversationSummary} from './lib/streaming/reducers/ConversationsReducer'
+export {EndpointsReducer} from './lib/streaming/reducers/EndpointsReducer'
+export type {EndpointSummary} from './lib/streaming/reducers/EndpointsReducer'
