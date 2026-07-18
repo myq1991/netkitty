@@ -14,6 +14,12 @@ import {UInt8ToBuffer, UInt16ToBuffer, UInt32ToBuffer} from '../../helper/Number
 
 const CONSTRUCTOR_VALIDATE_KEY: string = '__validate'
 
+//Per-codec-class cached MATCH probe. Content-heuristic selection calls MATCH() on many candidates
+//per layer; each used to build a whole fresh instance (rebuilding the SCHEMA) just to run match().
+//Since match() only inspects the previous layer and the raw buffer, one reusable probe per class
+//suffices — see BaseHeader.MATCH / bindContext.
+const MATCH_PROBE_KEY: string = '__matchProbe'
+
 /** Absolute byte span a field occupies in the packet, collected during a dissect pass. */
 export type FieldByteRange = {offset: number, length: number}
 
@@ -62,7 +68,17 @@ export abstract class BaseHeader {
     }
 
     public static MATCH(codecData: CodecData, codecModules: CodecModule[]): boolean {
-        return this.CREATE_CODEC_INSTANCE_WITCH_CODEC_MODULES(codecData, codecModules ? codecModules : []).match()
+        //Reuse one cached probe instance per codec class instead of rebuilding a full instance (and its
+        //SCHEMA) for every candidate. match() only reads the previous layer and the raw buffer, never
+        //this header's SCHEMA/instance, so rebinding context is enough. selectCodec runs synchronously,
+        //so the shared probe never overlaps across concurrent decodes.
+        let probe: any = Object.hasOwn(this, MATCH_PROBE_KEY) ? (this as any)[MATCH_PROBE_KEY] : undefined
+        if (!probe) {
+            probe = new (this as any)()
+            Object.defineProperty(this, MATCH_PROBE_KEY, {enumerable: false, configurable: false, value: probe})
+        }
+        probe.bindContext(codecData, codecModules ? codecModules : [])
+        return probe.match()
     }
 
     public static CREATE_INSTANCE(codecData: CodecData, codecModules: CodecModule[]): CodecModule {
@@ -177,25 +193,25 @@ export abstract class BaseHeader {
      * Previous Codec module
      * @protected
      */
-    protected readonly prevCodecModule: CodecModule
+    protected prevCodecModule!: CodecModule
 
     /**
      * Codec modules
      * @protected
      */
-    protected readonly codecModules: CodecModule[]
+    protected codecModules!: CodecModule[]
 
     /**
      * Previous codec modules
      * @protected
      */
-    protected readonly prevCodecModules: CodecModule[]
+    protected prevCodecModules!: CodecModule[]
 
     /**
      * Current header index in packet headers
      * @protected
      */
-    protected readonly headerIndex: number = 0
+    protected headerIndex: number = 0
 
     /**
      * Post packet handlers
@@ -222,9 +238,18 @@ export abstract class BaseHeader {
      * Codec data
      * @protected
      */
-    protected readonly codecData: CodecData
+    protected codecData!: CodecData
 
     constructor(codecData: CodecData, codecModules: CodecModule[]) {
+        this.bindContext(codecData, codecModules)
+    }
+
+    /**
+     * (Re)bind this instance's decode/match context. Extracted from the constructor so the static
+     * MATCH probe can reuse a single cached instance across heuristic candidates instead of rebuilding
+     * the whole SCHEMA for each — match() only reads the previous layer and the raw buffer.
+     */
+    protected bindContext(codecData: CodecData, codecModules: CodecModule[]): void {
         this.codecData = codecData
         this.startPos = codecData?.startPos ? codecData.startPos : 0
         codecModules = codecModules ? codecModules : []
