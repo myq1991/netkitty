@@ -1,5 +1,5 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
-import {BufferToUInt32, BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
+import {BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
 import {BufferToHex} from '../../helper/BufferToHex'
 import {HexToBuffer} from '../../helper/HexToBuffer'
 import {BaseHeader} from '../abstracts/BaseHeader'
