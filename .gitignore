@@ -17,6 +17,9 @@ CLAUDE.md
 # local design drafts (not committed; per-package README + docs are the real deliverables)
 /design
 
+# Playwright MCP scratch output (browser verification runs)
+/.playwright-mcp
+
 # local env files
 .env.local
 .env.*.local
