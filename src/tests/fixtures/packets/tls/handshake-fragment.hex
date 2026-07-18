@@ -1,6 +1,0 @@
-# TLS 1.2: fragmented Handshake record (Client Hello fragment) followed by an Application Data record
-# tshark ground truth: "[Client Hello Fragment], Application Data" (two records)
-# record1 = 16 0303 0008 | 01 000010 aabbccdd  (record len 8, handshakeLength claims 16 -> fragment)
-# record2 = 17 0303 0004 deadbeef             (separate application-data record)
-# constructed: eth/ipv4/tcp(dport 443); valid IPv4 + TCP checksums
-0242ac11000202000000000108004500003e00004000400626b80a0000010a000002d43101bb000000010000000150180100598e0000160303000801000010aabbccdd1703030004deadbeef

@@ -1,3 +1,0 @@
-# Minimal IEC 61850-9-2 SV frame carrying BOTH smpRate(0x86)=4096 and smpMod(0x88)=2
-# source: synthesized (spec-conformant, self-consistent length); no capture in pcaps/ has a decodable SV frame with smpMod
-010ccd04000100112233445588ba40000031000000006027800101a22230208003535631820200018304000000018501028602100087041234567888020002

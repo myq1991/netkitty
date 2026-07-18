@@ -1,0 +1,68 @@
+{
+  "name": "netkitty",
+  "version": "0.0.35",
+  "description": "Network tools kit — aggregate package re-exporting the netkitty codec, pcap, analysis and capture subsystems",
+  "main": "dist/codec.js",
+  "types": "dist/codec.d.ts",
+  "exports": {
+    "./network": {
+      "types": "./dist/network.d.ts",
+      "require": "./dist/network.js"
+    },
+    "./pcap": {
+      "types": "./dist/pcap.d.ts",
+      "require": "./dist/pcap.js"
+    },
+    "./codec": {
+      "types": "./dist/codec.d.ts",
+      "require": "./dist/codec.js"
+    },
+    "./codec/header": {
+      "types": "./dist/codec-header.d.ts",
+      "require": "./dist/codec-header.js"
+    },
+    "./helper": {
+      "types": "./dist/helper.d.ts",
+      "require": "./dist/helper.js"
+    },
+    "./analysis": {
+      "types": "./dist/analysis.d.ts",
+      "require": "./dist/analysis.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "shx rm -rf ./dist ./dist-test",
+    "build": "npm run clean && tsc -p tsconfig.json"
+  },
+  "keywords": [
+    "netkitty",
+    "net-analysis",
+    "capture-net-packets",
+    "pcap",
+    "encode",
+    "decode",
+    "wireshark"
+  ],
+  "author": "alex.ma",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "@netkitty/analysis": "^0.0.35",
+    "@netkitty/capture": "^0.0.35",
+    "@netkitty/codec": "^0.0.35",
+    "@netkitty/pcap": "^0.0.35",
+    "@netkitty/pcap-core": "^0.0.35"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "reflect-metadata": "^0.2.2",
+    "shx": "^0.3.4",
+    "typescript": "^5.8.2"
+  }
+}

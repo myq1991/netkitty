@@ -1,2 +1,0 @@
-# ARP with hardware type 0x8000 (>= 0x8000) to exercise unsigned decode of the htype field.
-ffffffffffff001122334455080680000800060400010011223344550a0000010000000000000a000002

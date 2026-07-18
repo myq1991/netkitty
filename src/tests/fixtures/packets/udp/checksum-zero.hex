@@ -1,3 +1,0 @@
-# IPv4 + UDP datagram whose recomputed checksum is 0x0000 (must be sent as 0xFFFF per RFC 768)
-# synthetic: sip 192.168.0.1 dip 192.168.0.2, sport 0x1234 dport 0x5678, payload 15da; ones-complement sum folds to 0xFFFF
-00000000000100000000000208004500001e000000004011f97bc0a80001c0a8000212345678000affff15da

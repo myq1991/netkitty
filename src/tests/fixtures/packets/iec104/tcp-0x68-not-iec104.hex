@@ -1,3 +1,0 @@
-# Non-IEC104 TCP payload that merely begins with 0x68 ('h'), on port 80 (not 2404)
-# derived from pcaps/iec104.pcap frame 9; ports -> 40000->80, payload -> ASCII "http-not-iec104."; tshark: protocols eth:ip:tcp only, NOT iec60870_104
-0016d1000905002215560b540800450000385d2640008006bf040a1466010a14646c9c400050cddab497009e59725018ff645a6a0000687474702d6e6f742d6965633130342e

@@ -1,3 +1,0 @@
-# IEC104 I-frame with an unknown/unsupported ASDU type id (200)
-# Synthesized from iec104/i-frame (type id octet flipped to 0xC8), re-encoded so checksums are consistent.
-0016d1000905002215560b540800450000385d2640008006bf040a1466010a14646cb54d0964cddab497009e59725018ff645a6a0000680e00000000c80106000a0000000014

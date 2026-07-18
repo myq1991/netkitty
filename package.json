@@ -1,77 +1,23 @@
 {
-  "name": "netkitty",
+  "name": "netkitty-monorepo",
   "version": "0.0.35",
-  "description": "Network tools kit",
+  "private": true,
+  "description": "netkitty monorepo — workspace root for the codec, pcap, pcap-core, analysis, capture and aggregate packages",
   "workspaces": [
     "packages/*"
   ],
-  "exports": {
-    "./network": {
-      "types": "./dist/NetworkExports.d.ts",
-      "require": "./dist/NetworkExports.js"
-    },
-    "./pcap": {
-      "types": "./dist/PcapExports.d.ts",
-      "require": "./dist/PcapExports.js"
-    },
-    "./codec": {
-      "types": "./dist/CodecExports.d.ts",
-      "require": "./dist/CodecExports.js"
-    },
-    "./codec/header": {
-      "types": "./dist/CodecHeaderExports.d.ts",
-      "require": "./dist/CodecHeaderExports.js"
-    },
-    "./helper": {
-      "types": "./dist/HelperExports.d.ts",
-      "require": "./dist/HelperExports.js"
-    },
-    "./analysis": {
-      "types": "./dist/AnalysisExports.d.ts",
-      "require": "./dist/AnalysisExports.js"
-    }
-  },
-  "files": [
-    "dist",
-    "!dist/tests",
-    "cpp",
-    "binding.gyp"
-  ],
   "scripts": {
-    "clean": "npm run clean:js && npm run clean:cpp",
-    "clean:js": "shx rm -rf ./build && shx rm -rf ./dist",
-    "clean:cpp": "shx rm -rf ./bindings",
-    "build:js": "npm run clean:js && tsc",
-    "build:cpp": "npm run clean:cpp && node-gyp-build",
-    "rebuild": "npm run clean && npm run build:cpp && npm run build:js",
-    "release": "npm run rebuild && release-it --no-push",
-    "test": "npm run build:js && node --test \"dist/tests/units/**/*.spec.js\"",
-    "test:only": "node --test \"dist/tests/units/**/*.spec.js\"",
-    "test:integration": "npm run rebuild && node dist/tests/integration/Capture.spec.js"
+    "clean": "lerna run clean",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "test:only": "lerna run test:only"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/myq1991/netkitty.git"
   },
-  "keywords": [
-    "netkitty",
-    "net-analysis",
-    "capture-net-packets",
-    "pcap",
-    "encode",
-    "decode",
-    "wireshark"
-  ],
   "author": "alex.ma",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/myq1991/netkitty/issues"
-  },
-  "homepage": "https://github.com/myq1991/netkitty#readme",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
   "devDependencies": {
     "@types/json-schema": "^7.0.15",
     "@types/node": "^22.13.10",
@@ -88,19 +34,5 @@
     "shx": "^0.3.4",
     "tslib": "^2.8.1",
     "typescript": "^5.8.2"
-  },
-  "dependencies": {
-    "ajv": "^8.17.1",
-    "bignumber.js": "^9.1.2",
-    "duplexpair": "^1.0.2",
-    "ip-address": "^10.0.1",
-    "is-electron": "^2.2.2",
-    "json-schema": "^0.4.0",
-    "node-addon-api": "^8.3.1",
-    "node-gyp-build": "^4.8.4",
-    "node-tlv": "^1.5.14",
-    "socket-ipc": "^4.0.2",
-    "sort-array": "^5.0.0",
-    "xpipe": "^1.0.8"
   }
 }

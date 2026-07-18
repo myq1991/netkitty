@@ -1,3 +1,0 @@
-# TLS 1.2 Alert record, Level=Fatal(2), Description=255 (unassigned per RFC 8446 §6; tshark: "Unknown (255)")
-# constructed: eth/ipv4/tcp(dport 443)/tls-alert; valid IPv4 + TCP checksums; record = 15 0303 0002 02 ff
-0242ac11000202000000000108004500002f00004000400626c70a0000010a000002d43101bb000000010000000150180100abce0000150303000202ff
