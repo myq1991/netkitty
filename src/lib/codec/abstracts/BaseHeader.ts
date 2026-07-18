@@ -589,7 +589,11 @@ export abstract class BaseHeader {
             //closures are synchronous, so this avoids a promise allocation + scheduler turn per field.
             if (paths) this.#currentFieldPath = paths[i]
             try {
-                const result: void | Promise<void> = decodes[i]()
+                //Invoke with the current instance as `this`. Arrow closures (headers not yet migrated)
+                //ignore the binding and use their captured lexical this — the same instance — so this is
+                //behaviour-neutral for them; migrated headers use plain functions whose dynamic `this`
+                //this provides, letting their SCHEMA be class-cached instead of rebuilt per packet.
+                const result: void | Promise<void> = decodes[i].call(this)
                 if (result && typeof (result as {then?: unknown}).then === 'function') await result
             } catch (e) {
                 this.recordError('', `Decode error: ${(e as Error).message}`)
@@ -622,7 +626,8 @@ export abstract class BaseHeader {
             //the packet still assembles best-effort (matches the decode contract).
             //Synchronous fast-path (see decode): only await a genuinely returned Promise.
             try {
-                const result: void | Promise<void> = encode()
+                //See decode: .call(this) is neutral for arrow closures, dynamic-`this` for migrated ones.
+                const result: void | Promise<void> = encode.call(this)
                 if (result && typeof (result as {then?: unknown}).then === 'function') await result
             } catch (e) {
                 this.recordError('', `Encode error: ${(e as Error).message}`)
