@@ -3,8 +3,12 @@ import {AnalysisSource} from './types/AnalysisSource'
 import {AnalysisEvents} from './types/AnalysisEvents'
 import {Frame} from './types/Frame'
 import {FrameRow} from './types/FrameRow'
+import {UpdateContext} from './types/UpdateContext'
 import {IAnalysisReducer} from './interfaces/IAnalysisReducer'
 import {IWorkerChannel} from './interfaces/IWorkerChannel'
+
+//How many frames to pull per replay batch — bounds memory and back-pressures the worker naturally.
+const REPLAY_BATCH: number = 512
 
 type AnyListener = (...args: unknown[]) => void
 
@@ -24,6 +28,8 @@ export class Analysis {
     #channel: IWorkerChannel | null = null
 
     #frameCount: number = 0
+
+    readonly #reducers: Set<IAnalysisReducer<unknown>> = new Set<IAnalysisReducer<unknown>>()
 
     readonly #listeners: Map<string, Set<AnyListener>> = new Map<string, Set<AnyListener>>()
 
@@ -78,16 +84,28 @@ export class Analysis {
         throw new Error('Analysis.filter not implemented yet')
     }
 
-    /** Attach a reducer; it replays every already-indexed frame, then follows the live stream. */
-    public attachReducer(reducer: IAnalysisReducer<unknown>): Promise<void> {
-        void reducer
-        throw new Error('Analysis.attachReducer not implemented yet')
+    /**
+     * Attach a reducer and replay every already-indexed frame into it (phase 'replay'), so stats are
+     * complete the moment attach resolves — Wireshark-style "open the stats and they're already there".
+     * Frames are pulled from the worker in bounded batches. (watch live-feed is added with watch().)
+     */
+    public async attachReducer(reducer: IAnalysisReducer<unknown>): Promise<void> {
+        const channel: IWorkerChannel = this.#require()
+        this.#reducers.add(reducer)
+        const total: number = this.#frameCount
+        for (let from: number = 0; from < total; from += REPLAY_BATCH) {
+            const to: number = Math.min(from + REPLAY_BATCH, total)
+            const frames: Frame[] = await channel.request<Frame[]>('getFrameBatch', {from: from, to: to})
+            for (const frame of frames) {
+                const context: UpdateContext = {index: frame.index, total: total, phase: 'replay'}
+                reducer.update(frame, context)
+            }
+        }
     }
 
-    /** Detach a reducer: stop feeding it and drop the internal reference. */
+    /** Detach a reducer: stop feeding it and drop the internal reference (its state is the caller's). */
     public detachReducer(reducer: IAnalysisReducer<unknown>): void {
-        void reducer
-        throw new Error('Analysis.detachReducer not implemented yet')
+        this.#reducers.delete(reducer)
     }
 
     public on<E extends keyof AnalysisEvents>(event: E, listener: AnalysisEvents[E]): this {

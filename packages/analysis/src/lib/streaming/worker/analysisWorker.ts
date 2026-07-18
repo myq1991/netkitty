@@ -51,12 +51,28 @@ endpoint.handle('getFrames', (payload: unknown): FrameRow[] => {
     return store.range(from, to).map(frameRow)
 })
 
-endpoint.handle('getFrame', async (payload: unknown): Promise<unknown> => {
-    const {index}: {index: number} = payload as {index: number}
+async function materializeFrame(index: number): Promise<unknown | null> {
     const record: FrameIndexRecord | null = store.get(index)
     if (!record || !backend) return null
     const bytes: Uint8Array = await backend.read(record.fileOffset, record.capturedLength)
     const layers: CodecDecodeResult[] = await codec.decode(Buffer.from(bytes))
     //JSON round-trip strips the FlexibleObject proxy / closures so the layer tree is structured-cloneable.
     return {...frameRow(record), capturedLength: record.capturedLength, layers: JSON.parse(JSON.stringify(layers))}
+}
+
+endpoint.handle('getFrame', async (payload: unknown): Promise<unknown> => {
+    const {index}: {index: number} = payload as {index: number}
+    return materializeFrame(index)
+})
+
+//Batch of fully-materialized frames (with layers), for reducer replay. v1 re-decodes each frame;
+//a v2 optimization runs built-in reducers inside the worker over the index columns instead.
+endpoint.handle('getFrameBatch', async (payload: unknown): Promise<unknown[]> => {
+    const {from, to}: {from: number, to: number} = payload as {from: number, to: number}
+    const out: unknown[] = []
+    for (let index: number = from; index < to; index++) {
+        const frame: unknown | null = await materializeFrame(index)
+        if (frame !== null) out.push(frame)
+    }
+    return out
 })
