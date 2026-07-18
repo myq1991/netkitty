@@ -8,6 +8,7 @@ import {FrameIndexer} from '../indexer/FrameIndexer'
 import {PcapIndexBuilder} from '../indexer/PcapIndexBuilder'
 import {FrameIndexRecord} from '../types/FrameIndexRecord'
 import {FrameRow} from '../types/FrameRow'
+import {FilterExpression, matchesFilter, parseFilter} from '../filter/FilterExpression'
 
 /**
  * The analysis worker: owns the read backend, columnar index, indexer dictionaries and codec. It
@@ -46,6 +47,25 @@ endpoint.handle('open', async (payload: unknown): Promise<{frameCount: number}> 
 })
 
 endpoint.handle('frameCount', (): number => store.count())
+
+//Display filter: re-decode each retained frame and evaluate the predicate. v1 has no column pre-filter
+//(a v2 optimization would use the protocol/conversation columns to skip obvious non-matches).
+endpoint.handle('filter', async (payload: unknown): Promise<number[]> => {
+    const {displayFilter}: {displayFilter: string} = payload as {displayFilter: string}
+    const expression: FilterExpression = parseFilter(displayFilter)
+    const matches: number[] = []
+    if (!backend) return matches
+    const first: number = store.firstIndex()
+    const end: number = first + store.count()
+    for (let index: number = first; index < end; index++) {
+        const record: FrameIndexRecord | null = store.get(index)
+        if (!record) continue
+        const bytes: Uint8Array = await backend.read(record.fileOffset, record.capturedLength)
+        const layers: CodecDecodeResult[] = await codec.decode(Buffer.from(bytes))
+        if (matchesFilter(layers, expression)) matches.push(index)
+    }
+    return matches
+})
 
 endpoint.handle('getFrames', (payload: unknown): FrameRow[] => {
     const {from, to}: {from: number, to: number} = payload as {from: number, to: number}

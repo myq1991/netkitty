@@ -93,10 +93,9 @@ export class Analysis {
         return this.#require().request<FrameRow[]>('getFrames', {from: from, to: to})
     }
 
-    /** Evaluate a display filter, returning the matching frame indices. */
-    public filter(displayFilter: string): Promise<number[]> {
-        void displayFilter
-        throw new Error('Analysis.filter not implemented yet')
+    /** Evaluate a display filter (v1 subset), returning the matching frame indices. */
+    public async filter(displayFilter: string): Promise<number[]> {
+        return this.#require().request<number[]>('filter', {displayFilter: displayFilter})
     }
 
     /**
