@@ -1,9 +1,8 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {Codec} from '../../lib/codec/Codec'
+import {Codec, CodecDecodeResult} from '@netkitty/codec'
 import {LoadPacket} from '../lib/Fixtures'
-import {CodecDecodeResult} from '../../lib/codec/types/CodecDecodeResult'
-import {AnalysisPacket, Conversation, Endpoint, FlowAnalysis, FlowAnalyzer} from '../../lib/analysis/FlowAnalyzer'
+import {AnalysisPacket, Conversation, Endpoint, FlowAnalysis, FlowAnalyzer} from '../../src'
 
 const codec: Codec = new Codec()
 const analyzer: FlowAnalyzer = new FlowAnalyzer()

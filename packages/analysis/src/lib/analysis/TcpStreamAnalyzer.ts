@@ -1,4 +1,4 @@
-import {CodecDecodeResult} from '../codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '@netkitty/codec'
 import {AnalysisPacket} from './FlowAnalyzer'
 
 /**

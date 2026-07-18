@@ -1,4 +1,4 @@
-import {CodecDecodeResult} from '../codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '@netkitty/codec'
 
 /**
  * Cross-packet flow analysis — the first stateful, read-only subsystem, layered ABOVE the per-packet

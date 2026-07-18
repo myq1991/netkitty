@@ -1,8 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {CodecDecodeResult} from '../../lib/codec/types/CodecDecodeResult'
-import {AnalysisPacket} from '../../lib/analysis/FlowAnalyzer'
-import {RttSample, TcpAnalysis, TcpStreamAnalyzer, TcpStreamDiagnostic} from '../../lib/analysis/TcpStreamAnalyzer'
+import {CodecDecodeResult} from '@netkitty/codec'
+import {AnalysisPacket, RttSample, TcpAnalysis, TcpStreamAnalyzer, TcpStreamDiagnostic} from '../../src'
 
 const analyzer: TcpStreamAnalyzer = new TcpStreamAnalyzer()
 
