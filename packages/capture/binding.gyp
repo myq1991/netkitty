@@ -1,5 +1,5 @@
 {
   "includes": [
-    "cpp/nodepcap/nodepcap.gypi"
+    "cpp/netkitty_capture.gypi"
   ]
 }

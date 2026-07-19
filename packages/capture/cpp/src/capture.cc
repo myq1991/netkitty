@@ -6,22 +6,22 @@
 
 using namespace Napi;
 
-Napi::Object Capture::Init(Napi::Env env, Napi::Object exports)
+Napi::Object NetKittyCapture::Init(Napi::Env env, Napi::Object exports)
 {
     Napi::Function func = DefineClass(
         env,
-        "Capture",
+        "NetKittyCapture",
         {
-            InstanceMethod("start", &Capture::Start),
-            InstanceMethod("stop", &Capture::Stop),
-            InstanceMethod("setFilter", &Capture::SetFilter),
-            InstanceMethod("send", &Capture::SendPacket),
+            InstanceMethod("start", &NetKittyCapture::Start),
+            InstanceMethod("stop", &NetKittyCapture::Stop),
+            InstanceMethod("setFilter", &NetKittyCapture::SetFilter),
+            InstanceMethod("send", &NetKittyCapture::SendPacket),
         });
-    exports.Set("Capture", func);
+    exports.Set("NetKittyCapture", func);
     return exports;
 }
 
-Capture::Capture(const Napi::CallbackInfo &info) : ObjectWrap(info)
+NetKittyCapture::NetKittyCapture(const Napi::CallbackInfo &info) : ObjectWrap(info)
 {
     Napi::Env env = info.Env();
 
@@ -61,9 +61,9 @@ Capture::Capture(const Napi::CallbackInfo &info) : ObjectWrap(info)
 }
 
 #ifdef _WIN32
-void Capture::cb_packets(uv_async_t *handle)
+void NetKittyCapture::cb_packets(uv_async_t *handle)
 {
-    Capture *obj = (Capture *)handle->data;
+    NetKittyCapture *obj = (NetKittyCapture *)handle->data;
     int packet_count;
 
     if (obj->closing)
@@ -75,7 +75,7 @@ void Capture::cb_packets(uv_async_t *handle)
     {
         packet_count = pcap_dispatch(obj->pcap_handle,
                                      1,
-                                     Capture::EmitPacket,
+                                     NetKittyCapture::EmitPacket,
                                      (u_char *)obj);
     } while (packet_count > 0 && !obj->closing);
 
@@ -83,21 +83,21 @@ void Capture::cb_packets(uv_async_t *handle)
     if (obj->closing)
         obj->cleanup();
 }
-void CALLBACK Capture::OnPacket(void *data, BOOLEAN didTimeout)
+void CALLBACK NetKittyCapture::OnPacket(void *data, BOOLEAN didTimeout)
 {
     // assert(!didTimeout);
     uv_async_t *async = (uv_async_t *)data;
     int r = uv_async_send(async);
     // assert(r == 0);
 }
-void Capture::cb_close(uv_handle_t *handle)
+void NetKittyCapture::cb_close(uv_handle_t *handle)
 {
 }
 #else
-void Capture::cb_packets(uv_poll_t *handle, int status, int events)
+void NetKittyCapture::cb_packets(uv_poll_t *handle, int status, int events)
 {
     // assert(status == 0);
-    Capture *obj = (Capture *)handle->data;
+    NetKittyCapture *obj = (NetKittyCapture *)handle->data;
 
     int packet_count;
 
@@ -112,7 +112,7 @@ void Capture::cb_packets(uv_poll_t *handle, int status, int events)
         {
             packet_count = pcap_dispatch(obj->pcap_handle,
                                          1,
-                                         Capture::EmitPacket,
+                                         NetKittyCapture::EmitPacket,
                                          (u_char *)obj);
         } while (packet_count > 1 && !obj->closing);
 
@@ -123,11 +123,11 @@ void Capture::cb_packets(uv_poll_t *handle, int status, int events)
 }
 #endif
 
-void Capture::EmitPacket(u_char *user,
+void NetKittyCapture::EmitPacket(u_char *user,
                                    const struct pcap_pkthdr *pkt_hdr,
                                    const u_char *pkt_data)
 {
-    Capture *obj = (Capture *)user;
+    NetKittyCapture *obj = (NetKittyCapture *)user;
 
     PacketEventData *eventData = new PacketEventData;
     eventData->pkt_data = new u_char[pkt_hdr->caplen];
@@ -147,7 +147,7 @@ void Capture::EmitPacket(u_char *user,
     obj->tsEmit_.BlockingCall(eventData, callback);
 }
 
-void Capture::Start(const Napi::CallbackInfo &info)
+void NetKittyCapture::Start(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     Napi::Function emit = info.This().As<Napi::Object>().Get("emit").As<Napi::Function>();
@@ -202,7 +202,7 @@ void Capture::Start(const Napi::CallbackInfo &info)
     // uv_async_init
     r = uv_async_init(uv_default_loop(),
                       &this->async,
-                      (uv_async_cb)Capture::cb_packets);
+                      (uv_async_cb)NetKittyCapture::cb_packets);
     // assert(r == 0);
     if(r!=0){
         Napi::Error::New(env,"uv_async_init error").ThrowAsJavaScriptException();
@@ -212,7 +212,7 @@ void Capture::Start(const Napi::CallbackInfo &info)
     r = RegisterWaitForSingleObject(
         &this->wait,
         pcap_getevent(this->pcap_handle),
-        Capture::OnPacket,
+        NetKittyCapture::OnPacket,
         &this->async,
         INFINITE,
         WT_EXECUTEINWAITTHREAD);
@@ -238,7 +238,7 @@ void Capture::Start(const Napi::CallbackInfo &info)
         Napi::Error::New(env,"uv_async_init error").ThrowAsJavaScriptException();
         return;
     }
-    r = uv_poll_start(&this->poll_handle, UV_READABLE, Capture::cb_packets);
+    r = uv_poll_start(&this->poll_handle, UV_READABLE, NetKittyCapture::cb_packets);
     this->poll_handle.data = this;
 #endif
     if (!this->filter.empty())
@@ -267,7 +267,7 @@ void Capture::Start(const Napi::CallbackInfo &info)
     }
 }
 
-void Capture::Stop(const Napi::CallbackInfo &info)
+void NetKittyCapture::Stop(const Napi::CallbackInfo &info)
 {
 #ifdef _WIN32
     if (this->wait)
@@ -282,7 +282,7 @@ void Capture::Stop(const Napi::CallbackInfo &info)
     pcap_close(this->pcap_handle);
 }
 
-void Capture::SetFilter(const Napi::CallbackInfo &info)
+void NetKittyCapture::SetFilter(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() < 1)
@@ -312,7 +312,7 @@ void Capture::SetFilter(const Napi::CallbackInfo &info)
 
 #else
     uv_poll_stop(&this->poll_handle);
-    uv_poll_start(&this->poll_handle, UV_READABLE, Capture::cb_packets);
+    uv_poll_start(&this->poll_handle, UV_READABLE, NetKittyCapture::cb_packets);
 #endif
     bpf_u_int32 NetMask = 0xffffff;
 
@@ -339,7 +339,7 @@ void Capture::SetFilter(const Napi::CallbackInfo &info)
     pcap_freecode(&this->fcode);
 }
 
-void Capture::SendPacket(const Napi::CallbackInfo &info)
+void NetKittyCapture::SendPacket(const Napi::CallbackInfo &info)
 {
     if (info.Length() != 1)
     {
@@ -369,7 +369,7 @@ void Capture::SendPacket(const Napi::CallbackInfo &info)
     }
 }
 
-bool Capture::close()
+bool NetKittyCapture::close()
 {
     if (this->pcap_handle && !this->closing)
     {
@@ -379,7 +379,7 @@ bool Capture::close()
             UnregisterWait(this->wait);
             this->wait = nullptr;
         }
-        uv_close((uv_handle_t *)&this->async, Capture::cb_close);
+        uv_close((uv_handle_t *)&this->async, NetKittyCapture::cb_close);
 #else
         uv_poll_stop(&this->poll_handle);
 #endif
@@ -390,7 +390,7 @@ bool Capture::close()
     return false;
 }
 
-void Capture::cleanup()
+void NetKittyCapture::cleanup()
 {
 #ifdef _WIN32
     this->wait = nullptr;

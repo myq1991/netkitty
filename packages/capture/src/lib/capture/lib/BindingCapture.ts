@@ -1,8 +1,8 @@
 import {IBindingCapture} from '../interfaces/IBindingCapture'
-import {GetNodePcapBindingCapture} from './GetNodePcapBindingCapture'
+import {GetCaptureBindingClass} from './GetCaptureBindingClass'
 import {IBindingCaptureOptions} from '../interfaces/IBindingCaptureOptions'
 
-const BindingCaptureClass: IBindingCapture = GetNodePcapBindingCapture()
+const BindingCaptureClass: IBindingCapture = GetCaptureBindingClass()
 
 export class BindingCapture extends BindingCaptureClass {
 

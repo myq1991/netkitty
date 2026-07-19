@@ -13,7 +13,7 @@ struct PacketEventData
     timeval tv;
 };
 
-class Capture : public Napi::ObjectWrap<Capture>
+class NetKittyCapture : public Napi::ObjectWrap<NetKittyCapture>
 {
 public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
@@ -25,7 +25,7 @@ public:
 #else
     static void cb_packets(uv_poll_t *handle, int status, int events);
 #endif
-    Capture(const Napi::CallbackInfo &);
+    NetKittyCapture(const Napi::CallbackInfo &);
     void Start(const Napi::CallbackInfo &);
     void Stop(const Napi::CallbackInfo &);
     void SetFilter(const Napi::CallbackInfo &);

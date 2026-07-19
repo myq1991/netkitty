@@ -1,5 +1,5 @@
 import {INetworkInterface} from './interfaces/INetworkInterface'
-import {GetNodePcapBinding} from './lib/GetNodePcapBinding'
+import {GetCaptureBinding} from './lib/GetCaptureBinding'
 import sortArray from 'sort-array'
 
 /**
@@ -7,7 +7,7 @@ import sortArray from 'sort-array'
  * @constructor
  */
 export function GetNetworkInterfaces(): INetworkInterface[] {
-    const ifaces: INetworkInterface[] = GetNodePcapBinding().GetNetworkInterfaces()
+    const ifaces: INetworkInterface[] = GetCaptureBinding().GetNetworkInterfaces()
     return sortArray(ifaces.map((iface: INetworkInterface): INetworkInterface => ({
         name: iface.name,
         mac: iface.mac.toLowerCase()

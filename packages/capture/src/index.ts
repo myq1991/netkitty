@@ -1,12 +1,12 @@
 /**
  * Fetch network interface
  */
-export {GetNetworkInterfaces} from './lib/nodepcap/GetNetworkInterfaces'
+export {GetNetworkInterfaces} from './lib/capture/GetNetworkInterfaces'
 /**
  * Network packet capture
  */
-export {Capture} from './lib/nodepcap/Capture'
+export {Capture} from './lib/capture/Capture'
 /**
  * Types
  */
-export {type INetworkInterface} from './lib/nodepcap/interfaces/INetworkInterface'
+export {type INetworkInterface} from './lib/capture/interfaces/INetworkInterface'

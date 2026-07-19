@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "nodepcap",
-      "product_dir": "<(module_root_dir)/bindings/nodepcap",
+      "target_name": "netkitty_capture",
+      "product_dir": "<(module_root_dir)/bindings",
       "sources": [
         "src/binding.cc",
         "src/capture.cc",
@@ -38,7 +38,7 @@
                   "link_settings": {
                     "libraries": [
                       "ws2_32.lib",
-                      "<(PRODUCT_DIR)/../../deps/lib/wpcap.lib"
+                      "<(module_root_dir)/cpp/deps/lib/wpcap.lib"
                     ]
                   }
                 },
@@ -46,7 +46,7 @@
                   "link_settings": {
                     "libraries": [
                       "ws2_32.lib",
-                      "<(PRODUCT_DIR)/../../deps/lib/x64/wpcap.lib"
+                      "<(module_root_dir)/cpp/deps/lib/x64/wpcap.lib"
                     ]
                   }
                 }
