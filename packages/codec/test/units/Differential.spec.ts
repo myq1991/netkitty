@@ -101,6 +101,19 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'yiaddr', ts: 'dhcp.ip.your', kind: 'str'},
         {nk: 'siaddr', ts: 'dhcp.ip.server', kind: 'str'},
         {nk: 'giaddr', ts: 'dhcp.ip.relay', kind: 'str'}
+    ]},
+    dns: {tsLayer: 'dns', fields: [
+        {nk: 'id', ts: 'dns.id', kind: 'int'},
+        // flag bits (tshark shows them as 0/1 under dns.flags_tree); our qr is a boolean → Number() → 0/1.
+        {nk: 'flags.qr', ts: 'dns.flags.response', kind: 'int'},
+        {nk: 'flags.opcode', ts: 'dns.flags.opcode', kind: 'int'},
+        {nk: 'flags.rcode', ts: 'dns.flags.rcode', kind: 'int'},
+        {nk: 'qdcount', ts: 'dns.count.queries', kind: 'int'},
+        {nk: 'ancount', ts: 'dns.count.answers', kind: 'int'},
+        // The resolved names. answers[0].name comes from a COMPRESSION POINTER (0xc00c) — matching
+        // tshark's resolved 'test.local' proves the pointer is followed correctly, the key DNS check.
+        {nk: 'questions.0.name.value', ts: 'dns.qry.name', kind: 'str'},
+        {nk: 'answers.0.name.value', ts: 'dns.resp.name', kind: 'str'}
     ]}
 }
 
@@ -108,13 +121,17 @@ function getByPath(obj: any, dottedPath: string): unknown {
     return dottedPath.split('.').reduce((o: any, key: string): any => (o == null ? undefined : o[key]), obj)
 }
 
-// tshark places a field either directly in the layer object or inside a one-level "*_tree" child.
+// tshark nests a field directly in the layer or inside child objects ("*_tree", "Queries"/"Answers"
+// record groups, …). Search depth-first, direct hit first — a strict superset of a one-level lookup,
+// so shallow fields resolve exactly as before while deep ones (e.g. dns.qry.name under Queries →
+// record) are now reachable instead of silently skipped.
 function getTsharkField(layer: {[field: string]: unknown} | undefined, field: string): unknown {
-    if (!layer) return undefined
+    if (!layer || typeof layer !== 'object') return undefined
     if (field in layer) return layer[field]
     for (const value of Object.values(layer)) {
-        if (value && typeof value === 'object' && !Array.isArray(value) && field in (value as object)) {
-            return (value as {[k: string]: unknown})[field]
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            const found: unknown = getTsharkField(value as {[field: string]: unknown}, field)
+            if (found !== undefined) return found
         }
     }
     return undefined

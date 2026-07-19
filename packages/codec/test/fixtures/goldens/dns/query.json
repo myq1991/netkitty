@@ -1,0 +1,82 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 56,
+      "id": 18496,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 13427,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 59747,
+      "dstport": 53,
+      "length": 36,
+      "checksum": 65079
+    },
+    "errors": []
+  },
+  {
+    "id": "dns",
+    "data": {
+      "id": 2016,
+      "flags": {
+        "qr": false,
+        "opcode": 0,
+        "aa": false,
+        "tc": false,
+        "rd": true,
+        "ra": false,
+        "z": false,
+        "ad": true,
+        "cd": false,
+        "rcode": 0
+      },
+      "qdcount": 1,
+      "ancount": 0,
+      "nscount": 0,
+      "arcount": 0,
+      "questions": [
+        {
+          "name": {
+            "value": "test.local",
+            "raw": "0474657374056c6f63616c00"
+          },
+          "qtype": 1,
+          "qclass": 1
+        }
+      ],
+      "answers": [],
+      "authorities": [],
+      "additionals": []
+    },
+    "errors": []
+  }
+]
