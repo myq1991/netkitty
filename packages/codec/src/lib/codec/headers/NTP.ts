@@ -1,10 +1,5 @@
 import {BaseHeader} from '../abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
-import {BufferToInt8} from '../../helper/BufferToNumber'
-import {Int8ToBuffer} from '../../helper/NumberToBuffer'
-import {BufferToHex} from '../../helper/BufferToHex'
-import {HexToBuffer} from '../../helper/HexToBuffer'
-import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 /**
  * NTP — Network Time Protocol (RFC 5905), the 48-byte packet header. Rides UDP port 123. Fields per
@@ -52,59 +47,15 @@ export class NTP extends BaseHeader {
                 },
                 stratum: this.fieldUInt('stratum', 1, 1, 'Stratum'),
                 //Poll and Precision are signed power-of-two-second exponents (RFC 5905 §7.3).
-                poll: {
-                    type: 'integer',
-                    label: 'Poll Interval',
-                    minimum: -128,
-                    maximum: 127,
-                    decode: function (this: NTP): void { this.instance.poll.setValue(BufferToInt8(this.readBytes(2, 1))) },
-                    encode: function (this: NTP): void { this.writeBytes(2, Int8ToBuffer(this.instance.poll.getValue(0))) }
-                },
-                precision: {
-                    type: 'integer',
-                    label: 'Precision',
-                    minimum: -128,
-                    maximum: 127,
-                    decode: function (this: NTP): void { this.instance.precision.setValue(BufferToInt8(this.readBytes(3, 1))) },
-                    encode: function (this: NTP): void { this.writeBytes(3, Int8ToBuffer(this.instance.precision.getValue(0))) }
-                },
+                poll: this.fieldInt8('poll', 2, 'Poll Interval'),
+                precision: this.fieldInt8('precision', 3, 'Precision'),
                 rootDelay: this.fieldUInt('rootDelay', 4, 4, 'Root Delay'),
                 rootDispersion: this.fieldUInt('rootDispersion', 8, 4, 'Root Dispersion'),
-                refId: {
-                    type: 'string',
-                    label: 'Reference ID',
-                    contentEncoding: StringContentEncodingEnum.HEX,
-                    decode: function (this: NTP): void { this.instance.refId.setValue(BufferToHex(this.readBytes(12, 4))) },
-                    encode: function (this: NTP): void { this.writeBytes(12, HexToBuffer(this.instance.refId.getValue('00000000'))) }
-                },
-                refTimestamp: {
-                    type: 'string',
-                    label: 'Reference Timestamp',
-                    contentEncoding: StringContentEncodingEnum.HEX,
-                    decode: function (this: NTP): void { this.instance.refTimestamp.setValue(BufferToHex(this.readBytes(16, 8))) },
-                    encode: function (this: NTP): void { this.writeBytes(16, HexToBuffer(this.instance.refTimestamp.getValue('0000000000000000'))) }
-                },
-                originTimestamp: {
-                    type: 'string',
-                    label: 'Origin Timestamp',
-                    contentEncoding: StringContentEncodingEnum.HEX,
-                    decode: function (this: NTP): void { this.instance.originTimestamp.setValue(BufferToHex(this.readBytes(24, 8))) },
-                    encode: function (this: NTP): void { this.writeBytes(24, HexToBuffer(this.instance.originTimestamp.getValue('0000000000000000'))) }
-                },
-                receiveTimestamp: {
-                    type: 'string',
-                    label: 'Receive Timestamp',
-                    contentEncoding: StringContentEncodingEnum.HEX,
-                    decode: function (this: NTP): void { this.instance.receiveTimestamp.setValue(BufferToHex(this.readBytes(32, 8))) },
-                    encode: function (this: NTP): void { this.writeBytes(32, HexToBuffer(this.instance.receiveTimestamp.getValue('0000000000000000'))) }
-                },
-                transmitTimestamp: {
-                    type: 'string',
-                    label: 'Transmit Timestamp',
-                    contentEncoding: StringContentEncodingEnum.HEX,
-                    decode: function (this: NTP): void { this.instance.transmitTimestamp.setValue(BufferToHex(this.readBytes(40, 8))) },
-                    encode: function (this: NTP): void { this.writeBytes(40, HexToBuffer(this.instance.transmitTimestamp.getValue('0000000000000000'))) }
-                }
+                refId: this.fieldHex('refId', 12, 4, 'Reference ID'),
+                refTimestamp: this.fieldHex('refTimestamp', 16, 8, 'Reference Timestamp'),
+                originTimestamp: this.fieldHex('originTimestamp', 24, 8, 'Origin Timestamp'),
+                receiveTimestamp: this.fieldHex('receiveTimestamp', 32, 8, 'Receive Timestamp'),
+                transmitTimestamp: this.fieldHex('transmitTimestamp', 40, 8, 'Transmit Timestamp')
             }
         }
     }

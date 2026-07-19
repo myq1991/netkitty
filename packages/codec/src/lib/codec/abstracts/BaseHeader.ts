@@ -10,8 +10,11 @@ import {FlexibleObject} from '../lib/FlexibleObject'
 import {Ajv, ErrorObject, ValidateFunction} from 'ajv'
 import {HeaderTreeNode} from '../types/HeaderTreeNode'
 import {CodecSchemaValidateError} from '../../../errors/CodecSchemaValidateError'
-import {BufferToUInt8, BufferToUInt16, BufferToUInt32} from '../../helper/BufferToNumber'
-import {UInt8ToBuffer, UInt16ToBuffer, UInt32ToBuffer} from '../../helper/NumberToBuffer'
+import {BufferToUInt8, BufferToUInt16, BufferToUInt32, BufferToInt8} from '../../helper/BufferToNumber'
+import {UInt8ToBuffer, UInt16ToBuffer, UInt32ToBuffer, Int8ToBuffer} from '../../helper/NumberToBuffer'
+import {BufferToHex} from '../../helper/BufferToHex'
+import {HexToBuffer} from '../../helper/HexToBuffer'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 const CONSTRUCTOR_VALIDATE_KEY: string = '__validate'
 
@@ -490,6 +493,60 @@ export abstract class BaseHeader {
                 }
                 node.setValue(value)
                 this.writeBytes(offset, write(value))
+            }
+        }
+    }
+
+    /**
+     * A signed 8-bit integer field at `offset` (e.g. NTP poll/precision — power-of-two exponents).
+     * Decode reads it as int8 into `name`; encode clamps to [-128, 127] (recording an error, never
+     * throwing) and writes it — byte-for-byte identical to a hand-written int8 field for in-range values.
+     * @protected
+     */
+    protected static fieldInt8(name: string, offset: number, label: string): ProtocolFieldJSONSchema {
+        return {
+            type: 'integer',
+            label: label,
+            minimum: -128,
+            maximum: 127,
+            decode: function (this: BaseHeader): void {
+                (this.instance as any)[name].setValue(BufferToInt8(this.readBytes(offset, 1)))
+            },
+            encode: function (this: BaseHeader): void {
+                const node: any = (this.instance as any)[name]
+                let value: number = node.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                if (value > 127) {
+                    this.recordError(node.getPath(), 'Maximum value is 127')
+                    value = 127
+                }
+                if (value < -128) {
+                    this.recordError(node.getPath(), 'Minimum value is -128')
+                    value = -128
+                }
+                node.setValue(value)
+                this.writeBytes(offset, Int8ToBuffer(value))
+            }
+        }
+    }
+
+    /**
+     * A raw byte field of `byteLength` octets at `offset`, kept verbatim as a lower-case hex string
+     * (e.g. NTP timestamps / reference id — bytes an editor should see and round-trip untouched).
+     * Decode reads the bytes to hex; encode writes the hex back (default: all-zero). Byte-for-byte
+     * identical to the hand-written pattern it replaces.
+     * @protected
+     */
+    protected static fieldHex(name: string, offset: number, byteLength: number, label: string): ProtocolFieldJSONSchema {
+        const zero: string = '00'.repeat(byteLength)
+        return {
+            type: 'string',
+            label: label,
+            contentEncoding: StringContentEncodingEnum.HEX,
+            decode: function (this: BaseHeader): void {
+                (this.instance as any)[name].setValue(BufferToHex(this.readBytes(offset, byteLength)))
+            },
+            encode: function (this: BaseHeader): void {
+                this.writeBytes(offset, HexToBuffer((this.instance as any)[name].getValue(zero)))
             }
         }
     }

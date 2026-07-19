@@ -15,7 +15,9 @@ class FieldTestHeader extends BaseHeader {
         type: 'object',
         properties: {
             val: FieldTestHeader.fieldUInt('val', 0, 2, 'Value'),
-            byte: FieldTestHeader.fieldUInt('byte', 2, 1, 'Byte')
+            byte: FieldTestHeader.fieldUInt('byte', 2, 1, 'Byte'),
+            sint: FieldTestHeader.fieldInt8('sint', 3, 'Signed'),
+            hex: FieldTestHeader.fieldHex('hex', 4, 4, 'Hex')
         }
     }
     public readonly id: string = 'field-test'
@@ -56,4 +58,33 @@ test('fieldUInt: encode round-trips an in-range value byte-for-byte', async (): 
     ;(header.instance as any).val.setValue(0xABCD)
     await header.field('val').encode!.call(header)
     assert.strictEqual(header.packet.subarray(0, 2).toString('hex'), 'abcd')
+})
+
+test('fieldInt8: decode reads a signed 8-bit integer (0xe7 = -25)', async (): Promise<void> => {
+    const header: FieldTestHeader = makeHeader(Buffer.from('000000e7', 'hex'))
+    await header.field('sint').decode!.call(header)
+    assert.strictEqual((header.instance as any).sint.getValue(), -25)
+})
+
+test('fieldInt8: encode round-trips an in-range signed value and clamps out of range', async (): Promise<void> => {
+    const header: FieldTestHeader = makeHeader(Buffer.alloc(4))
+    ;(header.instance as any).sint.setValue(-25)
+    await header.field('sint').encode!.call(header)
+    assert.strictEqual(header.packet[3], 0xe7, 'signed -25 writes as 0xe7')
+    ;(header.instance as any).sint.setValue(200) // > 127
+    await header.field('sint').encode!.call(header)
+    assert.strictEqual(header.packet[3], 127, 'clamped to 127')
+    ;(header.instance as any).sint.setValue(-200) // < -128
+    await header.field('sint').encode!.call(header)
+    assert.strictEqual(header.packet[3] << 24 >> 24, -128, 'clamped to -128 (0x80)')
+})
+
+test('fieldHex: decode reads raw bytes to a lower-case hex string and encode writes them back', async (): Promise<void> => {
+    const header: FieldTestHeader = makeHeader(Buffer.from('00000000deadbeef', 'hex'))
+    await header.field('hex').decode!.call(header)
+    assert.strictEqual((header.instance as any).hex.getValue(), 'deadbeef')
+    const out: FieldTestHeader = makeHeader(Buffer.alloc(8))
+    ;(out.instance as any).hex.setValue('cafebabe')
+    await out.field('hex').encode!.call(out)
+    assert.strictEqual(out.packet.subarray(4, 8).toString('hex'), 'cafebabe')
 })
