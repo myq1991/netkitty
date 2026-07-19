@@ -69,3 +69,67 @@ function matchesPredicate(layers: CodecDecodeResult[], predicate: FilterPredicat
 function anyEquals(value: string, a: string | null, b: string | null): boolean {
     return a === value || b === value
 }
+
+/**
+ * Try to decide a predicate from the index columns alone — the conversation key (protocol + the two
+ * canonical endpoints) and the top protocol — with NO re-decode. Returns true/false when decidable,
+ * or null when the frame must be decoded: direction-sensitive fields (src/dst/srcport/dstport, since
+ * the key is canonicalized and loses direction), or protocols the key/topProtocol don't pin down.
+ */
+export function indexableEval(predicate: FilterPredicate, conversationKey: string | null, topProtocol: string): boolean | null {
+    if (predicate.kind === 'protocol') {
+        if (predicate.name === 'tcp' || predicate.name === 'udp') {
+            if (conversationKey === null) return false
+            return conversationKey.slice(0, conversationKey.indexOf('|')) === predicate.name
+        }
+        if (predicate.name === 'arp') return topProtocol === 'arp'
+        return null
+    }
+    if (conversationKey === null) return false
+    const bar1: number = conversationKey.indexOf('|')
+    const bar2: number = conversationKey.indexOf('|', bar1 + 1)
+    const proto: string = conversationKey.slice(0, bar1)
+    const endpointA: string = conversationKey.slice(bar1 + 1, bar2)
+    const endpointB: string = conversationKey.slice(bar2 + 1)
+    switch (predicate.selector) {
+        case 'ip.addr':
+            if (proto !== 'tcp' && proto !== 'udp' && proto !== 'ip') return false
+            return anyEquals(predicate.value, ipOf(endpointA, proto), ipOf(endpointB, proto))
+        case 'tcp.port':
+            if (proto !== 'tcp') return false
+            return anyEquals(predicate.value, portOf(endpointA), portOf(endpointB))
+        case 'udp.port':
+            if (proto !== 'udp') return false
+            return anyEquals(predicate.value, portOf(endpointA), portOf(endpointB))
+        case 'eth.addr':
+            if (proto !== 'eth') return false
+            return anyEquals(predicate.value, endpointA, endpointB)
+        default:
+            return null
+    }
+}
+
+/**
+ * AND over indexableEval: false as soon as any column predicate excludes the frame (no decode); true
+ * if every predicate is column-decided true; null if a predicate needs the decoded layers to confirm.
+ */
+export function matchesIndexed(expression: FilterExpression, conversationKey: string | null, topProtocol: string): boolean | null {
+    let needsDecode: boolean = false
+    for (const predicate of expression) {
+        const decided: boolean | null = indexableEval(predicate, conversationKey, topProtocol)
+        if (decided === false) return false
+        if (decided === null) needsDecode = true
+    }
+    return needsDecode ? null : true
+}
+
+function ipOf(endpoint: string, proto: string): string {
+    if (proto === 'ip') return endpoint
+    const colon: number = endpoint.lastIndexOf(':')
+    return colon < 0 ? endpoint : endpoint.slice(0, colon)
+}
+
+function portOf(endpoint: string): string {
+    const colon: number = endpoint.lastIndexOf(':')
+    return colon < 0 ? '' : endpoint.slice(colon + 1)
+}

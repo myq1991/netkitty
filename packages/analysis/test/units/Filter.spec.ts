@@ -70,6 +70,23 @@ test('filter: AND combines predicates', async (): Promise<void> => {
     await analysis.close()
 })
 
+test('filter: direction-sensitive ip.src falls back to decode and stays correct', async (): Promise<void> => {
+    const frames: CodecDecodeResult[][] = await decodeAll('iec104.pcap')
+    const ip: CodecDecodeResult | undefined = frames[0].find((l: CodecDecodeResult): boolean => l.id === 'ipv4' || l.id === 'ipv6')
+    assert.ok(ip, 'first frame has IP')
+    const src: string = String((ip!.data as any).sip)
+    const filter: string = `ip.src == ${src}`
+    const analysis: Analysis = new Analysis()
+    await analysis.open(FixtureCapturePath('iec104.pcap'))
+    const got: number[] = await analysis.filter(filter)
+    //ip.src is direction-sensitive: the column pre-filter can't settle it (canonical key loses
+    //direction), so it re-decodes — and must still equal the direct evaluation.
+    assert.deepStrictEqual(got, expectedMatches(frames, filter))
+    assert.ok(got.includes(0), 'frame 0 is from its own source')
+    assert.ok(got.length < frames.length, 'only one direction matches')
+    await analysis.close()
+})
+
 test('filter: an unmatched value returns empty', async (): Promise<void> => {
     const analysis: Analysis = new Analysis()
     await analysis.open(FixtureCapturePath('iec104.pcap'))

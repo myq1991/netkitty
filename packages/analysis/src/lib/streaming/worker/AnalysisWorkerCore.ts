@@ -7,7 +7,7 @@ import {FrameIndexer} from '../indexer/FrameIndexer'
 import {PcapIndexBuilder} from '../indexer/PcapIndexBuilder'
 import {FrameIndexRecord} from '../types/FrameIndexRecord'
 import {FrameRow} from '../types/FrameRow'
-import {FilterExpression, matchesFilter, parseFilter} from '../filter/FilterExpression'
+import {FilterExpression, matchesFilter, matchesIndexed, parseFilter} from '../filter/FilterExpression'
 
 type PendingFrame = {info: IPcapPacketInfo, data: Buffer}
 
@@ -62,8 +62,10 @@ export function installAnalysisHandlers(endpoint: IWorkerEndpoint, makeBackend: 
 
     endpoint.handle('frameCount', (): number => store.count())
 
-    //Display filter: re-decode each retained frame and evaluate the predicate. v1 has no column pre-filter
-    //(a v2 optimization would use the protocol/conversation columns to skip obvious non-matches).
+    //Display filter with a column pre-filter: decide each frame from the index columns (conversation
+    //key + top protocol) first, and only re-decode the frames a predicate can't settle from columns
+    //(direction-sensitive fields, deeper protocols). Common filters (ip.addr / tcp.port / tcp|udp|arp)
+    //are answered entirely from the index — no decode.
     endpoint.handle('filter', async (payload: unknown): Promise<number[]> => {
         const {displayFilter}: {displayFilter: string} = payload as {displayFilter: string}
         const expression: FilterExpression = parseFilter(displayFilter)
@@ -74,6 +76,11 @@ export function installAnalysisHandlers(endpoint: IWorkerEndpoint, makeBackend: 
         for (let index: number = first; index < end; index++) {
             const record: FrameIndexRecord | null = store.get(index)
             if (!record) continue
+            const conversationKey: string | null = indexer.conversationKey(record.conversationHash)
+            const topProtocol: string = indexer.protocolName(record.protocolId)
+            const decided: boolean | null = matchesIndexed(expression, conversationKey, topProtocol)
+            if (decided === true) {matches.push(index); continue}
+            if (decided === false) continue
             const bytes: Uint8Array = await backend.read(record.fileOffset, record.capturedLength)
             const layers: CodecDecodeResult[] = await codec.decode(Buffer.from(bytes))
             if (matchesFilter(layers, expression)) matches.push(index)
