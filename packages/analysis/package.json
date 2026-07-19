@@ -13,8 +13,7 @@
   "files": [
     "dist",
     "README.md",
-    "README.zh-CN.md",
-    "BROWSER_VERIFY.md"
+    "README.zh-CN.md"
   ],
   "scripts": {
     "clean": "shx rm -rf ./dist ./dist-test",

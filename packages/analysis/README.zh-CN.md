@@ -75,7 +75,7 @@ const analysis = new Analysis({}, () => new WebWorkerChannel(worker))
 await analysis.open(file)   // file：一个 File/Blob
 ```
 
-node 与浏览器结果逐字段一致——见 [BROWSER_VERIFY.md](./BROWSER_VERIFY.md)。
+node 与浏览器结果逐字段一致。
 
 ## 旧接口（保留）
 

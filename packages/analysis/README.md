@@ -77,7 +77,7 @@ const analysis = new Analysis({}, () => new WebWorkerChannel(worker))
 await analysis.open(file)   // file: a File/Blob
 ```
 
-node and browser produce field-for-field identical results — see [BROWSER_VERIFY.md](./BROWSER_VERIFY.md).
+node and browser produce field-for-field identical results.
 
 ## Legacy (retained)
 
