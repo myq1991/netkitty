@@ -28,6 +28,10 @@
     "./analysis": {
       "types": "./dist/analysis.d.ts",
       "require": "./dist/analysis.js"
+    },
+    "./iface": {
+      "types": "./dist/iface.d.ts",
+      "require": "./dist/iface.js"
     }
   },
   "files": [
@@ -56,6 +60,7 @@
     "@netkitty/analysis": "^0.0.35",
     "@netkitty/capture": "^0.0.35",
     "@netkitty/codec": "^0.0.35",
+    "@netkitty/iface": "^0.0.35",
     "@netkitty/pcap": "^0.0.35",
     "@netkitty/pcap-core": "^0.0.35"
   },
