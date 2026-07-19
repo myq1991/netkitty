@@ -29,6 +29,9 @@ export class FrameIndexer {
         const key: string | null = flow ? canonicalConversationKey(flow) : null
         const conversationHash: number = key !== null ? hash32(key) : 0
         if (key !== null && !this.#conversationKeys.has(conversationHash)) this.#conversationKeys.set(conversationHash, key)
+        //Forward = the original source is the canonical endpointA (source <= destination), matching
+        //canonicalConversationKey. Lets src/dst filters recover direction from the key without decoding.
+        const directionForward: number = flow ? (flow.source <= flow.destination ? 1 : 0) : 1
         const record: FrameIndexRecord = {
             index: -1,
             fileOffset: fileOffset,
@@ -36,7 +39,8 @@ export class FrameIndexer {
             originalLength: originalLength,
             timestamp: timestamp,
             protocolId: this.#protocolId(topProtocolOf(layers)),
-            conversationHash: conversationHash
+            conversationHash: conversationHash,
+            directionForward: directionForward
         }
         return this.#store.append(record)
     }

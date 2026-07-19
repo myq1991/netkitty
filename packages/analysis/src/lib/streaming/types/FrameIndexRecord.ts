@@ -13,4 +13,8 @@ export type FrameIndexRecord = {
     protocolId: number
     //Hash of the canonical n-tuple, direction-independent.
     conversationHash: number
+    //1 if the frame's original source is the canonical endpointA (forward), else 0. Recovers the
+    //src/dst direction that the canonicalized conversation key drops, so src/dst/port filters can be
+    //answered from the index columns without re-decoding.
+    directionForward: number
 }

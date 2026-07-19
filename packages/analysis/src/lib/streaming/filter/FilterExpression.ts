@@ -76,7 +76,7 @@ function anyEquals(value: string, a: string | null, b: string | null): boolean {
  * or null when the frame must be decoded: direction-sensitive fields (src/dst/srcport/dstport, since
  * the key is canonicalized and loses direction), or protocols the key/topProtocol don't pin down.
  */
-export function indexableEval(predicate: FilterPredicate, conversationKey: string | null, topProtocol: string): boolean | null {
+export function indexableEval(predicate: FilterPredicate, conversationKey: string | null, topProtocol: string, directionForward: number): boolean | null {
     if (predicate.kind === 'protocol') {
         if (predicate.name === 'tcp' || predicate.name === 'udp') {
             if (conversationKey === null) return false
@@ -91,19 +91,46 @@ export function indexableEval(predicate: FilterPredicate, conversationKey: strin
     const proto: string = conversationKey.slice(0, bar1)
     const endpointA: string = conversationKey.slice(bar1 + 1, bar2)
     const endpointB: string = conversationKey.slice(bar2 + 1)
+    //directionForward=1 → source is endpointA; else source is endpointB.
+    const source: string = directionForward ? endpointA : endpointB
+    const destination: string = directionForward ? endpointB : endpointA
     switch (predicate.selector) {
         case 'ip.addr':
             if (proto !== 'tcp' && proto !== 'udp' && proto !== 'ip') return false
             return anyEquals(predicate.value, ipOf(endpointA, proto), ipOf(endpointB, proto))
+        case 'ip.src':
+            if (proto !== 'tcp' && proto !== 'udp' && proto !== 'ip') return false
+            return ipOf(source, proto) === predicate.value
+        case 'ip.dst':
+            if (proto !== 'tcp' && proto !== 'udp' && proto !== 'ip') return false
+            return ipOf(destination, proto) === predicate.value
         case 'tcp.port':
             if (proto !== 'tcp') return false
             return anyEquals(predicate.value, portOf(endpointA), portOf(endpointB))
+        case 'tcp.srcport':
+            if (proto !== 'tcp') return false
+            return portOf(source) === predicate.value
+        case 'tcp.dstport':
+            if (proto !== 'tcp') return false
+            return portOf(destination) === predicate.value
         case 'udp.port':
             if (proto !== 'udp') return false
             return anyEquals(predicate.value, portOf(endpointA), portOf(endpointB))
+        case 'udp.srcport':
+            if (proto !== 'udp') return false
+            return portOf(source) === predicate.value
+        case 'udp.dstport':
+            if (proto !== 'udp') return false
+            return portOf(destination) === predicate.value
         case 'eth.addr':
             if (proto !== 'eth') return false
             return anyEquals(predicate.value, endpointA, endpointB)
+        case 'eth.src':
+            if (proto !== 'eth') return false
+            return source === predicate.value
+        case 'eth.dst':
+            if (proto !== 'eth') return false
+            return destination === predicate.value
         default:
             return null
     }
@@ -113,10 +140,10 @@ export function indexableEval(predicate: FilterPredicate, conversationKey: strin
  * AND over indexableEval: false as soon as any column predicate excludes the frame (no decode); true
  * if every predicate is column-decided true; null if a predicate needs the decoded layers to confirm.
  */
-export function matchesIndexed(expression: FilterExpression, conversationKey: string | null, topProtocol: string): boolean | null {
+export function matchesIndexed(expression: FilterExpression, conversationKey: string | null, topProtocol: string, directionForward: number): boolean | null {
     let needsDecode: boolean = false
     for (const predicate of expression) {
-        const decided: boolean | null = indexableEval(predicate, conversationKey, topProtocol)
+        const decided: boolean | null = indexableEval(predicate, conversationKey, topProtocol, directionForward)
         if (decided === false) return false
         if (decided === null) needsDecode = true
     }

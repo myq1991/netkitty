@@ -13,7 +13,8 @@ function rec(seed: number): FrameIndexRecord {
         originalLength: seed + 20,
         timestamp: 1000 + seed,
         protocolId: seed % 60000,
-        conversationHash: seed * 7
+        conversationHash: seed * 7,
+        directionForward: seed % 2
     }
 }
 
@@ -25,7 +26,7 @@ test('index store: append returns monotonic frame numbers and get round-trips fi
     assert.strictEqual(store.count(), 3)
     assert.deepStrictEqual(store.get(1), {
         index: 1, fileOffset: 1000, capturedLength: 11, originalLength: 21,
-        timestamp: 1001, protocolId: 1, conversationHash: 7
+        timestamp: 1001, protocolId: 1, conversationHash: 7, directionForward: 1
     })
 })
 

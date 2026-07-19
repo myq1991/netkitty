@@ -29,6 +29,8 @@ export class ColumnarIndexStore implements IIndexStore {
 
     #conversationHash: Uint32Array
 
+    #directionForward: Uint8Array
+
     constructor(initialCapacity: number = 1024) {
         this.#capacity = Math.max(1, initialCapacity)
         this.#fileOffset = new Float64Array(this.#capacity)
@@ -37,6 +39,7 @@ export class ColumnarIndexStore implements IIndexStore {
         this.#timestamp = new Float64Array(this.#capacity)
         this.#protocolId = new Uint16Array(this.#capacity)
         this.#conversationHash = new Uint32Array(this.#capacity)
+        this.#directionForward = new Uint8Array(this.#capacity)
     }
 
     public append(record: FrameIndexRecord): number {
@@ -48,6 +51,7 @@ export class ColumnarIndexStore implements IIndexStore {
         this.#timestamp[slot] = record.timestamp
         this.#protocolId[slot] = record.protocolId
         this.#conversationHash[slot] = record.conversationHash
+        this.#directionForward[slot] = record.directionForward
         this.#length++
         return this.#base + slot
     }
@@ -94,6 +98,7 @@ export class ColumnarIndexStore implements IIndexStore {
         this.#timestamp.copyWithin(0, drop, this.#length)
         this.#protocolId.copyWithin(0, drop, this.#length)
         this.#conversationHash.copyWithin(0, drop, this.#length)
+        this.#directionForward.copyWithin(0, drop, this.#length)
         this.#length = remaining
         this.#base += drop
     }
@@ -111,7 +116,8 @@ export class ColumnarIndexStore implements IIndexStore {
             originalLength: this.#originalLength[slot],
             timestamp: this.#timestamp[slot],
             protocolId: this.#protocolId[slot],
-            conversationHash: this.#conversationHash[slot]
+            conversationHash: this.#conversationHash[slot],
+            directionForward: this.#directionForward[slot]
         }
     }
 
@@ -123,18 +129,21 @@ export class ColumnarIndexStore implements IIndexStore {
         const timestamp: Float64Array = new Float64Array(next)
         const protocolId: Uint16Array = new Uint16Array(next)
         const conversationHash: Uint32Array = new Uint32Array(next)
+        const directionForward: Uint8Array = new Uint8Array(next)
         fileOffset.set(this.#fileOffset)
         capturedLength.set(this.#capturedLength)
         originalLength.set(this.#originalLength)
         timestamp.set(this.#timestamp)
         protocolId.set(this.#protocolId)
         conversationHash.set(this.#conversationHash)
+        directionForward.set(this.#directionForward)
         this.#fileOffset = fileOffset
         this.#capturedLength = capturedLength
         this.#originalLength = originalLength
         this.#timestamp = timestamp
         this.#protocolId = protocolId
         this.#conversationHash = conversationHash
+        this.#directionForward = directionForward
         this.#capacity = next
     }
 }

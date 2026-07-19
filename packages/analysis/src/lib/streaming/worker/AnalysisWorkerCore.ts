@@ -78,7 +78,7 @@ export function installAnalysisHandlers(endpoint: IWorkerEndpoint, makeBackend: 
             if (!record) continue
             const conversationKey: string | null = indexer.conversationKey(record.conversationHash)
             const topProtocol: string = indexer.protocolName(record.protocolId)
-            const decided: boolean | null = matchesIndexed(expression, conversationKey, topProtocol)
+            const decided: boolean | null = matchesIndexed(expression, conversationKey, topProtocol, record.directionForward)
             if (decided === true) {matches.push(index); continue}
             if (decided === false) continue
             const bytes: Uint8Array = await backend.read(record.fileOffset, record.capturedLength)

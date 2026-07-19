@@ -70,7 +70,7 @@ test('filter: AND combines predicates', async (): Promise<void> => {
     await analysis.close()
 })
 
-test('filter: direction-sensitive ip.src falls back to decode and stays correct', async (): Promise<void> => {
+test('filter: direction-sensitive ip.src is column-decided via the direction bit, matching a direct eval', async (): Promise<void> => {
     const frames: CodecDecodeResult[][] = await decodeAll('iec104.pcap')
     const ip: CodecDecodeResult | undefined = frames[0].find((l: CodecDecodeResult): boolean => l.id === 'ipv4' || l.id === 'ipv6')
     assert.ok(ip, 'first frame has IP')
@@ -79,11 +79,11 @@ test('filter: direction-sensitive ip.src falls back to decode and stays correct'
     const analysis: Analysis = new Analysis()
     await analysis.open(FixtureCapturePath('iec104.pcap'))
     const got: number[] = await analysis.filter(filter)
-    //ip.src is direction-sensitive: the column pre-filter can't settle it (canonical key loses
-    //direction), so it re-decodes — and must still equal the direct evaluation.
+    //ip.src is direction-sensitive; the index direction bit recovers src/dst from the canonical key,
+    //so it is decided from columns (no re-decode) and must still equal the direct evaluation.
     assert.deepStrictEqual(got, expectedMatches(frames, filter))
     assert.ok(got.includes(0), 'frame 0 is from its own source')
-    assert.ok(got.length < frames.length, 'only one direction matches')
+    assert.ok(got.length < frames.length, 'only one direction matches — proving direction is honored')
     await analysis.close()
 })
 
