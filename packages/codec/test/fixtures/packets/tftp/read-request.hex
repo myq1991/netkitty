@@ -1,0 +1,3 @@
+# TFTP Read Request (RRQ, RFC 1350) on UDP port 69, from tftp-hpa client GET against tftpd-hpa on loopback
+# docker debian:12: in.tftpd on 127.0.0.1:69, tftp get test.txt, tcpdump udp. DATA/ACK move to an ephemeral TID.
+00000000000000000000000008004500002dd7c44000401164f97f0000017f000001cd3b00450019fe2c0001746573742e747874006f6374657400

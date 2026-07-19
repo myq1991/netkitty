@@ -1,0 +1,56 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 45,
+      "id": 55236,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 25849,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 52539,
+      "dstport": 69,
+      "length": 25,
+      "checksum": 65068
+    },
+    "errors": []
+  },
+  {
+    "id": "tftp",
+    "data": {
+      "opcode": 1,
+      "filename": "test.txt",
+      "mode": "octet",
+      "options": []
+    },
+    "errors": []
+  }
+]

@@ -133,6 +133,11 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'questions.0.name.value', ts: 'dns.qry.name', kind: 'str'},
         {nk: 'answers.0.name.value', ts: 'dns.resp.name', kind: 'str'}
     ]},
+    tftp: {tsLayer: 'tftp', fields: [
+        {nk: 'opcode', ts: 'tftp.opcode', kind: 'int'},
+        {nk: 'filename', ts: 'tftp.source_file', kind: 'str'},
+        {nk: 'mode', ts: 'tftp.type', kind: 'str'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.
