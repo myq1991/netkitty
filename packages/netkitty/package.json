@@ -32,6 +32,10 @@
     "./iface": {
       "types": "./dist/iface.d.ts",
       "require": "./dist/iface.js"
+    },
+    "./replay": {
+      "types": "./dist/replay.d.ts",
+      "require": "./dist/replay.js"
     }
   },
   "files": [
@@ -62,7 +66,8 @@
     "@netkitty/codec": "^0.0.35",
     "@netkitty/iface": "^0.0.35",
     "@netkitty/pcap": "^0.0.35",
-    "@netkitty/pcap-core": "^0.0.35"
+    "@netkitty/pcap-core": "^0.0.35",
+    "@netkitty/replay": "^0.0.35"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",

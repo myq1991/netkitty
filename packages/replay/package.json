@@ -1,0 +1,53 @@
+{
+  "name": "@netkitty/replay",
+  "version": "0.0.35",
+  "description": "Packet replay and traffic generation over a native addon — replays pcap/pcapng/cap at recorded inter-frame timing (or topspeed/mbps/pps) on the fastest per-platform send backend (Linux PF_PACKET, BSD/macOS BPF, Windows Npcap)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "gypfile": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "cpp",
+    "binding.gyp"
+  ],
+  "scripts": {
+    "clean": "shx rm -rf ./dist ./dist-test",
+    "clean:cpp": "shx rm -rf ./bindings",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "build:cpp": "npm run clean:cpp && node-gyp-build",
+    "build:test": "tsc -p tsconfig.test.json",
+    "test": "echo \"@netkitty/replay: integration-only tests (need a network device + privileges) — run 'npm run test:integration'\"",
+    "test:integration": "npm run build:test && node --test \"dist-test/**/*.spec.js\"",
+    "test:only": "node --test \"dist-test/**/*.spec.js\""
+  },
+  "keywords": [
+    "netkitty",
+    "replay",
+    "tcpreplay",
+    "pcap",
+    "sendpacket",
+    "packet"
+  ],
+  "author": "alex.ma",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "shx": "^0.3.4",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@netkitty/pcap": "^0.0.35",
+    "node-addon-api": "^8.3.1",
+    "node-gyp-build": "^4.8.4"
+  }
+}
