@@ -1,7 +1,5 @@
-import {open, stat} from 'node:fs/promises'
-import {watchFile, unwatchFile} from 'node:fs'
-import type {FileHandle, FileReadResult} from 'node:fs/promises'
-import type {Stats} from 'node:fs'
+import {open, stat, type FileHandle, type FileReadResult} from 'node:fs/promises'
+import {watchFile, unwatchFile, type Stats} from 'node:fs'
 import {IReadBackend} from '../interfaces/IReadBackend'
 
 /**
