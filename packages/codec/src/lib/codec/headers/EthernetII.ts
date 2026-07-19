@@ -1,4 +1,5 @@
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {DemuxProducer} from '../types/DemuxProducer'
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {UInt16ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
@@ -80,6 +81,8 @@ export class EthernetII extends BaseHeader {
     public readonly name: string = 'Ethernet II'
 
     public readonly nickname: string = 'ETH'
+
+    public readonly demuxProducers: DemuxProducer[] = [{field: 'etherType', namespace: 'ethertype', kind: 'string'}]
 
     public match(): boolean {
         const specialScenes: string[] = ['trill', 'vxlan', 'nvgre', 'mpls', 'qinq', 'gre', 'geneve']

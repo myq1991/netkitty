@@ -1,5 +1,6 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {DemuxProducer} from '../types/DemuxProducer'
 import {BufferToUInt8} from '../../helper/BufferToNumber'
 import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
@@ -527,6 +528,9 @@ export class IPv6HopByHopOptions extends BaseHeader {
     public id: string = 'ipv6-hopopt'
 
     public readonly matchKeys: string[] = ['ipproto:0']
+
+    //Extension header: it both consumes ipproto:0 and produces the next-header key for the layer after it.
+    public readonly demuxProducers: DemuxProducer[] = [{field: 'nxt', namespace: 'ipproto', kind: 'uint'}]
 
     public name: string = 'IPv6 Hop-by-Hop Option'
 

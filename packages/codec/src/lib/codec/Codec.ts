@@ -14,17 +14,8 @@ import {NextLayer, ConsistencyIssue} from './types/LayerGraph'
 import {DissectionField, DissectionLayer} from './types/Dissection'
 import {FieldByteRange} from './abstracts/BaseHeader'
 import {ProtocolJSONSchema} from '../schema/ProtocolJSONSchema'
+import {DemuxProducer, DemuxProducerKind} from './types/DemuxProducer'
 import * as packetHeaders from './PacketHeaders'
-
-/**
- * Producer fields whose value decides the next layer, mirroring computeDemuxKeys: a layer whose
- * schema declares one of these can be followed by any codec registered under that demux namespace.
- */
-const DEMUX_PRODUCERS: {field: string, namespace: string, numeric: boolean}[] = [
-    {field: 'etherType', namespace: 'ethertype', numeric: false},
-    {field: 'protocol', namespace: 'ipproto', numeric: true},
-    {field: 'nxt', namespace: 'ipproto', numeric: true}
-]
 
 export class Codec {
 
@@ -144,15 +135,37 @@ export class Codec {
      */
     protected computeDemuxKeys(prevCodecModule: CodecModule | undefined): string[] {
         if (!prevCodecModule) return []
+        //Read the declaration off the already-constructed prev instance (not the static getter, which
+        //would build a fresh instance + SCHEMA per decoded layer on the hot path).
+        const producers: DemuxProducer[] = prevCodecModule.demuxProducers
         const instance: FlexibleObject = prevCodecModule.instance
         const keys: string[] = []
-        const etherType: any = instance.etherType.getValue()
-        if (etherType !== undefined && etherType !== null) keys.push(`ethertype:${etherType}`)
-        const protocol: any = instance.protocol.getValue()
-        if (protocol !== undefined && protocol !== null) keys.push(`ipproto:${protocol}`)
-        const nextHeader: any = instance.nxt.getValue()
-        if (nextHeader !== undefined && nextHeader !== null) keys.push(`ipproto:${nextHeader}`)
+        for (const producer of producers) {
+            const raw: any = (instance as any)[producer.field].getValue()
+            if (raw === undefined || raw === null) continue
+            keys.push(`${producer.namespace}:${this.#normalizeDemux(raw, producer.kind)}`)
+        }
         return keys
+    }
+
+    /**
+     * Normalize a demux value into its dispatch-key form by the field's STORAGE representation (never
+     * by an output radix). uint → decimal string (protocol/nxt/ports are numbers); string → identity
+     * (etherType already stores a lower-case fixed-width hex string; case-sensitive maps kept verbatim);
+     * guid/bytes → lower-cased. Must produce exactly the string a matchKeys entry uses.
+     * @private
+     */
+    #normalizeDemux(raw: any, kind: DemuxProducerKind): string {
+        switch (kind) {
+            case 'uint':
+                return String(raw)
+            case 'guid':
+            case 'bytes':
+                return String(raw).toLowerCase()
+            case 'string':
+            default:
+                return String(raw)
+        }
     }
 
     /**
@@ -286,11 +299,9 @@ export class Codec {
      * @param layerId
      * @private
      */
-    #producersOf(layerId: string): {field: string, namespace: string, numeric: boolean}[] {
-        const schema: CodecSchema | undefined = this.#codecSchemas.find((codecSchema: CodecSchema): boolean => codecSchema.id === layerId)
-        const properties: any = schema ? (schema.schema as any).properties : undefined
-        if (!properties) return []
-        return DEMUX_PRODUCERS.filter((producer: {field: string, namespace: string, numeric: boolean}): boolean => producer.field in properties)
+    #producersOf(layerId: string): DemuxProducer[] {
+        const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === layerId)
+        return codecModuleConstructor ? codecModuleConstructor.DEMUX_PRODUCERS : []
     }
 
     /**
@@ -308,7 +319,7 @@ export class Codec {
             for (const [key, constructors] of this.#dispatchTable) {
                 if (!key.startsWith(prefix)) continue
                 const raw: string = key.substring(prefix.length)
-                const value: string | number = producer.numeric ? Number(raw) : raw
+                const value: string | number = producer.kind === 'uint' ? Number(raw) : raw
                 for (const codecModuleConstructor of constructors) {
                     const dedup: string = `${codecModuleConstructor.PROTOCOL_ID}@${producer.field}=${value}`
                     if (seen.has(dedup)) continue
@@ -353,7 +364,7 @@ export class Codec {
             for (const producer of this.#producersOf(parent.id)) {
                 const actual: any = (parent.data as any)[producer.field]
                 if (actual === undefined || actual === null) continue
-                const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(`${producer.namespace}:${actual}`)
+                const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(`${producer.namespace}:${this.#normalizeDemux(actual, producer.kind)}`)
                 if (bucket && bucket.some((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.PROTOCOL_ID === child.id)) continue
                 issues.push({
                     index: i,

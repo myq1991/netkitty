@@ -4,6 +4,7 @@ import {Codec} from '../../src/lib/codec/Codec'
 import {LoadPacket} from '../lib/Fixtures'
 import {NextLayer, ConsistencyIssue} from '../../src/lib/codec/types/LayerGraph'
 import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
+import {CodecSchema} from '../../src/lib/codec/types/CodecSchema'
 
 const codec: Codec = new Codec()
 
@@ -25,6 +26,56 @@ test('allowedNextLayers: eth offers ethertype-keyed children plus RawData', (): 
     assert.deepStrictEqual(discriminatorOf('eth', 'ipv6'), {field: 'etherType', value: '86dd'})
     // RawData is always available and carries no discriminator.
     assert.deepStrictEqual(discriminatorOf('eth', 'raw'), null)
+})
+
+// Golden snapshot of the full parent→child menu, derived from the per-schema demuxProducers
+// declarations. Records the ARP-leaf fix: with producers declared per schema (not inferred from a
+// schema property named 'protocol'), ARP no longer wrongly offers ipproto children — it is a leaf.
+test('allowedNextLayers golden: full parent→child menu (records the ARP leaf fix)', (): void => {
+    const menu: Record<string, string[]> = {}
+    for (const codecSchema of codec.CODEC_SCHEMAS as CodecSchema[]) {
+        menu[codecSchema.id] = codec.allowedNextLayers(codecSchema.id).map((n: NextLayer): string => n.id)
+    }
+    assert.deepStrictEqual(menu, {
+        eth: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
+        vlan: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
+        ipv4: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'raw'],
+        ipv6: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'raw'],
+        'ipv6-hopopt': ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'raw'],
+        arp: ['raw'],
+        goose: ['raw'],
+        sv: ['raw'],
+        icmp: ['raw'],
+        icmpv6: ['raw'],
+        tcp: ['raw'],
+        udp: ['raw'],
+        'tls-handshake': ['raw'],
+        'tls-alert': ['raw'],
+        'tls-ccsp': ['raw'],
+        'tls-appdata': ['raw'],
+        'tls-heartbeat': ['raw'],
+        IEC104_I_Frame: ['raw'],
+        IEC104_S_Frame: ['raw'],
+        IEC104_U_Frame: ['raw'],
+        raw: ['raw']
+    })
+})
+
+// Boundary: ARP is a leaf (declares no demuxProducers). It must not offer any demux child, and a
+// real eth+arp packet followed by nothing must not sprout a phantom layer.
+test('ARP is a demux leaf: only RawData follows, no phantom child from its protocol field', async (): Promise<void> => {
+    assert.deepStrictEqual(nextIds('arp'), ['raw'])
+    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('arp/baseline').buffer)
+    const nonRaw: CodecDecodeResult[] = decoded.filter((l: CodecDecodeResult): boolean => l.id !== 'raw')
+    assert.deepStrictEqual(nonRaw.map((l: CodecDecodeResult): string => l.id), ['eth', 'arp'])
+    assert.deepStrictEqual(codec.checkConsistency(decoded), [])
+})
+
+// Boundary: an unregistered discriminator value (etherType nobody claims) is normal, not an issue,
+// when the following layer is RawData.
+test('checkConsistency: unregistered etherType followed by raw is not flagged', async (): Promise<void> => {
+    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('codec/unknown-ethertype').buffer)
+    assert.deepStrictEqual(codec.checkConsistency(decoded), [])
 })
 
 test('allowedNextLayers: ipv4 uses protocol, ipv6 uses nxt', (): void => {

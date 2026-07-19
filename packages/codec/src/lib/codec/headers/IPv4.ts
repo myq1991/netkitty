@@ -1,5 +1,6 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {DemuxProducer} from '../types/DemuxProducer'
 import {UInt16ToHex} from '../../helper/NumberToHex'
 import {CodecModule} from '../types/CodecModule'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
@@ -336,6 +337,8 @@ export class IPv4 extends BaseHeader {
     public readonly id: string = 'ipv4'
 
     public readonly matchKeys: string[] = ['ethertype:0800']
+
+    public readonly demuxProducers: DemuxProducer[] = [{field: 'protocol', namespace: 'ipproto', kind: 'uint'}]
 
     public readonly name: string = 'Internet Protocol Version 4'
 

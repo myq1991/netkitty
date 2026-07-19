@@ -1,5 +1,6 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {DemuxProducer} from '../types/DemuxProducer'
 import {UInt16ToHex} from '../../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {BufferToUInt16, BufferToUInt8} from '../../helper/BufferToNumber'
@@ -165,6 +166,8 @@ export class IPv6 extends BaseHeader {
     public id: string = 'ipv6'
 
     public readonly matchKeys: string[] = ['ethertype:86dd']
+
+    public readonly demuxProducers: DemuxProducer[] = [{field: 'nxt', namespace: 'ipproto', kind: 'uint'}]
 
     public name: string = 'Internet Protocol Version 6'
 

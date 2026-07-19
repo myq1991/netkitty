@@ -5,6 +5,7 @@ import {CodecErrorInfo} from '../types/CodecErrorInfo'
 import {PostHandlerItem} from '../types/PostHandlerItem'
 import {SortPostHandlers} from '../lib/SortPostHandlers'
 import {CodecData} from '../types/CodecData'
+import {DemuxProducer} from '../types/DemuxProducer'
 import {FlexibleObject} from '../lib/FlexibleObject'
 import {Ajv, ErrorObject, ValidateFunction} from 'ajv'
 import {HeaderTreeNode} from '../types/HeaderTreeNode'
@@ -48,6 +49,15 @@ export abstract class BaseHeader {
      */
     public static get MATCH_KEYS(): string[] {
         return this.CODEC_INSTANCE.matchKeys
+    }
+
+    /**
+     * Demux keys this header produces for its child layer (from its own field values). Reversed by the
+     * codec to route the next layer, and read by the editor projection. Empty (the default) means this
+     * header is a leaf — nothing demuxes off it.
+     */
+    public static get DEMUX_PRODUCERS(): DemuxProducer[] {
+        return this.CODEC_INSTANCE.demuxProducers
     }
 
     public static get PROTOCOL_SCHEMA(): ProtocolJSONSchema {
@@ -118,6 +128,14 @@ export abstract class BaseHeader {
      * back to the content-heuristic match() list.
      */
     public readonly matchKeys: string[] = []
+
+    /**
+     * Demux keys this header produces for its child (see DemuxProducer). Declared per-schema so a new
+     * demux dimension (port, GUID, …) is a per-protocol declaration, not a core change. Default: none
+     * (a leaf header). Example: Ethernet declares `[{field:'etherType', namespace:'ethertype',
+     * kind:'string'}]`; IPv4 declares `[{field:'protocol', namespace:'ipproto', kind:'uint'}]`.
+     */
+    public readonly demuxProducers: DemuxProducer[] = []
 
     /**
      * Encode/Decode error info objects

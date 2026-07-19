@@ -1,5 +1,6 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {DemuxProducer} from '../types/DemuxProducer'
 import {UInt16ToHex} from '../../helper/NumberToHex'
 import {BufferToHex} from '../../helper/BufferToHex'
 
@@ -69,6 +70,8 @@ export class VLAN_802dot1Q extends BaseHeader {
     public readonly id: string = 'vlan'
 
     public readonly matchKeys: string[] = ['ethertype:8100']
+
+    public readonly demuxProducers: DemuxProducer[] = [{field: 'etherType', namespace: 'ethertype', kind: 'string'}]
 
     public readonly name: string = '802.1Q Virtual LAN'
 
