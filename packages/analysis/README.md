@@ -49,8 +49,7 @@ stream — so stats are complete the moment it resolves.
   the worker** by scanning the index columns (no re-decode, no per-frame cross-thread transfer, zero
   main-thread work), so they stay fast even at hundreds of millions of frames.
 - **Factories**: `reduceReducer(seed, fold)`, `groupByReducer(keyOf, seed, fold)`.
-- **Custom**: implement `IAnalysisReducer<T>` (`update(frame, ctx)` / `result()` / `reset()`); declare
-  `needs: string[]` to receive only those protocol layers (the worker projects them, cutting cross-thread bytes).
+- **Custom**: implement `IAnalysisReducer<T>` — see [Writing a custom reducer](#writing-a-custom-reducer).
 
 ```ts
 import {reduceReducer, groupByReducer} from '@netkitty/analysis'
@@ -58,6 +57,61 @@ import {reduceReducer, groupByReducer} from '@netkitty/analysis'
 const totalBytes = reduceReducer(0, (sum, frame) => sum + frame.length)
 const perProtocol = groupByReducer(f => f.topProtocol, 0, count => count + 1)
 ```
+
+### Writing a custom reducer
+
+A reducer is a plain object (or class) implementing `IAnalysisReducer<T>`:
+
+```ts
+interface IAnalysisReducer<T> {
+  update(frame: Frame, context: UpdateContext): void  // called once per frame (replay, then live)
+  result(): T                                          // rolling snapshot — callable any time, no finalize
+  reset(): void                                        // clear all accumulated state
+  readonly needs?: string[]                            // optional: layer ids you read (projection)
+  readonly indexOnly?: boolean                         // optional: correctness/perf contract, see below
+}
+```
+
+- **`update(frame, context)`** runs for every frame. `frame` carries `index`, `timestamp`, `length`,
+  `topProtocol`, `conversationKey`, and `layers` (the decoded protocol tree). `context` carries `index`,
+  `total`, and `phase` — `'replay'` while catching up on the already-indexed backlog, `'live'` while
+  tailing under `watch()`.
+- **`result()`** is a rolling snapshot; there is **no finalize**, so call it whenever (mid-replay,
+  mid-tail). **`reset()`** clears state.
+- Keep state bounded **per conversation/endpoint**, not per frame — the built-ins hold a first/last
+  index span instead of a member-frame list, so memory stays flat across hundreds of millions of frames.
+- **`needs`** (optional): the layer ids you actually read, e.g. `['ipv4', 'tcp']`. The worker then
+  transfers only those layers across the thread boundary instead of the whole tree — pure bandwidth win,
+  no behavioural change.
+- **`indexOnly`** (optional — a **correctness contract**, not just a hint): set `true` **only if**
+  `update` reads nothing beyond frame metadata (`index` / `timestamp` / `length` / `topProtocol` /
+  `conversationKey`) and the five-tuple carried in `layers` — the endpoint addresses and ports
+  (`eth` `smac`/`dmac`, `ipv4`/`ipv6` `sip`/`dip`, `tcp`/`udp` `srcport`/`dstport`). Replay then feeds
+  frames **synthesized straight from the index columns, skipping the per-frame re-decode** — measured
+  ~13× faster on large captures. ⚠️ If you set it while reading any deeper field (`ipv4.ttl`,
+  `tcp.flags`, TLS SNI, payload …), that field is simply **absent** on replay and your result is
+  silently wrong. When unsure, leave it unset — full decode is the safe default. `ConversationsReducer`
+  and `EndpointsReducer` set it (five-tuple only); `TcpStreamReducer` does not (it reads seq/ack/flags).
+
+```ts
+import {IAnalysisReducer, Frame, UpdateContext} from '@netkitty/analysis'
+
+//Counts frames per top-level protocol. Reads only metadata → indexOnly is safe.
+class ProtocolCounter implements IAnalysisReducer<Record<string, number>> {
+  readonly indexOnly = true
+  #counts: Record<string, number> = {}
+  update(frame: Frame, _context: UpdateContext): void {
+    this.#counts[frame.topProtocol] = (this.#counts[frame.topProtocol] ?? 0) + 1
+  }
+  result(): Record<string, number> { return {...this.#counts} }
+  reset(): void { this.#counts = {} }
+}
+```
+
+A reducer runs **on the main thread** — its `update` closure can't be structured-cloned into the worker.
+That is fine: `update` is cheap arithmetic; the expensive part (read + decode) already happened in the
+worker, and `indexOnly`/`needs` govern how much of it crosses back. A reducer may also extend an event
+emitter and push its own `progress`/`update` events from inside `update()`.
 
 ## Live capture (watch)
 
