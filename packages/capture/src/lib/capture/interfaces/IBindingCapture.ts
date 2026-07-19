@@ -14,8 +14,6 @@ export interface IBindingCapture extends EventEmitter {
 
     setFilter(filter: string): void
 
-    send(packet: Buffer): void
-
     on(eventName: 'data', callback: (data: Buffer, sec: number, usec: number) => void): this
 
     on(eventName: string, listener: (...args: any[]) => void): this

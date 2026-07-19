@@ -29,7 +29,6 @@ public:
     void Start(const Napi::CallbackInfo &);
     void Stop(const Napi::CallbackInfo &);
     void SetFilter(const Napi::CallbackInfo &);
-    void SendPacket(const Napi::CallbackInfo &);
 
 private:
     Napi::ThreadSafeFunction tsEmit_;

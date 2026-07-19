@@ -22,10 +22,6 @@ export class BindingCapture extends BindingCaptureClass {
         super.setFilter(filter)
     }
 
-    public send(packet: Buffer): void {
-        super.send(packet)
-    }
-
     public on(eventName: 'data', callback: (data: Buffer, sec: number, usec: number) => void): this
     public on(eventName: string, listener: (...args: any[]) => void): this {
         super.on(eventName, listener)

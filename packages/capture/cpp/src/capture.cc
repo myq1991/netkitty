@@ -15,7 +15,6 @@ Napi::Object NetKittyCapture::Init(Napi::Env env, Napi::Object exports)
             InstanceMethod("start", &NetKittyCapture::Start),
             InstanceMethod("stop", &NetKittyCapture::Stop),
             InstanceMethod("setFilter", &NetKittyCapture::SetFilter),
-            InstanceMethod("send", &NetKittyCapture::SendPacket),
         });
     exports.Set("NetKittyCapture", func);
     return exports;
@@ -364,36 +363,6 @@ void NetKittyCapture::SetFilter(const Napi::CallbackInfo &info)
     }
 
     pcap_freecode(&this->fcode);
-}
-
-void NetKittyCapture::SendPacket(const Napi::CallbackInfo &info)
-{
-    if (info.Length() != 1)
-    {
-        Napi::Error::New(info.Env(), "Expected exactly one argument")
-            .ThrowAsJavaScriptException();
-        return;
-    }
-
-    if (!info[0].IsBuffer())
-    {
-        Napi::Error::New(info.Env(), "Expected an Buffer")
-            .ThrowAsJavaScriptException();
-        return;
-    }
-
-    Napi::Buffer<char> buf = info[0].As<Napi::Buffer<char>>();
-    size_t buffer_size = buf.Length();
-
-    // pcap_send_packet
-    if (pcap_sendpacket(this->pcap_handle,
-                        (const u_char *)buf.Data(),
-                        (int)buffer_size) == -1)
-    {
-        Napi::Error::New(info.Env(), pcap_geterr(this->pcap_handle))
-            .ThrowAsJavaScriptException();
-        return;
-    }
 }
 
 bool NetKittyCapture::close()
