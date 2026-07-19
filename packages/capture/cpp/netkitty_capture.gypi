@@ -30,13 +30,16 @@
             ],
             "link_settings": {
               "libraries": [
-                "ws2_32.lib",
-                "iphlpapi.lib"
+                "-lws2_32",
+                "-liphlpapi"
               ]
             },
             "msvs_settings": {
               "VCCLCompilerTool": {
-                "ExceptionHandling": 1
+                "ExceptionHandling": 1,
+                "AdditionalOptions": [
+                  "/utf-8"
+                ]
               }
             }
           }
