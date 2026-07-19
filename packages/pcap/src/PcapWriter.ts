@@ -4,6 +4,12 @@ import {GeneratePCAPData, GeneratePCAPHeader, IPcapPacketInfo} from '@netkitty/p
 
 export interface IPcapWriterOptions {
     filename: string
+    /**
+     * Include the raw packet bytes (base64) in the emitted `packet` event info. Default true. Set false
+     * when the consumer only needs metadata — skips the per-packet base64 encoding, and the bytes stay
+     * in the file on disk.
+     */
+    includePacketData?: boolean
 }
 
 export class PcapWriter extends EventEmitter {
@@ -18,6 +24,8 @@ export class PcapWriter extends EventEmitter {
 
     protected offset: number = 0
 
+    protected readonly includePacketData: boolean
+
     public get wroteCount(): number {
         return this.index
     }
@@ -25,6 +33,7 @@ export class PcapWriter extends EventEmitter {
     constructor(options: IPcapWriterOptions) {
         super()
         this.filename = options.filename
+        this.includePacketData = options.includePacketData !== false
         if (!existsSync(this.filename)) {
             this.writeStream = createWriteStream(this.filename, {autoClose: false, flags: 'w'})
             const header: Buffer = GeneratePCAPHeader()
@@ -68,7 +77,7 @@ export class PcapWriter extends EventEmitter {
             packetLength: packetLength,
             seconds: seconds,
             microseconds: microseconds,
-            packet: packet.toString('base64')
+            packet: this.includePacketData ? packet.toString('base64') : ''
         }
         this.writeStream.write(pcapData, (): boolean => this.emit('packet', wrotePacketInfo))
     }

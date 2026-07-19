@@ -1,6 +1,6 @@
 import {GetNetworkInterfaces} from './GetNetworkInterfaces'
 import {INetworkInterface} from './interfaces/INetworkInterface'
-import {ICaptureOptions} from './interfaces/ICaptureOptions'
+import {CaptureEmitMode, ICaptureOptions} from './interfaces/ICaptureOptions'
 import {existsSync, rmSync, writeFileSync} from 'node:fs'
 import {GetDeviceCaptureTemporaryFilename} from '../GetDeviceCaptureTemporaryFilename'
 import {ChildProcess, fork} from 'node:child_process'
@@ -46,6 +46,8 @@ export class Capture extends EventEmitter {
 
     #filter: string = ''
 
+    #emit: CaptureEmitMode = 'full'
+
     #count: number = 0
 
     public get filter(): string {
@@ -69,6 +71,7 @@ export class Capture extends EventEmitter {
         this.#workerModule = options.workerModule ? options.workerModule : this.#workerModule
         this.#device = options.device
         this.#filter = options.filter ? options.filter : ''
+        this.#emit = options.emit ? options.emit : 'full'
         this.#tmpDir = options.tmpDir ? options.tmpDir : path.resolve(tmpdir(), 'netkitty-tmp')
         if (!options.workerModule) {
             //Use origin worker module, check capture device is available
@@ -91,12 +94,15 @@ export class Capture extends EventEmitter {
             captureWorkerId: this.#workerId,
             captureDevice: this.#device,
             captureFilter: this.#filter,
+            captureEmit: this.#emit,
             captureTemporaryFilename: this.#temporaryFilename,
             socketPath: this.#pipeServer.socketPath
         }
         this.getWorkerSocket().then((socket: PipeClientSocket): void => {
             socket.on('packet', (packetInfo: IPcapPacketInfo): void => {
-                this.emit('rawPacket', packetInfo.index, packetInfo.packet, packetInfo.seconds, packetInfo.microseconds)
+                //`rawPacket` carries the packet bytes; in `metadata` mode they are absent (kept only in
+                //the file), so emit it only when bytes are present. `packet` (metadata) always fires.
+                if (packetInfo.packet) this.emit('rawPacket', packetInfo.index, packetInfo.packet, packetInfo.seconds, packetInfo.microseconds)
                 this.emit('packet', packetInfo)
                 this.#count += 1
             })

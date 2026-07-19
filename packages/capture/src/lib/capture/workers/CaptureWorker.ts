@@ -4,8 +4,13 @@ import {PcapWriter, IPcapPacketInfo} from '@netkitty/pcap'
 
 const captureTemporaryFilename: string = process.env.captureTemporaryFilename!
 
+//`metadata` mode: the file still gets every packet, but the base64 bytes are dropped from the per-packet
+//notification (skips the encoding and the largest part of the IPC payload). `full` (default) keeps them.
+const includePacketData: boolean = process.env.captureEmit !== 'metadata'
+
 const pcapWrite: PcapWriter = new PcapWriter({
-    filename: captureTemporaryFilename
+    filename: captureTemporaryFilename,
+    includePacketData: includePacketData
 })
 
 const bindingCapture: BindingCapture = new BindingCapture({
