@@ -38,6 +38,13 @@ export class Codec {
     readonly #heuristicCodecs: CodecModuleConstructor[] = []
 
     /**
+     * Range demux table: namespace → sorted list of {lo, hi, codec} for matchKeys like
+     * 'tcpport:6000-6063'. Checked when an exact bucket lookup for that namespace's value misses, so a
+     * protocol can claim a port range without expanding it into thousands of exact keys.
+     */
+    readonly #rangeTable: Map<string, {lo: number, hi: number, codecModuleConstructor: CodecModuleConstructor}[]> = new Map()
+
+    /**
      * The RawData catch-all. Not part of the dispatch table or heuristic list;
      * used explicitly as the final fallback so decode never fails.
      */
@@ -101,6 +108,7 @@ export class Codec {
     protected buildDispatchTable(): void {
         this.#dispatchTable.clear()
         this.#heuristicCodecs.length = 0
+        this.#rangeTable.clear()
         for (const codecModuleConstructor of this.HEADER_CODECS) {
             if (codecModuleConstructor.PROTOCOL_ID === RawData.PROTOCOL_ID) {
                 this.#rawDataCodec = codecModuleConstructor
@@ -110,6 +118,14 @@ export class Codec {
             const keyed: boolean = !!(matchKeys && matchKeys.length)
             if (keyed) {
                 for (const matchKey of matchKeys) {
+                    const range: {namespace: string, lo: number, hi: number} | null = this.#parseRangeKey(matchKey)
+                    if (range) {
+                        const list: {lo: number, hi: number, codecModuleConstructor: CodecModuleConstructor}[] | undefined = this.#rangeTable.get(range.namespace)
+                        const entry: {lo: number, hi: number, codecModuleConstructor: CodecModuleConstructor} = {lo: range.lo, hi: range.hi, codecModuleConstructor: codecModuleConstructor}
+                        if (list) list.push(entry)
+                        else this.#rangeTable.set(range.namespace, [entry])
+                        continue
+                    }
                     const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(matchKey)
                     if (bucket) bucket.push(codecModuleConstructor)
                     else this.#dispatchTable.set(matchKey, [codecModuleConstructor])
@@ -126,11 +142,26 @@ export class Codec {
         //heuristic chain; Array.sort is stable in Node, so ties keep registration order (all default 0
         //→ order unchanged, so existing behavior is byte-identical).
         for (const bucket of this.#dispatchTable.values()) this.#sortByPriority(bucket)
+        for (const ranges of this.#rangeTable.values()) ranges.sort((a: {codecModuleConstructor: CodecModuleConstructor}, b: {codecModuleConstructor: CodecModuleConstructor}): number => b.codecModuleConstructor.MATCH_PRIORITY - a.codecModuleConstructor.MATCH_PRIORITY)
         this.#sortByPriority(this.#heuristicCodecs)
     }
 
     #sortByPriority(codecModuleConstructors: CodecModuleConstructor[]): void {
         codecModuleConstructors.sort((a: CodecModuleConstructor, b: CodecModuleConstructor): number => b.MATCH_PRIORITY - a.MATCH_PRIORITY)
+    }
+
+    /**
+     * Parse a range matchKey 'namespace:LO-HI' (decimal, LO<=HI) into its parts, or null if it is a
+     * plain exact key. Only integer ranges are supported (ports).
+     * @private
+     */
+    #parseRangeKey(matchKey: string): {namespace: string, lo: number, hi: number} | null {
+        const match: RegExpMatchArray | null = matchKey.match(/^([^:]+):(\d+)-(\d+)$/)
+        if (!match) return null
+        const lo: number = Number(match[2])
+        const hi: number = Number(match[3])
+        if (lo > hi) return null
+        return {namespace: match[1], lo: lo, hi: hi}
     }
 
     /**
@@ -200,9 +231,23 @@ export class Codec {
         //(protocol) and IPv6 (nxt); see TCP/UDP match().
         for (const matchKey of this.computeDemuxKeys(prevCodecModule)) {
             const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(matchKey)
-            if (!bucket) continue
-            for (const codecModuleConstructor of bucket) {
-                if (codecModuleConstructor.MATCH(codecData, codecModules)) return codecModuleConstructor
+            if (bucket) {
+                for (const codecModuleConstructor of bucket) {
+                    if (codecModuleConstructor.MATCH(codecData, codecModules)) return codecModuleConstructor
+                }
+            }
+            //Range table: a codec claiming e.g. 'tcpport:6000-6063' matches any value in [lo,hi].
+            if (this.#rangeTable.size > 0) {
+                const colon: number = matchKey.indexOf(':')
+                const ranges: {lo: number, hi: number, codecModuleConstructor: CodecModuleConstructor}[] | undefined = colon > 0 ? this.#rangeTable.get(matchKey.substring(0, colon)) : undefined
+                if (ranges) {
+                    const value: number = Number(matchKey.substring(colon + 1))
+                    if (Number.isInteger(value)) {
+                        for (const range of ranges) {
+                            if (value >= range.lo && value <= range.hi && range.codecModuleConstructor.MATCH(codecData, codecModules)) return range.codecModuleConstructor
+                        }
+                    }
+                }
             }
         }
         //2. Content-heuristic codecs (tunnels, TCP-payload protocols, undeclared customs).
@@ -343,6 +388,15 @@ export class Codec {
                     result.push({id: codecModuleConstructor.PROTOCOL_ID, name: codecModuleConstructor.PROTOCOL_NAME, discriminator: {field: producer.field, value: value}})
                 }
             }
+            //Range-keyed children in this namespace: hint the low end of the range as the discriminator.
+            const ranges: {lo: number, codecModuleConstructor: CodecModuleConstructor}[] | undefined = this.#rangeTable.get(producer.namespace)
+            if (ranges) {
+                for (const range of ranges) {
+                    if (seen.has(range.codecModuleConstructor.PROTOCOL_ID)) continue
+                    seen.add(range.codecModuleConstructor.PROTOCOL_ID)
+                    result.push({id: range.codecModuleConstructor.PROTOCOL_ID, name: range.codecModuleConstructor.PROTOCOL_NAME, discriminator: {field: producer.field, value: range.lo}})
+                }
+            }
         }
         result.push({id: this.#rawDataCodec.PROTOCOL_ID, name: this.#rawDataCodec.PROTOCOL_NAME, discriminator: null})
         return result
@@ -381,21 +435,31 @@ export class Codec {
             //reachable off its well-known demux value (e.g. TLS on a non-443 port). Never flag it as
             //inconsistent with the parent's discriminator — it is matched by content, not by the key.
             if (this.#heuristicCodecs.some((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.PROTOCOL_ID === child.id)) continue
-            for (const producer of this.#producersOf(parent.id)) {
+            //A parent may expose several producers in one namespace (TCP's src+dst port). The child is
+            //consistent if ANY of them routes to it; only flag when NONE do. Report the first producer
+            //that actually carried a value as the representative.
+            const producers: DemuxProducer[] = this.#producersOf(parent.id)
+            let representative: {producer: DemuxProducer, actual: any} | undefined = undefined
+            let reachable: boolean = false
+            for (const producer of producers) {
                 const actual: any = (parent.data as any)[producer.field]
                 if (actual === undefined || actual === null) continue
+                if (!representative) representative = {producer: producer, actual: actual}
                 const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(`${producer.namespace}:${this.#normalizeDemux(actual, producer.kind)}`)
-                if (bucket && bucket.some((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.PROTOCOL_ID === child.id)) continue
-                issues.push({
-                    index: i,
-                    parentId: parent.id,
-                    childId: child.id,
-                    field: producer.field,
-                    actual: actual,
-                    suggestion: this.childDiscriminator(parent.id, child.id),
-                    message: `${parent.id}.${producer.field}=${actual} 与下一层 '${child.id}' 不符`
-                })
+                if (bucket && bucket.some((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.PROTOCOL_ID === child.id)) { reachable = true; break }
+                const ranges: {lo: number, hi: number, codecModuleConstructor: CodecModuleConstructor}[] | undefined = this.#rangeTable.get(producer.namespace)
+                if (ranges && Number.isInteger(Number(actual)) && ranges.some((range: {lo: number, hi: number, codecModuleConstructor: CodecModuleConstructor}): boolean => Number(actual) >= range.lo && Number(actual) <= range.hi && range.codecModuleConstructor.PROTOCOL_ID === child.id)) { reachable = true; break }
             }
+            if (reachable || !representative) continue
+            issues.push({
+                index: i,
+                parentId: parent.id,
+                childId: child.id,
+                field: representative.producer.field,
+                actual: representative.actual,
+                suggestion: this.childDiscriminator(parent.id, child.id),
+                message: `${parent.id}.${representative.producer.field}=${representative.actual} 与下一层 '${child.id}' 不符`
+            })
         }
         return issues
     }

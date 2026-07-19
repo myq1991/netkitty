@@ -242,6 +242,65 @@ test('a non-TLS payload on tcp:443 falls to raw, not mis-decoded as TLS', async 
     assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'raw'), 'payload lands in raw')
 })
 
+// M1③c: a matchKey may be a port range 'tcpport:LO-HI'. It matches any value in [LO,HI] via the range
+// table (not by expanding the range into thousands of exact keys), and misses just outside.
+test('matchKeys range: tcpport:6000-6063 matches across the range and misses outside', async (): Promise<void> => {
+    class RangeChild extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'range-child'
+        public readonly name: string = 'Range Child'
+        public readonly nickname: string = 'RC'
+        public readonly matchKeys: string[] = ['tcpport:6000-6063']
+        public match(): boolean { return !!this.prevCodecModule && this.prevCodecModule.id === 'tcp' }
+    }
+    const codec: Codec = new Codec([RangeChild as any])
+    const reachesOn = async (dstport: number): Promise<boolean> => {
+        const {packet}: {packet: Buffer} = await codec.encode([
+            {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+            {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 6}},
+            {id: 'tcp', data: {srcport: 1234, dstport: dstport}}
+        ])
+        const decoded: CodecDecodeResult[] = await codec.decode(Buffer.concat([packet, Buffer.from('ab', 'hex')]))
+        return decoded.some((l: CodecDecodeResult): boolean => l.id === 'range-child')
+    }
+    assert.ok(await reachesOn(6000), 'low edge is in range')
+    assert.ok(await reachesOn(6032), 'middle is in range')
+    assert.ok(await reachesOn(6063), 'high edge is in range')
+    assert.ok(!(await reachesOn(5999)), 'just below the range is excluded')
+    assert.ok(!(await reachesOn(6064)), 'just above the range is excluded')
+    // The editor menu surfaces a range child with the low end of the range as its discriminator hint.
+    assert.deepStrictEqual(codec.childDiscriminator('tcp', 'range-child'), {field: 'dstport', value: 6000})
+    // checkConsistency must treat an in-range value as consistent (not falsely flag the range child).
+    const {packet}: {packet: Buffer} = await codec.encode([
+        {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+        {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 6}},
+        {id: 'tcp', data: {srcport: 1234, dstport: 6032}}
+    ])
+    const decoded: CodecDecodeResult[] = await codec.decode(Buffer.concat([packet, Buffer.from('ab', 'hex')]))
+    assert.deepStrictEqual(codec.checkConsistency(decoded), [], 'in-range value is consistent with the range child')
+})
+
+// Boundary: an inverted range (LO>HI) is not a valid range — it degrades to a (dead) exact key rather
+// than throwing or matching anything.
+test('matchKeys range: an inverted range tcpport:70-60 never matches (treated as a dead exact key)', async (): Promise<void> => {
+    class BadRange extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'bad-range'
+        public readonly name: string = 'Bad Range'
+        public readonly nickname: string = 'BR'
+        public readonly matchKeys: string[] = ['tcpport:70-60']
+        public match(): boolean { return true }
+    }
+    const codec: Codec = new Codec([BadRange as any])
+    const {packet}: {packet: Buffer} = await codec.encode([
+        {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+        {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 6}},
+        {id: 'tcp', data: {srcport: 1234, dstport: 65}}
+    ])
+    const decoded: CodecDecodeResult[] = await codec.decode(Buffer.concat([packet, Buffer.from('ab', 'hex')]))
+    assert.ok(decoded.every((l: CodecDecodeResult): boolean => l.id !== 'bad-range'), 'inverted range never matches')
+})
+
 // A custom codec WITHOUT a demux key still works via the heuristic fallback list.
 test('custom codec without matchKeys is still reachable via heuristic fallback', async (): Promise<void> => {
     class Proto88B5Heuristic extends BaseHeader {
