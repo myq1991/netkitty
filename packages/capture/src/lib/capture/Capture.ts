@@ -3,11 +3,10 @@ import {INetworkInterface} from './interfaces/INetworkInterface'
 import {ICaptureOptions} from './interfaces/ICaptureOptions'
 import {existsSync, rmSync, writeFileSync} from 'node:fs'
 import {GetDeviceCaptureTemporaryFilename} from '../GetDeviceCaptureTemporaryFilename'
-import {ChildProcess} from 'node:child_process'
+import {ChildProcess, fork} from 'node:child_process'
 import path from 'node:path'
 import isElectron from 'is-electron'
-import * as childProcess from 'child_process'
-import {utilityProcess, UtilityProcess} from 'electron'
+import type {UtilityProcess} from 'electron'
 import {PipeServer} from '../pipe/PipeServer'
 import {PipeClientSocket} from '../pipe/PipeClientSocket'
 import {randomInt} from 'crypto'
@@ -102,7 +101,15 @@ export class Capture extends EventEmitter {
                 this.#count += 1
             })
         })
-        this.#worker = isElectron() ? utilityProcess.fork(this.#workerModule, [], {env: env}) : childProcess.fork(this.#workerModule, [], {env: env})
+        if (isElectron()) {
+            //Lazy-require electron only inside an Electron runtime. electron is an optional peer, absent
+            //in a normal Node process, so a static import would crash the module on load everywhere else.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const {utilityProcess}: {utilityProcess: {fork: (modulePath: string, args: string[], options: {env: Record<string, string>}) => UtilityProcess}} = require('electron')
+            this.#worker = utilityProcess.fork(this.#workerModule, [], {env: env})
+        } else {
+            this.#worker = fork(this.#workerModule, [], {env: env})
+        }
     }
 
     /**
