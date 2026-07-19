@@ -89,6 +89,22 @@ test('attachReducer: Endpoints reducer replay matches a direct run', async (): P
     await analysis.close()
 })
 
+test('attachReducer: indexOnly synthesis matches a decoding replay', async (): Promise<void> => {
+    const analysis: Analysis = new Analysis()
+    await analysis.open(FixtureCapturePath('iec104.pcap'))
+    const synthesized: ConversationsReducer = new ConversationsReducer()          // indexOnly=true → columns
+    await analysis.attachReducer(synthesized)
+    const decoded: ConversationsReducer = new ConversationsReducer()
+    ;(decoded as unknown as {indexOnly: boolean}).indexOnly = false                // force the decode path
+    await analysis.attachReducer(decoded)
+    const keyOf = (c: ConversationSummary): string => `${c.protocol}|${c.endpointA}|${c.endpointB}`
+    const sorted = (arr: ConversationSummary[]): ConversationSummary[] => [...arr].sort((a: ConversationSummary, b: ConversationSummary): number => (keyOf(a) < keyOf(b) ? -1 : 1))
+    assert.strictEqual(synthesized.result().length, decoded.result().length)
+    assert.ok(synthesized.result().length > 0)
+    assert.deepStrictEqual(sorted(synthesized.result()), sorted(decoded.result()))
+    await analysis.close()
+})
+
 test('attachReducer: detachReducer drops the reference', async (): Promise<void> => {
     const analysis: Analysis = new Analysis()
     await analysis.open(FixtureCapturePath('tcp-1.pcapng'))

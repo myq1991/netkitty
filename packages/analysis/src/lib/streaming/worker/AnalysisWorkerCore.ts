@@ -9,6 +9,7 @@ import {FrameIndexRecord} from '../types/FrameIndexRecord'
 import {FrameRow} from '../types/FrameRow'
 import {FilterExpression, matchesFilter, matchesIndexed, parseFilter} from '../filter/FilterExpression'
 import {computeConversations, computeEndpoints} from './BuiltinScans'
+import {synthesizeLayers} from './SyntheticFrame'
 import {ConversationSummary} from '../reducers/ConversationsReducer'
 import {EndpointSummary} from '../reducers/EndpointsReducer'
 
@@ -109,11 +110,20 @@ export function installAnalysisHandlers(endpoint: IWorkerEndpoint, makeBackend: 
     //Batch of materialized frames (with layers, optionally projected to `needs`), for reducer replay.
     //v1 re-decodes each frame; a v2 optimization runs built-in reducers inside the worker over columns.
     endpoint.handle('getFrameBatch', async (payload: unknown): Promise<unknown[]> => {
-        const {from, to, needs}: {from: number, to: number, needs?: string[]} = payload as {from: number, to: number, needs?: string[]}
+        const {from, to, needs, indexOnly}: {from: number, to: number, needs?: string[], indexOnly?: boolean} = payload as {from: number, to: number, needs?: string[], indexOnly?: boolean}
         const out: unknown[] = []
         for (let index: number = from; index < to; index++) {
-            const frame: unknown | null = await materializeFrame(index, needs)
-            if (frame !== null) out.push(frame)
+            if (indexOnly) {
+                //indexOnly reducer: synthesize the five-tuple frame from index columns, skip decode.
+                const record: FrameIndexRecord | null = store.get(index)
+                if (!record) continue
+                const key: string | null = indexer.conversationKey(record.conversationHash)
+                const layers: CodecDecodeResult[] = key !== null ? synthesizeLayers(key, record.directionForward) : []
+                out.push({...frameRow(record), capturedLength: record.capturedLength, layers: layers})
+            } else {
+                const frame: unknown | null = await materializeFrame(index, needs)
+                if (frame !== null) out.push(frame)
+            }
         }
         return out
     })

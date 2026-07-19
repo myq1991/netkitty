@@ -22,6 +22,9 @@ export class EndpointsReducer implements IAnalysisReducer<EndpointSummary[]> {
 
     public readonly needs: string[] = ['eth', 'ipv4', 'ipv6', 'tcp', 'udp', 'arp']
 
+    //Only the five-tuple — replay can feed frames synthesized from the index columns (no re-decode).
+    public readonly indexOnly: boolean = true
+
     readonly #endpoints: Map<string, EndpointSummary> = new Map<string, EndpointSummary>()
 
     public update(frame: Frame, context: UpdateContext): void {
