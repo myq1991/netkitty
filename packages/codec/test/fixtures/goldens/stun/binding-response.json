@@ -1,0 +1,74 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 108,
+      "id": 64492,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 16530,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 3478,
+      "dstport": 47968,
+      "length": 88,
+      "checksum": 65131
+    },
+    "errors": []
+  },
+  {
+    "id": "stun",
+    "data": {
+      "messageType": 257,
+      "messageLength": 60,
+      "magicCookie": "2112a442",
+      "transactionId": "c925e106eedd60d36ee2bfa2",
+      "attributes": [
+        {
+          "type": 32,
+          "value": "00019a725e12a443"
+        },
+        {
+          "type": 1,
+          "value": "0001bb607f000001"
+        },
+        {
+          "type": 32811,
+          "value": "00010d967f000001"
+        },
+        {
+          "type": 32802,
+          "value": "436f7475726e2d342e362e312027476f72737427"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

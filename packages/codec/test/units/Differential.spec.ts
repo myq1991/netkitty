@@ -79,6 +79,13 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'stratum', ts: 'ntp.stratum', kind: 'int'},
         {nk: 'poll', ts: 'ntp.ppoll', kind: 'int'},
         {nk: 'precision', ts: 'ntp.precision', kind: 'int'}
+    ]},
+    stun: {tsLayer: 'stun', fields: [
+        // tshark shows stun.type as '0x0101'; Number('0x0101')===257 matches our integer messageType,
+        // so kind:'int' (not hexcode, whose string-strip would give '257' vs '0101'). Message class
+        // (request 0x0001 vs response 0x0101) is the strong differential catch here.
+        {nk: 'messageType', ts: 'stun.type', kind: 'int'},
+        {nk: 'messageLength', ts: 'stun.length', kind: 'int'}
     ]}
 }
 

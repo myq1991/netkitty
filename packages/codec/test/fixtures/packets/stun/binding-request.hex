@@ -1,0 +1,3 @@
+# STUN Binding Request (RFC 5389) captured from turnutils_stunclient against a local coturn server on lo
+# docker debian:12 + coturn turnutils_stunclient -p 3478 127.0.0.1, tcpdump udp port 3478
+000000000000000000000000080045000030fbeb4000401140cf7f0000017f000001bb600d96001cfe2f000100002112a442c925e106eedd60d36ee2bfa2

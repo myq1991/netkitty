@@ -1,0 +1,57 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 48,
+      "id": 64491,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 16591,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 47968,
+      "dstport": 3478,
+      "length": 28,
+      "checksum": 65071
+    },
+    "errors": []
+  },
+  {
+    "id": "stun",
+    "data": {
+      "messageType": 1,
+      "messageLength": 0,
+      "magicCookie": "2112a442",
+      "transactionId": "c925e106eedd60d36ee2bfa2",
+      "attributes": []
+    },
+    "errors": []
+  }
+]
