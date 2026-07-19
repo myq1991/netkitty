@@ -131,6 +131,8 @@ export class TLS_ApplicationData extends BaseHeader {
         }
     }
     public id: string = 'tls-appdata'
+    public readonly matchKeys: string[] = ['tcpport:443']
+    public readonly heuristicFallback: boolean = true
     public name: string = 'Transport Layer Security(Application Data Protocol)'
     public nickname: string = 'TLS-AppData'
 

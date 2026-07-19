@@ -47,7 +47,8 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         sv: ['raw'],
         icmp: ['raw'],
         icmpv6: ['raw'],
-        tcp: ['raw'],
+        // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
+        tcp: ['tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
         udp: ['raw'],
         'tls-handshake': ['raw'],
         'tls-alert': ['raw'],
@@ -86,8 +87,22 @@ test('allowedNextLayers: ipv4 uses protocol, ipv6 uses nxt', (): void => {
     assert.deepStrictEqual(discriminatorOf('ipv4', 'udp'), {field: 'protocol', value: 17})
 })
 
-test('allowedNextLayers: a leaf/transport layer offers only RawData (heuristic children not in the demux graph)', (): void => {
-    assert.deepStrictEqual(nextIds('tcp'), ['raw'])
+test('allowedNextLayers: a genuine leaf layer offers only RawData', (): void => {
+    // goose/arp/icmp are true leaves — no demux dimension hangs off them.
+    assert.deepStrictEqual(nextIds('goose'), ['raw'])
+    assert.deepStrictEqual(nextIds('icmp'), ['raw'])
+})
+
+// M1③b: tcp now offers its port-keyed children (TLS on 443, IEC104 on 2404), each listed once with a
+// dstport discriminator hint, plus RawData. udp stays raw-only (no udp protocols registered yet).
+test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus RawData', (): void => {
+    const ids: string[] = nextIds('tcp')
+    for (const expected of ['tls-handshake', 'tls-appdata', 'IEC104_I_Frame', 'raw']) {
+        assert.ok(ids.includes(expected), `tcp should offer '${expected}', got ${ids.join(',')}`)
+    }
+    assert.deepStrictEqual(discriminatorOf('tcp', 'tls-handshake'), {field: 'dstport', value: 443})
+    assert.deepStrictEqual(discriminatorOf('tcp', 'IEC104_I_Frame'), {field: 'dstport', value: 2404})
+    assert.deepStrictEqual(nextIds('udp'), ['raw'])
 })
 
 // 2b: the discriminator to set when adding a child (RawData / heuristic children return null).
@@ -95,7 +110,10 @@ test('childDiscriminator returns the parent field+value to make a child follow',
     assert.deepStrictEqual(codec.childDiscriminator('eth', 'ipv6'), {field: 'etherType', value: '86dd'})
     assert.deepStrictEqual(codec.childDiscriminator('ipv6', 'tcp'), {field: 'nxt', value: 6})
     assert.strictEqual(codec.childDiscriminator('eth', 'raw'), null)
-    assert.strictEqual(codec.childDiscriminator('tcp', 'tls-handshake'), null)
+    // A port-keyed dual child now has a discriminator hint (its well-known port); RawData and
+    // not-reachable pairs return null.
+    assert.deepStrictEqual(codec.childDiscriminator('tcp', 'tls-handshake'), {field: 'dstport', value: 443})
+    assert.strictEqual(codec.childDiscriminator('tcp', 'ipv4'), null)
 })
 
 // 2c: consistency detection — advisory, never blocks encode.

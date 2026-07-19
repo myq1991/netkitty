@@ -732,6 +732,10 @@ export class TLS_Handshake extends BaseHeader {
         }
     }
     public id: string = 'tls-handshake'
+    //Fast-path bucket on the well-known HTTPS port; heuristicFallback keeps it matched on any other
+    //port by its record content (0x16 + version), so TLS on e.g. tcp:8443 still decodes.
+    public readonly matchKeys: string[] = ['tcpport:443']
+    public readonly heuristicFallback: boolean = true
     public name: string = 'Transport Layer Security(Handshake Protocol)'
     public nickname: string = 'TLS-Handshake'
 

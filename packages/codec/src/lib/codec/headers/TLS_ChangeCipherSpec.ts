@@ -132,6 +132,8 @@ export class TLS_ChangeCipherSpec extends BaseHeader {
         }
     }
     public id: string = 'tls-ccsp'
+    public readonly matchKeys: string[] = ['tcpport:443']
+    public readonly heuristicFallback: boolean = true
     public name: string = 'Transport Layer Security(ChangeCipherSpec Protocol)'
     public nickname: string = 'TLS-ChangeCipherSpec'
 

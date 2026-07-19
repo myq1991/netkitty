@@ -7421,6 +7421,10 @@ export class IEC104_I_Frame extends BaseHeader {
         }
     }
     public id: string = 'IEC104_I_Frame'
+    //IEC 104 rides tcp:2404 (IEC 60870-5-104). Fast-path bucket + heuristicFallback (its match() also
+    //confirms the 0x68 start byte and the 2404 port, so a stray 0x68 on another port is not mis-decoded).
+    public readonly matchKeys: string[] = ['tcpport:2404']
+    public readonly heuristicFallback: boolean = true
     public name: string = 'IEC 60870-5-104'
     public nickname: string = 'iec60870_104'
 

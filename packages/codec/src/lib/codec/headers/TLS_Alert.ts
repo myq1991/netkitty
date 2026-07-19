@@ -525,6 +525,8 @@ export class TLS_Alert extends BaseHeader {
         }
     }
     public id: string = 'tls-alert'
+    public readonly matchKeys: string[] = ['tcpport:443']
+    public readonly heuristicFallback: boolean = true
     public name: string = 'Transport Layer Security(Alert Protocol)'
     public nickname: string = 'TLS-Alert'
 

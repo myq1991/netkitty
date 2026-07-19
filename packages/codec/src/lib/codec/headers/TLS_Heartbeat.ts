@@ -196,6 +196,8 @@ export class TLS_Heartbeat extends BaseHeader {
         }
     }
     public id: string = 'tls-heartbeat'
+    public readonly matchKeys: string[] = ['tcpport:443']
+    public readonly heuristicFallback: boolean = true
     public name: string = 'Transport Layer Security(Heartbeat Protocol)'
     public nickname: string = 'TLS-Heartbeat'
 

@@ -213,6 +213,35 @@ test('UDP produces a udpport demux key, isolated from tcpport (namespace separat
     assert.ok(decoded2.every((l: CodecDecodeResult): boolean => l.id !== 'tcpport-only'), 'tcpport codec not reached over udp (udpport:9999 ≠ tcpport:9999)')
 })
 
+// M1③b: TLS/IEC104 are registered in their port buckets (443/2404) for the O(1) fast path, yet stay
+// in the heuristic fallback — so TLS on a non-443 port is still recognized by content.
+test('TLS on a non-443 port (8443) is still recognized via the heuristic fallback', async (): Promise<void> => {
+    const codec: Codec = new Codec()
+    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('tls/clienthello').buffer)
+    // Move it off 443 (fixture is 12345→443) and re-encode faithfully (checksums recomputed).
+    ;(decoded.find((l: CodecDecodeResult): boolean => l.id === 'tcp')!.data as any).dstport = 8443
+    const {packet}: {packet: Buffer} = await codec.encode(decoded)
+    const redecoded: CodecDecodeResult[] = await codec.decode(packet)
+    assert.ok(redecoded.some((l: CodecDecodeResult): boolean => l.id === 'tls-handshake'), 'TLS still decoded on tcp:8443')
+    // And a content-heuristic child on a non-well-known port is NOT flagged as inconsistent (dual codec).
+    assert.deepStrictEqual(codec.checkConsistency(redecoded), [])
+})
+
+test('a non-TLS payload on tcp:443 falls to raw, not mis-decoded as TLS', async (): Promise<void> => {
+    const codec: Codec = new Codec()
+    const {packet}: {packet: Buffer} = await codec.encode([
+        {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+        {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 6}},
+        {id: 'tcp', data: {srcport: 12345, dstport: 443}}
+    ])
+    // "GET / HTTP/1.1\r\n" — first byte 0x47 is not a TLS content type (0x14–0x18), so the tcpport:443
+    // bucket's TLS candidates all reject it by content and it falls through to raw.
+    const withHttp: Buffer = Buffer.concat([packet, Buffer.from('474554202f20485454502f312e310d0a', 'hex')])
+    const decoded: CodecDecodeResult[] = await codec.decode(withHttp)
+    assert.ok(decoded.every((l: CodecDecodeResult): boolean => !l.id.startsWith('tls')), 'not mis-decoded as TLS')
+    assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'raw'), 'payload lands in raw')
+})
+
 // A custom codec WITHOUT a demux key still works via the heuristic fallback list.
 test('custom codec without matchKeys is still reachable via heuristic fallback', async (): Promise<void> => {
     class Proto88B5Heuristic extends BaseHeader {

@@ -121,6 +121,8 @@ export class IEC104_U_Frame extends BaseHeader {
         }
     }
     public id: string = 'IEC104_U_Frame'
+    public readonly matchKeys: string[] = ['tcpport:2404']
+    public readonly heuristicFallback: boolean = true
     public name: string = 'IEC 60870-5-104'
     public nickname: string = 'iec60870_104'
 

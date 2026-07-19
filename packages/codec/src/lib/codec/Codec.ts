@@ -335,9 +335,11 @@ export class Codec {
                 const raw: string = key.substring(prefix.length)
                 const value: string | number = producer.kind === 'uint' ? Number(raw) : raw
                 for (const codecModuleConstructor of constructors) {
-                    const dedup: string = `${codecModuleConstructor.PROTOCOL_ID}@${producer.field}=${value}`
-                    if (seen.has(dedup)) continue
-                    seen.add(dedup)
+                    //Dedup by protocol id: a parent with two producers in one namespace (TCP's src+dst
+                    //port) must not list the same child twice. The first producer encountered wins the
+                    //discriminator hint (refining src-vs-dst direction is a later step).
+                    if (seen.has(codecModuleConstructor.PROTOCOL_ID)) continue
+                    seen.add(codecModuleConstructor.PROTOCOL_ID)
                     result.push({id: codecModuleConstructor.PROTOCOL_ID, name: codecModuleConstructor.PROTOCOL_NAME, discriminator: {field: producer.field, value: value}})
                 }
             }
