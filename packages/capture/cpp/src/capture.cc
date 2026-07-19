@@ -233,6 +233,15 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
     }
 
 #else
+    //Non-blocking so the drain loop in cb_packets (while pcap_dispatch > 0) returns as soon as the
+    //buffer is empty instead of blocking on the next packet — otherwise continuous traffic keeps the
+    //loop inside pcap_dispatch and starves the event loop. uv_poll (level-triggered) re-fires for more.
+    if (pcap_setnonblock(this->pcap_handle, 1, errbuf) == -1)
+    {
+        this->teardown();
+        Napi::Error::New(env, errbuf).ThrowAsJavaScriptException();
+        return;
+    }
     this->fd = pcap_get_selectable_fd(this->pcap_handle);
     r = uv_poll_init(uv_default_loop(), &this->poll_handle, this->fd);
 //     assert(r == 0);
