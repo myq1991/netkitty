@@ -64,10 +64,8 @@ struct NkPcapApi
     void (*freecode)(struct bpf_program *);
     int (*setfilter)(pcap_t *, struct bpf_program *);
     void (*close_)(pcap_t *);
+    void (*breakloop)(pcap_t *);
     int (*findalldevs)(pcap_if_t **, char *);
-    int (*setnonblock)(pcap_t *, int, char *);
-    int (*setmintocopy)(pcap_t *, int);
-    HANDLE (*getevent)(pcap_t *);
 };
 extern NkPcapApi g_nkpcap;
 
@@ -81,10 +79,8 @@ bool NkPcapLoad();
 #define pcap_freecode g_nkpcap.freecode
 #define pcap_setfilter g_nkpcap.setfilter
 #define pcap_close g_nkpcap.close_
+#define pcap_breakloop g_nkpcap.breakloop
 #define pcap_findalldevs g_nkpcap.findalldevs
-#define pcap_setnonblock g_nkpcap.setnonblock
-#define pcap_setmintocopy g_nkpcap.setmintocopy
-#define pcap_getevent g_nkpcap.getevent
 
 #endif // _WIN32
 

@@ -1,31 +1,30 @@
 #ifndef NETKITTY_PCAP_CAPTURE_H
 #define NETKITTY_PCAP_CAPTURE_H
 
-#include <uv.h>
 #include <napi.h>
 #include <string.h>
+#include <string>
+#include <thread>
+#include <atomic>
 #include "pcap_api.h"
 
 struct PacketEventData
 {
     u_char *pkt_data;
     size_t copy_len;
-    timeval tv;
+    struct timeval tv;
 };
 
+// Each instance owns one pcap handle captured on its own dedicated thread (blocking pcap_dispatch),
+// delivering packets to JS via a ThreadSafeFunction. This is platform-uniform: no libuv fd/event
+// integration, so the same code path runs on Linux, macOS and Windows.
 class NetKittyCapture : public Napi::ObjectWrap<NetKittyCapture>
 {
 public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static void EmitPacket(u_char *user, const struct pcap_pkthdr *pkt_hdr, const u_char *pkt_data);
-#ifdef _WIN32
-    static void cb_packets(uv_async_t *handle);
-    static void cb_close(uv_handle_t *handle);
-    static void CALLBACK OnPacket(void *data, BOOLEAN didTimeout);
-#else
-    static void cb_packets(uv_poll_t *handle, int status, int events);
-#endif
     NetKittyCapture(const Napi::CallbackInfo &);
+    ~NetKittyCapture();
     void Start(const Napi::CallbackInfo &);
     void Stop(const Napi::CallbackInfo &);
     void SetFilter(const Napi::CallbackInfo &);
@@ -35,21 +34,13 @@ private:
     std::string iface;
     std::string filter;
     pcap_t *pcap_handle = NULL;
-    bool close();
-    void cleanup();
-    void teardown();
-    bool closing;
-    bool handling_packets;
-    bool tsfn_active;
-    bool uv_active;
+    std::thread worker_;
+    std::atomic<bool> stop_;
+    bool running_;
     struct bpf_program fcode;
-#ifdef _WIN32
-    HANDLE wait;
-    uv_async_t async;
-#else
-    uv_poll_t poll_handle;
-    int fd;
-#endif
+    void captureLoop();
+    void stopCapture();
+    bool applyFilter(std::string &err);
 };
 
 #endif
