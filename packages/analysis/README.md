@@ -58,10 +58,18 @@ const perProtocol = groupByReducer(f => f.topProtocol, 0, count => count + 1)
 
 ## Live capture (watch)
 
+`watch()` tails a growing capture, feeding reducers with phase `'live'`. The index is **unbounded by
+default** (you own the memory). `maxFrames` is an optional guard: past the cap the oldest indexed
+frames are FIFO-evicted (Wireshark-style ring buffer), keeping a long-running tail bounded — only the
+in-memory index is dropped, the file on disk is untouched.
+
 ```ts
-const analysis = new Analysis({maxFrames: 1_000_000})   // FIFO-evict past the cap → bounded memory
+const analysis = new Analysis()                         // default: unbounded index
 analysis.on('frame', row => { /* new indexed frame */ })
-await analysis.watch('/path/to/growing.pcap')           // tails the file; feeds reducers with phase 'live'
+await analysis.watch('/path/to/growing.pcap')           // tails the file; reducers get phase 'live'
+
+// optional memory guard for a long-running tail:
+// new Analysis({maxFrames: 1_000_000})  // FIFO-evict the oldest past the cap → bounded memory
 ```
 
 ## Browser

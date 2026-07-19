@@ -2,6 +2,6 @@
 export type AnalysisOptions = {
     //LRU decode-cache ceiling in bytes; defaults to an internal ~64MB.
     parseCacheBytes?: number
-    //Index frame ceiling for watch() (FIFO eviction past it); open() defaults to unbounded.
+    //Optional index frame ceiling (mainly for watch tails): FIFO-evict the oldest past it. Default: unbounded.
     maxFrames?: number
 }

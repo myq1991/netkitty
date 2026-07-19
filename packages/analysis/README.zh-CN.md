@@ -56,10 +56,17 @@ const perProtocol = groupByReducer(f => f.topProtocol, 0, count => count + 1)
 
 ## 实时抓包（watch）
 
+`watch()` 会 tail 一个持续增长的抓包文件，以 phase `'live'` 逐帧喂 reducer。索引**默认无界**
+（内存由你自负）。`maxFrames` 是可选的内存护栏：超过上限时对最老的索引条目做 FIFO 驱逐
+（Wireshark 式环形缓冲），让长跑的 tail 内存有界——只丢内存里的索引条目，磁盘上的原始文件不受影响。
+
 ```ts
-const analysis = new Analysis({maxFrames: 1_000_000})   // 超上限 FIFO 驱逐 → 内存有界
+const analysis = new Analysis()                         // 默认：索引无界
 analysis.on('frame', row => { /* 新索引的帧 */ })
-await analysis.watch('/path/to/growing.pcap')           // tail 文件；以 phase 'live' 喂 reducer
+await analysis.watch('/path/to/growing.pcap')           // tail 文件；reducer 收到 phase 'live'
+
+// 长跑 tail 的可选内存护栏：
+// new Analysis({maxFrames: 1_000_000})  // 超上限 FIFO 驱逐最老帧 → 内存有界
 ```
 
 ## 浏览器
