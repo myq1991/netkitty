@@ -3,22 +3,23 @@ import {INetworkInterface} from './interfaces/INetworkInterface'
 import {CaptureEmitMode, ICaptureOptions} from './interfaces/ICaptureOptions'
 import {existsSync, rmSync, writeFileSync} from 'node:fs'
 import {GetDeviceCaptureTemporaryFilename} from '../GetDeviceCaptureTemporaryFilename'
-import {ChildProcess, fork} from 'node:child_process'
 import path from 'node:path'
-import isElectron from 'is-electron'
-import type {UtilityProcess} from 'electron'
-import {PipeServer} from '../pipe/PipeServer'
-import {PipeClientSocket} from '../pipe/PipeClientSocket'
 import {randomInt} from 'crypto'
 import {cp} from 'node:fs/promises'
 import EventEmitter from 'events'
 import {DeviceNotFoundError} from '../../errors/DeviceNotFoundError'
 import {tmpdir} from 'node:os'
 import {IPcapPacketInfo, GeneratePCAPHeader} from '@netkitty/pcap'
+import {captureHost, ICaptureSessionConfig} from './CaptureHost'
 
+/**
+ * A single live capture. Its packets are captured by a shared host process (see CaptureHost) that runs
+ * one native thread per capture, so opening many captures costs one process, not one process each. The
+ * public API (start/stop/pause/resume/setFilter/saveTo/dispose + packet/rawPacket events) is unchanged.
+ */
 export class Capture extends EventEmitter {
 
-    readonly #workerModule: string = path.resolve(__dirname, './workers/CaptureWorker.js')
+    readonly #id: string = `CAP_${Date.now().toString(16)}${randomInt(0xffffffff).toString(16)}`
 
     readonly #device: string
 
@@ -26,17 +27,9 @@ export class Capture extends EventEmitter {
 
     readonly #temporaryFilename: string
 
-    readonly #pipeServer: PipeServer
+    readonly #emit: CaptureEmitMode
 
-    #hasWorker: boolean = false
-
-    #worker: ChildProcess | UtilityProcess | undefined
-
-    #workerId: string | undefined
-
-    #workerSocket: PipeClientSocket | undefined
-
-    #workerDestroying: boolean = false
+    #registered: boolean = false
 
     #started: boolean = false
 
@@ -45,8 +38,6 @@ export class Capture extends EventEmitter {
     #operating: boolean = false
 
     #filter: string = ''
-
-    #emit: CaptureEmitMode = 'full'
 
     #count: number = 0
 
@@ -68,127 +59,45 @@ export class Capture extends EventEmitter {
      */
     constructor(options: ICaptureOptions) {
         super()
-        this.#workerModule = options.workerModule ? options.workerModule : this.#workerModule
         this.#device = options.device
         this.#filter = options.filter ? options.filter : ''
         this.#emit = options.emit ? options.emit : 'full'
         this.#tmpDir = options.tmpDir ? options.tmpDir : path.resolve(tmpdir(), 'netkitty-tmp')
-        if (!options.workerModule) {
-            //Use origin worker module, check capture device is available
+        if (options.workerModule) {
+            captureHost.setWorkerModule(options.workerModule)
+        } else {
+            //Use the built-in host worker: verify the capture device exists.
             if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.#device).length) throw new DeviceNotFoundError(`Device ${this.#device} not found`)
         }
         this.#temporaryFilename = options.temporaryFilename ? options.temporaryFilename : GetDeviceCaptureTemporaryFilename(this.#device, this.#tmpDir)
-        this.#pipeServer = new PipeServer()
         this.cleanTemporaryFile()
         writeFileSync(this.#temporaryFilename, GeneratePCAPHeader())
     }
 
-    /**
-     * Create and initialize capture worker
-     * @protected
-     */
-    protected createCaptureWorker(): void {
-        this.#hasWorker = true
-        this.#workerId = `CW_${Date.now().toString(16)}${randomInt(32).toString(16)}`
-        const env: Record<string, string> = {
-            captureWorkerId: this.#workerId,
-            captureDevice: this.#device,
-            captureFilter: this.#filter,
-            captureEmit: this.#emit,
-            captureTemporaryFilename: this.#temporaryFilename,
-            socketPath: this.#pipeServer.socketPath
-        }
-        this.getWorkerSocket().then((socket: PipeClientSocket): void => {
-            socket.on('packet', (packetInfo: IPcapPacketInfo): void => {
-                //`rawPacket` carries the packet bytes; in `metadata` mode they are absent (kept only in
-                //the file), so emit it only when bytes are present. `packet` (metadata) always fires.
-                if (packetInfo.packet) this.emit('rawPacket', packetInfo.index, packetInfo.packet, packetInfo.seconds, packetInfo.microseconds)
-                this.emit('packet', packetInfo)
-                this.#count += 1
-            })
-        })
-        if (isElectron()) {
-            //Lazy-require electron only inside an Electron runtime. electron is an optional peer, absent
-            //in a normal Node process, so a static import would crash the module on load everywhere else.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const {utilityProcess}: {utilityProcess: {fork: (modulePath: string, args: string[], options: {env: Record<string, string>}) => UtilityProcess}} = require('electron')
-            this.#worker = utilityProcess.fork(this.#workerModule, [], {env: env})
-        } else {
-            this.#worker = fork(this.#workerModule, [], {env: env})
-        }
+    #config(): ICaptureSessionConfig {
+        return {device: this.#device, filter: this.#filter, emit: this.#emit, temporaryFilename: this.#temporaryFilename}
     }
 
-    /**
-     * Destroy capture worker
-     * @protected
-     */
-    protected async destroyCaptureWorker(): Promise<void> {
-        if (!this.#hasWorker) return
-        if (this.#workerDestroying) {
-            while (this.#workerDestroying) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
-            return
-        }
-        this.#workerDestroying = true
-        await new Promise<void>((resolve: (value: void | PromiseLike<void>) => void): void => {
-            if (this.#workerSocket && this.#worker) {
-                const disconnectHandler: () => void = (): void => {
-                    clearTimeout(notifyExitTimeout)
-                    return resolve()
-                }
-                this.#workerSocket.once('disconnect', disconnectHandler)
-                this.#workerSocket.notify('exit')
-                const notifyExitTimeout: NodeJS.Timeout = setTimeout((): void => {
-                    this.#workerSocket?.off('disconnect', disconnectHandler)
-                    this.#worker?.kill('SIGINT')
-                    return resolve()
-                }, 10000)
+    async #ensureRegistered(): Promise<void> {
+        if (this.#registered) return
+        await captureHost.create(
+            this.#id,
+            this.#config(),
+            (info: IPcapPacketInfo): void => this.#onPacket(info),
+            (error: Error): void => {
+                //`error` throws if unhandled; only surface a host crash when the caller is listening.
+                if (this.listenerCount('error') > 0) this.emit('error', error)
             }
-        })
-        this.#workerSocket = undefined
-        this.#worker = undefined
-        this.#workerId = undefined
-        this.#workerDestroying = false
-        this.#hasWorker = false
+        )
+        this.#registered = true
     }
 
-    /**
-     * Get worker socket
-     * @protected
-     */
-    protected async getWorkerSocket(): Promise<PipeClientSocket> {
-        return new Promise((resolve: (value: PipeClientSocket | PromiseLike<PipeClientSocket>) => void): void => {
-            if (!this.#workerSocket) {
-                this.#pipeServer.once('connect', (clientSocket: PipeClientSocket): void => {
-                    this.#workerSocket = clientSocket
-                    return resolve(this.#workerSocket)
-                })
-            } else {
-                return resolve(this.#workerSocket)
-            }
-        })
-    }
-
-    /**
-     * Clean resources before start capture
-     * @param removeTmpFile
-     * @protected
-     */
-    protected async cleanResources(removeTmpFile: boolean = true): Promise<void> {
-        //Clean cached capture data
-        if (existsSync(this.#temporaryFilename) && removeTmpFile) this.cleanTemporaryFile()
-        //Clean old worker resources
-        if (this.#worker && this.#workerSocket) await this.destroyCaptureWorker()
-    }
-
-    /**
-     * Clean temporary pcap file
-     * @protected
-     */
-    protected cleanTemporaryFile(): void {
-        rmSync(this.#temporaryFilename, {
-            recursive: true,
-            force: true
-        })
+    #onPacket(info: IPcapPacketInfo): void {
+        //`rawPacket` carries the packet bytes; in `metadata` mode they are absent (kept only in the
+        //file), so emit it only when bytes are present. `packet` (metadata) always fires.
+        if (info.packet) this.emit('rawPacket', info.index, info.packet, info.seconds, info.microseconds)
+        this.emit('packet', info)
+        this.#count += 1
     }
 
     /**
@@ -197,6 +106,15 @@ export class Capture extends EventEmitter {
      */
     protected async waitOperationDone(): Promise<void> {
         while (this.#operating) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
+    }
+
+    /**
+     * Wait for the host writer to flush every packet we have seen (bounded so a lost host can't hang us).
+     * @protected
+     */
+    protected async drainCount(): Promise<void> {
+        let guard: number = 0
+        while (await captureHost.count(this.#id) !== this.#count && guard++ < 500) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
     }
 
     /**
@@ -209,10 +127,8 @@ export class Capture extends EventEmitter {
         this.#operating = true
         try {
             this.#started = true
-            await this.cleanResources(false)
-            this.createCaptureWorker()
-            const workerSocket: PipeClientSocket = await this.getWorkerSocket()
-            await workerSocket.invoke('start')
+            await this.#ensureRegistered()
+            await captureHost.start(this.#id)
         } catch (e) {
             this.#started = false
             this.#operating = false
@@ -226,14 +142,12 @@ export class Capture extends EventEmitter {
      */
     public async stop(): Promise<void> {
         if (!this.#started) return
-        if (this.#workerDestroying) return
         await this.waitOperationDone()
         this.#operating = true
-        const workerSocket: PipeClientSocket = await this.getWorkerSocket()
-        await workerSocket.invoke('stop')
-        while (await workerSocket.invoke('count') !== this.count) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
-        await this.destroyCaptureWorker()
+        await captureHost.stop(this.#id)
+        await this.drainCount()
         this.#started = false
+        this.#paused = false
         this.#operating = false
     }
 
@@ -242,13 +156,11 @@ export class Capture extends EventEmitter {
      */
     public async pause(): Promise<void> {
         if (!this.#started) return
-        if (!this.#hasWorker) return
-        if (this.#workerDestroying) return
+        if (this.#paused) return
         await this.waitOperationDone()
         this.#operating = true
-        const workerSocket: PipeClientSocket = await this.getWorkerSocket()
-        await workerSocket.invoke('stop')
-        while (await workerSocket.invoke('count') !== this.count) await new Promise((resolve: (value: unknown) => void): NodeJS.Timeout => setTimeout(resolve, 10))
+        await captureHost.stop(this.#id)
+        await this.drainCount()
         this.#paused = true
         this.#operating = false
     }
@@ -258,12 +170,10 @@ export class Capture extends EventEmitter {
      */
     public async resume(): Promise<void> {
         if (!this.#started) return
-        if (!this.#hasWorker) return
-        if (this.#workerDestroying) return
+        if (!this.#paused) return
         await this.waitOperationDone()
         this.#operating = true
-        const workerSocket: PipeClientSocket = await this.getWorkerSocket()
-        await workerSocket.invoke('start')
+        await captureHost.start(this.#id)
         this.#paused = false
         this.#operating = false
     }
@@ -273,13 +183,13 @@ export class Capture extends EventEmitter {
      * @param filter
      */
     public async setFilter(filter: string): Promise<void> {
-        if (!this.#started) return
-        if (!this.#hasWorker) return
-        if (this.#workerDestroying) return
+        if (!this.#registered) {
+            this.#filter = filter
+            return
+        }
         await this.waitOperationDone()
         this.#operating = true
-        const workerSocket: PipeClientSocket = await this.getWorkerSocket()
-        await workerSocket.invoke('setFilter', filter)
+        await captureHost.setFilter(this.#id, filter)
         this.#filter = filter
         this.#operating = false
     }
@@ -297,11 +207,27 @@ export class Capture extends EventEmitter {
      */
     public async dispose(): Promise<void> {
         await this.stop()
-        await this.cleanResources()
+        if (this.#registered) {
+            await captureHost.destroy(this.#id)
+            this.#registered = false
+        }
+        if (existsSync(this.#temporaryFilename)) this.cleanTemporaryFile()
+    }
+
+    /**
+     * Clean temporary pcap file
+     * @protected
+     */
+    protected cleanTemporaryFile(): void {
+        rmSync(this.#temporaryFilename, {
+            recursive: true,
+            force: true
+        })
     }
 
     public on(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
     public on(eventName: 'rawPacket', listener: (index: number, packet: string, seconds: number, microseconds: number) => void): this
+    public on(eventName: 'error', listener: (error: Error) => void): this
     public on(eventName: string, listener: (...args: any[]) => void): this {
         super.on(eventName, listener)
         return this
@@ -309,6 +235,7 @@ export class Capture extends EventEmitter {
 
     public once(eventName: 'packet', listener: (pcapPacketInfo: IPcapPacketInfo) => void): this
     public once(eventName: 'rawPacket', listener: (index: number, packet: string, seconds: number, microseconds: number) => void): this
+    public once(eventName: 'error', listener: (error: Error) => void): this
     public once(eventName: string, listener: (...args: any[]) => void): this {
         super.once(eventName, listener)
         return this
