@@ -38,6 +38,9 @@ export class Analysis {
     constructor(options: AnalysisOptions = {}, spawnChannel?: () => IWorkerChannel) {
         this.#options = options
         this.#spawnChannel = spawnChannel !== undefined ? spawnChannel : (): IWorkerChannel => {
+            //Lazy require keeps this module environment-agnostic — it never statically imports the
+            //node-only worker_threads channel (a browser build injects its own factory instead).
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const factory: {spawnNodeAnalysisChannel: () => IWorkerChannel} = require('./worker/spawnNodeAnalysisChannel')
             return factory.spawnNodeAnalysisChannel()
         }
