@@ -14,6 +14,7 @@ export {NTP} from './headers/NTP'
 export {STUN} from './headers/STUN'
 export {DHCP} from './headers/DHCP'
 export {DNS} from './headers/DNS'
+export {SNMP} from './headers/SNMP'
 export {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 //阿才写的代码
 export {TLS_Alert} from './headers/TLS_Alert'

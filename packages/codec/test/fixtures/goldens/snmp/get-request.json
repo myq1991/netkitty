@@ -1,0 +1,65 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 71,
+      "id": 20913,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 60146,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 42417,
+      "dstport": 161,
+      "length": 51,
+      "checksum": 65094
+    },
+    "errors": []
+  },
+  {
+    "id": "snmp",
+    "data": {
+      "version": 1,
+      "community": "public",
+      "pduType": 160,
+      "requestId": 1137294592,
+      "errorStatus": 0,
+      "errorIndex": 0,
+      "variableBindings": [
+        {
+          "oid": "1.3.6.1.2.1.1.5.0",
+          "valueType": 5,
+          "value": ""
+        }
+      ]
+    },
+    "errors": []
+  }
+]

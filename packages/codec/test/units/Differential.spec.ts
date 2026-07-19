@@ -114,6 +114,15 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         // tshark's resolved 'test.local' proves the pointer is followed correctly, the key DNS check.
         {nk: 'questions.0.name.value', ts: 'dns.qry.name', kind: 'str'},
         {nk: 'answers.0.name.value', ts: 'dns.resp.name', kind: 'str'}
+    ]},
+    snmp: {tsLayer: 'snmp', fields: [
+        {nk: 'version', ts: 'snmp.version', kind: 'int'},
+        {nk: 'community', ts: 'snmp.community', kind: 'str'},
+        {nk: 'requestId', ts: 'snmp.request_id', kind: 'int'},
+        {nk: 'errorStatus', ts: 'snmp.error_status', kind: 'int'},
+        {nk: 'errorIndex', ts: 'snmp.error_index', kind: 'int'},
+        // The decoded object identifier — verifies the BER OID base-128 decode matches tshark.
+        {nk: 'variableBindings.0.oid', ts: 'snmp.name', kind: 'str'}
     ]}
 }
 
