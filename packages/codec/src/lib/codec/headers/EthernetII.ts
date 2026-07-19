@@ -84,6 +84,11 @@ export class EthernetII extends BaseHeader {
 
     public readonly demuxProducers: DemuxProducer[] = [{field: 'etherType', namespace: 'ethertype', kind: 'string'}]
 
+    //DLT_EN10MB = 1. Lets decode(packet, 1) dispatch to Ethernet by link type; heuristicFallback keeps
+    //Ethernet as the default no-linktype root (its match() still succeeds when there is no parent).
+    public readonly matchKeys: string[] = ['linktype:1']
+    public readonly heuristicFallback: boolean = true
+
     public match(): boolean {
         const specialScenes: string[] = ['trill', 'vxlan', 'nvgre', 'mpls', 'qinq', 'gre', 'geneve']
         if (this.prevCodecModule && !specialScenes.includes(this.prevCodecModule.id)) return false

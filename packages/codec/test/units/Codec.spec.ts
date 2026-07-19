@@ -301,6 +301,36 @@ test('matchKeys range: an inverted range tcpport:70-60 never matches (treated as
     assert.ok(decoded.every((l: CodecDecodeResult): boolean => l.id !== 'bad-range'), 'inverted range never matches')
 })
 
+// M1⑤: decode(packet, linktype) selects the root layer by pcap DLT. DLT_EN10MB=1 → Ethernet, giving
+// the same result as the default; an unknown/omitted link type falls back to the Ethernet heuristic root.
+test('decode(packet, 1): DLT_EN10MB routes the root to Ethernet, identical to the default', async (): Promise<void> => {
+    const codec: Codec = new Codec()
+    const buf: Buffer = LoadPacket('arp/baseline').buffer
+    const byDefault: string[] = (await codec.decode(buf)).map((l: CodecDecodeResult): string => l.id)
+    const byLinktype: string[] = (await codec.decode(buf, 1)).map((l: CodecDecodeResult): string => l.id)
+    assert.deepStrictEqual(byLinktype, byDefault)
+    assert.strictEqual(byLinktype[0], 'eth')
+})
+
+test('decode(packet, linktype): a non-Ethernet root is selected by link type; default and unknown fall back to Ethernet', async (): Promise<void> => {
+    class WifiRoot extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'wifi-root'
+        public readonly name: string = 'WiFi Root'
+        public readonly nickname: string = 'WR'
+        public readonly matchKeys: string[] = ['linktype:230']
+        public match(): boolean { return !this.prevCodecModule }
+    }
+    const codec: Codec = new Codec([WifiRoot as any])
+    const bytes: Buffer = Buffer.from('0102030405', 'hex')
+    // linktype 230 selects the custom root.
+    assert.strictEqual((await codec.decode(bytes, 230))[0].id, 'wifi-root')
+    // No linktype → default Ethernet-first root (WifiRoot is keyed-only, not in the heuristic list).
+    assert.strictEqual((await codec.decode(bytes))[0].id, 'eth')
+    // An unregistered linktype → no bucket → heuristic fallback to Ethernet.
+    assert.strictEqual((await codec.decode(bytes, 9999))[0].id, 'eth')
+})
+
 // A custom codec WITHOUT a demux key still works via the heuristic fallback list.
 test('custom codec without matchKeys is still reachable via heuristic fallback', async (): Promise<void> => {
     class Proto88B5Heuristic extends BaseHeader {

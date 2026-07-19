@@ -221,15 +221,22 @@ export class Codec {
      * @param codecModules
      * @protected
      */
-    protected selectCodec(codecData: CodecData, codecModules: CodecModule[]): CodecModuleConstructor {
+    protected selectCodec(codecData: CodecData, codecModules: CodecModule[], rootLinktype?: number): CodecModuleConstructor {
         const prevCodecModule: CodecModule | undefined = codecModules[codecModules.length - 1]
+        //Root layer: when a link type is supplied (a pcap DLT value), dispatch the first layer by a
+        //'linktype:<dlt>' key so a non-Ethernet link (802.11+radiotap, etc.) selects the right root.
+        //Without one, the root falls to the heuristic list (Ethernet matches when there is no parent),
+        //so the default decode(packet) behaviour is unchanged.
+        const demuxKeys: string[] = (codecModules.length === 0 && rootLinktype !== undefined && rootLinktype !== null)
+            ? [`linktype:${rootLinktype}`]
+            : this.computeDemuxKeys(prevCodecModule)
         //1. Dispatch table: O(1) lookup by the previous layer's demux value. Every candidate is
         //confirmed by match(), singleton buckets included — a header's own guard is never skipped, so
         //a demux key that is ambiguous across parents (e.g. 'ipproto:0' produced by both an IPv4
         //protocol=0 and an IPv6 next-header=0) still routes correctly, because IPv6 Hop-by-Hop's
         //match() rejects a non-IPv6 parent. Transport headers accept their demux value from both IPv4
         //(protocol) and IPv6 (nxt); see TCP/UDP match().
-        for (const matchKey of this.computeDemuxKeys(prevCodecModule)) {
+        for (const matchKey of demuxKeys) {
             const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(matchKey)
             if (bucket) {
                 for (const codecModuleConstructor of bucket) {
@@ -293,8 +300,9 @@ export class Codec {
      * @param codecModules
      * @private
      */
-    async #decode(codecData: CodecData, codecModules: CodecModule[] = [], collectRanges: boolean = false): Promise<void> {
-        const codecModuleConstructor: CodecModuleConstructor = this.selectCodec(codecData, codecModules)
+    async #decode(codecData: CodecData, codecModules: CodecModule[] = [], collectRanges: boolean = false, rootLinktype?: number): Promise<void> {
+        //rootLinktype only steers the first (root) layer; deeper layers demux off their parent.
+        const codecModuleConstructor: CodecModuleConstructor = this.selectCodec(codecData, codecModules, codecModules.length === 0 ? rootLinktype : undefined)
         const codecModule: CodecModule = codecModuleConstructor.CREATE_INSTANCE(codecData, codecModules)
         //Dissect pass: record each field's byte span. Off for normal decode, so the hot path is untouched.
         if (collectRanges) codecModule.enableByteRangeTracking()
@@ -302,21 +310,23 @@ export class Codec {
         codecData.startPos = codecModule.endPos
         codecModules.push(codecModule)
         if (codecData.startPos >= codecData.packet.length) return
-        return this.#decode(codecData, codecModules, collectRanges)
+        return this.#decode(codecData, codecModules, collectRanges, rootLinktype)
     }
 
     /**
      * Decode packet
      * @param packet
+     * @param linktype optional pcap link-layer type (DLT) to select the root layer (e.g. 1 = Ethernet,
+     *   127 = radiotap). Omit to use the default Ethernet-first root — existing callers are unaffected.
      */
-    public async decode(packet: Buffer): Promise<CodecDecodeResult[]> {
+    public async decode(packet: Buffer, linktype?: number): Promise<CodecDecodeResult[]> {
         const codecData: CodecData = {
             packet: packet,
             startPos: 0,
             postHandlers: []
         }
         const codecModules: CodecModule[] = []
-        await this.#decode(codecData, codecModules)
+        await this.#decode(codecData, codecModules, false, linktype)
         const postDecodeHandlers: PostHandlerItem[] = ProcessPacketDecodePostHandlers(codecData.postHandlers)
         let postDecodeHandler: PostHandlerItem | undefined = postDecodeHandlers.shift()
         while (postDecodeHandler) {
