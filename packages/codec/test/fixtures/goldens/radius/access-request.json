@@ -1,0 +1,78 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 101,
+      "id": 5797,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 26081,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 58042,
+      "dstport": 1812,
+      "length": 81,
+      "checksum": 65124
+    },
+    "errors": []
+  },
+  {
+    "id": "radius",
+    "data": {
+      "code": 1,
+      "identifier": 255,
+      "length": 73,
+      "authenticator": "c936b1398d77a2c4af9c20d1adcd8c43",
+      "attributes": [
+        {
+          "type": 1,
+          "value": "626f62"
+        },
+        {
+          "type": 2,
+          "value": "e56114cd2465b9d17960a7f193ba5f85"
+        },
+        {
+          "type": 4,
+          "value": "ac110003"
+        },
+        {
+          "type": 5,
+          "value": "00000000"
+        },
+        {
+          "type": 80,
+          "value": "8e81fa55216d3fc24d493fdb87680eaa"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

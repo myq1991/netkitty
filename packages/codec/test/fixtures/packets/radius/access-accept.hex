@@ -1,0 +1,3 @@
+# RADIUS Access-Accept (RFC 2865) from freeradius — minimal 20-byte header, no attributes
+# docker debian:12: freeradius -X + radtest bob hello 127.0.0.1 0 testing123, tcpdump udp 1812/1813
+00000000000000000000000008004500003016a60000401166157f0000017f0000010714e2ba001cfe2f02ff00146380b3bf1ef9628f317116f32f0d978c

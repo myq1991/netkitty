@@ -1,0 +1,57 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 48,
+      "id": 5798,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 26133,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 1812,
+      "dstport": 58042,
+      "length": 28,
+      "checksum": 65071
+    },
+    "errors": []
+  },
+  {
+    "id": "radius",
+    "data": {
+      "code": 2,
+      "identifier": 255,
+      "length": 20,
+      "authenticator": "6380b3bf1ef9628f317116f32f0d978c",
+      "attributes": []
+    },
+    "errors": []
+  }
+]

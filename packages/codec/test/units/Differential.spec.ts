@@ -158,6 +158,11 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'facility', ts: 'syslog.facility', kind: 'int'},
         {nk: 'severity', ts: 'syslog.level', kind: 'int'}
     ]},
+    radius: {tsLayer: 'radius', fields: [
+        {nk: 'code', ts: 'radius.code', kind: 'int'},
+        {nk: 'identifier', ts: 'radius.id', kind: 'int'},
+        {nk: 'length', ts: 'radius.length', kind: 'int'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.
