@@ -44,6 +44,7 @@ export type PcapSectionHeader = {
 export type PcapRecordHeader = {
     timestampSeconds: number
     timestampMicroseconds: number
+    timestampNanoseconds: number
     capturedLength: number
     originalLength: number
 }
@@ -238,6 +239,7 @@ export class PcapParserCore {
             const header: PcapRecordHeader = {
                 timestampSeconds: this.readUInt32(buffer, 0),
                 timestampMicroseconds: this.timestampNanosecond ? Math.floor(timestampFraction / 1000) : timestampFraction,
+                timestampNanoseconds: this.timestampNanosecond ? timestampFraction : timestampFraction * 1000,
                 capturedLength: this.readUInt32(buffer, 8),
                 originalLength: this.readUInt32(buffer, 12)
             }
@@ -275,6 +277,7 @@ export class PcapParserCore {
                 packetLength: data.length,
                 seconds: this.currentPacketHeader.timestampSeconds,
                 microseconds: this.currentPacketHeader.timestampMicroseconds,
+                nanoseconds: this.currentPacketHeader.timestampNanoseconds,
                 packet: data.toString('base64')
             }
             this.handlers.onPacketData?.(data)
@@ -294,14 +297,16 @@ export class PcapParserCore {
      * @param timestampLow
      * @protected
      */
-    protected ngTimestamp(ngInterface: PcapNgInterface, timestampHigh: number, timestampLow: number): { seconds: number, microseconds: number } {
+    protected ngTimestamp(ngInterface: PcapNgInterface, timestampHigh: number, timestampLow: number): { seconds: number, microseconds: number, nanoseconds: number } {
         const ticks: bigint = (BigInt(timestampHigh) << 32n) | BigInt(timestampLow)
         const divisor: bigint = ngInterface.timestampBase === 2
             ? 2n ** BigInt(ngInterface.timestampExponent)
             : 10n ** BigInt(ngInterface.timestampExponent)
+        const fraction: bigint = ticks % divisor
         return {
             seconds: Number(ticks / divisor),
-            microseconds: Number(((ticks % divisor) * 1000000n) / divisor)
+            microseconds: Number((fraction * 1000000n) / divisor),
+            nanoseconds: Number((fraction * 1000000000n) / divisor)
         }
     }
 
@@ -353,11 +358,12 @@ export class PcapParserCore {
      * pcapng: emit one packet block as IPcapPacketInfo
      * @protected
      */
-    protected ngEmitPacket(blockOffset: number, blockTotalLength: number, recordHeaderLength: number, data: Buffer, seconds: number, microseconds: number, originalLength: number): void {
+    protected ngEmitPacket(blockOffset: number, blockTotalLength: number, recordHeaderLength: number, data: Buffer, seconds: number, microseconds: number, nanoseconds: number, originalLength: number): void {
         this.index += 1
         const header: PcapRecordHeader = {
             timestampSeconds: seconds,
             timestampMicroseconds: microseconds,
+            timestampNanoseconds: nanoseconds,
             capturedLength: data.length,
             originalLength: originalLength
         }
@@ -373,6 +379,7 @@ export class PcapParserCore {
             packetLength: data.length,
             seconds: seconds,
             microseconds: microseconds,
+            nanoseconds: nanoseconds,
             packet: data.toString('base64')
         }
         this.handlers.onPacketData?.(data)
@@ -444,8 +451,8 @@ export class PcapParserCore {
                     return this.fail(`corrupt pcapng: captured length ${capturedLength} does not fit its block (${blockTotalLength})`)
                 }
                 const data: Buffer = buffer.subarray(PCAPNG_EPB_HEADER_LENGTH, PCAPNG_EPB_HEADER_LENGTH + capturedLength)
-                const timestamp: { seconds: number, microseconds: number } = this.ngTimestamp(this.ngInterface(interfaceId), timestampHigh, timestampLow)
-                this.ngEmitPacket(blockOffset, blockTotalLength, PCAPNG_EPB_HEADER_LENGTH, data, timestamp.seconds, timestamp.microseconds, originalLength)
+                const timestamp: { seconds: number, microseconds: number, nanoseconds: number } = this.ngTimestamp(this.ngInterface(interfaceId), timestampHigh, timestampLow)
+                this.ngEmitPacket(blockOffset, blockTotalLength, PCAPNG_EPB_HEADER_LENGTH, data, timestamp.seconds, timestamp.microseconds, timestamp.nanoseconds, originalLength)
                 break
             }
             case PCAPNG_BLOCK_SIMPLE_PACKET: {
@@ -457,7 +464,7 @@ export class PcapParserCore {
                     return this.fail(`corrupt pcapng: simple packet length ${capturedLength} is invalid`)
                 }
                 const data: Buffer = buffer.subarray(PCAPNG_SPB_HEADER_LENGTH, PCAPNG_SPB_HEADER_LENGTH + capturedLength)
-                this.ngEmitPacket(blockOffset, blockTotalLength, PCAPNG_SPB_HEADER_LENGTH, data, 0, 0, originalLength)
+                this.ngEmitPacket(blockOffset, blockTotalLength, PCAPNG_SPB_HEADER_LENGTH, data, 0, 0, 0, originalLength)
                 break
             }
             default:

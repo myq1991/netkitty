@@ -111,6 +111,8 @@ test('core: nanosecond-resolution classic pcap converts fraction to microseconds
     assert.strictEqual(outcome.packets.length, 1)
     assert.strictEqual(outcome.packets[0].seconds, 1)
     assert.strictEqual(outcome.packets[0].microseconds, 1)
+    //full ns precision is preserved even though microseconds truncates it
+    assert.strictEqual(outcome.packets[0].nanoseconds, 1500)
     assert.strictEqual(Buffer.from(outcome.packets[0].packet, 'base64').toString('hex'), 'abababab')
 })
 

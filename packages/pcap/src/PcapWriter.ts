@@ -77,6 +77,7 @@ export class PcapWriter extends EventEmitter {
             packetLength: packetLength,
             seconds: seconds,
             microseconds: microseconds,
+            nanoseconds: microseconds * 1000,
             packet: this.includePacketData ? packet.toString('base64') : ''
         }
         this.writeStream.write(pcapData, (): boolean => this.emit('packet', wrotePacketInfo))
