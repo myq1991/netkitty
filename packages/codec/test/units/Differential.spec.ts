@@ -132,6 +132,15 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'flags.qr', ts: 'dns.flags.response', kind: 'int'},
         {nk: 'questions.0.name.value', ts: 'dns.qry.name', kind: 'str'},
         {nk: 'answers.0.name.value', ts: 'dns.resp.name', kind: 'str'}
+    ]},
+    dhcpv6: {tsLayer: 'dhcpv6', fields: [
+        {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
+        // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.
+        {nk: 'transactionId', ts: 'dhcpv6.xid', kind: 'hexcode'}
+        // NB: the per-option code is deliberately NOT mapped — tshark nests options and getTsharkField's
+        // DFS does not guarantee the FIRST option (it returns whichever dhcpv6.option.type it reaches
+        // first), so a direct options.0.code comparison would be unreliable. The option walk is covered
+        // byte-for-byte by the round-trip + golden instead.
     ]}
 }
 

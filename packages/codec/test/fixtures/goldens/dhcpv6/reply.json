@@ -1,0 +1,68 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "b2:00:25:bc:f3:a1",
+      "smac": "7a:2c:29:f3:6e:4b",
+      "etherType": "86dd"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6",
+    "data": {
+      "version": 6,
+      "tclass": {
+        "dscp": 48,
+        "ecn": 0
+      },
+      "flow": 715358,
+      "plen": 125,
+      "nxt": 17,
+      "hllm": 64,
+      "sip": "fe80:0000:0000:0000:782c:29ff:fef3:6e4b",
+      "dip": "fe80:0000:0000:0000:b000:25ff:febc:f3a1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 547,
+      "dstport": 546,
+      "length": 125,
+      "checksum": 54617
+    },
+    "errors": []
+  },
+  {
+    "id": "dhcpv6",
+    "data": {
+      "msgType": 7,
+      "transactionId": "8f3328",
+      "options": [
+        {
+          "code": 1,
+          "value": "0001000131efeee3b20025bcf3a1"
+        },
+        {
+          "code": 2,
+          "value": "0001000131efeee0000000000000"
+        },
+        {
+          "code": 3,
+          "value": "25bcf3a100000e100000189c00050018fd0000000000000000000000000001a800001c2000001d4c"
+        },
+        {
+          "code": 13,
+          "value": "000073756363657373"
+        },
+        {
+          "code": 23,
+          "value": "fd000000000000000000000000000001"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,64 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "33:33:00:01:00:02",
+      "smac": "b2:00:25:bc:f3:a1",
+      "etherType": "86dd"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6",
+    "data": {
+      "version": 6,
+      "tclass": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "flow": 923489,
+      "plen": 64,
+      "nxt": 17,
+      "hllm": 1,
+      "sip": "fe80:0000:0000:0000:b000:25ff:febc:f3a1",
+      "dip": "ff02:0000:0000:0000:0000:0000:0001:0002"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 546,
+      "dstport": 547,
+      "length": 64,
+      "checksum": 50742
+    },
+    "errors": []
+  },
+  {
+    "id": "dhcpv6",
+    "data": {
+      "msgType": 1,
+      "transactionId": "2d6f45",
+      "options": [
+        {
+          "code": 1,
+          "value": "0001000131efeee3b20025bcf3a1"
+        },
+        {
+          "code": 6,
+          "value": "001700180027001f"
+        },
+        {
+          "code": 8,
+          "value": "0000"
+        },
+        {
+          "code": 3,
+          "value": "25bcf3a100000e1000001518"
+        }
+      ]
+    },
+    "errors": []
+  }
+]
