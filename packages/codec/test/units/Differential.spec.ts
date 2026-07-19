@@ -123,6 +123,15 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'errorIndex', ts: 'snmp.error_index', kind: 'int'},
         // The decoded object identifier — verifies the BER OID base-128 decode matches tshark.
         {nk: 'variableBindings.0.oid', ts: 'snmp.name', kind: 'str'}
+    ]},
+    // mDNS reuses the DNS wire format (and tshark's dns.* fields under an 'mdns' layer). Same mapping —
+    // the answer name in the response comes from a compression pointer, verified against tshark.
+    mdns: {tsLayer: 'mdns', fields: [
+        {nk: 'qdcount', ts: 'dns.count.queries', kind: 'int'},
+        {nk: 'ancount', ts: 'dns.count.answers', kind: 'int'},
+        {nk: 'flags.qr', ts: 'dns.flags.response', kind: 'int'},
+        {nk: 'questions.0.name.value', ts: 'dns.qry.name', kind: 'str'},
+        {nk: 'answers.0.name.value', ts: 'dns.resp.name', kind: 'str'}
     ]}
 }
 

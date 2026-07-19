@@ -1,0 +1,129 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:fb",
+      "smac": "26:0f:20:29:10:3b",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 178,
+      "id": 8916,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 255,
+      "protocol": 17,
+      "checksum": 52052,
+      "sip": "172.20.0.2",
+      "dip": "224.0.0.251"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 5353,
+      "dstport": 5353,
+      "length": 158,
+      "checksum": 36289
+    },
+    "errors": []
+  },
+  {
+    "id": "mdns",
+    "data": {
+      "id": 0,
+      "flags": {
+        "qr": true,
+        "opcode": 0,
+        "aa": true,
+        "tc": false,
+        "rd": false,
+        "ra": false,
+        "z": false,
+        "ad": false,
+        "cd": false,
+        "rcode": 0
+      },
+      "qdcount": 0,
+      "ancount": 5,
+      "nscount": 0,
+      "arcount": 0,
+      "questions": [],
+      "answers": [
+        {
+          "name": {
+            "value": "testhost._http._tcp.local",
+            "raw": "0874657374686f7374055f68747470045f746370056c6f63616c00"
+          },
+          "type": 16,
+          "class": 32769,
+          "ttl": 4500,
+          "rdlength": 1,
+          "rdata": "00"
+        },
+        {
+          "name": {
+            "value": "_http._tcp.local",
+            "raw": "c015"
+          },
+          "type": 12,
+          "class": 1,
+          "ttl": 4500,
+          "rdlength": 2,
+          "rdata": "c00c"
+        },
+        {
+          "name": {
+            "value": "testhost._http._tcp.local",
+            "raw": "c00c"
+          },
+          "type": 33,
+          "class": 32769,
+          "ttl": 120,
+          "rdlength": 21,
+          "rdata": "000000001f900c383564346462643132653734c020"
+        },
+        {
+          "name": {
+            "value": "85d4dbd12e74.local",
+            "raw": "c052"
+          },
+          "type": 1,
+          "class": 32769,
+          "ttl": 120,
+          "rdlength": 4,
+          "rdata": "ac140002"
+        },
+        {
+          "name": {
+            "value": "_services._dns-sd._udp.local",
+            "raw": "095f7365727669636573075f646e732d7364045f756470c020"
+          },
+          "type": 12,
+          "class": 1,
+          "ttl": 4500,
+          "rdlength": 2,
+          "rdata": "c015"
+        }
+      ],
+      "authorities": [],
+      "additionals": []
+    },
+    "errors": []
+  }
+]
