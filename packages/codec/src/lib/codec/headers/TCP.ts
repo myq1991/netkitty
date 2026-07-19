@@ -1,5 +1,6 @@
 import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {BaseHeader} from '../abstracts/BaseHeader'
+import {DemuxProducer} from '../types/DemuxProducer'
 import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../../helper/BufferToNumber'
 import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../../helper/NumberToBuffer'
 import {IPv6ToBuffer} from '../../helper/IPToBuffer'
@@ -920,6 +921,12 @@ export class TCP extends BaseHeader {
     public readonly id: string = 'tcp'
 
     public readonly matchKeys: string[] = ['ipproto:6']
+
+    //Produces a port demux key from BOTH ports (a protocol's well-known port may be src or dst).
+    public readonly demuxProducers: DemuxProducer[] = [
+        {field: 'dstport', namespace: 'tcpport', kind: 'uint'},
+        {field: 'srcport', namespace: 'tcpport', kind: 'uint'}
+    ]
 
     public readonly name: string = 'Transmission Control Protocol'
 

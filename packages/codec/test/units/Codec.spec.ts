@@ -155,6 +155,64 @@ test('matchPriority: within a bucket the higher-priority codec wins even if regi
     assert.ok(decoded.every((l: CodecDecodeResult): boolean => l.id !== 'lo-pri'), 'lower-priority candidate not selected')
 })
 
+// M1③a: TCP/UDP now produce a port demux key (from both src and dst port), so a protocol can be
+// dispatched by its well-known port in O(1). A codec registered under tcpport:<port> is reached after
+// a TCP layer carrying that port.
+test('TCP produces a tcpport demux key: a codec keyed on tcpport:9999 is reached after tcp dstport 9999', async (): Promise<void> => {
+    class TcpPortChild extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'tcpport-child'
+        public readonly name: string = 'TCP Port Child'
+        public readonly nickname: string = 'TPC'
+        public readonly matchKeys: string[] = ['tcpport:9999']
+        public match(): boolean { return !!this.prevCodecModule && this.prevCodecModule.id === 'tcp' }
+    }
+    const codec: Codec = new Codec([TcpPortChild as any])
+    const {packet}: {packet: Buffer} = await codec.encode([
+        {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+        {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 6}},
+        {id: 'tcp', data: {srcport: 1234, dstport: 9999}}
+    ])
+    const decoded: CodecDecodeResult[] = await codec.decode(Buffer.concat([packet, Buffer.from('abcd', 'hex')]))
+    assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'tcpport-child'), 'reached via tcpport:9999 bucket')
+})
+
+test('UDP produces a udpport demux key, isolated from tcpport (namespace separation)', async (): Promise<void> => {
+    class UdpPortChild extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'udpport-child'
+        public readonly name: string = 'UDP Port Child'
+        public readonly nickname: string = 'UPC'
+        public readonly matchKeys: string[] = ['udpport:9999']
+        public match(): boolean { return !!this.prevCodecModule && this.prevCodecModule.id === 'udp' }
+    }
+    const codec: Codec = new Codec([UdpPortChild as any])
+    const {packet}: {packet: Buffer} = await codec.encode([
+        {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+        {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 17}},
+        {id: 'udp', data: {srcport: 1234, dstport: 9999}}
+    ])
+    const decoded: CodecDecodeResult[] = await codec.decode(Buffer.concat([packet, Buffer.from('abcd', 'hex')]))
+    assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'udpport-child'), 'reached via udpport:9999')
+    // A tcpport-keyed codec must NOT be reachable over UDP (namespaces are separate).
+    class TcpPortOnly extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'tcpport-only'
+        public readonly name: string = 'TCP Port Only'
+        public readonly nickname: string = 'TPO'
+        public readonly matchKeys: string[] = ['tcpport:9999']
+        public match(): boolean { return true }
+    }
+    const codec2: Codec = new Codec([TcpPortOnly as any])
+    const {packet: p2}: {packet: Buffer} = await codec2.encode([
+        {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+        {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 17}},
+        {id: 'udp', data: {srcport: 1234, dstport: 9999}}
+    ])
+    const decoded2: CodecDecodeResult[] = await codec2.decode(Buffer.concat([p2, Buffer.from('abcd', 'hex')]))
+    assert.ok(decoded2.every((l: CodecDecodeResult): boolean => l.id !== 'tcpport-only'), 'tcpport codec not reached over udp (udpport:9999 ≠ tcpport:9999)')
+})
+
 // A custom codec WITHOUT a demux key still works via the heuristic fallback list.
 test('custom codec without matchKeys is still reachable via heuristic fallback', async (): Promise<void> => {
     class Proto88B5Heuristic extends BaseHeader {

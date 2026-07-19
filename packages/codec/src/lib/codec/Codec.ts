@@ -375,6 +375,10 @@ export class Codec {
             const parent: CodecDecodeResult = decoded[i]
             const child: CodecDecodeResult = decoded[i + 1]
             if (child.id === this.#rawDataCodec.PROTOCOL_ID) continue
+            //A content-heuristic child (no matchKeys, or heuristicFallback dual) is legitimately
+            //reachable off its well-known demux value (e.g. TLS on a non-443 port). Never flag it as
+            //inconsistent with the parent's discriminator — it is matched by content, not by the key.
+            if (this.#heuristicCodecs.some((codecModuleConstructor: CodecModuleConstructor): boolean => codecModuleConstructor.PROTOCOL_ID === child.id)) continue
             for (const producer of this.#producersOf(parent.id)) {
                 const actual: any = (parent.data as any)[producer.field]
                 if (actual === undefined || actual === null) continue
