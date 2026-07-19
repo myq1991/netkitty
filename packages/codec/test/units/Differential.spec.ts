@@ -86,6 +86,21 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         // (request 0x0001 vs response 0x0101) is the strong differential catch here.
         {nk: 'messageType', ts: 'stun.type', kind: 'int'},
         {nk: 'messageLength', ts: 'stun.length', kind: 'int'}
+    ]},
+    dhcp: {tsLayer: 'dhcp', fields: [
+        // dhcp.type is the BOOTP op (1 request / 2 reply); the DHCP message type (DISCOVER/ACK) is
+        // option 53, not mapped here. xid/flags are shown as 0x-hex — Number() parses those, so kind:'int'.
+        {nk: 'op', ts: 'dhcp.type', kind: 'int'},
+        {nk: 'htype', ts: 'dhcp.hw.type', kind: 'int'},
+        {nk: 'hlen', ts: 'dhcp.hw.len', kind: 'int'},
+        {nk: 'hops', ts: 'dhcp.hops', kind: 'int'},
+        {nk: 'xid', ts: 'dhcp.id', kind: 'int'},
+        {nk: 'secs', ts: 'dhcp.secs', kind: 'int'},
+        {nk: 'flags', ts: 'dhcp.flags', kind: 'int'},
+        {nk: 'ciaddr', ts: 'dhcp.ip.client', kind: 'str'},
+        {nk: 'yiaddr', ts: 'dhcp.ip.your', kind: 'str'},
+        {nk: 'siaddr', ts: 'dhcp.ip.server', kind: 'str'},
+        {nk: 'giaddr', ts: 'dhcp.ip.relay', kind: 'str'}
     ]}
 }
 

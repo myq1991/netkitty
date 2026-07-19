@@ -14,6 +14,8 @@ import {BufferToUInt8, BufferToUInt16, BufferToUInt32, BufferToInt8} from '../..
 import {UInt8ToBuffer, UInt16ToBuffer, UInt32ToBuffer, Int8ToBuffer} from '../../helper/NumberToBuffer'
 import {BufferToHex} from '../../helper/BufferToHex'
 import {HexToBuffer} from '../../helper/HexToBuffer'
+import {BufferToIPv4} from '../../helper/BufferToIP'
+import {IPv4ToBuffer} from '../../helper/IPToBuffer'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
 const CONSTRUCTOR_VALIDATE_KEY: string = '__validate'
@@ -547,6 +549,34 @@ export abstract class BaseHeader {
             },
             encode: function (this: BaseHeader): void {
                 this.writeBytes(offset, HexToBuffer((this.instance as any)[name].getValue(zero)))
+            }
+        }
+    }
+
+    /**
+     * A 4-octet IPv4 address field at `offset`, stored as a dotted-quad string (e.g. DHCP
+     * ciaddr/yiaddr/siaddr/giaddr). Decode reads it to `a.b.c.d`; encode writes it back (default
+     * '0.0.0.0', recording a Not Found error if the value is missing). Byte-for-byte identical to the
+     * hand-written IPv4-address pattern (see IPv4.sip/dip).
+     * @protected
+     */
+    protected static fieldIPv4(name: string, offset: number, label: string): ProtocolFieldJSONSchema {
+        return {
+            type: 'string',
+            label: label,
+            //Match IPv4.sip/dip exactly: the same length bounds + ipv4 content encoding, so Ajv
+            //validation and the editor's field metadata are identical to the hand-written pattern.
+            minLength: 7,
+            maxLength: 15,
+            contentEncoding: StringContentEncodingEnum.IPv4,
+            decode: function (this: BaseHeader): void {
+                (this.instance as any)[name].setValue(BufferToIPv4(this.readBytes(offset, 4)))
+            },
+            encode: function (this: BaseHeader): void {
+                const node: any = (this.instance as any)[name]
+                const value: string = node.getValue('0.0.0.0', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                node.setValue(value)
+                this.writeBytes(offset, IPv4ToBuffer(value))
             }
         }
     }

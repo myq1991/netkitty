@@ -17,7 +17,8 @@ class FieldTestHeader extends BaseHeader {
             val: FieldTestHeader.fieldUInt('val', 0, 2, 'Value'),
             byte: FieldTestHeader.fieldUInt('byte', 2, 1, 'Byte'),
             sint: FieldTestHeader.fieldInt8('sint', 3, 'Signed'),
-            hex: FieldTestHeader.fieldHex('hex', 4, 4, 'Hex')
+            hex: FieldTestHeader.fieldHex('hex', 4, 4, 'Hex'),
+            addr: FieldTestHeader.fieldIPv4('addr', 8, 'Address')
         }
     }
     public readonly id: string = 'field-test'
@@ -87,4 +88,24 @@ test('fieldHex: decode reads raw bytes to a lower-case hex string and encode wri
     ;(out.instance as any).hex.setValue('cafebabe')
     await out.field('hex').encode!.call(out)
     assert.strictEqual(out.packet.subarray(4, 8).toString('hex'), 'cafebabe')
+})
+
+test('fieldIPv4: decode reads a dotted-quad and encode writes the 4 octets back', async (): Promise<void> => {
+    const header: FieldTestHeader = makeHeader(Buffer.from('0000000000000000c0a80101', 'hex'))
+    await header.field('addr').decode!.call(header)
+    assert.strictEqual((header.instance as any).addr.getValue(), '192.168.1.1')
+    const out: FieldTestHeader = makeHeader(Buffer.alloc(12))
+    ;(out.instance as any).addr.setValue('10.0.0.5')
+    await out.field('addr').encode!.call(out)
+    assert.strictEqual(out.packet.subarray(8, 12).toString('hex'), '0a000005')
+})
+
+// fieldIPv4 must be schema-identical to the hand-written IPv4.sip/dip pattern (length bounds + ipv4
+// content encoding), so Ajv validation and editor metadata match. Regression for critic finding.
+test('fieldIPv4: emits the same schema metadata as the hand-written IPv4 address field', (): void => {
+    const addr: any = new FieldTestHeader({packet: Buffer.alloc(0), startPos: 0, postHandlers: []} as any, []).field('addr')
+    assert.strictEqual(addr.type, 'string')
+    assert.strictEqual(addr.minLength, 7)
+    assert.strictEqual(addr.maxLength, 15)
+    assert.strictEqual(addr.contentEncoding, 'ipv4')
 })
