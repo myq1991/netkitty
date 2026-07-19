@@ -138,6 +138,13 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'filename', ts: 'tftp.source_file', kind: 'str'},
         {nk: 'mode', ts: 'tftp.type', kind: 'str'}
     ]},
+    // LLMNR reuses the DNS wire format (tshark's dns.* fields under an 'llmnr' layer), like mDNS.
+    llmnr: {tsLayer: 'llmnr', fields: [
+        {nk: 'id', ts: 'dns.id', kind: 'int'},
+        {nk: 'qdcount', ts: 'dns.count.queries', kind: 'int'},
+        {nk: 'flags.qr', ts: 'dns.flags.response', kind: 'int'},
+        {nk: 'questions.0.name.value', ts: 'dns.qry.name', kind: 'str'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.

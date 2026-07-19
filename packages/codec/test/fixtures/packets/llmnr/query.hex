@@ -1,0 +1,3 @@
+# LLMNR query (RFC 4795, DNS wire format) for "wpad" A IN, multicast to 224.0.0.252:5355
+# docker debian:12 bridge net: a standard LLMNR query sent over a real UDP socket, tcpdump udp 5355.
+01005e0000fc9ad3687c4c2f080045000032c45b40000111284dac140002e00000fc8dc414eb001e8d422a1b0000000100000000000004777061640000010001

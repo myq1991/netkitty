@@ -1,0 +1,82 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:fc",
+      "smac": "9a:d3:68:7c:4c:2f",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 50,
+      "id": 50267,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 17,
+      "checksum": 10317,
+      "sip": "172.20.0.2",
+      "dip": "224.0.0.252"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 36292,
+      "dstport": 5355,
+      "length": 30,
+      "checksum": 36162
+    },
+    "errors": []
+  },
+  {
+    "id": "llmnr",
+    "data": {
+      "id": 10779,
+      "flags": {
+        "qr": false,
+        "opcode": 0,
+        "aa": false,
+        "tc": false,
+        "rd": false,
+        "ra": false,
+        "z": false,
+        "ad": false,
+        "cd": false,
+        "rcode": 0
+      },
+      "qdcount": 1,
+      "ancount": 0,
+      "nscount": 0,
+      "arcount": 0,
+      "questions": [
+        {
+          "name": {
+            "value": "wpad",
+            "raw": "047770616400"
+          },
+          "qtype": 1,
+          "qclass": 1
+        }
+      ],
+      "answers": [],
+      "authorities": [],
+      "additionals": []
+    },
+    "errors": []
+  }
+]
