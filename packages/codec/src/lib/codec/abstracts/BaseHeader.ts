@@ -60,6 +60,21 @@ export abstract class BaseHeader {
         return this.CODEC_INSTANCE.demuxProducers
     }
 
+    /**
+     * When true, this header is also placed in the content-heuristic fallback list even though it has
+     * demux matchKeys. Lets a protocol with a reliable content signature (TLS, IEC104) take the O(1)
+     * bucket on its well-known port yet still be recognized on any other port via its match(). Default
+     * false: matchKeys → bucket only; no matchKeys → heuristic only.
+     */
+    public static get HEURISTIC_FALLBACK(): boolean {
+        return this.CODEC_INSTANCE.heuristicFallback
+    }
+
+    /** Higher is tried first within a demux bucket and within the heuristic chain; ties keep registration order. */
+    public static get MATCH_PRIORITY(): number {
+        return this.CODEC_INSTANCE.matchPriority
+    }
+
     public static get PROTOCOL_SCHEMA(): ProtocolJSONSchema {
         const schema: ProtocolJSONSchema = JSON.parse(JSON.stringify(this.CODEC_INSTANCE.SCHEMA))
         if (!Object.hasOwn(this, CONSTRUCTOR_VALIDATE_KEY)) {
@@ -136,6 +151,15 @@ export abstract class BaseHeader {
      * kind:'string'}]`; IPv4 declares `[{field:'protocol', namespace:'ipproto', kind:'uint'}]`.
      */
     public readonly demuxProducers: DemuxProducer[] = []
+
+    /**
+     * Also register in the content-heuristic fallback list despite having matchKeys — so a
+     * content-signed protocol keeps working off its well-known port. See static HEURISTIC_FALLBACK.
+     */
+    public readonly heuristicFallback: boolean = false
+
+    /** Selection priority within a bucket / the heuristic chain (higher first; ties keep registration order). */
+    public readonly matchPriority: number = 0
 
     /**
      * Encode/Decode error info objects

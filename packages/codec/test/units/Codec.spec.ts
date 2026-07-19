@@ -76,6 +76,85 @@ test('IPv4 protocol=0 must not misroute into IPv6 Hop-by-Hop (single-bucket matc
     )
 })
 
+// M1②: a codec may register in BOTH its demux bucket AND the heuristic fallback (heuristicFallback),
+// so a content-signed protocol takes the O(1) bucket on its well-known key yet is still recognized off
+// it — the framework guarantee that later lets TLS keep working on non-443 ports.
+class SignedDual extends BaseHeader {
+    public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+    public readonly id: string = 'signed-dual'
+    public readonly name: string = 'Signed Dual'
+    public readonly nickname: string = 'DUAL'
+    public readonly matchKeys: string[] = ['ethertype:88b5']
+    public readonly heuristicFallback: boolean = true
+    public match(): boolean {
+        return !!this.prevCodecModule && this.prevCodecModule.id === 'eth'
+    }
+}
+function ethFrame(etherTypeHex: string, payloadHex: string): Buffer {
+    return Buffer.from('ffffffffffff' + '001122334455' + etherTypeHex + payloadHex, 'hex')
+}
+
+test('dual registration: a heuristicFallback codec is reachable via its demux bucket (fast path)', async (): Promise<void> => {
+    const codec: Codec = new Codec([SignedDual as any])
+    const decoded: CodecDecodeResult[] = await codec.decode(ethFrame('88b5', '01020304'))
+    assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'signed-dual'), 'reached via ethertype:88b5 bucket')
+})
+
+test('dual registration: the same codec is still reached off its key via the heuristic fallback', async (): Promise<void> => {
+    const codec: Codec = new Codec([SignedDual as any])
+    // etherType 0x9999 has no bucket → must fall through to the heuristic list, where the dual codec also lives.
+    const decoded: CodecDecodeResult[] = await codec.decode(ethFrame('9999', '01020304'))
+    assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'signed-dual'), 'reached off-key via heuristic fallback')
+})
+
+// Boundary: a keyed codec WITHOUT heuristicFallback (the default) is NOT in the heuristic list, so it
+// is only reachable via its exact demux key — behavior unchanged from before M1②.
+test('a keyed codec without heuristicFallback is only reachable via its key', async (): Promise<void> => {
+    class KeyedOnly extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'keyed-only'
+        public readonly name: string = 'Keyed Only'
+        public readonly nickname: string = 'KO'
+        public readonly matchKeys: string[] = ['ethertype:88b6']
+        public match(): boolean {
+            return !!this.prevCodecModule && this.prevCodecModule.id === 'eth'
+        }
+    }
+    const codec: Codec = new Codec([KeyedOnly as any])
+    const onKey: CodecDecodeResult[] = await codec.decode(ethFrame('88b6', '01020304'))
+    assert.ok(onKey.some((l: CodecDecodeResult): boolean => l.id === 'keyed-only'), 'reached on its key')
+    const offKey: CodecDecodeResult[] = await codec.decode(ethFrame('9999', '01020304'))
+    assert.ok(offKey.every((l: CodecDecodeResult): boolean => l.id !== 'keyed-only'), 'NOT reachable off its key (no fallback)')
+})
+
+// matchPriority orders multiple candidates in a bucket deterministically (higher first), regardless of
+// registration order.
+test('matchPriority: within a bucket the higher-priority codec wins even if registered later', async (): Promise<void> => {
+    class LoPri extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'lo-pri'
+        public readonly name: string = 'Lo'
+        public readonly nickname: string = 'LO'
+        public readonly matchKeys: string[] = ['ethertype:88b7']
+        public readonly matchPriority: number = 0
+        public match(): boolean { return !!this.prevCodecModule && this.prevCodecModule.id === 'eth' }
+    }
+    class HiPri extends BaseHeader {
+        public readonly SCHEMA: ProtocolJSONSchema = {type: 'object', properties: {}}
+        public readonly id: string = 'hi-pri'
+        public readonly name: string = 'Hi'
+        public readonly nickname: string = 'HI'
+        public readonly matchKeys: string[] = ['ethertype:88b7']
+        public readonly matchPriority: number = 10
+        public match(): boolean { return !!this.prevCodecModule && this.prevCodecModule.id === 'eth' }
+    }
+    // LoPri registered first; without priority ordering it would win by registration order.
+    const codec: Codec = new Codec([LoPri as any, HiPri as any])
+    const decoded: CodecDecodeResult[] = await codec.decode(ethFrame('88b7', '01020304'))
+    assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'hi-pri'), 'higher matchPriority selected')
+    assert.ok(decoded.every((l: CodecDecodeResult): boolean => l.id !== 'lo-pri'), 'lower-priority candidate not selected')
+})
+
 // A custom codec WITHOUT a demux key still works via the heuristic fallback list.
 test('custom codec without matchKeys is still reachable via heuristic fallback', async (): Promise<void> => {
     class Proto88B5Heuristic extends BaseHeader {

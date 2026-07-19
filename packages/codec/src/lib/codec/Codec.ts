@@ -107,16 +107,30 @@ export class Codec {
                 continue
             }
             const matchKeys: string[] = codecModuleConstructor.MATCH_KEYS
-            if (matchKeys && matchKeys.length) {
+            const keyed: boolean = !!(matchKeys && matchKeys.length)
+            if (keyed) {
                 for (const matchKey of matchKeys) {
                     const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(matchKey)
                     if (bucket) bucket.push(codecModuleConstructor)
                     else this.#dispatchTable.set(matchKey, [codecModuleConstructor])
                 }
-            } else {
+            }
+            //Also list in the heuristic fallback when unkeyed, OR when a keyed codec opts in — so a
+            //content-signed protocol on its well-known port takes the O(1) bucket yet still matches on
+            //any other port. A codec may therefore appear in both a bucket and the heuristic chain.
+            if (!keyed || codecModuleConstructor.HEURISTIC_FALLBACK) {
                 this.#heuristicCodecs.push(codecModuleConstructor)
             }
         }
+        //Deterministic ordering: higher matchPriority is tried first within each bucket and within the
+        //heuristic chain; Array.sort is stable in Node, so ties keep registration order (all default 0
+        //→ order unchanged, so existing behavior is byte-identical).
+        for (const bucket of this.#dispatchTable.values()) this.#sortByPriority(bucket)
+        this.#sortByPriority(this.#heuristicCodecs)
+    }
+
+    #sortByPriority(codecModuleConstructors: CodecModuleConstructor[]): void {
+        codecModuleConstructors.sort((a: CodecModuleConstructor, b: CodecModuleConstructor): number => b.MATCH_PRIORITY - a.MATCH_PRIORITY)
     }
 
     /**
