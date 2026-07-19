@@ -40,7 +40,9 @@ export class Replay extends EventEmitter {
             limit: options.limit ?? 0,
             maxSleepMs: options.maxSleepMs ?? 0,
             precision: options.precision ?? 'auto',
-            realtime: options.realtime ?? false
+            realtime: options.realtime ?? false,
+            //native cpu sentinels: -1 unpinned, -2 auto-select; a number pins to that core
+            cpu: typeof options.cpu === 'number' ? options.cpu : options.cpu === 'auto' ? -2 : -1
         })
     }
 

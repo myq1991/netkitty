@@ -88,6 +88,7 @@ NetKittyReplay::NetKittyReplay(const Napi::CallbackInfo &info) : ObjectWrap(info
         this->precision_ = (p == "sleep") ? 1 : (p == "spin") ? 2 : 0;
     }
     this->realtime_ = o.Has("realtime") && o.Get("realtime").As<Napi::Boolean>().Value();
+    this->cpu_ = o.Has("cpu") ? (int)o.Get("cpu").As<Napi::Number>().Int32Value() : -1;
     if (this->loop_ < 1) this->loop_ = 1;
     this->abort_.store(false);
 }
@@ -158,6 +159,8 @@ void NetKittyReplay::run()
     // Raise this send thread's priority so pacing suffers less scheduler jitter. Best-effort; the Node
     // main thread is unaffected (this runs on the dedicated worker thread).
     NkBoostSendThread(this->realtime_);
+    // Optionally pin the send thread to one core to stop the scheduler migrating it (best-effort).
+    NkPinThread(this->cpu_);
 
     std::string openErr;
     ISendBackend *backend = OpenSendBackend(this->device_, openErr);
@@ -238,6 +241,10 @@ void NetKittyReplay::run()
             cumBytes += f.data.size();
             cumPkts++;
 
+            //Paced modes need each frame on the wire now; topspeed lets the backend batch (flushed
+            //after the loop). No-op for non-batching backends.
+            if (paced) backend->flush();
+
             if (this->limit_ && sent >= this->limit_)
             {
                 this->abort_.store(true);
@@ -254,6 +261,7 @@ void NetKittyReplay::run()
         }
     }
 
+    backend->flush(); // drain any frames a batching backend (topspeed) still holds
     delete backend;
     NkUnboostSendThread();
     double elapsedMs = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startClock).count();

@@ -1,3 +1,6 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1 // for cpu_set_t / sched_setaffinity on glibc (must precede any system header)
+#endif
 #include "thread_priority.h"
 
 #if defined(_WIN32)
@@ -14,6 +17,29 @@ const char *NkBoostSendThread(bool realtime)
     return realtime ? "win:time-critical+1ms" : "win:highest+1ms";
 }
 void NkUnboostSendThread() { timeEndPeriod(1); }
+bool NkPinThread(int cpu)
+{
+    if (cpu == NK_CPU_NONE) return false;
+    DWORD_PTR mask;
+    if (cpu == NK_CPU_AUTO)
+    {
+        //Auto: highest allowed core in the process affinity mask (respects any prior limit, skips core 0).
+        DWORD_PTR procMask = 0, sysMask = 0;
+        if (!GetProcessAffinityMask(GetCurrentProcess(), &procMask, &sysMask) || procMask == 0) return false;
+        int hi = -1;
+        for (int i = (int)(sizeof(DWORD_PTR) * 8) - 1; i >= 0; i--)
+        {
+            if (procMask & ((DWORD_PTR)1 << i)) { hi = i; break; }
+        }
+        if (hi < 0) return false;
+        mask = (DWORD_PTR)1 << hi;
+    }
+    else
+    {
+        mask = (DWORD_PTR)1 << cpu;
+    }
+    return SetThreadAffinityMask(GetCurrentThread(), mask) != 0;
+}
 
 #elif defined(__APPLE__)
 #include <pthread/qos.h>
@@ -27,6 +53,11 @@ const char *NkBoostSendThread(bool realtime)
     return "mac:qos-user-interactive";
 }
 void NkUnboostSendThread() {}
+bool NkPinThread(int)
+{
+    //macOS has no real per-core pinning (THREAD_AFFINITY_POLICY is advisory and a no-op on Apple Silicon).
+    return false;
+}
 
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #include <pthread.h>
@@ -49,8 +80,37 @@ const char *NkBoostSendThread(bool realtime)
     return "posix:default";
 }
 void NkUnboostSendThread() {}
+bool NkPinThread(int cpu)
+{
+#if defined(__linux__)
+    if (cpu == NK_CPU_NONE) return false;
+    int target = cpu;
+    if (cpu == NK_CPU_AUTO)
+    {
+        //Auto: highest core in the CURRENT allowed set (respects any taskset/cgroup limit, and skips
+        //core 0 which typically carries more kernel/IRQ work).
+        cpu_set_t cur;
+        CPU_ZERO(&cur);
+        if (sched_getaffinity(0, sizeof(cur), &cur) != 0) return false;
+        target = -1;
+        for (int i = CPU_SETSIZE - 1; i >= 0; i--)
+        {
+            if (CPU_ISSET(i, &cur)) { target = i; break; }
+        }
+        if (target < 0) return false;
+    }
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    CPU_SET(target, &set);
+    return sched_setaffinity(0, sizeof(set), &set) == 0;
+#else
+    (void)cpu; // BSD uses a different cpuset API; not wired up
+    return false;
+#endif
+}
 
 #else
 const char *NkBoostSendThread(bool) { return "default"; }
 void NkUnboostSendThread() {}
+bool NkPinThread(int) { return false; }
 #endif

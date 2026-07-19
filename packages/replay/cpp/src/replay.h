@@ -48,6 +48,7 @@ private:
     uint64_t maxSleepNs_ = 0; // clamp per-wait (0 = no clamp)
     int precision_ = 0;      // 0 auto, 1 sleep, 2 spin
     bool realtime_ = false;  // request real-time scheduling for the send thread
+    int cpu_ = -1;           // pin the send thread to this CPU core (-1 = no pin)
     std::vector<ReplayFrame> frames_;
 
     Napi::ThreadSafeFunction tsEmit_;

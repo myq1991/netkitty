@@ -42,6 +42,14 @@ export interface IReplayOptions {
      */
     realtime?: boolean
     /**
+     * Pin the send thread to a CPU core to stop the scheduler migrating it between cores, which reduces
+     * pacing jitter. A number pins to that 0-based core; `'auto'` picks the highest core in the process's
+     * allowed set (skips core 0, respects any taskset/cgroup limit). Best-effort: works on Linux and
+     * Windows; macOS has no real per-core pinning so it is ignored there. Omit to leave the thread
+     * unpinned (the default — auto-pinning is opt-in because on a small/shared host it can hurt).
+     */
+    cpu?: number | 'auto'
+    /**
      * Verify the device exists (via @netkitty/iface, if installed) before starting, throwing a clear
      * error listing available interfaces if not. Default true; set false to skip the check.
      */
