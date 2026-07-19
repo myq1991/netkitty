@@ -152,6 +152,12 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         // The first-level-decoded NetBIOS name (e.g. "WORKGROUP<00>") — verifies our decode matches tshark.
         {nk: 'questions.0.name.value', ts: 'nbns.name', kind: 'str'}
     ]},
+    // Syslog: verify the PRI split into facility/severity matches tshark. (The message body granularity
+    // differs — we keep the whole body, tshark extracts just the MSG — so message is not mapped.)
+    syslog: {tsLayer: 'syslog', fields: [
+        {nk: 'facility', ts: 'syslog.facility', kind: 'int'},
+        {nk: 'severity', ts: 'syslog.level', kind: 'int'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.

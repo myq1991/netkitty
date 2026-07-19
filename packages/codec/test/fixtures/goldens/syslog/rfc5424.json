@@ -1,0 +1,56 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 149,
+      "id": 43923,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 37058,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 35837,
+      "dstport": 514,
+      "length": 129,
+      "checksum": 65172
+    },
+    "errors": []
+  },
+  {
+    "id": "syslog",
+    "data": {
+      "pri": 13,
+      "facility": 1,
+      "severity": 5,
+      "message": "1 2026-07-19T21:24:51.264517+00:00 54196380f2af testapp - - [timeQuality tzKnown=\"1\" isSynced=\"0\"] hello syslog world"
+    },
+    "errors": []
+  }
+]
