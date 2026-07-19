@@ -147,7 +147,10 @@ export class UDP extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
+        //UDP sits above IPv4 (protocol field) or IPv6 (next-header field) — accept its demux value from
+        //either, so match() stays consistent with the shared 'ipproto:17' dispatch key.
         if (this.prevCodecModule.instance.protocol.getValue() === 0x11) return true
+        if (this.prevCodecModule.instance.nxt.getValue() === 0x11) return true
         return false
     }
 

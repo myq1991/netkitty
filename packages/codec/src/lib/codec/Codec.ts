@@ -165,14 +165,15 @@ export class Codec {
      */
     protected selectCodec(codecData: CodecData, codecModules: CodecModule[]): CodecModuleConstructor {
         const prevCodecModule: CodecModule | undefined = codecModules[codecModules.length - 1]
-        //1. Dispatch table: O(1) lookup by the previous layer's demux value.
+        //1. Dispatch table: O(1) lookup by the previous layer's demux value. Every candidate is
+        //confirmed by match(), singleton buckets included — a header's own guard is never skipped, so
+        //a demux key that is ambiguous across parents (e.g. 'ipproto:0' produced by both an IPv4
+        //protocol=0 and an IPv6 next-header=0) still routes correctly, because IPv6 Hop-by-Hop's
+        //match() rejects a non-IPv6 parent. Transport headers accept their demux value from both IPv4
+        //(protocol) and IPv6 (nxt); see TCP/UDP match().
         for (const matchKey of this.computeDemuxKeys(prevCodecModule)) {
             const bucket: CodecModuleConstructor[] | undefined = this.#dispatchTable.get(matchKey)
             if (!bucket) continue
-            //A demux value maps to exactly one codec in practice: trust it directly,
-            //which is what lets TCP over IPv6 (ipproto:6 via nxt) resolve correctly.
-            if (bucket.length === 1) return bucket[0]
-            //Ambiguous key (multiple registrants): confirm with each codec's match().
             for (const codecModuleConstructor of bucket) {
                 if (codecModuleConstructor.MATCH(codecData, codecModules)) return codecModuleConstructor
             }

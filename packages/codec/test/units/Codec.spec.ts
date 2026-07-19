@@ -53,6 +53,29 @@ test('newly added custom codec is reachable during decode', async (): Promise<vo
     Layer(decoded, 'proto88b5')
 })
 
+// Regression: the demux dispatch must confirm even a single-registrant bucket with the codec's own
+// match(). 'ipproto:0' is produced by BOTH an IPv4 protocol=0 and an IPv6 next-header=0, but IPv6
+// Hop-by-Hop options are the sole registrant; without running its match() (which requires an IPv6
+// parent) an IPv4 protocol=0 packet was wrongly decoded as a Hop-by-Hop header.
+// The packet is deliberately malformed — building it via encode also exercises the "encode is a
+// faithful executor, it can construct any illegal packet" contract — and it must still round-trip.
+test('IPv4 protocol=0 must not misroute into IPv6 Hop-by-Hop (single-bucket match() is enforced)', async (): Promise<void> => {
+    const codec: Codec = new Codec()
+    const {packet}: {packet: Buffer} = await codec.encode([
+        {id: 'eth', data: {dmac: 'ff:ff:ff:ff:ff:ff', smac: '00:11:22:33:44:55', etherType: '0800'}},
+        {id: 'ipv4', data: {protocol: 0}}
+    ])
+    //Append trailing bytes that the buggy dispatch would have eaten as a Hop-by-Hop header.
+    const malformed: Buffer = Buffer.concat([packet, Buffer.from('0102030405060708', 'hex')])
+
+    const decoded: CodecDecodeResult[] = await AssertRoundTrip(malformed)
+    assert.ok(decoded.some((layer: CodecDecodeResult): boolean => layer.id === 'ipv4'), 'IPv4 layer present')
+    assert.ok(
+        decoded.every((layer: CodecDecodeResult): boolean => layer.id !== 'ipv6-hopopt'),
+        'IPv4 protocol=0 must not decode into an IPv6 Hop-by-Hop header'
+    )
+})
+
 // A custom codec WITHOUT a demux key still works via the heuristic fallback list.
 test('custom codec without matchKeys is still reachable via heuristic fallback', async (): Promise<void> => {
     class Proto88B5Heuristic extends BaseHeader {
