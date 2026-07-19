@@ -1,0 +1,65 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 76,
+      "id": 2347,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 13172,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 123,
+      "dstport": 56149,
+      "length": 56,
+      "checksum": 65099
+    },
+    "errors": []
+  },
+  {
+    "id": "ntp",
+    "data": {
+      "li": 0,
+      "vn": 3,
+      "mode": 4,
+      "stratum": 8,
+      "poll": 0,
+      "precision": -25,
+      "rootDelay": 0,
+      "rootDispersion": 0,
+      "refId": "7f7f0101",
+      "refTimestamp": "ee0791cdb865d992",
+      "originTimestamp": "0000000000000000",
+      "receiveTimestamp": "ee0791cf6144e1fd",
+      "transmitTimestamp": "ee0791cf614a447c"
+    },
+    "errors": []
+  }
+]

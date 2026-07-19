@@ -69,6 +69,16 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
     icmpv6: {tsLayer: 'icmpv6', fields: [
         {nk: 'type', ts: 'icmpv6.type', kind: 'int'},
         {nk: 'code', ts: 'icmpv6.code', kind: 'int'}
+    ]},
+    ntp: {tsLayer: 'ntp', fields: [
+        // li/vn/mode live under tshark's ntp.flags_tree; getTsharkField finds them. precision is signed
+        // — a strong symmetric-wrong catch (unsigned 0xe7=231 would fail against tshark's -25).
+        {nk: 'li', ts: 'ntp.flags.li', kind: 'int'},
+        {nk: 'vn', ts: 'ntp.flags.vn', kind: 'int'},
+        {nk: 'mode', ts: 'ntp.flags.mode', kind: 'int'},
+        {nk: 'stratum', ts: 'ntp.stratum', kind: 'int'},
+        {nk: 'poll', ts: 'ntp.ppoll', kind: 'int'},
+        {nk: 'precision', ts: 'ntp.precision', kind: 'int'}
     ]}
 }
 

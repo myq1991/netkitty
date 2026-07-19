@@ -49,7 +49,8 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         icmpv6: ['raw'],
         // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
         tcp: ['tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
-        udp: ['raw'],
+        udp: ['ntp', 'raw'],
+        ntp: ['raw'],
         'tls-handshake': ['raw'],
         'tls-alert': ['raw'],
         'tls-ccsp': ['raw'],
@@ -102,7 +103,9 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     }
     assert.deepStrictEqual(discriminatorOf('tcp', 'tls-handshake'), {field: 'dstport', value: 443})
     assert.deepStrictEqual(discriminatorOf('tcp', 'IEC104_I_Frame'), {field: 'dstport', value: 2404})
-    assert.deepStrictEqual(nextIds('udp'), ['raw'])
+    // udp now offers NTP on its well-known port 123.
+    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'raw'])
+    assert.deepStrictEqual(discriminatorOf('udp', 'ntp'), {field: 'dstport', value: 123})
 })
 
 // 2b: the discriminator to set when adding a child (RawData / heuristic children return null).
