@@ -8,6 +8,9 @@ import {PcapIndexBuilder} from '../indexer/PcapIndexBuilder'
 import {FrameIndexRecord} from '../types/FrameIndexRecord'
 import {FrameRow} from '../types/FrameRow'
 import {FilterExpression, matchesFilter, matchesIndexed, parseFilter} from '../filter/FilterExpression'
+import {computeConversations, computeEndpoints} from './BuiltinScans'
+import {ConversationSummary} from '../reducers/ConversationsReducer'
+import {EndpointSummary} from '../reducers/EndpointsReducer'
 
 type PendingFrame = {info: IPcapPacketInfo, data: Buffer}
 
@@ -61,6 +64,11 @@ export function installAnalysisHandlers(endpoint: IWorkerEndpoint, makeBackend: 
     })
 
     endpoint.handle('frameCount', (): number => store.count())
+
+    //Built-in stats computed inside the worker by scanning the index columns (no decode, no frame
+    //transfer, main thread stays free). Results equal ConversationsReducer/EndpointsReducer.
+    endpoint.handle('conversations', (): ConversationSummary[] => computeConversations(store, (hash: number): string | null => indexer.conversationKey(hash)))
+    endpoint.handle('endpoints', (): EndpointSummary[] => computeEndpoints(store, (hash: number): string | null => indexer.conversationKey(hash)))
 
     //Display filter with a column pre-filter: decide each frame from the index columns (conversation
     //key + top protocol) first, and only re-decode the frames a predicate can't settle from columns

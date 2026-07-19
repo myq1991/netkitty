@@ -43,8 +43,11 @@ A reducer is a pluggable rolling analysis fed every frame; `result()` is a snaps
 is no finalize). `attachReducer` **replays** the whole indexed backlog first, then follows the live
 stream — so stats are complete the moment it resolves.
 
-- **Built-in** (exported, attach them yourself): `ConversationsReducer`, `EndpointsReducer`,
-  `TcpStreamReducer` (retransmissions / duplicate ACKs / RTT).
+- **Built-in** (exported): `ConversationsReducer`, `EndpointsReducer`, `TcpStreamReducer`
+  (retransmissions / duplicate ACKs / RTT). For Conversations/Endpoints prefer the shortcut methods
+  `analysis.conversations()` / `analysis.endpoints()` — they compute the same result **entirely inside
+  the worker** by scanning the index columns (no re-decode, no per-frame cross-thread transfer, zero
+  main-thread work), so they stay fast even at hundreds of millions of frames.
 - **Factories**: `reduceReducer(seed, fold)`, `groupByReducer(keyOf, seed, fold)`.
 - **Custom**: implement `IAnalysisReducer<T>` (`update(frame, ctx)` / `result()` / `reset()`); declare
   `needs: string[]` to receive only those protocol layers (the worker projects them, cutting cross-thread bytes).

@@ -6,6 +6,8 @@ import {FrameRow} from './types/FrameRow'
 import {UpdateContext} from './types/UpdateContext'
 import {IAnalysisReducer} from './interfaces/IAnalysisReducer'
 import {IWorkerChannel} from './interfaces/IWorkerChannel'
+import {ConversationSummary} from './reducers/ConversationsReducer'
+import {EndpointSummary} from './reducers/EndpointsReducer'
 
 //How many frames to pull per replay batch — bounds memory and back-pressures the worker naturally.
 const REPLAY_BATCH: number = 512
@@ -79,6 +81,19 @@ export class Analysis {
 
     public frameCount(): number {
         return this.#frameCount
+    }
+
+    /**
+     * Conversation table, computed inside the worker by scanning the index columns — no re-decode, no
+     * per-frame cross-thread transfer, no main-thread work. Equivalent to attaching a ConversationsReducer.
+     */
+    public async conversations(): Promise<ConversationSummary[]> {
+        return this.#require().request<ConversationSummary[]>('conversations')
+    }
+
+    /** Per-endpoint tx/rx totals, computed inside the worker over the index columns (see conversations()). */
+    public async endpoints(): Promise<EndpointSummary[]> {
+        return this.#require().request<EndpointSummary[]>('endpoints')
     }
 
     /** A single frame with decoded layers (served through the worker's on-demand re-parse). */
