@@ -30,7 +30,8 @@
             ],
             "link_settings": {
               "libraries": [
-                "ws2_32.lib"
+                "ws2_32.lib",
+                "iphlpapi.lib"
               ]
             },
             "msvs_settings": {

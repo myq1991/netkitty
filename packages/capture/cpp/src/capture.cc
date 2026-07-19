@@ -1,8 +1,10 @@
 #include <napi.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <uv.h>
 #include "capture.h"
+
+//Snapshot length passed to pcap_open_live, and the upper bound the per-packet copy is clamped to.
+#define NK_CAPTURE_SNAPLEN 262144
 
 using namespace Napi;
 
@@ -130,11 +132,18 @@ void NetKittyCapture::EmitPacket(u_char *user,
 {
     NetKittyCapture *obj = (NetKittyCapture *)user;
 
+    //Never trust caplen blindly: clamp it to the snaplen we opened with, so a driver/library bug that
+    //reports a bogus length can't turn the copy below into a heap overflow.
+    size_t copy_len = pkt_hdr->caplen;
+    if (copy_len > NK_CAPTURE_SNAPLEN) copy_len = NK_CAPTURE_SNAPLEN;
+
     PacketEventData *eventData = new PacketEventData;
-    eventData->pkt_data = new u_char[pkt_hdr->caplen];
-    eventData->copy_len = pkt_hdr->caplen;
-    gettimeofday(&eventData->tv, NULL);
-    memcpy(eventData->pkt_data, pkt_data, pkt_hdr->caplen);
+    eventData->pkt_data = new u_char[copy_len];
+    eventData->copy_len = copy_len;
+    //Use the capture timestamp libpcap already recorded (kernel/driver clock), not a wall-clock read
+    //at emit time — more accurate and portable (gettimeofday does not exist on Windows).
+    eventData->tv = pkt_hdr->ts;
+    memcpy(eventData->pkt_data, pkt_data, copy_len);
 
     auto callback = [](Napi::Env env, Napi::Function jsCallback, PacketEventData *data)
     {
@@ -167,7 +176,7 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     // printf("%s", errbuf);
     this->pcap_handle = pcap_open_live(this->iface.c_str(), // name of the device
-                                       262144,              // portion of the packet to capture.
+                                       NK_CAPTURE_SNAPLEN,  // portion of the packet to capture.
                                        1,                   // promiscuous mode (nonzero means promiscuous)
                                        250,                 // read timeout
                                        errbuf               // error buffer

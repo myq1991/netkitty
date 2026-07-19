@@ -120,6 +120,43 @@ static int GetMacAddress(char *pIface)
     memcpy((void *)&cMacAddr,ptr,6);
     return 1;
 }
+#elif defined(_WIN32)
+#include <stdlib.h>
+#include <string.h>
+#include <iphlpapi.h>
+
+unsigned char cMacAddr[8]; // Server's MAC address
+
+// pcap device names on Windows look like "\Device\NPF_{GUID}"; GetAdaptersAddresses reports
+// AdapterName as "{GUID}", so match on the GUID substring and copy the physical address.
+static int GetMacAddress(char *pIface)
+{
+    const char *guid = strstr(pIface, "{");
+    if (guid == NULL) return 0;
+    const ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
+    ULONG size = 0;
+    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW) return 0;
+    IP_ADAPTER_ADDRESSES *adapters = (IP_ADAPTER_ADDRESSES *)malloc(size);
+    if (adapters == NULL) return 0;
+    int found = 0;
+    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, adapters, &size) == ERROR_SUCCESS)
+    {
+        for (IP_ADAPTER_ADDRESSES *a = adapters; a != NULL; a = a->Next)
+        {
+            if (a->AdapterName != NULL && strcmp(a->AdapterName, guid) == 0)
+            {
+                if (a->PhysicalAddressLength >= 6)
+                {
+                    memcpy(cMacAddr, a->PhysicalAddress, 6);
+                    found = 1;
+                }
+                break;
+            }
+        }
+    }
+    free(adapters);
+    return found;
+}
 #endif
 
 #ifdef _WIN32
@@ -194,7 +231,7 @@ Napi::Array GetNetworkInterfaces(const Napi::CallbackInfo &info)
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_if_t *alldevs = nullptr, *dev;
     auto arr = Napi::Array::New(env);
-    u_int64_t index = 0;
+    unsigned int index = 0;
     if (pcap_findalldevs(&alldevs, errbuf) == -1)
     {
         Napi::TypeError::New(env, errbuf)
@@ -210,7 +247,7 @@ Napi::Array GetNetworkInterfaces(const Napi::CallbackInfo &info)
             continue; // If the interface is LoopInterface, continue
         Napi::Object deviceObject = Napi::Object::New(env);
         deviceObject.Set("name", Napi::String::New(env, dev->name));
-        bzero((void *)&cMacAddr[0], sizeof(cMacAddr));
+        memset((void *)&cMacAddr[0], 0, sizeof(cMacAddr));
         GetMacAddress(dev->name);
         char macAddress[18];
         snprintf(macAddress, sizeof(macAddress), "%02X:%02X:%02X:%02X:%02X:%02X", cMacAddr[0], cMacAddr[1], cMacAddr[2],
