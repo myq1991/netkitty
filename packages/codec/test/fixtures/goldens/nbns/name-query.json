@@ -1,0 +1,82 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "ff:ff:ff:ff:ff:ff",
+      "smac": "fa:cc:9b:28:47:54",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 78,
+      "id": 5287,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 52685,
+      "sip": "172.20.0.2",
+      "dip": "172.20.255.255"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 50685,
+      "dstport": 137,
+      "length": 58,
+      "checksum": 22646
+    },
+    "errors": []
+  },
+  {
+    "id": "nbns",
+    "data": {
+      "id": 23594,
+      "flags": {
+        "qr": false,
+        "opcode": 0,
+        "aa": false,
+        "tc": false,
+        "rd": true,
+        "ra": false,
+        "z": false,
+        "ad": false,
+        "cd": true,
+        "rcode": 0
+      },
+      "qdcount": 1,
+      "ancount": 0,
+      "nscount": 0,
+      "arcount": 0,
+      "questions": [
+        {
+          "name": {
+            "value": "WORKGROUP<00>",
+            "raw": "20464845504643454c45484643455046464641434143414341434143414341414100"
+          },
+          "qtype": 32,
+          "qclass": 1
+        }
+      ],
+      "answers": [],
+      "authorities": [],
+      "additionals": []
+    },
+    "errors": []
+  }
+]

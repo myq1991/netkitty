@@ -145,6 +145,13 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'flags.qr', ts: 'dns.flags.response', kind: 'int'},
         {nk: 'questions.0.name.value', ts: 'dns.qry.name', kind: 'str'}
     ]},
+    nbns: {tsLayer: 'nbns', fields: [
+        {nk: 'id', ts: 'nbns.id', kind: 'int'},
+        {nk: 'qdcount', ts: 'nbns.count.queries', kind: 'int'},
+        {nk: 'flags.qr', ts: 'nbns.flags.response', kind: 'int'},
+        // The first-level-decoded NetBIOS name (e.g. "WORKGROUP<00>") — verifies our decode matches tshark.
+        {nk: 'questions.0.name.value', ts: 'nbns.name', kind: 'str'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.

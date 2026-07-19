@@ -1,0 +1,3 @@
+# NBNS name query (RFC 1002) for WORKGROUP<00> on UDP 137, from samba nmblookup broadcast
+# docker debian:12 bridge net: nmblookup -B <bcast> WORKGROUP, tcpdump udp 137. Name uses first-level encoding.
+fffffffffffffacc9b28475408004500004e14a740004011cdcdac140002ac14ffffc5fd0089003a58765c2a0110000100000000000020464845504643454c4548464345504646464143414341434143414341434141410000200001

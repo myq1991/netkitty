@@ -19,6 +19,7 @@ export {MDNS} from './headers/MDNS'
 export {DHCPv6} from './headers/DHCPv6'
 export {TFTP} from './headers/TFTP'
 export {LLMNR} from './headers/LLMNR'
+export {NBNS} from './headers/NBNS'
 export {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 //阿才写的代码
 export {TLS_Alert} from './headers/TLS_Alert'
