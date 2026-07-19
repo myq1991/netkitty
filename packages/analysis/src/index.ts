@@ -1,13 +1,4 @@
 /**
- * Cross-packet flow analysis — a read-only subsystem layered above the codec. Consumes decoded
- * packets (plus capture timestamps) and groups them into conversations and endpoints.
- */
-export {FlowAnalyzer} from './lib/analysis/FlowAnalyzer'
-export type {AnalysisPacket, Conversation, Endpoint, FlowAnalysis} from './lib/analysis/FlowAnalyzer'
-export {TcpStreamAnalyzer} from './lib/analysis/TcpStreamAnalyzer'
-export type {RttSample, TcpAnalysis, TcpStreamDiagnostic} from './lib/analysis/TcpStreamAnalyzer'
-
-/**
  * Streaming capture-file analysis — the Analysis facade over a single worker, pluggable reducers, a
  * display filter, and the pluggable backend seams. node (worker_threads) and browser (Web Worker)
  * share one environment-agnostic API, verified field-for-field in both.
@@ -34,6 +25,7 @@ export type {ConversationSummary} from './lib/streaming/reducers/ConversationsRe
 export {EndpointsReducer} from './lib/streaming/reducers/EndpointsReducer'
 export type {EndpointSummary} from './lib/streaming/reducers/EndpointsReducer'
 export {TcpStreamReducer} from './lib/streaming/reducers/TcpStreamReducer'
+export type {RttSample, TcpStreamDiagnostic} from './lib/streaming/reducers/TcpStreamReducer'
 export {reduceReducer, groupByReducer} from './lib/streaming/reducers/ReducerFactories'
 export {parseFilter, matchesFilter, matchesIndexed, indexableEval} from './lib/streaming/filter/FilterExpression'
 export type {FilterExpression, FilterPredicate} from './lib/streaming/filter/FilterExpression'

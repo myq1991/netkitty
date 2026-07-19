@@ -9,7 +9,7 @@ export type ConversationFlow = {
 
 /**
  * Derive the conversation n-tuple from a frame's decoded layers. Prefers IP + transport (tcp/udp),
- * falls back to bare IP, then Ethernet MACs — mirrors FlowAnalyzer so streaming and batch agree.
+ * falls back to bare IP, then Ethernet MACs.
  */
 export function flowOf(layers: CodecDecodeResult[]): ConversationFlow | null {
     const ip: CodecDecodeResult | undefined = layers.find((l: CodecDecodeResult): boolean => l.id === 'ipv4' || l.id === 'ipv6')

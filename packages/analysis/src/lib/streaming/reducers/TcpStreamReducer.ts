@@ -2,7 +2,27 @@ import {CodecDecodeResult} from '@netkitty/codec'
 import {Frame} from '../types/Frame'
 import {UpdateContext} from '../types/UpdateContext'
 import {IAnalysisReducer} from '../interfaces/IAnalysisReducer'
-import {RttSample, TcpStreamDiagnostic} from '../../analysis/TcpStreamAnalyzer'
+
+/** One RTT sample: a data/SYN/FIN segment matched to the first ACK that covers it. */
+export type RttSample = {
+    segmentIndex: number
+    ackIndex: number
+    rtt: number
+}
+
+/** Diagnostics for one bidirectional TCP conversation. */
+export type TcpStreamDiagnostic = {
+    key: string
+    endpointA: string
+    endpointB: string
+    packets: number
+    retransmissions: number[]
+    duplicateAcks: number[]
+    rttSamples: RttSample[]
+    rttMin: number | null
+    rttMax: number | null
+    rttMean: number | null
+}
 
 type TcpView = {
     source: string
@@ -80,7 +100,7 @@ function summarizeRtt(stream: TcpStreamDiagnostic): void {
 }
 
 /**
- * Streaming TCP stream diagnostics — same logic as TcpStreamAnalyzer, per-frame: retransmissions
+ * Streaming TCP stream diagnostics, derived per-frame: retransmissions
  * (sequence space already sent, RFC 1982-aware), duplicate ACKs, and RTT (a segment matched to the
  * first ACK covering it). result() is a rolling snapshot; RTT min/max/mean are recomputed at result().
  * State grows per unique TCP stream — watch governance (eviction) layers on in a later step.

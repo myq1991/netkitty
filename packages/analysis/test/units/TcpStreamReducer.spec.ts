@@ -1,10 +1,11 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
 import {CodecDecodeResult} from '@netkitty/codec'
-import {AnalysisPacket, RttSample, TcpAnalysis, TcpStreamAnalyzer, TcpStreamDiagnostic} from '../../src'
 import {Frame} from '../../src/lib/streaming/types/Frame'
 import {UpdateContext} from '../../src/lib/streaming/types/UpdateContext'
-import {TcpStreamReducer} from '../../src/lib/streaming/reducers/TcpStreamReducer'
+import {RttSample, TcpStreamDiagnostic, TcpStreamReducer} from '../../src/lib/streaming/reducers/TcpStreamReducer'
+
+type Packet = {layers: CodecDecodeResult[], timestamp: number, length: number}
 
 const CTX: UpdateContext = {index: 0, total: 0, phase: 'replay'}
 
@@ -12,7 +13,7 @@ function layer(id: string, data: Record<string, unknown>): CodecDecodeResult {
     return {id: id, name: id, nickname: id, protocol: true, errors: [], data: data as any}
 }
 
-function seg(sip: string, sport: number, dip: string, dport: number, seq: number, ack: number, flags: {syn?: boolean, fin?: boolean, ack?: boolean, push?: boolean}, payload: number, timestamp: number): AnalysisPacket {
+function seg(sip: string, sport: number, dip: string, dport: number, seq: number, ack: number, flags: {syn?: boolean, fin?: boolean, ack?: boolean, push?: boolean}, payload: number, timestamp: number): Packet {
     return {
         layers: [
             layer('eth', {}),
@@ -24,7 +25,7 @@ function seg(sip: string, sport: number, dip: string, dport: number, seq: number
     }
 }
 
-function scenario(): AnalysisPacket[] {
+function scenario(): Packet[] {
     const C: [string, number] = ['10.0.0.1', 1234]
     const S: [string, number] = ['10.0.0.2', 80]
     return [
@@ -38,31 +39,32 @@ function scenario(): AnalysisPacket[] {
     ]
 }
 
-function frameOf(packet: AnalysisPacket, index: number): Frame {
+function frameOf(packet: Packet, index: number): Frame {
     return {index: index, timestamp: packet.timestamp, length: packet.length, capturedLength: packet.length, topProtocol: 'tcp', conversationKey: null, info: '', layers: packet.layers}
 }
 
-function reduceStreams(packets: AnalysisPacket[]): TcpStreamDiagnostic[] {
+function reduceStreams(packets: Packet[]): TcpStreamDiagnostic[] {
     const reducer: TcpStreamReducer = new TcpStreamReducer()
-    packets.forEach((packet: AnalysisPacket, index: number): void => reducer.update(frameOf(packet, index), CTX))
+    packets.forEach((packet: Packet, index: number): void => reducer.update(frameOf(packet, index), CTX))
     return reducer.result()
 }
 
-test('tcp reducer: matches TcpStreamAnalyzer on retransmission/dupACK/RTT', (): void => {
-    const legacy: TcpAnalysis = new TcpStreamAnalyzer().analyze(scenario())
+const r3 = (n: number): number => Math.round(n * 1000) / 1000
+
+test('tcp reducer: derives retransmission/dupACK/RTT for a full handshake+data scenario', (): void => {
     const streamed: TcpStreamDiagnostic[] = reduceStreams(scenario())
-    assert.strictEqual(streamed.length, legacy.streams.length)
-    const expected: TcpStreamDiagnostic = legacy.streams[0]
+    assert.strictEqual(streamed.length, 1)
     const got: TcpStreamDiagnostic = streamed[0]
-    assert.strictEqual(got.key, expected.key)
-    assert.strictEqual(got.packets, expected.packets)
-    assert.deepStrictEqual(got.retransmissions, expected.retransmissions)
-    assert.deepStrictEqual(got.duplicateAcks, expected.duplicateAcks)
-    const rttOf = (s: TcpStreamDiagnostic): number[] => s.rttSamples.map((r: RttSample): number => Math.round(r.rtt * 1000) / 1000).sort((a: number, b: number): number => a - b)
-    assert.deepStrictEqual(rttOf(got), rttOf(expected))
-    assert.strictEqual(got.rttMin, expected.rttMin)
-    assert.strictEqual(got.rttMax, expected.rttMax)
-    assert.strictEqual(got.rttMean, expected.rttMean)
+    assert.strictEqual(got.key, 'tcp|10.0.0.1:1234|10.0.0.2:80')
+    assert.strictEqual(got.packets, 7)
+    assert.deepStrictEqual(got.retransmissions, [4])
+    assert.deepStrictEqual(got.duplicateAcks, [6])
+    //Three RTT samples: SYN→SYN,ACK; client ACK covering the SYN,ACK; server ACK covering the 100B data.
+    const samples: number[][] = got.rttSamples.map((s: RttSample): number[] => [s.segmentIndex, s.ackIndex, r3(s.rtt)])
+    assert.deepStrictEqual(samples, [[0, 1, 0.1], [1, 2, 0.05], [3, 5, 0.4]])
+    assert.strictEqual(r3(got.rttMin as number), 0.05)
+    assert.strictEqual(r3(got.rttMax as number), 0.4)
+    assert.strictEqual(r3(got.rttMean as number), 0.183)
 })
 
 test('tcp reducer: flags retransmission #4 and duplicate ACK #6', (): void => {
@@ -74,7 +76,7 @@ test('tcp reducer: flags retransmission #4 and duplicate ACK #6', (): void => {
 
 test('tcp reducer: result() is a rolling snapshot with recomputed RTT summary', (): void => {
     const reducer: TcpStreamReducer = new TcpStreamReducer()
-    const packets: AnalysisPacket[] = scenario()
+    const packets: Packet[] = scenario()
     reducer.update(frameOf(packets[0], 0), CTX)
     reducer.update(frameOf(packets[1], 1), CTX)
     const early: TcpStreamDiagnostic = reducer.result()[0]

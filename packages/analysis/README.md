@@ -144,8 +144,3 @@ await analysis.open(file)   // file: a File/Blob
 ```
 
 node and browser produce field-for-field identical results.
-
-## Legacy (retained)
-
-The batch `FlowAnalyzer` and `TcpStreamAnalyzer` (which take an in-memory `AnalysisPacket[]`) remain
-exported and unchanged.

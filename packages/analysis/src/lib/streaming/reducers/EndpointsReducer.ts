@@ -16,7 +16,7 @@ export type EndpointSummary = {
 
 /**
  * Rolling per-endpoint totals: every frame credits its source (tx) and destination (rx). result() is
- * a snapshot; reset() clears it. Mirrors FlowAnalyzer's endpoint accounting.
+ * a snapshot; reset() clears it.
  */
 export class EndpointsReducer implements IAnalysisReducer<EndpointSummary[]> {
 

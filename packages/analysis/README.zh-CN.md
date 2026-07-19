@@ -140,8 +140,3 @@ await analysis.open(file)   // file 是一个 File/Blob
 ```
 
 Node 和浏览器下算出来的结果逐字段完全一致。
-
-## 旧接口(保留)
-
-老的批处理式接口 `FlowAnalyzer` 和 `TcpStreamAnalyzer`(直接吃内存里的 `AnalysisPacket[]`)仍然
-导出、也没有改动。

@@ -4,9 +4,9 @@ import {IAnalysisReducer} from '../interfaces/IAnalysisReducer'
 import {ConversationFlow, flowOf} from '../indexer/ConversationKey'
 
 /**
- * A bidirectional conversation summary. Same shape as FlowAnalyzer's Conversation, except the full
- * packetIndices array is replaced by firstIndex/lastIndex — the member frame list is recovered from
- * the index layer (filter/range) instead of held per-conversation, so state stays bounded.
+ * A bidirectional conversation summary. Instead of holding the full member-frame list, it keeps only
+ * firstIndex/lastIndex — the member frames are recovered from the index layer (filter/range) on
+ * demand, so per-conversation state stays bounded no matter how many frames it spans.
  */
 export type ConversationSummary = {
     protocol: string
@@ -25,7 +25,7 @@ export type ConversationSummary = {
 /**
  * Rolling conversation table: groups frames direction-independently by n-tuple, tallying packets,
  * bytes, per-direction counts and time/index spans. result() is a snapshot at any point; reset()
- * clears it. Mirrors FlowAnalyzer so streaming and batch agree.
+ * clears it.
  */
 export class ConversationsReducer implements IAnalysisReducer<ConversationSummary[]> {
 

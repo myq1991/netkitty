@@ -1,64 +1,67 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
 import {CodecDecodeResult} from '@netkitty/codec'
-import {AnalysisPacket, Endpoint, FlowAnalysis, FlowAnalyzer} from '../../src'
 import {Frame} from '../../src/lib/streaming/types/Frame'
 import {UpdateContext} from '../../src/lib/streaming/types/UpdateContext'
 import {ConversationSummary, ConversationsReducer} from '../../src/lib/streaming/reducers/ConversationsReducer'
 import {EndpointSummary, EndpointsReducer} from '../../src/lib/streaming/reducers/EndpointsReducer'
 
+type Packet = {layers: CodecDecodeResult[], timestamp: number, length: number}
+
 function layer(id: string, data: Record<string, unknown>): CodecDecodeResult {
     return {id: id, name: id, nickname: id, protocol: true, errors: [], data: data as any}
 }
 
-function tcpPacket(sip: string, sport: number, dip: string, dport: number, timestamp: number, length: number): AnalysisPacket {
+function tcpPacket(sip: string, sport: number, dip: string, dport: number, timestamp: number, length: number): Packet {
     return {layers: [layer('eth', {}), layer('ipv4', {sip: sip, dip: dip}), layer('tcp', {srcport: sport, dstport: dport})], timestamp: timestamp, length: length}
 }
 
-function frameOf(packet: AnalysisPacket, index: number): Frame {
+function frameOf(packet: Packet, index: number): Frame {
     return {index: index, timestamp: packet.timestamp, length: packet.length, capturedLength: packet.length, topProtocol: 'tcp', conversationKey: null, info: '', layers: packet.layers}
 }
 
 const CTX: UpdateContext = {index: 0, total: 0, phase: 'replay'}
 
-const PACKETS: AnalysisPacket[] = [
+const PACKETS: Packet[] = [
     tcpPacket('10.0.0.1', 1234, '10.0.0.2', 80, 1.0, 100),
     tcpPacket('10.0.0.2', 80, '10.0.0.1', 1234, 1.5, 200),
     tcpPacket('10.0.0.1', 1234, '10.0.0.2', 80, 2.0, 150),
     tcpPacket('10.0.0.3', 5000, '10.0.0.4', 443, 3.0, 300)
 ]
 
-test('builtin reducers: ConversationsReducer matches FlowAnalyzer (minus packetIndices)', (): void => {
-    const legacy: FlowAnalysis = new FlowAnalyzer().analyze(PACKETS)
+test('builtin reducers: ConversationsReducer groups directionally by n-tuple', (): void => {
     const reducer: ConversationsReducer = new ConversationsReducer()
-    PACKETS.forEach((packet: AnalysisPacket, index: number): void => reducer.update(frameOf(packet, index), CTX))
+    PACKETS.forEach((packet: Packet, index: number): void => reducer.update(frameOf(packet, index), CTX))
     const streamed: ConversationSummary[] = reducer.result()
-    assert.strictEqual(streamed.length, legacy.conversations.length)
-    for (const expected of legacy.conversations) {
-        const got: ConversationSummary | undefined = streamed.find((c: ConversationSummary): boolean => c.endpointA === expected.endpointA && c.endpointB === expected.endpointB && c.protocol === expected.protocol)
-        assert.ok(got, `conversation ${expected.endpointA}↔${expected.endpointB} present`)
-        assert.strictEqual(got!.packets, expected.packets)
-        assert.strictEqual(got!.bytes, expected.bytes)
-        assert.strictEqual(got!.packetsAToB, expected.packetsAToB)
-        assert.strictEqual(got!.packetsBToA, expected.packetsBToA)
-        assert.strictEqual(got!.firstTimestamp, expected.firstTimestamp)
-        assert.strictEqual(got!.lastTimestamp, expected.lastTimestamp)
-        //firstIndex/lastIndex replace packetIndices: they are the span of the member index list.
-        assert.strictEqual(got!.firstIndex, expected.packetIndices[0])
-        assert.strictEqual(got!.lastIndex, expected.packetIndices[expected.packetIndices.length - 1])
+
+    const expected: ConversationSummary[] = [
+        {protocol: 'tcp', endpointA: '10.0.0.1:1234', endpointB: '10.0.0.2:80', packets: 3, bytes: 450, packetsAToB: 2, packetsBToA: 1, firstTimestamp: 1.0, lastTimestamp: 2.0, firstIndex: 0, lastIndex: 2},
+        {protocol: 'tcp', endpointA: '10.0.0.3:5000', endpointB: '10.0.0.4:443', packets: 1, bytes: 300, packetsAToB: 1, packetsBToA: 0, firstTimestamp: 3.0, lastTimestamp: 3.0, firstIndex: 3, lastIndex: 3}
+    ]
+    assert.strictEqual(streamed.length, expected.length)
+    for (const want of expected) {
+        const got: ConversationSummary | undefined = streamed.find((c: ConversationSummary): boolean => c.endpointA === want.endpointA && c.endpointB === want.endpointB && c.protocol === want.protocol)
+        assert.ok(got, `conversation ${want.endpointA}↔${want.endpointB} present`)
+        assert.deepStrictEqual(got, want)
     }
 })
 
-test('builtin reducers: EndpointsReducer matches FlowAnalyzer endpoints', (): void => {
-    const legacy: FlowAnalysis = new FlowAnalyzer().analyze(PACKETS)
+test('builtin reducers: EndpointsReducer credits source (tx) and destination (rx)', (): void => {
     const reducer: EndpointsReducer = new EndpointsReducer()
-    PACKETS.forEach((packet: AnalysisPacket, index: number): void => reducer.update(frameOf(packet, index), CTX))
+    PACKETS.forEach((packet: Packet, index: number): void => reducer.update(frameOf(packet, index), CTX))
     const streamed: EndpointSummary[] = reducer.result()
-    assert.strictEqual(streamed.length, legacy.endpoints.length)
-    for (const expected of legacy.endpoints) {
-        const got: EndpointSummary | undefined = streamed.find((e: EndpointSummary): boolean => e.address === expected.address)
-        assert.ok(got, `endpoint ${expected.address} present`)
-        assert.deepStrictEqual(got, expected as Endpoint)
+
+    const expected: EndpointSummary[] = [
+        {address: '10.0.0.1:1234', packets: 3, bytes: 450, txPackets: 2, txBytes: 250, rxPackets: 1, rxBytes: 200},
+        {address: '10.0.0.2:80', packets: 3, bytes: 450, txPackets: 1, txBytes: 200, rxPackets: 2, rxBytes: 250},
+        {address: '10.0.0.3:5000', packets: 1, bytes: 300, txPackets: 1, txBytes: 300, rxPackets: 0, rxBytes: 0},
+        {address: '10.0.0.4:443', packets: 1, bytes: 300, txPackets: 0, txBytes: 0, rxPackets: 1, rxBytes: 300}
+    ]
+    assert.strictEqual(streamed.length, expected.length)
+    for (const want of expected) {
+        const got: EndpointSummary | undefined = streamed.find((e: EndpointSummary): boolean => e.address === want.address)
+        assert.ok(got, `endpoint ${want.address} present`)
+        assert.deepStrictEqual(got, want)
     }
 })
 
