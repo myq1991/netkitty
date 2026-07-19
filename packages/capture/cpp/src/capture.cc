@@ -58,6 +58,8 @@ NetKittyCapture::NetKittyCapture(const Napi::CallbackInfo &info) : ObjectWrap(in
 #endif
     this->handling_packets = false;
     this->closing = false;
+    this->tsfn_active = false;
+    this->uv_active = false;
 }
 
 #ifdef _WIN32
@@ -114,7 +116,7 @@ void NetKittyCapture::cb_packets(uv_poll_t *handle, int status, int events)
                                          1,
                                          NetKittyCapture::EmitPacket,
                                          (u_char *)obj);
-        } while (packet_count > 1 && !obj->closing);
+        } while (packet_count > 0 && !obj->closing);
 
         obj->handling_packets = false;
         if (obj->closing)
@@ -141,7 +143,7 @@ void NetKittyCapture::EmitPacket(u_char *user,
         // printf("Time: %ld.%06ld\n", data->tv.tv_sec, data->tv.tv_usec);
         jsCallback.Call({Napi::String::New(env, "data"),
                          Napi::Buffer<uint8_t>::Copy(env, data->pkt_data, data->copy_len), Napi::Number::New(env, data->tv.tv_sec), Napi::Number::New(env, data->tv.tv_usec)});
-        delete data->pkt_data;
+        delete[] data->pkt_data;
         delete data;
     };
     obj->tsEmit_.BlockingCall(eventData, callback);
@@ -161,6 +163,7 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
         1,              // Only one thread will use this initially
         [](Napi::Env) { // Finalizer used to clean threads up
         });
+    this->tsfn_active = true;
 
     char errbuf[PCAP_ERRBUF_SIZE] = "";
     // printf("%s", errbuf);
@@ -176,15 +179,12 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
     //     Napi::TypeError::New(env, "Unable to set buffer size").ThrowAsJavaScriptException();
     //     return;
     // }
-    if (strlen(errbuf) != 0)
-    {
-        Napi::TypeError::New(env, errbuf).ThrowAsJavaScriptException();
-        return;
-    }
-
+    //pcap_open_live returns NULL only on failure; a non-empty errbuf on success is just a warning
+    //(e.g. promiscuous mode unsupported), so key the error strictly on a NULL handle.
     if (this->pcap_handle == NULL)
     {
-        Napi::TypeError::New(env, errbuf).ThrowAsJavaScriptException();
+        this->teardown();
+        Napi::Error::New(env, errbuf).ThrowAsJavaScriptException();
         return;
     }
 
@@ -205,9 +205,11 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
                       (uv_async_cb)NetKittyCapture::cb_packets);
     // assert(r == 0);
     if(r!=0){
+        this->teardown();
         Napi::Error::New(env,"uv_async_init error").ThrowAsJavaScriptException();
         return;
     }
+    this->uv_active = true;
     this->async.data = this;
     r = RegisterWaitForSingleObject(
         &this->wait,
@@ -226,7 +228,8 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
                       (LPTSTR)&errmsg,
                       0,
                       nullptr);
-        Napi::TypeError::New(env, errmsg).ThrowAsJavaScriptException();
+        this->teardown();
+        Napi::Error::New(env, errmsg).ThrowAsJavaScriptException();
         return;
     }
 
@@ -235,11 +238,13 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
     r = uv_poll_init(uv_default_loop(), &this->poll_handle, this->fd);
 //     assert(r == 0);
     if(r!=0){
-        Napi::Error::New(env,"uv_async_init error").ThrowAsJavaScriptException();
+        this->teardown();
+        Napi::Error::New(env,"uv_poll_init error").ThrowAsJavaScriptException();
         return;
     }
-    r = uv_poll_start(&this->poll_handle, UV_READABLE, NetKittyCapture::cb_packets);
+    this->uv_active = true;
     this->poll_handle.data = this;
+    r = uv_poll_start(&this->poll_handle, UV_READABLE, NetKittyCapture::cb_packets);
 #endif
     if (!this->filter.empty())
     {
@@ -248,20 +253,20 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
         // compile the filter
         if (pcap_compile(this->pcap_handle, &this->fcode, this->filter.c_str(), 1, NetMask) < 0)
         {
-            Napi::TypeError::New(env, "Error compiling filter: wrong syntax.")
-                .ThrowAsJavaScriptException();
             pcap_freecode(&this->fcode);
-            pcap_close(this->pcap_handle);
+            this->teardown();
+            Napi::Error::New(env, "Error compiling filter: wrong syntax.")
+                .ThrowAsJavaScriptException();
             return;
         }
 
         // set the filter
         if (pcap_setfilter(this->pcap_handle, &this->fcode) < 0)
         {
-            Napi::TypeError::New(env, "Error setting the filter")
-                .ThrowAsJavaScriptException();
             pcap_freecode(&this->fcode);
-            pcap_close(this->pcap_handle);
+            this->teardown();
+            Napi::Error::New(env, "Error setting the filter")
+                .ThrowAsJavaScriptException();
             return;
         }
     }
@@ -269,17 +274,39 @@ void NetKittyCapture::Start(const Napi::CallbackInfo &info)
 
 void NetKittyCapture::Stop(const Napi::CallbackInfo &info)
 {
-#ifdef _WIN32
-    if (this->wait)
+    this->teardown();
+}
+
+//Release every native resource, guarded and idempotent: safe to call twice, from a Start() failure
+//path, or on a handle that was never opened. Order: drop the JS callback, stop the loop watcher, then
+//close the pcap handle. Nulling pcap_handle is what makes a later Stop()/SetFilter() a no-op instead
+//of a double free.
+void NetKittyCapture::teardown()
+{
+    if (this->tsfn_active)
     {
-        UnregisterWait(this->wait);
-        wait = nullptr;
+        this->tsEmit_.Release();
+        this->tsfn_active = false;
     }
-    uv_close((uv_handle_t *)&this->async, cb_close);
+    if (this->uv_active)
+    {
+#ifdef _WIN32
+        if (this->wait)
+        {
+            UnregisterWait(this->wait);
+            this->wait = nullptr;
+        }
+        uv_close((uv_handle_t *)&this->async, NetKittyCapture::cb_close);
 #else
-    uv_poll_stop(&this->poll_handle);
+        uv_poll_stop(&this->poll_handle);
 #endif
-    pcap_close(this->pcap_handle);
+        this->uv_active = false;
+    }
+    if (this->pcap_handle)
+    {
+        pcap_close(this->pcap_handle);
+        this->pcap_handle = NULL;
+    }
 }
 
 void NetKittyCapture::SetFilter(const Napi::CallbackInfo &info)
@@ -319,20 +346,20 @@ void NetKittyCapture::SetFilter(const Napi::CallbackInfo &info)
     // compile the filter
     if (pcap_compile(this->pcap_handle, &this->fcode, filter.c_str(), 1, NetMask) < 0)
     {
-        Napi::TypeError::New(env, "Error compiling filter: wrong syntax.")
-            .ThrowAsJavaScriptException();
         pcap_freecode(&this->fcode);
-        pcap_close(this->pcap_handle);
+        this->teardown();
+        Napi::Error::New(env, "Error compiling filter: wrong syntax.")
+            .ThrowAsJavaScriptException();
         return;
     }
 
     // set the filter
     if (pcap_setfilter(this->pcap_handle, &this->fcode) < 0)
     {
-        Napi::TypeError::New(env, "Error setting the filter")
-            .ThrowAsJavaScriptException();
         pcap_freecode(&this->fcode);
-        pcap_close(this->pcap_handle);
+        this->teardown();
+        Napi::Error::New(env, "Error setting the filter")
+            .ThrowAsJavaScriptException();
         return;
     }
 

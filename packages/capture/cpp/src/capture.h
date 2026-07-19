@@ -38,8 +38,11 @@ private:
     pcap_t *pcap_handle = NULL;
     bool close();
     void cleanup();
+    void teardown();
     bool closing;
     bool handling_packets;
+    bool tsfn_active;
+    bool uv_active;
     struct bpf_program fcode;
 #ifdef _WIN32
     HANDLE wait;
