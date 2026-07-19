@@ -108,17 +108,18 @@ class ProtocolCounter implements IAnalysisReducer<Record<string, number>> {
 }
 ```
 
-A reducer runs **on the main thread** — its `update` closure can't be structured-cloned into the worker.
-That is fine: `update` is cheap arithmetic; the expensive part (read + decode) already happened in the
-worker, and `indexOnly`/`needs` govern how much of it crosses back. A reducer may also extend an event
-emitter and push its own `progress`/`update` events from inside `update()`.
+A reducer runs **on the main thread** — its `update` is a function, so it can't be copied into the
+worker to run there. That is fine: `update` is just cheap arithmetic; the expensive part (read + decode)
+already happened in the worker, and `indexOnly`/`needs` decide how much of that data is sent back. A
+reducer may also extend an event emitter and push its own `progress`/`update` events from `update()`.
 
 ## Live capture (watch)
 
-`watch()` tails a growing capture, feeding reducers with phase `'live'`. The index is **unbounded by
-default** (you own the memory). `maxFrames` is an optional guard: past the cap the oldest indexed
-frames are FIFO-evicted (Wireshark-style ring buffer), keeping a long-running tail bounded — only the
-in-memory index is dropped, the file on disk is untouched.
+`watch()` follows a capture file that is still being written, feeding each new frame to reducers with
+phase `'live'`. The index is **unbounded by default** (the memory is yours to manage). `maxFrames` is an
+optional guard: once the index passes the cap, the oldest entries are dropped first-in-first-out
+(a Wireshark-style ring buffer), keeping a long-running tail bounded — only the in-memory index is
+dropped, the file on disk is untouched.
 
 ```ts
 const analysis = new Analysis()                         // default: unbounded index
