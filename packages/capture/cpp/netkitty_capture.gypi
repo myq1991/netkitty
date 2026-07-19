@@ -6,7 +6,8 @@
       "sources": [
         "src/binding.cc",
         "src/capture.cc",
-        "src/utils.cc"
+        "src/utils.cc",
+        "src/pcap_api.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")"
@@ -24,42 +25,17 @@
         [
           "OS==\"win\"",
           {
-            "sources": [],
-            "include_dirs": [
-              "deps/include"
-            ],
             "defines": [
               "WPCAP"
             ],
-            "conditions": [
-              [
-                "target_arch==\"ia32\"",
-                {
-                  "link_settings": {
-                    "libraries": [
-                      "ws2_32.lib",
-                      "<(module_root_dir)/cpp/deps/lib/wpcap.lib"
-                    ]
-                  }
-                },
-                {
-                  "link_settings": {
-                    "libraries": [
-                      "ws2_32.lib",
-                      "<(module_root_dir)/cpp/deps/lib/x64/wpcap.lib"
-                    ]
-                  }
-                }
+            "link_settings": {
+              "libraries": [
+                "ws2_32.lib"
               ]
-            ],
+            },
             "msvs_settings": {
               "VCCLCompilerTool": {
                 "ExceptionHandling": 1
-              },
-              "VCLinkerTool": {
-                "DelayLoadDLLs": [
-                  "wpcap.dll"
-                ]
               }
             }
           }

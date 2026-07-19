@@ -177,6 +177,12 @@ Napi::Boolean Prepare(const Napi::CallbackInfo &info)
         // fprintf(stderr, "Couldn't load Npcap\n");
         return Napi::Boolean::New(info.Env(), false);
     }
+
+    // Resolve wpcap.dll entry points at runtime (no import lib, no bundled SDK).
+    if (!NkPcapLoad())
+    {
+        return Napi::Boolean::New(info.Env(), false);
+    }
 #endif
 
     return Napi::Boolean::New(info.Env(), true);

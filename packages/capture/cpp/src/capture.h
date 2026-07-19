@@ -4,7 +4,7 @@
 #include <uv.h>
 #include <napi.h>
 #include <string.h>
-#include <pcap.h>
+#include "pcap_api.h"
 
 struct PacketEventData
 {
