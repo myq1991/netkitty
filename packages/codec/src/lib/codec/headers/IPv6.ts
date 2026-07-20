@@ -184,6 +184,9 @@ export class IPv6 extends BaseHeader {
         //Bare-IP tunnel path (GTP-U): no inner-protocol field, so match by the IPv6 version nibble. The
         //tunnel-parent id gate MUST come first — a 4-bit nibble alone is too weak a signature.
         if (['gtp'].includes(this.prevCodecModule.id) && (this.readBytes(0, 1, true)[0] >> 4) === 6) return true
+        //Typed-tunnel path: GENEVE carries a Protocol Type (an EtherType), so trust that self-describing
+        //field rather than the weak version nibble — the ethertype demux already routed us here.
+        if (this.prevCodecModule.id === 'geneve' && this.prevCodecModule.instance.protocolType.getValue() === UInt16ToHex(0x86dd)) return true
         return false
     }
 

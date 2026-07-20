@@ -1,0 +1,6 @@
+# GENEVE (RFC 8926) over UDP/IPv4 port 6081, protocol type 0x6558 (Transparent Ethernet Bridging),
+# VNI 100, no options — tunneling a complete inner Ethernet frame (eth/ipv4/icmp echo-request).
+# source: standard GENEVE header + a real inner eth frame, sent via a real UDP socket to 127.0.0.1:6081
+# on a debian:12 container's ethernet lo, captured with tcpdump. Inner recurses via EthernetII (which
+# already accepts a 'geneve' tunnel parent), like VXLAN.
+000000000000000000000000080045000086155640004011270f7f0000017f000001858e17c10072fe8500006558000064008eba97c187e932c519fcd137080045000054f631000040010088c0a8019ec0a80101080055e16143000067e811540002dc9908090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637

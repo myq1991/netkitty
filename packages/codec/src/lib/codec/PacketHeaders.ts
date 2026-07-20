@@ -26,6 +26,7 @@ export {VXLAN} from './headers/VXLAN'
 export {GTPU} from './headers/GTPU'
 export {RMCP} from './headers/RMCP'
 export {L2TP} from './headers/L2TP'
+export {GENEVE} from './headers/GENEVE'
 export {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 //阿才写的代码
 export {TLS_Alert} from './headers/TLS_Alert'

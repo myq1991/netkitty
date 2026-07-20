@@ -185,6 +185,16 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // GENEVE base header. proto_type (hexcode) + vni verify the tunnel; the inner eth/ip/icmp layers are
+    // compared via their own mappings (the outer+inner duplicate layer is skipped by the duplicate guard).
+    geneve: {tsLayer: 'geneve', fields: [
+        {nk: 'version', ts: 'geneve.version', kind: 'int'},
+        {nk: 'optLen', ts: 'geneve.option.length', kind: 'int'},
+        {nk: 'vni', ts: 'geneve.vni', kind: 'int'},
+        {nk: 'protocolType', ts: 'geneve.proto_type', kind: 'hexcode'},
+        {nk: 'oam', ts: 'geneve.flags.oam', kind: 'int'},
+        {nk: 'critical', ts: 'geneve.flags.critical', kind: 'int'}
+    ]},
     // L2TP v2 header. tunnel/session/Ns/Nr and flags.type/version verify the flag-conditional header
     // walk landed on the right offsets. The AVPs are nested + repeated under tshark's per-AVP groups
     // (DFS-unreliable, like the DHCPv6 options), so they are verified byte-for-byte by round-trip+golden.

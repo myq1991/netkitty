@@ -1,0 +1,6 @@
+# GENEVE (RFC 8926) over UDP/IPv4 port 6081, protocol type 0x0800 (IPv4), VNI 100, no options —
+# tunneling a bare inner IPv4/ICMP packet (no inner Ethernet). Exercises the typed-tunnel dispatch:
+# GENEVE's protocolType drives the ethertype demux to IPv4 (which accepts a 'geneve' parent), NOT the
+# EthernetII fallback. source: standard GENEVE header + a real inner IP packet via UDP socket to
+# 127.0.0.1:6081 on a debian:12 container's ethernet lo, captured with tcpdump.
+000000000000000000000000080045000078422740004011fa4b7f0000017f000001acec17c10064fe77000008000000640045000054f631000040010088c0a8019ec0a80101080055e16143000067e811540002dc9908090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637
