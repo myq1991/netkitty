@@ -1,0 +1,5 @@
+# L2TP v2 control message SCCRQ (Start-Control-Connection-Request, RFC 2661) over UDP/IPv4 port 1701.
+# Flags C802 = T(control)+L(length)+S(sequence), version 2; length 0x38; tunnel/session/Ns/Nr = 0.
+# 5 AVPs: Message Type=SCCRQ, Protocol Version 1.0, Framing Capabilities, Host Name "lac1", Assigned Tunnel ID.
+# source: standard SCCRQ payload via a real UDP socket to 127.0.0.1:1701 on a debian:12 ethernet lo, tcpdump.
+000000000000000000000000080045000054a8504000401194467f0000017f000001cf9b06a50040fe53c8020038000000000000000080080000000000018008000000020100800a0000000300000001800a000000076c6163318008000000090007

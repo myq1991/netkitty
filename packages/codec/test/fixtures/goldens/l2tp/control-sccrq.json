@@ -1,0 +1,111 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 84,
+      "id": 43088,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 37958,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 53147,
+      "dstport": 1701,
+      "length": 64,
+      "checksum": 65107
+    },
+    "errors": []
+  },
+  {
+    "id": "l2tp",
+    "data": {
+      "flags": {
+        "type": true,
+        "length": true,
+        "sequence": true,
+        "offset": false,
+        "priority": false,
+        "version": 2,
+        "reserved1": 0,
+        "reserved2": 0,
+        "reserved3": 0
+      },
+      "length": 56,
+      "tunnelId": 0,
+      "sessionId": 0,
+      "ns": 0,
+      "nr": 0,
+      "avps": [
+        {
+          "mandatory": true,
+          "hidden": false,
+          "reserved": 0,
+          "vendorId": 0,
+          "attrType": 0,
+          "value": "0001"
+        },
+        {
+          "mandatory": true,
+          "hidden": false,
+          "reserved": 0,
+          "vendorId": 0,
+          "attrType": 2,
+          "value": "0100"
+        },
+        {
+          "mandatory": true,
+          "hidden": false,
+          "reserved": 0,
+          "vendorId": 0,
+          "attrType": 3,
+          "value": "00000001"
+        },
+        {
+          "mandatory": true,
+          "hidden": false,
+          "reserved": 0,
+          "vendorId": 0,
+          "attrType": 7,
+          "value": "6c616331"
+        },
+        {
+          "mandatory": true,
+          "hidden": false,
+          "reserved": 0,
+          "vendorId": 0,
+          "attrType": 9,
+          "value": "0007"
+        }
+      ],
+      "payload": ""
+    },
+    "errors": []
+  }
+]

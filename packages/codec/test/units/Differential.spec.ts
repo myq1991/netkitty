@@ -185,6 +185,18 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // L2TP v2 header. tunnel/session/Ns/Nr and flags.type/version verify the flag-conditional header
+    // walk landed on the right offsets. The AVPs are nested + repeated under tshark's per-AVP groups
+    // (DFS-unreliable, like the DHCPv6 options), so they are verified byte-for-byte by round-trip+golden.
+    l2tp: {tsLayer: 'l2tp', fields: [
+        {nk: 'length', ts: 'l2tp.length', kind: 'int'},
+        {nk: 'tunnelId', ts: 'l2tp.tunnel', kind: 'int'},
+        {nk: 'sessionId', ts: 'l2tp.session', kind: 'int'},
+        {nk: 'ns', ts: 'l2tp.Ns', kind: 'int'},
+        {nk: 'nr', ts: 'l2tp.Nr', kind: 'int'},
+        {nk: 'flags.version', ts: 'l2tp.version', kind: 'int'},
+        {nk: 'flags.type', ts: 'l2tp.type', kind: 'int'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.
