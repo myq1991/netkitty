@@ -298,6 +298,12 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
     // Redis RESP (tcp:6379): tshark names the layer 'resp' and nests repeated resp.bulk_string keys, which
     // collapse last-wins under -T json — so the command verb (first bulk string) is not reliably mappable.
     // The respType/command parse is verified by round-trip + golden instead (like NNTP/LLDP).
+    // R-GOOSE/R-SV (IEC 61850-90-5 Session, udp:102): tshark only reaches its R-GOOSE dissector via a CLTP
+    // (ISO 8602) UD-TPDU heuristic — the common direct-in-UDP wire form this codec models is dissected as
+    // opaque 'data', so tshark exposes no r-session fields to map. The 90-5 session byte layout was instead
+    // cross-checked against Wireshark's packet-goose.c dissector during development (a CLTP-wrapped copy of
+    // the SPDU dissects as r-goose with matching SPDU number / APPID / goosePdu); here it is verified by
+    // round-trip + golden.
     // LLDP (IEEE 802.1AB, ethertype 0x88cc): the TLV values are kept as opaque hex, so tshark's decoded
     // per-TLV scalars (lldp.time_to_live etc.) do not map to a single field — verified by round-trip + golden.
     // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the

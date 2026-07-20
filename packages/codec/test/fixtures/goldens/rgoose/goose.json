@@ -1,0 +1,77 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:0c:cd:01:00:01",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 218,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 26129,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 40000,
+      "dstport": 102,
+      "length": 198,
+      "checksum": 50303
+    },
+    "errors": []
+  },
+  {
+    "id": "r-session",
+    "data": {
+      "si": 161,
+      "li": 23,
+      "commonHeaderId": 128,
+      "headerLength": 21,
+      "spduLength": 182,
+      "spduNumber": 64,
+      "version": 1,
+      "security": {
+        "timeCurrentKey": 0,
+        "timeNextKey": 65535,
+        "keyId": 1,
+        "initVecLength": 0,
+        "initVec": ""
+      },
+      "payloadLength": 143,
+      "payloadItems": [
+        {
+          "payloadType": 129,
+          "simulation": 0,
+          "appid": 1,
+          "apduLength": 137,
+          "apdu": "618186801a4745446576696365463635302f4c4c4e3024474f2467636230318103009c4082184745446576696365463635302f4c4c4e3024474f4f534531830b463635305f474f4f5345318408386ebbf34217280a85010186010a8701008801018901008a0108ab208301008403030000830100840303000083010084030300008301008403030000"
+        }
+      ],
+      "signature": "8510abababababababababababababababab"
+    },
+    "errors": []
+  }
+]
