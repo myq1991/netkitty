@@ -1,0 +1,95 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 61,
+      "id": 12720,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 2825,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 43783,
+      "dstport": 11211,
+      "seq": 1669219994,
+      "ack": 1889334210,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65073,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 775705704,
+          "tsecr": 775705704
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "memcached",
+    "data": {
+      "isBinary": false,
+      "magic": 0,
+      "opcode": 0,
+      "keyLength": 0,
+      "extrasLength": 0,
+      "dataType": 0,
+      "status": 0,
+      "totalBodyLength": 0,
+      "opaque": 0,
+      "cas": "0000000000000000",
+      "body": "",
+      "message": "67657420666f6f0d0a",
+      "command": "get",
+      "summaryInfo": "get"
+    },
+    "errors": []
+  }
+]

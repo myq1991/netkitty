@@ -1,0 +1,3 @@
+# LDAP bindRequest (messageID 1, LDAPv3 simple auth, name cn=admin,dc=example,dc=org), REAL capture
+# docker osixia/openldap:1.5.0; debian:12 sidecar sharing netns: ldapwhoami -x -D cn=admin,dc=example,dc=org, tcpdump -i lo tcp port 389
+00000000000000000000000008004500006106b24000400635e37f0000017f000001e8e401850469cdf27bf9e86880180200fe5500000101080a2e38a6032e38a603302b0201016026020103041a636e3d61646d696e2c64633d6578616d706c652c64633d6f7267800561646d696e

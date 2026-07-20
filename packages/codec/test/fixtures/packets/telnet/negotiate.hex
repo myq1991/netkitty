@@ -1,0 +1,12 @@
+# Telnet (RFC 854, tcp:23) server initial option negotiation. On connect the server sends its opening
+# IAC command run: "FF FB 01" (IAC WILL ECHO), "FF FB 03" (IAC WILL SUPPRESS-GO-AHEAD), "FF FD 1F"
+# (IAC DO NAWS, window-size option 31), then the shell prompt data "/ # " (2f 20 23 20). The whole
+# payload is kept verbatim (byte-perfect); the leading IAC run is parsed for display into
+# {isNegotiation:true, commands:[WILL ECHO, WILL SGA, DO NAWS]}.
+# source: REAL telnet negotiation captured from a busybox telnetd container
+# (`docker run -p 2323:23 busybox telnetd -F -p 23 -l /bin/sh`) by reading the server's first bytes off
+# a loopback socket — the exact application-layer payload was fffb01fffb03fffd1f2f202320. That genuine
+# on-wire negotiation was then wrapped in an eth+ipv4+tcp frame by the netkitty encoder (src port 23,
+# docker-bridge MACs/IPs 172.17.0.1→172.17.0.2) — the Telnet payload is the real server negotiation; the
+# eth/ipv4/tcp envelope is synthesized. Verified [eth,ipv4,tcp,telnet] decode + byte-perfect round-trip.
+0242ac1100020242ac110001080045000035000040000006229eac110001ac1100020017c29400000000000000005000000038b70000fffb01fffb03fffd1f2f202320

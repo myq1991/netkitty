@@ -1,0 +1,8 @@
+# Memcached TEXT protocol `get foo\r\n` command on TCP port 11211. The whole payload is kept verbatim
+# (byte-perfect); the leading token is parsed for display (command='get'). Memcached also speaks a binary
+# protocol (magic 0x80/0x81) which this codec branches on — see the crafted binary tests in Memcached.spec.ts.
+# source: REAL capture — alpine container, memcached -l 127.0.0.1 -p 11211, a prior `set foo 0 0 3\r\nbar\r\n`
+# stored the key, then `printf 'get foo\r\n' | nc 127.0.0.1 11211` over the loopback (lo) interface,
+# captured with tcpdump -i lo (Linux lo frames as Ethernet with all-zero MACs, ethertype 0800). This frame
+# is the client's `get foo` request: IPv4/TCP src 43783 -> dst 11211, PSH+ACK, with TCP timestamp options.
+00000000000000000000000008004500003d31b0400040060b097f0000017f000001ab072bcb637e469a709cf3c280180200fe3100000101080a2e3c54682e3c546867657420666f6f0d0a

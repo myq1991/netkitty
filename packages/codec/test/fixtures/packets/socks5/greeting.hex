@@ -1,0 +1,6 @@
+# SOCKS5 (tcp:1080) client greeting (RFC 1928): version 5, nMethods 2, methods [0x00 no-auth, 0x02
+# username/password]. SOCKS5 payload is the 4 bytes `05 02 00 02`.
+# source: constructed deterministically with the netkitty encoder (eth + ipv4 + tcp/dst-1080 + socks5).
+# The 4-byte greeting is fixed by the RFC and trivial to build by hand; SOCKS5 is also easily captured
+# live via `curl --socks5 <proxy:1080>` through a danted proxy, but the greeting bytes are identical.
+52540012345652540065432108004500002c00004000000666cc0a0000000a000001c7380438000000000000000050000000cb6b000005020002

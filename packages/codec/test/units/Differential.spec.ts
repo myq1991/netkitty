@@ -377,6 +377,29 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
     // RFB/VNC (tcp:5900): tshark's 'vnc' layer renders the version as "003.008" whereas this codec keeps
     // the full "RFB 003.008" line + split major/minor — the formats don't line up for a single-field map,
     // so the version handshake is verified by round-trip + golden instead (like LLDP/NNTP).
+    // LDAP (RFC 4511, tcp:389). tshark names the layer 'ldap'. The messageID is the one cleanly-comparable
+    // scalar (nested under ldap.LDAPMessage_element). protocolOpTag is NOT mapped: this codec keeps the raw
+    // BER tag byte (0x60) while tshark renders ldap.protocolOp as the op index (0). The op body is verified
+    // by round-trip + golden.
+    ldap: {tsLayer: 'ldap', fields: [
+        {nk: 'messageID', ts: 'ldap.messageID', kind: 'int'}
+    ]},
+    // Memcached (tcp:11211). tshark names the layer 'memcache'. The text command verb (get/set/…). The
+    // binary protocol + values are verified by round-trip + golden.
+    memcached: {tsLayer: 'memcache', fields: [
+        {nk: 'command', ts: 'memcache.command', kind: 'str'}
+    ]},
+    // SOCKS5 (RFC 1928, tcp:1080). tshark names the layer 'socks'. version + the greeting method count
+    // (nested under "Client Authentication Methods"). The method list + request/reply are round-trip verified.
+    socks5: {tsLayer: 'socks', fields: [
+        {nk: 'version', ts: 'socks.version', kind: 'int'},
+        {nk: 'nMethods', ts: 'socks.auth_method_count', kind: 'int'}
+    ]},
+    // Kerberos (RFC 4120, tcp/udp:88): tshark decodes kerberos.msg_type as the numeric message type (10 for
+    // AS-REQ) whereas this codec keeps the raw BER application tag (0x6a); the formats don't line up, and the
+    // message body is raw, so it is verified by round-trip + golden.
+    // Telnet (tcp:23): tshark emits one telnet.cmd per IAC command, which collapse last-wins under -T json,
+    // so the leading command isn't reliably mappable; the IAC parse is verified by round-trip + golden.
     // R-GOOSE/R-SV (IEC 61850-90-5 Session, udp:102): tshark only reaches its R-GOOSE dissector via a CLTP
     // (ISO 8602) UD-TPDU heuristic — the common direct-in-UDP wire form this codec models is dissected as
     // opaque 'data', so tshark exposes no r-session fields to map. The 90-5 session byte layout was instead
