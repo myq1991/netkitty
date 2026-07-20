@@ -1,0 +1,5 @@
+# VRRP v2 Advertisement (RFC 3768) over IPv4 (IP protocol 112), multicast to 224.0.0.18. VRID 1,
+# priority 100, count 1, auth type 0, advertisement interval 1s, virtual IP 192.168.1.1, checksum 0xb952.
+# source: standard VRRP v2 advertisement emitted via a raw IPPROTO-112 socket (multicast egress forced
+# onto lo) inside a debian:12 container, captured with tcpdump. Linux lo → all-zero MACs, ethertype 0800.
+00000000000000000000000008004500002096aa4000ff7085af7f000001e0000012210164010001b952c0a80101

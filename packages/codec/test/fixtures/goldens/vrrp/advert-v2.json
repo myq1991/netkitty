@@ -1,0 +1,53 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 32,
+      "id": 38570,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 255,
+      "protocol": 112,
+      "checksum": 34223,
+      "sip": "127.0.0.1",
+      "dip": "224.0.0.18"
+    },
+    "errors": []
+  },
+  {
+    "id": "vrrp",
+    "data": {
+      "version": 2,
+      "type": 1,
+      "vrid": 1,
+      "priority": 100,
+      "count": 1,
+      "authType": 0,
+      "adverInt": 1,
+      "checksum": 47442,
+      "addresses": [
+        "192.168.1.1"
+      ]
+    },
+    "errors": []
+  }
+]

@@ -185,6 +185,19 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // VRRP v2/v3 (RFC 3768/5798). checksum uses kind 'int' (Number('0xb952')===47442). The virtual IP
+    // address list is verified via addresses[0]; tshark names it vrrp.ip_addr.
+    vrrp: {tsLayer: 'vrrp', fields: [
+        {nk: 'version', ts: 'vrrp.version', kind: 'int'},
+        {nk: 'type', ts: 'vrrp.type', kind: 'int'},
+        {nk: 'vrid', ts: 'vrrp.virt_rtr_id', kind: 'int'},
+        {nk: 'priority', ts: 'vrrp.prio', kind: 'int'},
+        {nk: 'count', ts: 'vrrp.addr_count', kind: 'int'},
+        {nk: 'authType', ts: 'vrrp.auth_type', kind: 'int'},
+        {nk: 'adverInt', ts: 'vrrp.adver_int', kind: 'int'},
+        {nk: 'checksum', ts: 'vrrp.checksum', kind: 'int'},
+        {nk: 'addresses.0', ts: 'vrrp.ip_addr', kind: 'str'}
+    ]},
     // BFD Control (RFC 5880). State + discriminators + intervals verify the 24-byte mandatory section.
     bfd: {tsLayer: 'bfd', fields: [
         {nk: 'version', ts: 'bfd.version', kind: 'int'},
