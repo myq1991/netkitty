@@ -31,6 +31,7 @@ export {GRE} from './headers/GRE'
 export {BFD} from './headers/BFD'
 export {VRRP} from './headers/VRRP'
 export {OSPF} from './headers/OSPF'
+export {ModbusTCP} from './headers/ModbusTCP'
 export {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 //阿才写的代码
 export {TLS_Alert} from './headers/TLS_Alert'

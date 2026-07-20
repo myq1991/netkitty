@@ -185,6 +185,15 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // Modbus/TCP (tcp:502). tshark splits it into an 'mbtcp' layer (MBAP header) and a 'modbus' layer
+    // (PDU); the mapping verifies the 7-byte MBAP header against 'mbtcp'. The function code + data are
+    // verified byte-for-byte by the round-trip + golden (they live in tshark's separate 'modbus' layer).
+    modbus: {tsLayer: 'mbtcp', fields: [
+        {nk: 'transactionId', ts: 'mbtcp.trans_id', kind: 'int'},
+        {nk: 'protocolId', ts: 'mbtcp.prot_id', kind: 'int'},
+        {nk: 'length', ts: 'mbtcp.len', kind: 'int'},
+        {nk: 'unitId', ts: 'mbtcp.unit_id', kind: 'int'}
+    ]},
     // OSPFv2 (RFC 2328). Common header + Hello fields. tshark names the router id 'ospf.srcrouter' and
     // the message type 'ospf.msg'. checksum uses kind 'int' (Number('0xf694')).
     ospf: {tsLayer: 'ospf', fields: [

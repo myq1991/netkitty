@@ -1,0 +1,87 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 64,
+      "id": 45960,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 35117,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 33214,
+      "dstport": 502,
+      "seq": 3095902893,
+      "ack": 4252413879,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65076,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 756306167,
+          "tsecr": 756306167
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "modbus",
+    "data": {
+      "transactionId": 1,
+      "protocolId": 0,
+      "length": 6,
+      "unitId": 1,
+      "functionCode": 3,
+      "data": "0000000a"
+    },
+    "errors": []
+  }
+]

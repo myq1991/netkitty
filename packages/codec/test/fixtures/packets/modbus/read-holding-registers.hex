@@ -1,0 +1,5 @@
+# Modbus/TCP (tcp:502) Read Holding Registers request. MBAP: transaction 1, protocol 0, length 6,
+# unit 1; PDU: function code 0x03, start address 0x0000, quantity 0x000a (10 registers).
+# source: real Modbus request sent over a TCP socket to a local listener on 127.0.0.1:502 in a debian:12
+# container's ethernet lo (kernel TCP with timestamp options), captured with tcpdump (PSH data segment).
+000000000000000000000000080045000040b38840004006892d7f0000017f00000181be01f6b887baadfd76afb780180200fe3400000101080a2d1450f72d1450f700010000000601030000000a
