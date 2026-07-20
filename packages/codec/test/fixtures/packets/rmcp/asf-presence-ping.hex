@@ -1,0 +1,4 @@
+# ASF RMCP Presence Ping (ASF 2.0 / DSP0136) over UDP/IPv4 port 623
+# source: standard ASF ping payload (06 00 ff 06 | enterprise 4542 | type 0x80 ping | tag 0 | len 0)
+# sent via a real UDP socket to 127.0.0.1:623 on a debian:12 container's ethernet lo, captured with tcpdump
+0000000000000000000000000800450000287aff40004011c1c37f0000017f00000185bc026f0014fe270600ff06000011be80000000

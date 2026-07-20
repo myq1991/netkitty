@@ -175,6 +175,16 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'teid', ts: 'gtp.teid', kind: 'hexcode'},
         {nk: 'msgType', ts: 'gtp.message', kind: 'int'}
     ]},
+    // RMCP header core. tshark renders these as 0x-hex; kind 'int' compares numerically
+    // (Number('0x06')===6). rmcp.class is nested under tshark's "Type: …, Class: …" group but
+    // getTsharkField's DFS reaches it. The ASF sub-message (asf.iana/type/…) is a SEPARATE tshark
+    // layer with no netkitty layer of its own to key a mapping on, so it is verified byte-for-byte by
+    // the round-trip + golden instead.
+    rmcp: {tsLayer: 'rmcp', fields: [
+        {nk: 'version', ts: 'rmcp.version', kind: 'int'},
+        {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
+        {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.

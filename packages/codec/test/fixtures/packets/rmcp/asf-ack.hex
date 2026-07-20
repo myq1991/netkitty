@@ -1,0 +1,6 @@
+# ASF-class RMCP ACK (ASF 2.0 / DSP0136): a bare 4-byte RMCP header with the ACK bit set (class byte
+# 0x86 = ACK + ASF class 6) and NO ASF message body — the standard acknowledgement frame.
+# source: standard 4-byte RMCP ACK payload (06 00 ff 86) via a real UDP socket to 127.0.0.1:623 on a
+# debian:12 container's ethernet lo, captured with tcpdump. Regression for the class-6/empty-payload
+# encode dead-zone (must not fabricate 8 phantom ASF bytes on re-encode).
+000000000000000000000000080045000020748c40004011c83e7f0000017f000001a2de026f000cfe1f0600ff86
