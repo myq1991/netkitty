@@ -167,6 +167,10 @@ export class IPv6 extends BaseHeader {
 
     public readonly matchKeys: string[] = ['ethertype:86dd']
 
+    //Also in the heuristic chain so IPv6 can be recognized as the inner payload of a bare-IP tunnel
+    //(GTP-U G-PDU). The etherType path below still handles the ethertype:86dd bucket unchanged.
+    public readonly heuristicFallback: boolean = true
+
     public readonly demuxProducers: DemuxProducer[] = [{field: 'nxt', namespace: 'ipproto', kind: 'uint'}]
 
     public name: string = 'Internet Protocol Version 6'
@@ -175,7 +179,12 @@ export class IPv6 extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x86dd)
+        //Normal path (unchanged): a parent that demuxed to IPv6 via its etherType field.
+        if (this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x86dd)) return true
+        //Bare-IP tunnel path (GTP-U): no inner-protocol field, so match by the IPv6 version nibble. The
+        //tunnel-parent id gate MUST come first — a 4-bit nibble alone is too weak a signature.
+        if (['gtp'].includes(this.prevCodecModule.id) && (this.readBytes(0, 1, true)[0] >> 4) === 6) return true
+        return false
     }
 
 }

@@ -338,6 +338,11 @@ export class IPv4 extends BaseHeader {
 
     public readonly matchKeys: string[] = ['ethertype:0800']
 
+    //Also in the heuristic chain so IPv4 can be recognized as the inner payload of a bare-IP tunnel
+    //(GTP-U G-PDU), which carries no inner-protocol field. The etherType path below still handles the
+    //normal ethertype:0800 bucket, so ethernet-parented IPv4 is byte-identical to before.
+    public readonly heuristicFallback: boolean = true
+
     public readonly demuxProducers: DemuxProducer[] = [{field: 'protocol', namespace: 'ipproto', kind: 'uint'}]
 
     public readonly name: string = 'Internet Protocol Version 4'
@@ -346,6 +351,12 @@ export class IPv4 extends BaseHeader {
 
     public match(): boolean {
         if (!this.prevCodecModule) return false
-        return this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x0800)
+        //Normal path (unchanged): a parent that demuxed to IPv4 via its etherType field.
+        if (this.prevCodecModule.instance.etherType.getValue() === UInt16ToHex(0x0800)) return true
+        //Bare-IP tunnel path: GTP-U (and future discriminator-less IP tunnels) carry no inner-protocol
+        //field, so match by the IPv4 version nibble. The tunnel-parent id gate MUST come first — a 4-bit
+        //nibble alone is too weak a signature (many TCP/TLS payloads begin 0x4x).
+        if (['gtp'].includes(this.prevCodecModule.id) && (this.readBytes(0, 1, true)[0] >> 4) === 4) return true
+        return false
     }
 }

@@ -23,6 +23,7 @@ export {NBNS} from './headers/NBNS'
 export {Syslog} from './headers/Syslog'
 export {RADIUS} from './headers/RADIUS'
 export {VXLAN} from './headers/VXLAN'
+export {GTPU} from './headers/GTPU'
 export {VLAN_802dot1Q} from './headers/VLAN_802dot1Q'
 //阿才写的代码
 export {TLS_Alert} from './headers/TLS_Alert'

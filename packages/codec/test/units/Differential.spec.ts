@@ -169,6 +169,12 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
     vxlan: {tsLayer: 'vxlan', fields: [
         {nk: 'vni', ts: 'vxlan.vni', kind: 'int'}
     ]},
+    // GTP-U: verify TEID + message type. The inner IP is decoded recursively; the inner icmp/… layers
+    // are compared via their own mappings (the outer+inner 'ip' pair is skipped by the duplicate guard).
+    gtp: {tsLayer: 'gtp', fields: [
+        {nk: 'teid', ts: 'gtp.teid', kind: 'hexcode'},
+        {nk: 'msgType', ts: 'gtp.message', kind: 'int'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.

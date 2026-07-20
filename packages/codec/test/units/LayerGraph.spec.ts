@@ -49,7 +49,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         icmpv6: ['raw'],
         // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
         tcp: ['stun', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
-        udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'raw'],
+        udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'raw'],
         ntp: ['raw'],
         stun: ['raw'],
         dhcp: ['raw'],
@@ -63,6 +63,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         syslog: ['raw'],
         radius: ['raw'],
         vxlan: ['raw'],
+        gtp: ['raw'],
         'tls-handshake': ['raw'],
         'tls-alert': ['raw'],
         'tls-ccsp': ['raw'],
@@ -116,7 +117,7 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('tcp', 'tls-handshake'), {field: 'dstport', value: 443})
     assert.deepStrictEqual(discriminatorOf('tcp', 'IEC104_I_Frame'), {field: 'dstport', value: 2404})
     // udp now offers NTP on its well-known port 123.
-    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'raw'])
+    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'raw'])
     assert.deepStrictEqual(discriminatorOf('udp', 'ntp'), {field: 'dstport', value: 123})
     assert.deepStrictEqual(discriminatorOf('udp', 'stun'), {field: 'dstport', value: 3478})
     assert.deepStrictEqual(discriminatorOf('udp', 'dhcp'), {field: 'dstport', value: 67})
@@ -130,6 +131,7 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('udp', 'syslog'), {field: 'dstport', value: 514})
     assert.deepStrictEqual(discriminatorOf('udp', 'radius'), {field: 'dstport', value: 1812})
     assert.deepStrictEqual(discriminatorOf('udp', 'vxlan'), {field: 'dstport', value: 4789})
+    assert.deepStrictEqual(discriminatorOf('udp', 'gtp'), {field: 'dstport', value: 2152})
 })
 
 // 2b: the discriminator to set when adding a child (RawData / heuristic children return null).
@@ -150,15 +152,19 @@ test('checkConsistency: a well-formed stack reports no issues', async (): Promis
 })
 
 test('checkConsistency: a lying parent discriminator is flagged with an aligning suggestion', async (): Promise<void> => {
-    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('tls/clienthello').buffer)
-    // eth says IPv6 but the next layer is IPv4.
-    ;(decoded.find((l: CodecDecodeResult): boolean => l.id === 'eth')!.data as any).etherType = '86dd'
+    // Use eth→arp: arp is a plain demux child (not a heuristic-chain member), so the consistency
+    // mechanism applies. (IPv4/IPv6 are now heuristic-chain members — to also decode as bare-IP tunnel
+    // inner payloads — so, like TLS/IEC104, a lying eth.etherType above them is deliberately not
+    // flagged; that content/tunnel-reachable edge is intentionally silent in the editor.)
+    const decoded: CodecDecodeResult[] = await codec.decode(LoadPacket('arp/baseline').buffer)
+    // eth says IPv4 (0800) but the next layer is ARP (etherType should be 0806).
+    ;(decoded.find((l: CodecDecodeResult): boolean => l.id === 'eth')!.data as any).etherType = '0800'
     const issues: ConsistencyIssue[] = codec.checkConsistency(decoded)
     assert.strictEqual(issues.length, 1)
     assert.strictEqual(issues[0].parentId, 'eth')
-    assert.strictEqual(issues[0].childId, 'ipv4')
-    assert.strictEqual(issues[0].actual, '86dd')
-    assert.deepStrictEqual(issues[0].suggestion, {field: 'etherType', value: '0800'})
+    assert.strictEqual(issues[0].childId, 'arp')
+    assert.strictEqual(issues[0].actual, '0800')
+    assert.deepStrictEqual(issues[0].suggestion, {field: 'etherType', value: '0806'})
 })
 
 test('checkConsistency: a wrong ip.protocol is flagged and suggests the correct protocol number', async (): Promise<void> => {

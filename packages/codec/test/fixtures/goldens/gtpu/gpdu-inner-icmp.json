@@ -1,0 +1,101 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:55:44:33:22:11",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 120,
+      "id": 4660,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 5183,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 32768,
+      "dstport": 2152,
+      "length": 100,
+      "checksum": 51387
+    },
+    "errors": []
+  },
+  {
+    "id": "gtp",
+    "data": {
+      "flags": {
+        "version": 1,
+        "pt": true,
+        "e": false,
+        "s": false,
+        "pn": false
+      },
+      "msgType": 255,
+      "length": 84,
+      "teid": "12345678",
+      "optionalHeader": "",
+      "payload": ""
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 84,
+      "id": 63025,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 1,
+      "checksum": 136,
+      "sip": "192.168.1.158",
+      "dip": "192.168.1.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "icmp",
+    "data": {
+      "type": 8,
+      "code": 0,
+      "checksum": 21985,
+      "ident": 24899,
+      "seq": 0,
+      "message": "67e811540002dc9908090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637"
+    },
+    "errors": []
+  }
+]
