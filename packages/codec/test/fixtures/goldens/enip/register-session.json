@@ -1,0 +1,88 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 80,
+      "id": 6262,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 9264,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 59244,
+      "dstport": 44818,
+      "seq": 2366747679,
+      "ack": 3227001228,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65092,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 760108417,
+          "tsecr": 760108417
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "enip",
+    "data": {
+      "command": 101,
+      "length": 4,
+      "sessionHandle": 0,
+      "status": 0,
+      "senderContext": "0000000000000000",
+      "options": 0,
+      "data": "01000000"
+    },
+    "errors": []
+  }
+]

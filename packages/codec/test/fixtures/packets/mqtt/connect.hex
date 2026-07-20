@@ -1,0 +1,5 @@
+# MQTT 3.1.1 (tcp:1883) CONNECT packet. Fixed header: type 1 (CONNECT), flags 0, Remaining Length 16
+# (varint 0x10). Variable header: protocol name "MQTT", level 4, connect flags 0x02 (clean session),
+# keep-alive 60. Payload: client id "test". source: standard MQTT CONNECT via a TCP socket to
+# 127.0.0.1:1883 on a debian:12 container's ethernet lo, captured with tcpdump (PSH data segment).
+000000000000000000000000080045000046b5fb4000400686b47f0000017f000001cd56075b3568f8cf598d87ef80180200fe3a00000101080a2d5849e92d5849e9101000044d5154540402003c000474657374

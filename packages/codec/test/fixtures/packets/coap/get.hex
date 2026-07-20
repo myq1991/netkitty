@@ -1,0 +1,5 @@
+# CoAP (RFC 7252, udp:5683) CON GET request. Version 1, type 0 (CON), token length 4, code 0.01 (GET),
+# message ID 0x1234, token "test" (74657374), one Uri-Path option (delta 11, len 4) "test".
+# source: standard CoAP CON GET payload via a real UDP socket to 127.0.0.1:5683 on a debian:12
+# container's ethernet lo, captured with tcpdump.
+00000000000000000000000008004500002968ec40004011d3d57f0000017f000001b9e516330015fe284401123474657374b474657374

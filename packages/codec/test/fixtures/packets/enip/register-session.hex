@@ -1,0 +1,5 @@
+# EtherNet/IP encapsulation (ODVA, tcp:44818) RegisterSession request. LITTLE-ENDIAN header: command
+# 0x0065 (RegisterSession), length 4, session handle 0, status 0, sender context 0, options 0; data =
+# protocol version 0x0001 (LE) + options flags 0x0000. source: standard ENIP RegisterSession payload over
+# a TCP socket to 127.0.0.1:44818 on a debian:12 container's ethernet lo, captured with tcpdump (PSH).
+00000000000000000000000008004500005018764000400624307f0000017f000001e76caf128d11b41fc058218c80180200fe4400000101080a2d4e55812d4e558165000400000000000000000000000000000000000000000001000000

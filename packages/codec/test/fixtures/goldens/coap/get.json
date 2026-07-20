@@ -1,0 +1,59 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 41,
+      "id": 26860,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 54229,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 47589,
+      "dstport": 5683,
+      "length": 21,
+      "checksum": 65064
+    },
+    "errors": []
+  },
+  {
+    "id": "coap",
+    "data": {
+      "version": 1,
+      "type": 0,
+      "tokenLength": 4,
+      "code": 1,
+      "messageId": 4660,
+      "token": "74657374",
+      "payload": "b474657374"
+    },
+    "errors": []
+  }
+]

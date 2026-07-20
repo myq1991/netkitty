@@ -185,6 +185,31 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the
+    // varint Remaining Length. The variable header/payload is verified by round-trip + golden.
+    mqtt: {tsLayer: 'mqtt', fields: [
+        {nk: 'messageType', ts: 'mqtt.msgtype', kind: 'int'},
+        {nk: 'remainingLength', ts: 'mqtt.len', kind: 'int'}
+    ]},
+    // CoAP (RFC 7252, udp:5683). The 4-byte fixed header. The token (tshark colon-formats it) and the
+    // options/payload are verified byte-for-byte by round-trip + golden.
+    coap: {tsLayer: 'coap', fields: [
+        {nk: 'version', ts: 'coap.version', kind: 'int'},
+        {nk: 'type', ts: 'coap.type', kind: 'int'},
+        {nk: 'tokenLength', ts: 'coap.token_len', kind: 'int'},
+        {nk: 'code', ts: 'coap.code', kind: 'int'},
+        {nk: 'messageId', ts: 'coap.mid', kind: 'int'}
+    ]},
+    // EtherNet/IP encapsulation (ODVA, tcp/udp:44818). The little-endian header fields; tshark renders
+    // them as 0x-hex but kind 'int' compares numerically (Number('0x0065')===101). The CIP/CPF command-
+    // specific data is verified byte-for-byte by round-trip + golden (tshark's separate sub-tree).
+    enip: {tsLayer: 'enip', fields: [
+        {nk: 'command', ts: 'enip.command', kind: 'int'},
+        {nk: 'length', ts: 'enip.length', kind: 'int'},
+        {nk: 'sessionHandle', ts: 'enip.session', kind: 'int'},
+        {nk: 'status', ts: 'enip.status', kind: 'int'},
+        {nk: 'options', ts: 'enip.options', kind: 'int'}
+    ]},
     // BACnet/IP (udp:47808). tshark names the BVLC layer 'bvlc'. type + function verify the header; the
     // BVLC Length (tshark renders it differently) and the NPDU/APDU payload are verified by round-trip.
     bacnet: {tsLayer: 'bvlc', fields: [
