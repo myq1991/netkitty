@@ -1,0 +1,4 @@
+# SOCKS4 server reply over TCP/1080 — null(0) + status 0x5A (request granted), bound 66.102.7.99:80
+# constructed: eth/ipv4(6=tcp)/tcp(1080->51000) envelope assembled by the netkitty encoder (valid checksums)
+# SOCKS4 payload (8 bytes): 00 5a 0050 42660763  = null(00) status(5a granted) dstPort(0050=80) dstIp(42660763=66.102.7.99)
+5254001234565254006543210800450000300000400000066f4d42660763c0a8010a0438c7380000000000000000500000008e7d0000005a005042660763

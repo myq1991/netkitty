@@ -1,0 +1,37 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "86dd"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6",
+    "data": {
+      "version": 6,
+      "tclass": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "flow": 0,
+      "plen": 33,
+      "nxt": 50,
+      "hllm": 0,
+      "sip": "0000:0000:0000:0000:0000:0000:0000:0000",
+      "dip": "0000:0000:0000:0000:0000:0000:0000:0000"
+    },
+    "errors": []
+  },
+  {
+    "id": "esp",
+    "data": {
+      "spi": 3735928559,
+      "sequenceNumber": 42,
+      "encryptedPayload": "00aabbccddeeff00112233445566778899aabbccddeeff0011"
+    },
+    "errors": []
+  }
+]

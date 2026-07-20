@@ -1,0 +1,7 @@
+# IPsec ESP (RFC 4303) over IPv4 (IP protocol 50). Cleartext header = SPI (0x0201a1c2) + Sequence
+# Number (1); everything after is the opaque encrypted payload + padding + ICV, kept verbatim.
+# Bytes: eth[14] 00112233445566778899aabb0800 | ipv4[20] 4500 0040(len=64) 0000 4000 40 32(proto=50)
+#   f71d(csum) c0a8010a(src 192.168.1.10) c0a80114(dst 192.168.1.20) | esp[44] 0201a1c2(spi)
+#   00000001(seq) + 36-byte encrypted payload. tshark: layer 'esp' esp.spi=0x0201a1c2 esp.sequence=1.
+# source: constructed via the netkitty encoder (valid eth/ipv4 envelope, checksum computed).
+00112233445566778899aabb080045000040000040000032f71dc0a8010ac0a801140201a1c200000001d3a4b7f1092e5c8a1122334455667788aabbccddeeff00112233445566778899aabbccdd

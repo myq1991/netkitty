@@ -13,6 +13,7 @@
       "pnio",
       "ecat",
       "hsr",
+      "eapol",
       "vlan",
       "raw"
     ],
@@ -34,6 +35,8 @@
       "gre",
       "vrrp",
       "ospf",
+      "ah",
+      "esp",
       "raw"
     ],
     "ipv6": [
@@ -45,6 +48,8 @@
       "gre",
       "vrrp",
       "ospf",
+      "ah",
+      "esp",
       "raw"
     ],
     "ipv6-hopopt": [
@@ -56,6 +61,8 @@
       "gre",
       "vrrp",
       "ospf",
+      "ah",
+      "esp",
       "raw"
     ],
     "icmpv6": [
@@ -78,6 +85,7 @@
       "telnet",
       "memcached",
       "socks5",
+      "socks4",
       "modbus",
       "dnp3",
       "c37118",
@@ -96,6 +104,10 @@
       "imap",
       "nntp",
       "irc",
+      "bgp",
+      "finger",
+      "rlogin",
+      "whois",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -137,6 +149,7 @@
       "enip",
       "coap",
       "sip",
+      "rip",
       "raw"
     ],
     "ntp": [
@@ -248,6 +261,7 @@
       "pnio",
       "ecat",
       "hsr",
+      "eapol",
       "vlan",
       "raw"
     ],
@@ -261,6 +275,7 @@
       "pnio",
       "ecat",
       "hsr",
+      "eapol",
       "vlan",
       "raw"
     ],
@@ -355,7 +370,45 @@
       "pnio",
       "ecat",
       "hsr",
+      "eapol",
       "vlan",
+      "raw"
+    ],
+    "ah": [
+      "icmp",
+      "ipv6-hopopt",
+      "icmpv6",
+      "tcp",
+      "udp",
+      "gre",
+      "vrrp",
+      "ospf",
+      "ah",
+      "esp",
+      "raw"
+    ],
+    "bgp": [
+      "raw"
+    ],
+    "eapol": [
+      "raw"
+    ],
+    "esp": [
+      "raw"
+    ],
+    "finger": [
+      "raw"
+    ],
+    "rip": [
+      "raw"
+    ],
+    "rlogin": [
+      "raw"
+    ],
+    "socks4": [
+      "raw"
+    ],
+    "whois": [
       "raw"
     ],
     "vlan": [
@@ -368,6 +421,7 @@
       "pnio",
       "ecat",
       "hsr",
+      "eapol",
       "vlan",
       "raw"
     ],
@@ -437,6 +491,10 @@
         "field": "etherType",
         "value": "892f"
       },
+      "eapol": {
+        "field": "etherType",
+        "value": "888e"
+      },
       "vlan": {
         "field": "etherType",
         "value": "8100"
@@ -485,6 +543,14 @@
         "field": "protocol",
         "value": 89
       },
+      "ah": {
+        "field": "protocol",
+        "value": 51
+      },
+      "esp": {
+        "field": "protocol",
+        "value": 50
+      },
       "raw": null
     },
     "ipv6": {
@@ -520,6 +586,14 @@
         "field": "nxt",
         "value": 89
       },
+      "ah": {
+        "field": "nxt",
+        "value": 51
+      },
+      "esp": {
+        "field": "nxt",
+        "value": 50
+      },
       "raw": null
     },
     "ipv6-hopopt": {
@@ -554,6 +628,14 @@
       "ospf": {
         "field": "nxt",
         "value": 89
+      },
+      "ah": {
+        "field": "nxt",
+        "value": 51
+      },
+      "esp": {
+        "field": "nxt",
+        "value": 50
       },
       "raw": null
     },
@@ -613,6 +695,10 @@
         "value": 11211
       },
       "socks5": {
+        "field": "dstport",
+        "value": 1080
+      },
+      "socks4": {
         "field": "dstport",
         "value": 1080
       },
@@ -687,6 +773,22 @@
       "irc": {
         "field": "dstport",
         "value": 6667
+      },
+      "bgp": {
+        "field": "dstport",
+        "value": 179
+      },
+      "finger": {
+        "field": "dstport",
+        "value": 79
+      },
+      "rlogin": {
+        "field": "dstport",
+        "value": 513
+      },
+      "whois": {
+        "field": "dstport",
+        "value": 43
       },
       "tls-alert": {
         "field": "dstport",
@@ -843,6 +945,10 @@
         "field": "dstport",
         "value": 5060
       },
+      "rip": {
+        "field": "dstport",
+        "value": 520
+      },
       "raw": null
     },
     "ntp": {
@@ -981,6 +1087,10 @@
         "field": "protocolType",
         "value": "892f"
       },
+      "eapol": {
+        "field": "protocolType",
+        "value": "888e"
+      },
       "vlan": {
         "field": "protocolType",
         "value": "8100"
@@ -1023,6 +1133,10 @@
       "hsr": {
         "field": "protocolType",
         "value": "892f"
+      },
+      "eapol": {
+        "field": "protocolType",
+        "value": "888e"
       },
       "vlan": {
         "field": "protocolType",
@@ -1148,10 +1262,81 @@
         "field": "etherType",
         "value": "892f"
       },
+      "eapol": {
+        "field": "etherType",
+        "value": "888e"
+      },
       "vlan": {
         "field": "etherType",
         "value": "8100"
       },
+      "raw": null
+    },
+    "ah": {
+      "icmp": {
+        "field": "nxt",
+        "value": 1
+      },
+      "ipv6-hopopt": {
+        "field": "nxt",
+        "value": 0
+      },
+      "icmpv6": {
+        "field": "nxt",
+        "value": 58
+      },
+      "tcp": {
+        "field": "nxt",
+        "value": 6
+      },
+      "udp": {
+        "field": "nxt",
+        "value": 17
+      },
+      "gre": {
+        "field": "nxt",
+        "value": 47
+      },
+      "vrrp": {
+        "field": "nxt",
+        "value": 112
+      },
+      "ospf": {
+        "field": "nxt",
+        "value": 89
+      },
+      "ah": {
+        "field": "nxt",
+        "value": 51
+      },
+      "esp": {
+        "field": "nxt",
+        "value": 50
+      },
+      "raw": null
+    },
+    "bgp": {
+      "raw": null
+    },
+    "eapol": {
+      "raw": null
+    },
+    "esp": {
+      "raw": null
+    },
+    "finger": {
+      "raw": null
+    },
+    "rip": {
+      "raw": null
+    },
+    "rlogin": {
+      "raw": null
+    },
+    "socks4": {
+      "raw": null
+    },
+    "whois": {
       "raw": null
     },
     "vlan": {
@@ -1190,6 +1375,10 @@
       "hsr": {
         "field": "etherType",
         "value": "892f"
+      },
+      "eapol": {
+        "field": "etherType",
+        "value": "888e"
       },
       "vlan": {
         "field": "etherType",

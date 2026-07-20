@@ -1,0 +1,6 @@
+# BGP-4 (tcp:179) OPEN message. Header: 16-byte all-ones marker, length 29, type 1 (OPEN);
+# body: version 4, my AS 64512, hold time 180s, BGP identifier 192.0.2.1, optional param len 0.
+# source: constructed spec-accurate frame (RFC 4271). eth/ipv4/tcp envelope assembled by the netkitty
+# encoder (valid IPv4 + TCP checksums); tshark 'bgp' dissector agrees (marker/length/type + OPEN body).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 179 dst 51000), [54:73] bgp header, [73:83] OPEN body.
+000000000000000000000000080045000045000040000006f6afc0000201c000020200b3c738000000000000000050000000a4000000ffffffffffffffffffffffffffffffff001d0104fc0000b4c000020100

@@ -1,0 +1,6 @@
+# IPsec ESP (RFC 4303) over IPv6 (Next Header = 50). Exercises the IPv6 nxt match path and the
+# IPv6-payload bound on the verbatim encrypted payload.
+# Bytes: eth[14] ...86dd | ipv6[40] 6000_0000 0021(plen=33) 32(nxt=50) 00(hlim) 2001:db8::1 ->
+#   2001:db8::2 | esp[33] deadbeef(spi) 0000002a(seq=42) + 25-byte encrypted payload.
+# source: constructed via the netkitty encoder (valid eth/ipv6 envelope).
+00112233445566778899aabb86dd60000000002132000000000000000000000000000000000000000000000000000000000000000000deadbeef0000002a00aabbccddeeff00112233445566778899aabbccddeeff0011

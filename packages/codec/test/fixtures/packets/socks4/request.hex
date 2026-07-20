@@ -1,0 +1,4 @@
+# SOCKS4 CONNECT request over TCP/1080 — version 4, command 1 (CONNECT), dst 66.102.7.99:80, userId "Fred"
+# constructed: eth/ipv4(6=tcp)/tcp(51000->1080) envelope assembled by the netkitty encoder (valid checksums); tshark agrees (layer 'socks': version 4, command 1, dstport 80, dst 66.102.7.99, username Fred)
+# SOCKS4 payload (14 bytes): 04 01 0050 42660763 46726564 00  = version(04) command(01) dstPort(0050=80) dstIp(42660763=66.102.7.99) userId("Fred") null(00)
+5254001234565254006543210800450000350000400000066f48c0a8010a42660763c7380438000000000000000050000000defa000004010050426607634672656400

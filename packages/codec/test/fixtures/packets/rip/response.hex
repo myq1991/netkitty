@@ -1,0 +1,4 @@
+# RIP v2 response (command 2) with two route entries, over UDP 520 -> 520, IPv4 multicast to 224.0.0.9
+# constructed: assembled through the netkitty encoder so the eth/ipv4/udp envelope + checksums are valid; tshark 'rip' layer agrees (command 2, version 2, both entries)
+# bytes: eth[14] 01005e000009/001122334455/0800 | ipv4[20] 4500..c0a80101/e0000009 | udp[8] 0208/0208/0034/8e0f | rip[44]: cmd=02 ver=02 reserved=0000, entry1 AF=0002 tag=0000 ip=c0a80100(192.168.1.0) mask=ffffff00 nexthop=00000000 metric=00000001, entry2 AF=0002 tag=0000 ip=0a000000(10.0.0.0) mask=ff000000 nexthop=00000000 metric=00000002
+01005e000009001122334455080045000048000040000111d7f2c0a80101e00000090208020800348e0f0202000000020000c0a80100ffffff000000000000000001000200000a000000ff0000000000000000000002

@@ -1,0 +1,9 @@
+# EAPOL (IEEE 802.1X, ethertype 0x888E) — an EAPOL-Key frame carrying the WPA/RSN 4-way-handshake
+# message 1 (Packet Type 3). Version 2 (802.1X-2004), Body Length 95 = the IEEE 802.11 RSN key
+# descriptor (Descriptor Type 02=RSN, Key Info 0x008a = pairwise+ACK, Key Length 16, Replay Counter 1,
+# a 32-byte ANonce, zero Key IV/RSC/ID, zero MIC as this is msg 1, Key Data Length 0). AP 00:0c:29:33:cc:dd
+# → STA 00:0c:29:11:aa:bb. Total 113 bytes (>60, so no Ethernet padding). constructed: hand-assembled from
+# the IEEE 802.1X / 802.11 field layout; cross-checked against tshark's eapol dissector (wlan.rsn.* fields).
+# breakdown: eth[14] 000c2911aabb 000c2933ccdd 888e | eapol hdr[4] version=02 type=03 bodyLength=005f
+# | key body[95] 02 008a 0010 0000000000000001 <nonce 32> <iv 16=00> <rsc 8=00> <id 8=00> <mic 16=00> 0000
+000c2911aabb000c2933ccdd888e0203005f02008a001000000000000000010102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

@@ -1,0 +1,10 @@
+# Finger (RFC 1288, tcp:79) client query. The client opens the transaction with a single US-ASCII query
+# line "/W root\r\n" (2f 57 20 72 6f 6f 74 0d 0a): the verbose switch {W}="/W", a space, the username
+# "root", terminated by CR LF. The whole payload is kept verbatim (byte-perfect); the first line is
+# parsed for display into {isVerbose:true, query:"root"}.
+# source: CONSTRUCTED — the "/W root\r\n" payload is a spec-accurate RFC 1288 verbose query; the
+# eth+ipv4+tcp envelope (docker-bridge MACs/IPs 172.17.0.1:49798 -> 172.17.0.2:79) was synthesized by the
+# netkitty encoder so checksums/lengths are valid. Cross-checked with tshark: it dissects a `finger` layer
+# with finger.query = "/W root\r\n". Verified [eth,ipv4,tcp,finger] decode + byte-perfect round-trip.
+# byte breakdown: 14 eth | 20 ipv4 (proto 6) | 20 tcp (dstport 0x004f=79) | 9 finger payload
+0242ac1100020242ac11000108004500003100004000000622a2ac110001ac110002c286004f000000000000000050000000579a00002f5720726f6f740d0a

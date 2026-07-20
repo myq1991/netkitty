@@ -1,0 +1,65 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "02:00:00:00:00:02",
+      "smac": "02:00:00:00:00:01",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 58,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 51,
+      "checksum": 9357,
+      "sip": "10.1.1.1",
+      "dip": "10.1.1.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "ah",
+    "data": {
+      "nxt": 17,
+      "payloadLen": 4,
+      "reserved": "0000",
+      "spi": 287454020,
+      "sequenceNumber": 7,
+      "icv": "a1b2c3d4e5f60718293a4b5c"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 30000,
+      "dstport": 30001,
+      "length": 14,
+      "checksum": 48879
+    },
+    "errors": []
+  },
+  {
+    "id": "raw",
+    "data": {
+      "data": "deadbeefcafe"
+    },
+    "errors": []
+  }
+]

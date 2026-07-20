@@ -1,0 +1,4 @@
+# SOCKS4a CONNECT request over TCP/1080 — dstIp 0.0.0.1 (unresolved) so a trailing domain follows the userId
+# constructed: eth/ipv4(6=tcp)/tcp(51000->1080) envelope assembled by the netkitty encoder (valid checksums)
+# SOCKS4 payload (23 bytes): 04 01 0050 00000001 6e6b00 7777772e6578616d706c652e636f6d00  = version(04) command(01) dstPort(80) dstIp(0.0.0.1) userId("nk")null domain("www.example.com")null
+5254001234565254006543210800450000430000400000066f3ac0a8010a42660763c7380438000000000000000050000000cfc4000004010050000000016e6b007777772e6578616d706c652e636f6d00

@@ -1,0 +1,9 @@
+# IPsec AH (RFC 4302) in transport mode over IPv4 (proto 51), protecting an inner UDP datagram.
+# source: constructed via the netkitty encoder (eth/ipv4 checksums valid); AH fields cross-checked
+#         against tshark's ah dissector (next_header=17, length=4, spi=0x11223344, sequence=7, icv agree).
+# eth(14): dst 02:00:00:00:00:02  src 02:00:00:00:00:01  ethertype 0800
+# ipv4(20): 45 00 | totlen 003a | id 0000 | 4000 | ttl 40 | proto 33(=51 AH) | csum 248d | 10.1.1.1 -> 10.1.1.2
+# ah(24): nxt 11(=17 UDP) | payloadLen 04 (=>(4+2)*4=24B total, icv=12B) | reserved 0000 |
+#         spi 11223344 | seq 00000007 | icv a1b2c3d4e5f60718293a4b5c (HMAC-SHA1-96, 12B)
+# udp(8): sport 7530(30000) | dport 7531(30001) | len 000e | csum beef   payload: deadbeefcafe
+02000000000202000000000108004500003a000040004033248d0a0101010a010102110400001122334400000007a1b2c3d4e5f60718293a4b5c75307531000ebeefdeadbeefcafe

@@ -1,0 +1,73 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:09",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 72,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 17,
+      "checksum": 55282,
+      "sip": "192.168.1.1",
+      "dip": "224.0.0.9"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 520,
+      "dstport": 520,
+      "length": 52,
+      "checksum": 36367
+    },
+    "errors": []
+  },
+  {
+    "id": "rip",
+    "data": {
+      "command": 2,
+      "version": 2,
+      "reserved": 0,
+      "entries": [
+        {
+          "addressFamily": 2,
+          "routeTag": 0,
+          "ipAddress": "192.168.1.0",
+          "subnetMask": "255.255.255.0",
+          "nextHop": "0.0.0.0",
+          "metric": 1
+        },
+        {
+          "addressFamily": 2,
+          "routeTag": 0,
+          "ipAddress": "10.0.0.0",
+          "subnetMask": "255.0.0.0",
+          "nextHop": "0.0.0.0",
+          "metric": 2
+        }
+      ]
+    },
+    "errors": []
+  }
+]

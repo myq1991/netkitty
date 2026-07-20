@@ -1,0 +1,6 @@
+# BGP-4 (tcp:179) KEEPALIVE message. Header only: 16-byte all-ones marker, length 19, type 4
+# (KEEPALIVE); empty body — the minimal well-formed BGP message.
+# source: constructed spec-accurate frame (RFC 4271). eth/ipv4/tcp envelope assembled by the netkitty
+# encoder (valid IPv4 + TCP checksums). bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 51000 dst 179),
+# [54:73] bgp header (no body).
+00000000000000000000000008004500003b000040000006f6b9c0000202c0000201c73800b30000000000000000500000005fcf0000ffffffffffffffffffffffffffffffff001304

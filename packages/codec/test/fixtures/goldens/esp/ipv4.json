@@ -1,0 +1,45 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 64,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 50,
+      "checksum": 63261,
+      "sip": "192.168.1.10",
+      "dip": "192.168.1.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "esp",
+    "data": {
+      "spi": 33661378,
+      "sequenceNumber": 1,
+      "encryptedPayload": "d3a4b7f1092e5c8a1122334455667788aabbccddeeff00112233445566778899aabbccdd"
+    },
+    "errors": []
+  }
+]

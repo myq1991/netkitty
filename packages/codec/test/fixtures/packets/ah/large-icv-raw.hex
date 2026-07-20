@@ -1,0 +1,9 @@
+# IPsec AH (RFC 4302) over IPv4 (proto 51) with a 24-byte ICV (payloadLen=7) and an unrecognised
+# Next Header (59 = IPv6 No-Next-Header), so the protected payload falls through to RawData.
+# source: constructed via the netkitty encoder (eth/ipv4 checksums valid).
+# eth(14): dst 02:00:00:00:00:02  src 02:00:00:00:00:01  ethertype 0800
+# ipv4(20): 45 00 | totlen 003e | id 0000 | 4000 | ttl 3f | proto 33(=51 AH) | csum b76e | 192.0.2.10 -> 192.0.2.20
+# ah(36): nxt 3b(=59) | payloadLen 07 (=>(7+2)*4=36B total, icv=24B) | reserved 0000 |
+#         spi deadbeef | seq 01020304 | icv 00112233445566778899aabbccddeeff0011223344556677 (24B)
+# raw(6): f00dfaceb00c
+02000000000202000000000108004500003e000040003f33b76ec000020ac00002143b070000deadbeef0102030400112233445566778899aabbccddeeff0011223344556677f00dfaceb00c

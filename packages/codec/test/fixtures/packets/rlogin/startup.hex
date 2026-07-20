@@ -1,0 +1,12 @@
+# Rlogin (RFC 1282, tcp:513) client startup message. On connecting, the client sends four null-separated
+# strings: "\0jdoe\0root\0xterm/38400\0" (00 6a64 6f65 00 72 6f6f74 00 787465726d2f3338343030 00) — the
+# leading null (empty first field), client-user "jdoe", server-user "root", terminal-type/speed
+# "xterm/38400". The whole payload is kept verbatim (byte-perfect); when it opens with 0x00 the fields are
+# parsed for display into {isStartup:true, clientUser:"jdoe", serverUser:"root", terminalType:"xterm/38400"}.
+# source: CONSTRUCTED — the startup payload is a spec-accurate RFC 1282 message; the eth+ipv4+tcp envelope
+# (docker-bridge MACs/IPs 172.17.0.1:49820 -> 172.17.0.2:513) was synthesized by the netkitty encoder so
+# checksums/lengths are valid. Cross-checked with tshark: it dissects a `rlogin` layer with
+# rlogin.client_user_name="jdoe", rlogin.server_user_name="root", rlogin.terminal_type="xterm",
+# rlogin.terminal_speed="38400". Verified [eth,ipv4,tcp,rlogin] decode + byte-perfect round-trip.
+# byte breakdown: 14 eth | 20 ipv4 (proto 6) | 20 tcp (dstport 0x0201=513) | 23 rlogin payload = 77 total
+0242ac1100020242ac11000108004500003f0000400000062294ac110001ac110002c29c0201000000000000000050000000686a0000006a646f6500726f6f7400787465726d2f333834303000

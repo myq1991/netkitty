@@ -1,0 +1,8 @@
+# WHOIS client request (RFC 3912), tcp:43. The client's whole payload is the single US-ASCII line
+# "example.com\r\n" — the query domain terminated by CR LF. Kept verbatim (byte-perfect); the first line
+# is parsed for display into query "example.com" and isQuery=true (single CR-LF-terminated line).
+# source: CONSTRUCTED. The WHOIS payload is the spec-exact request line (bytes 6578616d706c652e636f6d0d0a
+# = "example.com\r\n"); the eth+ipv4+tcp envelope (dst port 43) was assembled by the netkitty encoder so
+# checksums are valid. Cross-checked with tshark: layer "whois", whois.query="example.com\r\n".
+# Verified [eth,ipv4,tcp,whois] decode + byte-perfect round-trip.
+0242ac1100020242ac110001080045000035000040000006229eac110001ac110002cb2c002b000000000000000050000000155d00006578616d706c652e636f6d0d0a
