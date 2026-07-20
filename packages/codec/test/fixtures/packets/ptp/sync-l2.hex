@@ -1,0 +1,5 @@
+# PTPv2 (IEEE 1588-2008) Sync message over raw Ethernet, EtherType 0x88f7, dst PTP primary
+# multicast 01:1b:19:00:00:00. messageType 0 (Sync), versionPTP 2, messageLength 44, domain 0,
+# twoStep flag, clockIdentity 001b19fffe000000, portNumber 1, seq 0; 10-byte zero originTimestamp body.
+# source: synthesized from the IEEE 1588-2008 clause-13 common-header layout; verified with tshark (ptp).
+011b19000000001b1900000088f70002002c00000200000000000000000000000000001b19fffe00000000010000000000000000000000000000

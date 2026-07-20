@@ -1,0 +1,6 @@
+# ONC RPC / SunRPC (RFC 5531, udp:111) portmapper GETPORT CALL. xid 0xdeadbeef, msgType 0 (CALL),
+# RPC version 2, program 100000 (portmap), program version 2, procedure 3 (GETPORT); AUTH_NULL cred +
+# verf (flavor 0, length 0 each); GETPORT args: program 100005 (mountd), version 1, protocol 17 (UDP),
+# port 0. UDP length 64, valid UDP checksum.
+# source: hand-crafted portmap GETPORT datagram; verified as eth:ethertype:ip:udp:rpc:portmap by tshark.
+00112233445566778899aabb080045000054123440004011a446c000020ac0000214c7a7006f0040083adeadbeef0000000000000002000186a0000000020000000300000000000000000000000000000000000186a5000000010000001100000000

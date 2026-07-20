@@ -1,0 +1,8 @@
+# EIGRP (IP proto 88) Hello — 20-byte header (version 2, opcode 5 Hello, checksum 0xee68, flags/seq/ack 0,
+# virtual router id 0, autonomous system 100) followed by two TLVs: Parameters (0x0001, len 12: K1..K6 =
+# 1,0,1,0,0,0, hold time 15) and Software Version (0x0004, len 8: EIGRP release 12.4, TLV version 1.2).
+# source: constructed spec-accurate frame. eth (dst 01:00:5e:00:00:0a multicast, src Cisco) / ipv4 (proto
+# 88, TTL 2, prec 6, dst 224.0.0.10, valid header checksum) envelope; EIGRP checksum computed correctly.
+# tshark decodes it as eth:ethertype:ip:eigrp with 'Checksum Status: Good'.
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] eigrp header, [54:66] Parameters TLV, [66:74] Software Version TLV.
+01005e00000a00000c0102ab080045c0003c00000000025815f7c0a80101e000000a0205ee68000000000000000000000000000000640001000c010001000000000f000400080c040102

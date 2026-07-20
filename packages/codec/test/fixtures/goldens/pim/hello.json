@@ -1,0 +1,47 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:0d",
+      "smac": "00:00:00:00:00:01",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 46,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 103,
+      "checksum": 5979,
+      "sip": "192.0.2.1",
+      "dip": "224.0.0.13"
+    },
+    "errors": []
+  },
+  {
+    "id": "pim",
+    "data": {
+      "version": 2,
+      "type": 0,
+      "reserved": "00",
+      "checksum": 26570,
+      "body": "000100020069001300040000000100140004aabbccdd"
+    },
+    "errors": []
+  }
+]

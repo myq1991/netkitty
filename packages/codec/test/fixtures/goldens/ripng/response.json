@@ -1,0 +1,55 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "33:33:00:00:00:09",
+      "smac": "00:00:00:00:00:01",
+      "etherType": "86dd"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6",
+    "data": {
+      "version": 6,
+      "tclass": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "flow": 0,
+      "plen": 32,
+      "nxt": 17,
+      "hllm": 255,
+      "sip": "fe80:0000:0000:0000:0000:0000:0000:0001",
+      "dip": "ff02:0000:0000:0000:0000:0000:0000:0009"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 521,
+      "dstport": 521,
+      "length": 32,
+      "checksum": 990
+    },
+    "errors": []
+  },
+  {
+    "id": "ripng",
+    "data": {
+      "command": 2,
+      "version": 1,
+      "reserved": 0,
+      "rtes": [
+        {
+          "prefix": "20010db8000000000000000000000000",
+          "routeTag": 0,
+          "prefixLength": 64,
+          "metric": 1
+        }
+      ]
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,7 @@
+# MPLS unicast (ethertype 0x8847) two-label stack over an inner IPv4/ICMP echo request.
+# Label stack: outer entry — Label 16, TC 0, S 0, TTL 64 — then inner entry — Label 100, TC 5, S 1
+# (bottom of stack), TTL 63 — then the IPv4 payload. Exercises the stack-repeat-until-S=1 walk.
+# source: constructed spec-accurate frame (RFC 3032). eth envelope + valid inner IPv4/ICMP checksums;
+# tshark 'mpls' dissector agrees (frame.protocols eth:ethertype:mpls:icmp:data; Labels 16 then 100).
+# bytes: [0:14] eth(ethertype 8847), [14:22] mpls stack (2 entries), [22:42] ipv4, [42:58] icmp.
+00000000000000000000000088470001004000064b3f45000024000100004001f6d4c0000201c00002020800663f0001002a6162636465666768

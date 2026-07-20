@@ -1,0 +1,9 @@
+# RSVP (IP protocol 46) PATH message, RFC 2205. Common header: version 1, flags 0, type 1 (PATH),
+# checksum 0xb643 (tshark-valid), send TTL 64, RSVP length 52. Objects: SESSION (dest 192.0.2.1,
+# UDP, port 5000), RSVP_HOP (neighbor 192.0.2.100, LIH 1), TIME_VALUES (refresh 30000ms),
+# SENDER_TEMPLATE (sender 192.0.2.100, port 1234).
+# source: constructed spec-accurate frame (RFC 2205). eth/ipv4 envelope assembled by the netkitty
+# encoder (valid IPv4 header checksum + RSVP message checksum); tshark 'rsvp' dissector agrees
+# (frame.protocols = eth:ethertype:ip:rsvp, all four objects dissected, checksum [correct]).
+# bytes: [0:14] eth, [14:34] ipv4(proto 46), [34:42] rsvp common header, [42:94] four objects.
+01005e00000000112233445508004500004800004000402eb622c0000264c00002011001b64340000034000c0101c000020111001388000c0301c0000264000000010008050100007530000c0b01c0000264000004d2

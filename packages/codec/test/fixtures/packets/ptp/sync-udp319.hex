@@ -1,0 +1,5 @@
+# PTPv2 (IEEE 1588-2008) Sync message over UDP/IPv4 event port 319, dst multicast 224.0.1.129.
+# messageType 0 (Sync), versionPTP 2, messageLength 44, domain 0, twoStep flag,
+# clockIdentity 001b19fffe000000, portNumber 1, seq 0; 10-byte zero originTimestamp body.
+# source: synthesized from the IEEE 1588-2008 clause-13 common-header layout; verified with tshark (ptp).
+01005e000181001b19000000080045000048000040000111d619c000020ae0000181013f013f00343f320002002c00000200000000000000000000000000001b19fffe00000000010000000000000000000000000000

@@ -1,0 +1,8 @@
+# PPPoE Discovery PADO (RFC 2516, EtherType 0x8863). Offer from an Access Concentrator to the host.
+# ver 1 / type 1, code 0x07 (PADO), session 0x0000, payload length 0x0013 (19 tag bytes).
+# tags: AC-Name (0x0102) len 3 value "isp" + Service-Name (0x0101) len 0 + Host-Uniq (0x0103) len 4
+#       value 12345678 (echoed from the host's PADI).
+# source: constructed spec-accurate frame (RFC 2516); tshark 'pppoed' dissector agrees.
+# bytes: [0:14] eth (dst 00:11:22:33:44:55 host, src 00:aa:bb:cc:dd:ee AC, type 8863),
+#        [14:20] pppoe header, [20:39] tags.
+00112233445500aabbccddee886311070000001301020003697370010100000103000412345678

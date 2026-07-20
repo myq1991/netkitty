@@ -1,0 +1,60 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:7f:ff:fa",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 122,
+      "id": 1,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 51307,
+      "sip": "192.168.1.100",
+      "dip": "239.255.255.250"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 49152,
+      "dstport": 1900,
+      "length": 102,
+      "checksum": 14850
+    },
+    "errors": []
+  },
+  {
+    "id": "ssdp",
+    "data": {
+      "message": "4d2d534541524348202a20485454502f312e310d0a484f53543a203233392e3235352e3235352e3235303a313930300d0a4d414e3a2022737364703a646973636f766572220d0a4d583a20310d0a53543a20737364703a616c6c0d0a0d0a",
+      "isRequest": true,
+      "method": "M-SEARCH",
+      "requestUri": "*",
+      "version": "HTTP/1.1",
+      "statusCode": 0,
+      "reasonPhrase": "",
+      "info": "M-SEARCH *"
+    },
+    "errors": []
+  }
+]

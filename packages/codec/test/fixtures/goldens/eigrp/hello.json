@@ -1,0 +1,62 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:0a",
+      "smac": "00:00:0c:01:02:ab",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 48,
+        "ecn": 0
+      },
+      "length": 60,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 2,
+      "protocol": 88,
+      "checksum": 5623,
+      "sip": "192.168.1.1",
+      "dip": "224.0.0.10"
+    },
+    "errors": []
+  },
+  {
+    "id": "eigrp",
+    "data": {
+      "version": 2,
+      "opcode": 5,
+      "checksum": 61032,
+      "flags": 0,
+      "sequence": 0,
+      "ack": 0,
+      "virtualRouterId": 0,
+      "autonomousSystem": 100,
+      "tlvs": [
+        {
+          "type": 1,
+          "length": 12,
+          "value": "010001000000000f"
+        },
+        {
+          "type": 4,
+          "length": 8,
+          "value": "0c040102"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

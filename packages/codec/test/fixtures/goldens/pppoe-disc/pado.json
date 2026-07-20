@@ -1,0 +1,40 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "00:aa:bb:cc:dd:ee",
+      "etherType": "8863"
+    },
+    "errors": []
+  },
+  {
+    "id": "pppoe-disc",
+    "data": {
+      "version": 1,
+      "type": 1,
+      "code": 7,
+      "sessionId": 0,
+      "length": 19,
+      "tags": [
+        {
+          "type": 258,
+          "length": 3,
+          "value": "697370"
+        },
+        {
+          "type": 257,
+          "length": 0,
+          "value": ""
+        },
+        {
+          "type": 259,
+          "length": 4,
+          "value": "12345678"
+        }
+      ],
+      "padding": ""
+    },
+    "errors": []
+  }
+]

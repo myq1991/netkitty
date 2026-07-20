@@ -1,0 +1,7 @@
+# IGMPv2 General Membership Query (RFC 2236, Type 0x11) over IPv4 (IP protocol 2). General query has
+# Max Resp Code 100 (10s) and group address 0.0.0.0; src 192.168.1.1, dst 224.0.0.1 (all-hosts), ttl 1,
+# IGMP checksum 0xee9b (tshark-valid), IP checksum 0x1836 (tshark-valid). Destination MAC 01:00:5e:00:00:01
+# is the all-hosts group's Ethernet multicast mapping.
+# source: standard IGMPv2 general query emitted via a raw IPPROTO-2 socket, fields set per RFC 2236 and
+# the checksums computed to match a real on-wire query.
+01005e00000100112233446608004500001c0000000001021836c0a80101e00000011164ee9b00000000

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:01",
+      "smac": "00:11:22:33:44:66",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 28,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 2,
+      "checksum": 6198,
+      "sip": "192.168.1.1",
+      "dip": "224.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "igmp",
+    "data": {
+      "type": 17,
+      "maxRespCode": 100,
+      "checksum": 61083,
+      "groupAddress": "0.0.0.0"
+    },
+    "errors": []
+  }
+]

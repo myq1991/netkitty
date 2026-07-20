@@ -14,6 +14,11 @@
       "ecat",
       "hsr",
       "eapol",
+      "lacp",
+      "mpls",
+      "pppoe-disc",
+      "pppoe-sess",
+      "ptp",
       "vlan",
       "raw"
     ],
@@ -37,6 +42,11 @@
       "ospf",
       "ah",
       "esp",
+      "dccp",
+      "eigrp",
+      "igmp",
+      "pim",
+      "rsvp",
       "raw"
     ],
     "ipv6": [
@@ -50,6 +60,11 @@
       "ospf",
       "ah",
       "esp",
+      "dccp",
+      "eigrp",
+      "igmp",
+      "pim",
+      "rsvp",
       "raw"
     ],
     "ipv6-hopopt": [
@@ -63,6 +78,11 @@
       "ospf",
       "ah",
       "esp",
+      "dccp",
+      "eigrp",
+      "igmp",
+      "pim",
+      "rsvp",
       "raw"
     ],
     "icmpv6": [
@@ -108,6 +128,8 @@
       "finger",
       "rlogin",
       "whois",
+      "ident",
+      "sunrpc",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -150,6 +172,12 @@
       "coap",
       "sip",
       "rip",
+      "gtpv2",
+      "hsrp",
+      "ptp",
+      "ripng",
+      "ssdp",
+      "sunrpc",
       "raw"
     ],
     "ntp": [
@@ -262,6 +290,11 @@
       "ecat",
       "hsr",
       "eapol",
+      "lacp",
+      "mpls",
+      "pppoe-disc",
+      "pppoe-sess",
+      "ptp",
       "vlan",
       "raw"
     ],
@@ -276,6 +309,11 @@
       "ecat",
       "hsr",
       "eapol",
+      "lacp",
+      "mpls",
+      "pppoe-disc",
+      "pppoe-sess",
+      "ptp",
       "vlan",
       "raw"
     ],
@@ -371,6 +409,11 @@
       "ecat",
       "hsr",
       "eapol",
+      "lacp",
+      "mpls",
+      "pppoe-disc",
+      "pppoe-sess",
+      "ptp",
       "vlan",
       "raw"
     ],
@@ -385,6 +428,11 @@
       "ospf",
       "ah",
       "esp",
+      "dccp",
+      "eigrp",
+      "igmp",
+      "pim",
+      "rsvp",
       "raw"
     ],
     "bgp": [
@@ -411,6 +459,54 @@
     "whois": [
       "raw"
     ],
+    "dccp": [
+      "raw"
+    ],
+    "eigrp": [
+      "raw"
+    ],
+    "gtpv2": [
+      "raw"
+    ],
+    "hsrp": [
+      "raw"
+    ],
+    "igmp": [
+      "raw"
+    ],
+    "ident": [
+      "raw"
+    ],
+    "lacp": [
+      "raw"
+    ],
+    "mpls": [
+      "raw"
+    ],
+    "pim": [
+      "raw"
+    ],
+    "pppoe-disc": [
+      "raw"
+    ],
+    "pppoe-sess": [
+      "raw"
+    ],
+    "ptp": [
+      "raw"
+    ],
+    "ripng": [
+      "raw"
+    ],
+    "rsvp": [
+      "raw"
+    ],
+    "ssdp": [
+      "raw"
+    ],
+    "sunrpc": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -422,6 +518,11 @@
       "ecat",
       "hsr",
       "eapol",
+      "lacp",
+      "mpls",
+      "pppoe-disc",
+      "pppoe-sess",
+      "ptp",
       "vlan",
       "raw"
     ],
@@ -495,6 +596,26 @@
         "field": "etherType",
         "value": "888e"
       },
+      "lacp": {
+        "field": "etherType",
+        "value": "8809"
+      },
+      "mpls": {
+        "field": "etherType",
+        "value": "8847"
+      },
+      "pppoe-disc": {
+        "field": "etherType",
+        "value": "8863"
+      },
+      "pppoe-sess": {
+        "field": "etherType",
+        "value": "8864"
+      },
+      "ptp": {
+        "field": "etherType",
+        "value": "88f7"
+      },
       "vlan": {
         "field": "etherType",
         "value": "8100"
@@ -551,6 +672,26 @@
         "field": "protocol",
         "value": 50
       },
+      "dccp": {
+        "field": "protocol",
+        "value": 33
+      },
+      "eigrp": {
+        "field": "protocol",
+        "value": 88
+      },
+      "igmp": {
+        "field": "protocol",
+        "value": 2
+      },
+      "pim": {
+        "field": "protocol",
+        "value": 103
+      },
+      "rsvp": {
+        "field": "protocol",
+        "value": 46
+      },
       "raw": null
     },
     "ipv6": {
@@ -594,6 +735,26 @@
         "field": "nxt",
         "value": 50
       },
+      "dccp": {
+        "field": "nxt",
+        "value": 33
+      },
+      "eigrp": {
+        "field": "nxt",
+        "value": 88
+      },
+      "igmp": {
+        "field": "nxt",
+        "value": 2
+      },
+      "pim": {
+        "field": "nxt",
+        "value": 103
+      },
+      "rsvp": {
+        "field": "nxt",
+        "value": 46
+      },
       "raw": null
     },
     "ipv6-hopopt": {
@@ -636,6 +797,26 @@
       "esp": {
         "field": "nxt",
         "value": 50
+      },
+      "dccp": {
+        "field": "nxt",
+        "value": 33
+      },
+      "eigrp": {
+        "field": "nxt",
+        "value": 88
+      },
+      "igmp": {
+        "field": "nxt",
+        "value": 2
+      },
+      "pim": {
+        "field": "nxt",
+        "value": 103
+      },
+      "rsvp": {
+        "field": "nxt",
+        "value": 46
       },
       "raw": null
     },
@@ -789,6 +970,14 @@
       "whois": {
         "field": "dstport",
         "value": 43
+      },
+      "ident": {
+        "field": "dstport",
+        "value": 113
+      },
+      "sunrpc": {
+        "field": "dstport",
+        "value": 111
       },
       "tls-alert": {
         "field": "dstport",
@@ -949,6 +1138,30 @@
         "field": "dstport",
         "value": 520
       },
+      "gtpv2": {
+        "field": "dstport",
+        "value": 2123
+      },
+      "hsrp": {
+        "field": "dstport",
+        "value": 1985
+      },
+      "ptp": {
+        "field": "dstport",
+        "value": 319
+      },
+      "ripng": {
+        "field": "dstport",
+        "value": 521
+      },
+      "ssdp": {
+        "field": "dstport",
+        "value": 1900
+      },
+      "sunrpc": {
+        "field": "dstport",
+        "value": 111
+      },
       "raw": null
     },
     "ntp": {
@@ -1091,6 +1304,26 @@
         "field": "protocolType",
         "value": "888e"
       },
+      "lacp": {
+        "field": "protocolType",
+        "value": "8809"
+      },
+      "mpls": {
+        "field": "protocolType",
+        "value": "8847"
+      },
+      "pppoe-disc": {
+        "field": "protocolType",
+        "value": "8863"
+      },
+      "pppoe-sess": {
+        "field": "protocolType",
+        "value": "8864"
+      },
+      "ptp": {
+        "field": "protocolType",
+        "value": "88f7"
+      },
       "vlan": {
         "field": "protocolType",
         "value": "8100"
@@ -1137,6 +1370,26 @@
       "eapol": {
         "field": "protocolType",
         "value": "888e"
+      },
+      "lacp": {
+        "field": "protocolType",
+        "value": "8809"
+      },
+      "mpls": {
+        "field": "protocolType",
+        "value": "8847"
+      },
+      "pppoe-disc": {
+        "field": "protocolType",
+        "value": "8863"
+      },
+      "pppoe-sess": {
+        "field": "protocolType",
+        "value": "8864"
+      },
+      "ptp": {
+        "field": "protocolType",
+        "value": "88f7"
       },
       "vlan": {
         "field": "protocolType",
@@ -1266,6 +1519,26 @@
         "field": "etherType",
         "value": "888e"
       },
+      "lacp": {
+        "field": "etherType",
+        "value": "8809"
+      },
+      "mpls": {
+        "field": "etherType",
+        "value": "8847"
+      },
+      "pppoe-disc": {
+        "field": "etherType",
+        "value": "8863"
+      },
+      "pppoe-sess": {
+        "field": "etherType",
+        "value": "8864"
+      },
+      "ptp": {
+        "field": "etherType",
+        "value": "88f7"
+      },
       "vlan": {
         "field": "etherType",
         "value": "8100"
@@ -1313,6 +1586,26 @@
         "field": "nxt",
         "value": 50
       },
+      "dccp": {
+        "field": "nxt",
+        "value": 33
+      },
+      "eigrp": {
+        "field": "nxt",
+        "value": 88
+      },
+      "igmp": {
+        "field": "nxt",
+        "value": 2
+      },
+      "pim": {
+        "field": "nxt",
+        "value": 103
+      },
+      "rsvp": {
+        "field": "nxt",
+        "value": 46
+      },
       "raw": null
     },
     "bgp": {
@@ -1337,6 +1630,54 @@
       "raw": null
     },
     "whois": {
+      "raw": null
+    },
+    "dccp": {
+      "raw": null
+    },
+    "eigrp": {
+      "raw": null
+    },
+    "gtpv2": {
+      "raw": null
+    },
+    "hsrp": {
+      "raw": null
+    },
+    "igmp": {
+      "raw": null
+    },
+    "ident": {
+      "raw": null
+    },
+    "lacp": {
+      "raw": null
+    },
+    "mpls": {
+      "raw": null
+    },
+    "pim": {
+      "raw": null
+    },
+    "pppoe-disc": {
+      "raw": null
+    },
+    "pppoe-sess": {
+      "raw": null
+    },
+    "ptp": {
+      "raw": null
+    },
+    "ripng": {
+      "raw": null
+    },
+    "rsvp": {
+      "raw": null
+    },
+    "ssdp": {
+      "raw": null
+    },
+    "sunrpc": {
       "raw": null
     },
     "vlan": {
@@ -1379,6 +1720,26 @@
       "eapol": {
         "field": "etherType",
         "value": "888e"
+      },
+      "lacp": {
+        "field": "etherType",
+        "value": "8809"
+      },
+      "mpls": {
+        "field": "etherType",
+        "value": "8847"
+      },
+      "pppoe-disc": {
+        "field": "etherType",
+        "value": "8863"
+      },
+      "pppoe-sess": {
+        "field": "etherType",
+        "value": "8864"
+      },
+      "ptp": {
+        "field": "etherType",
+        "value": "88f7"
       },
       "vlan": {
         "field": "etherType",

@@ -1,0 +1,13 @@
+# Ident (RFC 1413, tcp:113) server USERID reply. The ident server (src port 113) answers the query with a
+# single US-ASCII line "6193, 23 : USERID : UNIX : stjohns\r\n": the same two ports, the reply type
+# USERID, the operating-system token UNIX, and the owning user name "stjohns", terminated by CR LF. The
+# whole payload is kept verbatim (byte-perfect); the first line is parsed for display into
+# {isQuery:false, responseType:"USERID", serverPort:6193, clientPort:23, opsys:"UNIX", userId:"stjohns"}.
+# source: CONSTRUCTED — the reply line is a spec-accurate RFC 1413 USERID response (the example user is
+# from the RFC); the eth+ipv4+tcp envelope (172.17.0.2:113 -> 172.17.0.1:49798) was synthesized by the
+# netkitty encoder so checksums/lengths are valid. tshark 4.6.7 in this environment ships no RFC 1413
+# Ident dissector (verified: "ident" is not a valid tcp.port protocol), so it labels the payload
+# eth:ip:tcp:data; the frame is nonetheless a valid Ident-on-113 message. Verified [eth,ipv4,tcp,ident]
+# decode + byte-perfect round-trip via new Codec([Ident]).
+# byte breakdown: 14 eth | 20 ipv4 (proto 6) | 20 tcp (srcport 0x0071=113) | 36 ident payload
+0242ac1100010242ac11000208004500004c0000400000062287ac110002ac1100010071c28600000000000000005000000023e90000363139332c203233203a20555345524944203a20554e4958203a2073746a6f686e730d0a

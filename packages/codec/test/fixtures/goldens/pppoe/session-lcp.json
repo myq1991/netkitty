@@ -1,0 +1,24 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "00:aa:bb:cc:dd:ee",
+      "etherType": "8864"
+    },
+    "errors": []
+  },
+  {
+    "id": "pppoe-sess",
+    "data": {
+      "version": 1,
+      "type": 1,
+      "code": 0,
+      "sessionId": 1,
+      "length": 10,
+      "pppProtocol": "c021",
+      "payload": "01010008010405dc"
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,3 @@
+# GTPv2-C Create Session Request (3GPP TS 29.274), UDP 2123->2123, T flag=1, TEID=0x11223344, seq=2, one Recovery IE (type 3)
+# Synthetic frame (10.0.0.1 -> 10.0.0.2); verified as eth:ethertype:ip:udp:gtp:gtpv2 (message_type 32, teid 0x11223344) by tshark
+000c29112233000c2944556608004500002d00004000401126be0a0000010a000002084b084b001941904820000d11223344000002000300010007

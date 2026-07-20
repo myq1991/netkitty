@@ -1,0 +1,59 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 84,
+      "id": 4660,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 42054,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 51111,
+      "dstport": 111,
+      "length": 64,
+      "checksum": 2106
+    },
+    "errors": []
+  },
+  {
+    "id": "sunrpc",
+    "data": {
+      "xid": "deadbeef",
+      "msgType": 0,
+      "rpcVersion": 2,
+      "program": 100000,
+      "programVersion": 2,
+      "procedure": 3,
+      "body": "00000000000000000000000000000000000186a5000000010000001100000000"
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,10 @@
+# LACP (Slow Protocols, EtherType 0x8809) LACPDU. Subtype 1 (LACP), version 1.
+# TLVs: Actor Information (type 0x01 len 0x14: sysPri 32768, sysMac 00:00:00:00:00:01, key 1,
+# portPri 255, port 1, state 0x3d, reserved 000000); Partner Information (0x02 len 0x14: sysPri 65535,
+# sysMac all-zero, key 0, portPri 65535, port 0, state 0x00, reserved 000000); Collector Information
+# (0x03 len 0x10: maxDelay 0, reserved x12); Terminator (0x00 len 0x00); then 50 reserved padding octets.
+# source: constructed spec-accurate 110-byte LACPDU (IEEE 802.3ad). dst 01:80:c2:00:00:02
+# (Slow-Protocols multicast). tshark agrees: frame.protocols = eth:ethertype:slow:lacp.
+# bytes: [0:14] eth, [14:16] subtype+version, [16:36] Actor, [36:56] Partner, [56:72] Collector,
+# [72:74] Terminator, [74:124] reserved padding.
+0180c20000020000000000aa8809010101148000000000000001000100ff00013d0000000214ffff0000000000000000ffff0000000000000310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

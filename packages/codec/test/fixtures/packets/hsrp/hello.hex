@@ -1,0 +1,9 @@
+# HSRP v1 (RFC 2281, udp:1985) Hello message to the all-routers multicast 224.0.0.2.
+# Version 0 (HSRPv1); Op Code 0 (Hello); State 16 (Active); Hellotime 3s; Holdtime 10s; Priority 100;
+# Group 1; Reserved 0; Authentication Data "cisco" (default, NUL-padded); Virtual IP 192.0.2.1.
+# source: constructed spec-accurate frame (RFC 2281). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 + UDP checksums); tshark 'hsrp' dissector agrees (frame.protocols eth:...:udp:hsrp,
+# Op Code Hello / State Active / auth cisco / vip 192.0.2.1).
+# bytes: [0:14] eth (dst 01:00:5e:00:00:02), [14:34] ipv4 (192.0.2.10 -> 224.0.0.2), [34:42] udp(1985->1985),
+# [42:62] hsrp v1 mandatory section (20 bytes).
+01005e00000200000c07ac01080045000030000040000111d7b0c000020ae000000207c107c1001c2af1000010030a640100636973636f000000c0000201

@@ -1,0 +1,8 @@
+# PPPoE Session Stage (ethertype 0x8864, RFC 2516). PPPoE header: ver 1 / type 1, code 0x00,
+# session id 0x0001, length 10 (PPP payload = 2-byte protocol + 8-byte LCP). PPP protocol 0xc021 (LCP);
+# LCP Configure-Request (code 1, id 1, len 8) with one MRU option (type 1, len 4, value 0x05dc = 1500).
+# source: constructed spec-accurate frame (RFC 2516 + RFC 1661 LCP). Ethernet envelope hand-assembled;
+# tshark dissects it as eth:ethertype:pppoes:ppp:lcp (Configuration Request).
+# bytes: [0:14] eth (dst 00:11:22:33:44:55 src 00:aa:bb:cc:dd:ee ethertype 0x8864),
+#        [14:20] pppoe header, [20:22] ppp protocol 0xc021, [22:30] LCP Configure-Request.
+00112233445500aabbccddee886411000001000ac02101010008010405dc

@@ -1,0 +1,5 @@
+# RIPng (RFC 2080, RIP for IPv6) Response over UDP/IPv6 port 521 (process address ff02::9). Command 2
+# (Response), Version 1, reserved 0000, followed by one 20-byte Route Table Entry: IPv6 prefix 2001:db8::,
+# route tag 0, prefix length 64, metric 1. Hop limit 255. UDP checksum valid over the IPv6 pseudo-header.
+# source: hand-constructed per RFC 2080 §2.1; verified as `eth:ethertype:ipv6:udp:ripng` by tshark.
+33330000000900000000000186dd60000000002011fffe800000000000000000000000000001ff02000000000000000000000000000902090209002003de0201000020010db800000000000000000000000000004001

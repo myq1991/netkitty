@@ -1,0 +1,70 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:0c:29:11:22:33",
+      "smac": "00:0c:29:44:55:66",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 41,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 9922,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 2123,
+      "dstport": 2123,
+      "length": 21,
+      "checksum": 38433
+    },
+    "errors": []
+  },
+  {
+    "id": "gtpv2",
+    "data": {
+      "flags": {
+        "version": 2,
+        "piggybacking": false,
+        "teidFlag": false,
+        "spare": 0
+      },
+      "messageType": 1,
+      "messageLength": 9,
+      "sequenceNumber": 1,
+      "spare": "00",
+      "ies": [
+        {
+          "type": 3,
+          "spare": 0,
+          "instance": 0,
+          "value": "00"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

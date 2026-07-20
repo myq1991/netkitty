@@ -1,0 +1,62 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:02",
+      "smac": "00:00:0c:07:ac:01",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 48,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 17,
+      "checksum": 55216,
+      "sip": "192.0.2.10",
+      "dip": "224.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 1985,
+      "dstport": 1985,
+      "length": 28,
+      "checksum": 10993
+    },
+    "errors": []
+  },
+  {
+    "id": "hsrp",
+    "data": {
+      "version": 0,
+      "opCode": 0,
+      "state": 16,
+      "helloTime": 3,
+      "holdTime": 10,
+      "priority": 100,
+      "group": 1,
+      "reserved": 0,
+      "authData": "636973636f000000",
+      "virtualIP": "192.0.2.1"
+    },
+    "errors": []
+  }
+]

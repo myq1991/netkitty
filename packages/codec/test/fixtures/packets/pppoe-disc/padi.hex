@@ -1,0 +1,7 @@
+# PPPoE Discovery PADI (RFC 2516, EtherType 0x8863). Broadcast Initiation from a host.
+# ver 1 / type 1, code 0x09 (PADI), session 0x0000, payload length 0x000c (12 tag bytes).
+# tags: Service-Name (0x0101) len 0 (any service) + Host-Uniq (0x0103) len 4 value 12345678.
+# source: constructed spec-accurate frame (RFC 2516); tshark 'pppoed' dissector agrees.
+# bytes: [0:14] eth (dst ff:ff:ff:ff:ff:ff broadcast, src 00:11:22:33:44:55, type 8863),
+#        [14:20] pppoe header, [20:32] tags.
+ffffffffffff001122334455886311090000000c010100000103000412345678

@@ -1,0 +1,70 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:01:81",
+      "smac": "00:1b:19:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 72,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 17,
+      "checksum": 54809,
+      "sip": "192.0.2.10",
+      "dip": "224.0.1.129"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 319,
+      "dstport": 319,
+      "length": 52,
+      "checksum": 16178
+    },
+    "errors": []
+  },
+  {
+    "id": "ptp",
+    "data": {
+      "majorSdoId": 0,
+      "messageType": 0,
+      "minorVersionPTP": 0,
+      "versionPTP": 2,
+      "messageLength": 44,
+      "domainNumber": 0,
+      "minorSdoId": 0,
+      "flags": "0200",
+      "correctionField": "0000000000000000",
+      "reserved": "00000000",
+      "sourcePortIdentity": {
+        "clockIdentity": "001b19fffe000000",
+        "portNumber": 1
+      },
+      "sequenceId": 0,
+      "controlField": 0,
+      "logMessageInterval": 0,
+      "body": "00000000000000000000"
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,6 @@
+# ONC RPC / SunRPC (RFC 5531, tcp:111) portmapper GETPORT CALL with a Record Marking prefix. Record
+# mark 0x80000038 (last-fragment set, fragment length 56); then xid 0xdeadbeef, msgType 0 (CALL), RPC
+# version 2, program 100000 (portmap), program version 2, procedure 3 (GETPORT); AUTH_NULL cred + verf;
+# GETPORT args: program 100005 (mountd), version 1, protocol 17 (UDP), port 0.
+# source: hand-crafted portmap GETPORT segment; verified as eth:ethertype:ip:tcp:rpc:portmap by tshark.
+00112233445566778899aabb080045000064123440004006a441c000020ac0000214c7a8006f111111112222222250182000b1bc000080000038deadbeef0000000000000002000186a0000000020000000300000000000000000000000000000000000186a5000000010000001100000000

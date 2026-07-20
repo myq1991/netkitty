@@ -1,0 +1,6 @@
+# IGMPv2 Membership Report (RFC 2236, Type 0x16) over IPv4 (IP protocol 2). Reports multicast group
+# 224.1.1.1; src 192.168.1.10, dst 224.1.1.1, ttl 1, IGMP checksum 0x08fd (tshark-valid), IP checksum
+# 0x172c (tshark-valid). Destination MAC 01:00:5e:01:01:01 is the group's Ethernet multicast mapping.
+# source: standard IGMPv2 report emitted via a raw IPPROTO-2 socket, fields set per RFC 2236 and the
+# checksums computed to match a real on-wire report.
+01005e01010100112233445508004500001c000000000102172cc0a8010ae0010101160008fde0010101

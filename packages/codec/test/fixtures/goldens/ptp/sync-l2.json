@@ -1,0 +1,35 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:1b:19:00:00:00",
+      "smac": "00:1b:19:00:00:00",
+      "etherType": "88f7"
+    },
+    "errors": []
+  },
+  {
+    "id": "ptp",
+    "data": {
+      "majorSdoId": 0,
+      "messageType": 0,
+      "minorVersionPTP": 0,
+      "versionPTP": 2,
+      "messageLength": 44,
+      "domainNumber": 0,
+      "minorSdoId": 0,
+      "flags": "0200",
+      "correctionField": "0000000000000000",
+      "reserved": "00000000",
+      "sourcePortIdentity": {
+        "clockIdentity": "001b19fffe000000",
+        "portNumber": 1
+      },
+      "sequenceId": 0,
+      "controlField": 0,
+      "logMessageInterval": 0,
+      "body": "00000000000000000000"
+    },
+    "errors": []
+  }
+]

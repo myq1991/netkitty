@@ -1,0 +1,5 @@
+# SSDP (UPnP Device Architecture, udp:1900) M-SEARCH request to the multicast group 239.255.255.250:1900.
+# HTTP/1.1-shaped US-ASCII text with HOST/MAN/MX/ST headers, CRLF line endings and a terminating CRLF.
+# The whole message is kept verbatim (byte-perfect); the start line is parsed for display.
+# source: standard UPnP M-SEARCH discovery datagram, hand-constructed with correct IPv4/UDP checksums.
+01005e7ffffa00112233445508004500007a000100004011c86bc0a80164effffffac000076c00663a024d2d534541524348202a20485454502f312e310d0a484f53543a203233392e3235352e3235352e3235303a313930300d0a4d414e3a2022737364703a646973636f766572220d0a4d583a20310d0a53543a20737364703a616c6c0d0a0d0a

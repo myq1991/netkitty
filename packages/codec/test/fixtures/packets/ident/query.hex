@@ -1,0 +1,13 @@
+# Ident (RFC 1413, tcp:113) client query. The client opens a connection to the ident server (dst port
+# 113) and sends a single US-ASCII line "6193, 23\r\n" (36 31 39 33 2c 20 32 33 0d 0a): the server-side
+# TCP port 6193 and the client-side TCP port 23, separated by ", ", terminated by CR LF — asking the
+# server which user owns that connection. The whole payload is kept verbatim (byte-perfect); the first
+# line is parsed for display into {isQuery:true, serverPort:6193, clientPort:23}.
+# source: CONSTRUCTED — the "6193, 23\r\n" payload is a spec-accurate RFC 1413 query; the eth+ipv4+tcp
+# envelope (docker-bridge MACs/IPs 172.17.0.1:49798 -> 172.17.0.2:113) was synthesized by the netkitty
+# encoder so checksums/lengths are valid. tshark 4.6.7 in this environment ships no RFC 1413 Ident
+# dissector (verified: "ident" is not a valid tcp.port protocol), so it labels the payload eth:ip:tcp:data;
+# the frame is nonetheless a valid Ident-on-113 message. Verified [eth,ipv4,tcp,ident] decode +
+# byte-perfect round-trip via new Codec([Ident]).
+# byte breakdown: 14 eth | 20 ipv4 (proto 6) | 20 tcp (dstport 0x0071=113) | 10 ident payload
+0242ac1100020242ac11000108004500003200004000000622a1ac110001ac110002c2860071000000000000000050000000b9fb0000363139332c2032330d0a

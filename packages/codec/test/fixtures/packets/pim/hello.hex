@@ -1,0 +1,7 @@
+# PIM-SM v2 (ipproto 103) Hello message (RFC 7761 §4.3). PIM header: byte0 0x20 (version 2, type 0
+# Hello), reserved 0x00, checksum 0x67ca (valid, honored verbatim on encode). Hello options body:
+# Holdtime (type 1, 105s), DR Priority (type 19, value 1), Generation ID (type 20, 0xaabbccdd).
+# source: constructed spec-accurate frame. eth dst 01:00:5e:00:00:0d, IPv4 src 192.0.2.1 dst
+# 224.0.0.13 (ALL-PIM-ROUTERS), TTL 1, proto 103, valid IPv4 header checksum; tshark 'pim' dissector
+# agrees. bytes: [0:14] eth, [14:34] ipv4, [34:38] pim header, [38:] Hello options body.
+01005e00000d00000000000108004500002e000000000167175bc0000201e000000d200067ca000100020069001300040000000100140004aabbccdd
