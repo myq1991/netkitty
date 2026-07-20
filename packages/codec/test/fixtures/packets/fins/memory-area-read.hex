@@ -1,0 +1,8 @@
+# OMRON FINS (udp:9600) Memory Area Read request. 10-byte FINS header: ICF 0x80 (command, response
+# required), RSV 0x00, GCT 0x02 (gateway count), dest 0.10.0 (DNA/DA1/DA2), src 0.1.0 (SNA/SA1/SA2),
+# SID 0x00; command 0x0101 (Memory Area Read); body 82 0064 00 0001 = read DM area (0x82) word 100,
+# bit 0, 1 item. source: constructed spec-accurate frame. eth/ipv4/udp envelope assembled by the
+# netkitty encoder (valid IPv4 checksum + UDP length/checksum); tshark 'omron' dissector agrees
+# (Command: Memory Area Read (D100)).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 9600 dst 9600), [42:52] FINS header, [52:54] command, [54:60] body.
+000bcafe0001000bcafe000208004500002e0000400000110562c0a8fa01c0a8fa0a25802580001acc57800002000a00000100000101820064000001

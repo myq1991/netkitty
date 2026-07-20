@@ -1,0 +1,8 @@
+# MQTT-SN (v1.2) CONNECT over UDP (dst port 1883). 1-octet Length 0x0c (=12 total), Message Type 0x04
+# (CONNECT); body: Flags 0x04 (Clean Session), Protocol ID 0x01, Duration/Keep-Alive 10, Client ID "client".
+# source: constructed spec-accurate frame (MQTT-SN v1.2). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 + UDP checksums). tshark 'mqttsn' dissector agrees (Connect, len 12, flags Clean
+# Session, protocol id 1, keep alive 10, client id "client") when told to decode UDP/1883 as mqttsn
+# (`-d udp.port==1883,mqttsn`; tshark registers no default port for mqttsn).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 50000 dst 1883), [42:54] mqttsn (len+type+body).
+00112233445566778899aabb08004500002800010000401166c20a0000010a000002c350075b0014d5c20c040401000a636c69656e74

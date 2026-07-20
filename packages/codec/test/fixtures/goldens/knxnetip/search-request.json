@@ -1,0 +1,57 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:17:0c",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 42,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 33540,
+      "sip": "192.168.0.10",
+      "dip": "224.0.23.12"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 52250,
+      "dstport": 3671,
+      "length": 22,
+      "checksum": 36455
+    },
+    "errors": []
+  },
+  {
+    "id": "knxnetip",
+    "data": {
+      "headerLength": 6,
+      "protocolVersion": 16,
+      "serviceType": 513,
+      "totalLength": 14,
+      "body": "0801c0a8000a0e57"
+    },
+    "errors": []
+  }
+]

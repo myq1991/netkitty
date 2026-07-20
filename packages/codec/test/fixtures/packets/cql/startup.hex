@@ -1,0 +1,7 @@
+# Cassandra CQL native protocol v4 (tcp:9042) STARTUP message. 9-byte frame header:
+# version 0x04 (v4 request), flags 0x00, stream 1, opcode 0x01 (STARTUP), length 22; body is a
+# CQL [string map] {"CQL_VERSION":"3.0.0"} (n=1, key len 11 "CQL_VERSION", value len 5 "3.0.0").
+# source: constructed spec-accurate frame (DataStax native protocol v4). eth/ipv4/tcp envelope
+# assembled by the netkitty encoder (valid IPv4 + TCP checksums); tshark 'cql' dissector agrees.
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 51000 dst 9042), [54:63] cql header, [63:85] body.
+000000000000000000000000080045000047000040000006f692c000020ac0000214c7382352000000000000000050000000ede900000400000101000000160001000b43514c5f56455253494f4e0005332e302e30

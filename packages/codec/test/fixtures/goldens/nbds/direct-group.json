@@ -1,0 +1,60 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "ff:ff:ff:ff:ff:ff",
+      "smac": "00:0c:29:1a:2b:3c",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 127,
+      "id": 6699,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 128,
+      "protocol": 17,
+      "checksum": 39913,
+      "sip": "192.168.1.10",
+      "dip": "192.168.1.255"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 138,
+      "dstport": 138,
+      "length": 107,
+      "checksum": 56795
+    },
+    "errors": []
+  },
+  {
+    "id": "nbds",
+    "data": {
+      "msgType": 17,
+      "flags": 2,
+      "dgmId": 32805,
+      "sourceIP": "192.168.1.10",
+      "sourcePort": 138,
+      "dgmLength": 85,
+      "packetOffset": 0,
+      "body": "2045444550454e46414646464545464643444243414341434143414341434141410020464845504643454c454846434550464646414341434143414341434143414141005c4d41494c534c4f545c42524f57534500"
+    },
+    "errors": []
+  }
+]

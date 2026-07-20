@@ -1,0 +1,9 @@
+# KNXnet/IP (udp:3671) SEARCH_REQUEST. 6-byte header: header length 0x06, protocol version 0x10,
+# service type 0x0201 (SEARCH_REQUEST), total length 14 (0x000e = 6-byte header + 8-byte HPAI).
+# body: HPAI discovery endpoint — structure length 0x08, host protocol 0x01 (IPv4 UDP),
+# control endpoint 192.168.0.10:3671 (0x0e57).
+# source: constructed spec-accurate frame (KNX Association 03/03/02 Core). eth/ipv4/udp envelope
+# assembled by the netkitty encoder (valid IPv4 + UDP checksums); tshark 'kip' dissector agrees:
+# "KNX/IP Search Request, Discovery @ 192.168.0.10:3671".
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 52250 dst 3671), [42:48] knxnetip header, [48:56] HPAI.
+01005e00170c00112233445508004500002a0000400040118304c0a8000ae000170ccc1a0e5700168e6706100201000e0801c0a8000a0e57

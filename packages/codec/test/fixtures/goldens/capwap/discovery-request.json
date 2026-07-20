@@ -1,0 +1,71 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 49,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 63133,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 20000,
+      "dstport": 5246,
+      "length": 29,
+      "checksum": 52944
+    },
+    "errors": []
+  },
+  {
+    "id": "capwap",
+    "data": {
+      "version": 0,
+      "type": 0,
+      "hlen": 2,
+      "rid": 1,
+      "wbid": 1,
+      "flags": {
+        "t": false,
+        "f": false,
+        "l": false,
+        "w": false,
+        "m": false,
+        "k": false
+      },
+      "flagsReserved": 0,
+      "fragmentId": 0,
+      "fragmentOffset": 0,
+      "reserved": 0,
+      "headerRemainder": "",
+      "payload": "00000001000008000014000100"
+    },
+    "errors": []
+  }
+]

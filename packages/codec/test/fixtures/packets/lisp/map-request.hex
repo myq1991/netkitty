@@ -1,0 +1,7 @@
+# LISP control (udp:4342) Map-Request (RFC 6830 §6.1.2). Type 1 in the high nibble of byte0; record
+# count 1; 64-bit nonce; no Source-EID (AFI 0); one ITR-RLOC (AFI 1 IPv4 192.0.2.1); one record
+# (EID mask-len 24, AFI 1 IPv4, EID-prefix 192.0.2.0/24).
+# source: constructed spec-accurate frame (RFC 6830). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 checksum, UDP src/dst 4342); tshark 'lisp' dissector agrees (Map-Request).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp, [42:70] lisp Map-Request.
+000000000000000000000000080045000038000040000011f696c000020ac000021410f610f60024b96d10000001000102030405060700000001c000020100180001c0000200

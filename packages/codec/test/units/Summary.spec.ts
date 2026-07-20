@@ -17,8 +17,10 @@ test('summary: renders the innermost layer template (TCP)', async (): Promise<vo
 })
 
 test('summary: falls back to an outer layer template when the inner layer has none (UDP → IPv4)', async (): Promise<void> => {
-    // UDP declares no template, so the IPv4 template one layer out is used.
-    assert.strictEqual(await summaryOf('udp/netbios'), '192.168.1.198 → 192.168.1.255')
+    // A bare UDP packet whose payload is not claimed by any protocol (inner layer is raw, no template),
+    // so the IPv4 template one layer out is used. (udp/netbios is no longer bare — it is now a NetBIOS
+    // datagram claimed by the NBDS codec on udp:138, which carries its own summary template.)
+    assert.strictEqual(await summaryOf('udp/baseline'), '192.168.221.232 → 192.168.211.255')
 })
 
 test('summary: falls back to the innermost non-raw layer name when no template exists (ARP)', async (): Promise<void> => {

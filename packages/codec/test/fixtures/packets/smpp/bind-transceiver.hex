@@ -1,0 +1,9 @@
+# SMPP 3.4 (tcp:2775) bind_transceiver request. 16-byte header: command_length 40, command_id
+# 0x00000009 (bind_transceiver), command_status 0 (ESME_ROK), sequence_number 1; body: system_id
+# "SMPP3TEST", password "secret08", system_type "", interface_version 0x34 (SMPP 3.4), addr_ton 0,
+# addr_npi 0, address_range "".
+# source: constructed spec-accurate frame (SMPP 3.4 spec). eth/ipv4/tcp envelope assembled by the
+# netkitty encoder (valid IPv4 + TCP checksums); tshark 'smpp' dissector agrees (Bind_transceiver,
+# system_id/password/version + address fields), frame.protocols = eth:ethertype:ip:tcp:smpp.
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 51001 dst 2775), [54:70] smpp header, [70:94] body.
+000c29112233000c29445566080045000050000040000006f689c000020ac0000214c7390ad70000000000000000500000004891000000000028000000090000000000000001534d50503354455354007365637265743038000034000000

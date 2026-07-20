@@ -143,6 +143,14 @@
       "pptp",
       "stomp",
       "xmpp",
+      "cql",
+      "git",
+      "mongodb",
+      "openflow",
+      "rsync",
+      "slmp",
+      "smb2",
+      "smpp",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -198,6 +206,13 @@
       "ldp",
       "openvpn",
       "wccp",
+      "capwap",
+      "knxnetip",
+      "lisp",
+      "mqttsn",
+      "nbds",
+      "fins",
+      "slmp",
       "raw"
     ],
     "ntp": [
@@ -579,6 +594,51 @@
       "raw"
     ],
     "xmpp": [
+      "raw"
+    ],
+    "capwap": [
+      "raw"
+    ],
+    "cql": [
+      "raw"
+    ],
+    "git": [
+      "raw"
+    ],
+    "knxnetip": [
+      "raw"
+    ],
+    "lisp": [
+      "raw"
+    ],
+    "mqttsn": [
+      "raw"
+    ],
+    "mongodb": [
+      "raw"
+    ],
+    "nbds": [
+      "raw"
+    ],
+    "fins": [
+      "raw"
+    ],
+    "openflow": [
+      "raw"
+    ],
+    "rtps": [
+      "raw"
+    ],
+    "rsync": [
+      "raw"
+    ],
+    "slmp": [
+      "raw"
+    ],
+    "smb2": [
+      "raw"
+    ],
+    "smpp": [
       "raw"
     ],
     "vlan": [
@@ -1107,6 +1167,38 @@
         "field": "dstport",
         "value": 5222
       },
+      "cql": {
+        "field": "dstport",
+        "value": 9042
+      },
+      "git": {
+        "field": "dstport",
+        "value": 9418
+      },
+      "mongodb": {
+        "field": "dstport",
+        "value": 27017
+      },
+      "openflow": {
+        "field": "dstport",
+        "value": 6653
+      },
+      "rsync": {
+        "field": "dstport",
+        "value": 873
+      },
+      "slmp": {
+        "field": "dstport",
+        "value": 5007
+      },
+      "smb2": {
+        "field": "dstport",
+        "value": 445
+      },
+      "smpp": {
+        "field": "dstport",
+        "value": 2775
+      },
       "tls-alert": {
         "field": "dstport",
         "value": 443
@@ -1317,6 +1409,34 @@
       "wccp": {
         "field": "dstport",
         "value": 2048
+      },
+      "capwap": {
+        "field": "dstport",
+        "value": 5246
+      },
+      "knxnetip": {
+        "field": "dstport",
+        "value": 3671
+      },
+      "lisp": {
+        "field": "dstport",
+        "value": 4342
+      },
+      "mqttsn": {
+        "field": "dstport",
+        "value": 1883
+      },
+      "nbds": {
+        "field": "dstport",
+        "value": 138
+      },
+      "fins": {
+        "field": "dstport",
+        "value": 9600
+      },
+      "slmp": {
+        "field": "dstport",
+        "value": 5007
       },
       "raw": null
     },
@@ -1906,6 +2026,51 @@
       "raw": null
     },
     "xmpp": {
+      "raw": null
+    },
+    "capwap": {
+      "raw": null
+    },
+    "cql": {
+      "raw": null
+    },
+    "git": {
+      "raw": null
+    },
+    "knxnetip": {
+      "raw": null
+    },
+    "lisp": {
+      "raw": null
+    },
+    "mqttsn": {
+      "raw": null
+    },
+    "mongodb": {
+      "raw": null
+    },
+    "nbds": {
+      "raw": null
+    },
+    "fins": {
+      "raw": null
+    },
+    "openflow": {
+      "raw": null
+    },
+    "rtps": {
+      "raw": null
+    },
+    "rsync": {
+      "raw": null
+    },
+    "slmp": {
+      "raw": null
+    },
+    "smb2": {
+      "raw": null
+    },
+    "smpp": {
       "raw": null
     },
     "vlan": {

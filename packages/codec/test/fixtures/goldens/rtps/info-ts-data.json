@@ -1,0 +1,70 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:7f:ff:fa",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 92,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 51422,
+      "sip": "192.168.1.10",
+      "dip": "239.255.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 49152,
+      "dstport": 7401,
+      "length": 72,
+      "checksum": 63685
+    },
+    "errors": []
+  },
+  {
+    "id": "rtps",
+    "data": {
+      "magic": "52545053",
+      "protocolVersion": "0201",
+      "vendorId": "0101",
+      "guidPrefix": "010f45d2123456789abcdef0",
+      "submessages": [
+        {
+          "submessageId": 9,
+          "flags": 1,
+          "submessageLength": 8,
+          "body": "a1b2c3d4e5f60708"
+        },
+        {
+          "submessageId": 21,
+          "flags": 5,
+          "submessageLength": 28,
+          "body": "00001000000001c7000001c200000000000000010000000001000000"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

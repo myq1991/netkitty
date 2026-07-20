@@ -1,0 +1,7 @@
+# Git Smart Protocol (git://, tcp:9418) git-daemon request. Single pkt-line: 4-hex length prefix
+# "0032" (= 50 bytes, counting the prefix) + "git-upload-pack /project.git\0host=example.com\0".
+# source: constructed spec-accurate frame (git pkt-line / Documentation/gitprotocol-pack.txt). eth/ipv4/tcp
+# envelope assembled by the netkitty encoder (valid IPv4 + TCP checksums); tshark reports the frame as
+# eth:ethertype:ip:tcp:git (Git Smart Protocol dissector agrees).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 51000 dst 9418), [54:104] git pkt-line (50 bytes).
+00112233445566778899aabb08004500005a000040000006f67fc000020ac0000214c73824ca0000000000000000500000006ac10000303033326769742d75706c6f61642d7061636b202f70726f6a6563742e67697400686f73743d6578616d706c652e636f6d00

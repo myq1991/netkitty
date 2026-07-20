@@ -1,0 +1,10 @@
+# SLMP / MELSEC (Mitsubishi SeamLess Message Protocol, udp:5007) 3E-frame BINARY Batch Read request.
+# subheader 0x5000 (request), network 0, station 0xFF, module I/O 0x03FF (own station, LE), multidrop 0,
+# request data length 12 (LE); payload = monitor timer 0x0010 (LE), command 0x0401 Batch Read (LE),
+# subcommand 0x0000 word units (LE), device D100 (device code 0xA8, head number 100 LE) x 1 point.
+# source: constructed spec-accurate frame (SLMP 3E binary Read, cmd 0x0401). eth/ipv4/udp envelope
+# assembled by the netkitty encoder (valid IPv4 checksum + UDP checksum). Local tshark has no SLMP/melsec
+# dissector, so it stops at eth:ethertype:ip:udp:data (udp.port 5007 confirmed); the SLMP layout follows
+# the published 3E binary frame format and round-trips byte-for-byte through this codec.
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 49152 dst 5007), [42:51] slmp 3E header, [51:63] payload.
+000c29112233000c29aabbcc080045000031000040000011f94dc0a8000ac0a80014c000138f001dae2f500000ffff03000c00100001040000640000a80100

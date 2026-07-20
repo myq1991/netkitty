@@ -1,0 +1,8 @@
+# MongoDB Wire Protocol (tcp:27017) OP_MSG message. LITTLE-ENDIAN header: messageLength 36 (whole
+# message incl. 16-byte header), requestID 1, responseTo 0, opCode 2013 (OP_MSG); body: flagBits 0x0
+# + one Kind 0 (Body) section carrying the BSON document {ping: 1 (int32)}.
+# source: constructed spec-accurate frame (MongoDB Wire Protocol). eth/ipv4/tcp envelope assembled by
+# the netkitty encoder (valid IPv4 + TCP checksums); tshark 'mongo' dissector agrees (message header +
+# OP_MSG flags + Kind 0 body section + {ping:1} BSON document).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 51000 dst 27017), [54:70] mongo header, [70:90] OP_MSG body.
+00000000000000000000000008004500004c000040000006f6a8c0000202c0000201c73869890000000000000000500000001a020000240000000100000000000000dd07000000000000000f0000001070696e67000100000000

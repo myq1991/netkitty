@@ -1,0 +1,84 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:1c:42:00:00:01",
+      "smac": "00:1c:42:00:00:02",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 148,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 6,
+      "checksum": 63045,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 52000,
+      "dstport": 445,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 21677,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "smb2",
+    "data": {
+      "transportType": 0,
+      "streamProtocolLength": 104,
+      "protocolId": "fe534d42",
+      "structureSize": 64,
+      "creditCharge": 0,
+      "status": 0,
+      "command": 0,
+      "creditReqResp": 1,
+      "flags": 0,
+      "nextCommand": 0,
+      "messageId": "0000000000000000",
+      "reserved": "00000000",
+      "treeId": 0,
+      "sessionId": "0000000000000000",
+      "signature": "00000000000000000000000000000000",
+      "body": "240002000100000000000000112233445566778899aabbccddeeff00000000000000000002021002"
+    },
+    "errors": []
+  }
+]

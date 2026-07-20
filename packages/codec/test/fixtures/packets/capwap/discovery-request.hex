@@ -1,0 +1,6 @@
+# CAPWAP (RFC 5415) control-plane Discovery Request over UDP port 5246.
+# eth/ipv4/udp + 8-byte CAPWAP header (v0, type=0 CAPWAP Header, HLEN=2, RID=1, WBID=1 IEEE 802.11,
+# all flags 0, Fragment ID 0, Fragment Offset 0) + Control Header (Message Type 1 = Discovery Request,
+# Seq 0, Msg Element Length 8, Flags 0) + one Discovery Type message element (type 20, len 1, value 0).
+# Verified with tshark: frame.protocols = eth:ethertype:ip:udp:capwap
+00112233445566778899aabb080045000031000040000011f69dc000020ac00002144e20147e001dced0001042000000000000000001000008000014000100

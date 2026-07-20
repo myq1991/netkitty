@@ -1,0 +1,59 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:0c:29:11:22:33",
+      "smac": "00:0c:29:aa:bb:cc",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 49,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 63821,
+      "sip": "192.168.0.10",
+      "dip": "192.168.0.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 49152,
+      "dstport": 5007,
+      "length": 29,
+      "checksum": 44591
+    },
+    "errors": []
+  },
+  {
+    "id": "slmp",
+    "data": {
+      "subheader": 20480,
+      "networkNo": 0,
+      "stationNo": 255,
+      "moduleIO": 1023,
+      "multidropStation": 0,
+      "requestDataLength": 12,
+      "data": "100001040000640000a80100"
+    },
+    "errors": []
+  }
+]

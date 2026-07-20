@@ -1,0 +1,10 @@
+# SMB2 (tcp:445) NEGOTIATE Request over the Direct TCP transport (MS-SMB2 §2.1).
+# Transport prefix: 00 + 24-bit stream length 104; SMB2 header 64 bytes (ProtocolId fe534d42,
+# StructureSize 64, Command 0 NEGOTIATE, CreditRequest 1, all ids zero); NEGOTIATE Request body 40
+# bytes (StructureSize 36, DialectCount 2, SecurityMode 0x0001 signing-enabled, ClientGuid, dialects
+# 0x0202 SMB 2.0.2 + 0x0210 SMB 2.1).
+# source: constructed spec-accurate frame (MS-SMB2). eth/ipv4/tcp envelope assembled by the netkitty
+# encoder (valid IPv4 + TCP checksums); tshark 'smb2' dissector agrees (nbss -> smb2 NEGOTIATE Request).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 52000 dst 445), [54:58] transport prefix,
+# [58:122] smb2 header, [122:162] NEGOTIATE body.
+001c42000001001c42000002080045000094000040000006f645c000020ac0000214cb2001bd00000000000000005010000054ad000000000068fe534d42400000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000240002000100000000000000112233445566778899aabbccddeeff00000000000000000002021002

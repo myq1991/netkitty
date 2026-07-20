@@ -1,0 +1,9 @@
+# RTPS 2.1 (OMG DDSI-RTPS) message over UDP, vendor RTI Connext (0x0101). 20-byte header
+# (magic 'RTPS', version 2.1, vendorId, 12-byte guidPrefix) + two submessages: INFO_TS
+# (id 0x09, flags E=1 little-endian, 8-byte timestamp) and DATA (id 0x15, flags E=1 + Data present,
+# 28-byte body: extraFlags/octetsToInlineQos/readerId/writerId/writerSeqNum + CDR serialized payload).
+# source: constructed spec-accurate frame (OMG DDSI-RTPS 2.x). eth/ipv4/udp envelope assembled by the
+# netkitty encoder (valid IPv4 header + UDP checksums); Wireshark 'rtps' dissector agrees
+# (frame.protocols = eth:ethertype:ip:udp:rtps; INFO_TS + DATA submessages, magic/version/vendorId/guidPrefix).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 49152 dst 7401), [42:62] rtps header, [62:74] INFO_TS, [74:106] DATA.
+01005e7ffffa00112233445508004500005c000040000011c8dec0a8010aefff0001c0001ce90048f8c55254505302010101010f45d2123456789abcdef009010800a1b2c3d4e5f6070815051c0000001000000001c7000001c200000000000000010000000001000000

@@ -1,0 +1,8 @@
+# OpenFlow 1.3 (tcp:6653) Hello message (type 0). Header: version 0x04 (OF 1.3), type 0 (Hello),
+# length 16, xid 1; body: one OFPHET_VERSIONBITMAP element (type 1, length 8, bitmap 0x00000012 =
+# versions 1 and 4 supported).
+# source: constructed spec-accurate frame (ONF OpenFlow 1.3.x, ONF Hello handshake). eth/ipv4/tcp
+# envelope assembled by the netkitty encoder (valid IPv4 + TCP checksums); tshark 'openflow_v4'
+# dissector agrees (version/type/length/xid + version-bitmap element).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 40000 dst 6653), [54:62] openflow header, [62:70] Hello body.
+000000000001000000000002080045000038000040000006f6bcc0000201c00002029c4019fd0000000000000000500000007167000004000010000000010001000800000012
