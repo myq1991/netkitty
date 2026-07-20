@@ -1,0 +1,5 @@
+# OSPFv2 Hello (RFC 2328) over IPv4 (IP protocol 89). Router ID 1.1.1.1, area 0.0.0.0, hello interval
+# 10, dead interval 40, network mask 255.255.255.0, one neighbor 2.2.2.2. checksum 0xf694 (tshark-valid).
+# source: standard OSPFv2 Hello payload emitted via a raw IPPROTO-89 socket to 127.0.0.1 on a debian:12
+# container's ethernet lo, captured with tcpdump.
+00000000000000000000000008004500004400fb400040593b647f0000017f000001020100300101010100000000f69400000000000000000000ffffff00000a020100000028000000000000000002020202

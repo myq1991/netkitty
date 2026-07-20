@@ -1,0 +1,62 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 68,
+      "id": 251,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 89,
+      "checksum": 15204,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "ospf",
+    "data": {
+      "version": 2,
+      "type": 1,
+      "packetLength": 48,
+      "routerId": "1.1.1.1",
+      "areaId": "0.0.0.0",
+      "checksum": 63124,
+      "auType": 0,
+      "auth": "0000000000000000",
+      "hello": {
+        "networkMask": "255.255.255.0",
+        "helloInterval": 10,
+        "options": 2,
+        "routerPriority": 1,
+        "routerDeadInterval": 40,
+        "designatedRouter": "0.0.0.0",
+        "backupDesignatedRouter": "0.0.0.0",
+        "neighbors": [
+          "2.2.2.2"
+        ]
+      }
+    },
+    "errors": []
+  }
+]

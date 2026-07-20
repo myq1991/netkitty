@@ -185,6 +185,23 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // OSPFv2 (RFC 2328). Common header + Hello fields. tshark names the router id 'ospf.srcrouter' and
+    // the message type 'ospf.msg'. checksum uses kind 'int' (Number('0xf694')).
+    ospf: {tsLayer: 'ospf', fields: [
+        {nk: 'version', ts: 'ospf.version', kind: 'int'},
+        {nk: 'type', ts: 'ospf.msg', kind: 'int'},
+        {nk: 'packetLength', ts: 'ospf.packet_length', kind: 'int'},
+        {nk: 'routerId', ts: 'ospf.srcrouter', kind: 'str'},
+        {nk: 'areaId', ts: 'ospf.area_id', kind: 'str'},
+        {nk: 'checksum', ts: 'ospf.checksum', kind: 'int'},
+        {nk: 'auType', ts: 'ospf.auth.type', kind: 'int'},
+        {nk: 'hello.networkMask', ts: 'ospf.hello.network_mask', kind: 'str'},
+        {nk: 'hello.helloInterval', ts: 'ospf.hello.hello_interval', kind: 'int'},
+        {nk: 'hello.routerDeadInterval', ts: 'ospf.hello.router_dead_interval', kind: 'int'},
+        {nk: 'hello.routerPriority', ts: 'ospf.hello.router_priority', kind: 'int'},
+        {nk: 'hello.designatedRouter', ts: 'ospf.hello.designated_router', kind: 'str'},
+        {nk: 'hello.neighbors.0', ts: 'ospf.hello.active_neighbor', kind: 'str'}
+    ]},
     // VRRP v2/v3 (RFC 3768/5798). checksum uses kind 'int' (Number('0xb952')===47442). The virtual IP
     // address list is verified via addresses[0]; tshark names it vrrp.ip_addr.
     vrrp: {tsLayer: 'vrrp', fields: [

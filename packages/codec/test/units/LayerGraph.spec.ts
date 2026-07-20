@@ -39,9 +39,9 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
     assert.deepStrictEqual(menu, {
         eth: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
         vlan: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
-        ipv4: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'raw'],
-        ipv6: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'raw'],
-        'ipv6-hopopt': ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'raw'],
+        ipv4: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
+        ipv6: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
+        'ipv6-hopopt': ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
         arp: ['raw'],
         goose: ['raw'],
         sv: ['raw'],
@@ -73,6 +73,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         gre: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
         bfd: ['raw'],
         vrrp: ['raw'],
+        ospf: ['raw'],
         'tls-handshake': ['raw'],
         'tls-alert': ['raw'],
         'tls-ccsp': ['raw'],
@@ -114,6 +115,9 @@ test('allowedNextLayers: ipv4 uses protocol, ipv6 uses nxt', (): void => {
     // VRRP is carried over IP as protocol 112.
     assert.deepStrictEqual(discriminatorOf('ipv4', 'vrrp'), {field: 'protocol', value: 112})
     assert.deepStrictEqual(discriminatorOf('ipv6', 'vrrp'), {field: 'nxt', value: 112})
+    // OSPF is carried over IP as protocol 89.
+    assert.deepStrictEqual(discriminatorOf('ipv4', 'ospf'), {field: 'protocol', value: 89})
+    assert.deepStrictEqual(discriminatorOf('ipv6', 'ospf'), {field: 'nxt', value: 89})
 })
 
 test('allowedNextLayers: a genuine leaf layer offers only RawData', (): void => {
