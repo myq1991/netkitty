@@ -48,8 +48,8 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         icmp: ['raw'],
         icmpv6: ['raw'],
         // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
-        tcp: ['stun', 'modbus', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
-        udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'raw'],
+        tcp: ['stun', 'modbus', 'dnp3', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
+        udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'dnp3', 'raw'],
         ntp: ['raw'],
         stun: ['raw'],
         dhcp: ['raw'],
@@ -75,6 +75,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         vrrp: ['raw'],
         ospf: ['raw'],
         modbus: ['raw'],
+        dnp3: ['raw'],
         'tls-handshake': ['raw'],
         'tls-alert': ['raw'],
         'tls-ccsp': ['raw'],
@@ -137,8 +138,9 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('tcp', 'tls-handshake'), {field: 'dstport', value: 443})
     assert.deepStrictEqual(discriminatorOf('tcp', 'IEC104_I_Frame'), {field: 'dstport', value: 2404})
     assert.deepStrictEqual(discriminatorOf('tcp', 'modbus'), {field: 'dstport', value: 502})
+    assert.deepStrictEqual(discriminatorOf('tcp', 'dnp3'), {field: 'dstport', value: 20000})
     // udp now offers NTP on its well-known port 123.
-    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'raw'])
+    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'dnp3', 'raw'])
     assert.deepStrictEqual(discriminatorOf('udp', 'ntp'), {field: 'dstport', value: 123})
     assert.deepStrictEqual(discriminatorOf('udp', 'stun'), {field: 'dstport', value: 3478})
     assert.deepStrictEqual(discriminatorOf('udp', 'dhcp'), {field: 'dstport', value: 67})
@@ -157,6 +159,7 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('udp', 'l2tp'), {field: 'dstport', value: 1701})
     assert.deepStrictEqual(discriminatorOf('udp', 'geneve'), {field: 'dstport', value: 6081})
     assert.deepStrictEqual(discriminatorOf('udp', 'bfd'), {field: 'dstport', value: 3784})
+    assert.deepStrictEqual(discriminatorOf('udp', 'dnp3'), {field: 'dstport', value: 20000})
     // GENEVE routes its inner frame by protocolType (an EtherType).
     assert.deepStrictEqual(discriminatorOf('geneve', 'ipv4'), {field: 'protocolType', value: '0800'})
     assert.deepStrictEqual(discriminatorOf('geneve', 'ipv6'), {field: 'protocolType', value: '86dd'})

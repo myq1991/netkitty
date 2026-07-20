@@ -185,6 +185,18 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // DNP3 (IEEE 1815, tcp/udp:20000) Data Link header. The control sub-bits and LE dest/src addresses
+    // verify the header decode; the header CRC (tshark shows it LE-interpreted as a value, we keep the
+    // raw bytes) and the data-block payload are verified byte-for-byte by round-trip + golden.
+    dnp3: {tsLayer: 'dnp3', fields: [
+        {nk: 'start', ts: 'dnp3.start', kind: 'hexcode'},
+        {nk: 'length', ts: 'dnp3.len', kind: 'int'},
+        {nk: 'control.functionCode', ts: 'dnp3.ctl.prifunc', kind: 'int'},
+        {nk: 'control.dir', ts: 'dnp3.ctl.dir', kind: 'int'},
+        {nk: 'control.prm', ts: 'dnp3.ctl.prm', kind: 'int'},
+        {nk: 'destination', ts: 'dnp3.dst', kind: 'int'},
+        {nk: 'source', ts: 'dnp3.src', kind: 'int'}
+    ]},
     // Modbus/TCP (tcp:502). tshark splits it into an 'mbtcp' layer (MBAP header) and a 'modbus' layer
     // (PDU); the mapping verifies the 7-byte MBAP header against 'mbtcp'. The function code + data are
     // verified byte-for-byte by the round-trip + golden (they live in tshark's separate 'modbus' layer).

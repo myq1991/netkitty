@@ -1,0 +1,6 @@
+# DNP3 (IEEE 1815, tcp:20000) read request. Data Link header: start 0x0564, length 11, control 0xC4
+# (DIR/PRM, function 4 = unconfirmed user data), destination 4, source 1, header CRC. One data block:
+# transport 0xC0 (FIR/FIN) + application C0 01 3C 01 06 (READ, object group 60 var 1 class 0, all points)
+# + block CRC. source: real DNP3 frame (valid DNP CRCs, poly 0x3D65) over a TCP socket to 127.0.0.1:20000
+# on a debian:12 container's ethernet lo, captured with tcpdump (PSH data segment).
+000000000000000000000000080045000046c39d4000400679127f0000017f000001e6a64e202fa6b468e75c1caf80180200fe3a00000101080a2d22464f2d22464f05640bc4040001000130c0c0013c0106ff50
