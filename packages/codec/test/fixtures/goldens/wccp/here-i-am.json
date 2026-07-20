@@ -1,0 +1,56 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:00",
+      "smac": "00:00:0c:07:ac:01",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 72,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 9891,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 2048,
+      "dstport": 2048,
+      "length": 52,
+      "checksum": 55608
+    },
+    "errors": []
+  },
+  {
+    "id": "wccp",
+    "data": {
+      "type": 10,
+      "version": 512,
+      "length": 36,
+      "components": "000000040000000000010018000000000000000000000000000000000000000000000000"
+    },
+    "errors": []
+  }
+]

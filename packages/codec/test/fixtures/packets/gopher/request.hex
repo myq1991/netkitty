@@ -1,0 +1,12 @@
+# Gopher (RFC 1436, tcp:70) client request. The client opens a connection to the Gopher server (dst port
+# 70) and sends a single US-ASCII selector line "/rfc/rfc1436.txt\r\n"
+# (2f 72 66 63 2f 72 66 63 31 34 33 36 2e 74 78 74 0d 0a): the selector string that names the requested
+# item, terminated by CR LF (no TAB, so not a type-7 search). The whole payload is kept verbatim
+# (byte-perfect); the first line is parsed for display into {isRequest:true, selector:"/rfc/rfc1436.txt"}.
+# source: CONSTRUCTED — the "/rfc/rfc1436.txt\r\n" payload is a spec-accurate RFC 1436 selector request;
+# the eth+ipv4+tcp envelope (docker-bridge MACs/IPs 172.17.0.1:49798 -> 172.17.0.2:70) was synthesized by
+# the netkitty encoder so checksums/lengths are valid. Cross-checked with tshark 4.x: it dissects a
+# `gopher` layer with "Gopher request: /rfc/rfc1436.txt" (frame.protocols = eth:ethertype:ip:tcp:gopher).
+# Verified [eth,ipv4,tcp,gopher] decode + byte-perfect round-trip.
+# byte breakdown: 14 eth | 20 ipv4 (proto 6) | 20 tcp (dstport 0x0046=70) | 18 gopher payload
+0242ac1100020242ac11000108004500003a0000400000062299ac110001ac110002c286004600000000000000005000000050d800002f7266632f726663313433362e7478740d0a

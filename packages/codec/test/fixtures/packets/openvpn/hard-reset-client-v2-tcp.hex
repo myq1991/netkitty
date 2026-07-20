@@ -1,0 +1,6 @@
+# OpenVPN (tcp:1194) P_CONTROL_HARD_RESET_CLIENT_V2 with the 2-byte big-endian record length prefix.
+# length 14; opcode 7, key id 0 (opcode/key-id octet 0x38); session id 0102030405060708; message-packet-id
+# array length 0 (no ACKs); message packet-id 0.
+# source: hand-crafted OpenVPN control segment; eth/ipv4/tcp envelope assembled by the netkitty encoder
+# (valid IPv4 + TCP checksums). Verified as ...:tcp:openvpn by the tshark 'openvpn' dissector.
+001122334455778899aabbcc080045000038000040000006f6a1c000020ac0000214c73804aa00000000000000005000000013b50000000e3801020304050607080000000000

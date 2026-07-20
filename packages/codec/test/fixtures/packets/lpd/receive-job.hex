@@ -1,0 +1,7 @@
+# LPD / LPR (RFC 1179), TCP port 515. Daemon command 0x02 "Receive a printer job" for queue
+# "PostScript": command byte 0x02 + ASCII operand "PostScript" + line feed (0x0a) = 12 payload bytes.
+# source: constructed spec-accurate frame (RFC 1179 §5). eth/ipv4/tcp envelope assembled by the netkitty
+# encoder (valid IPv4 + TCP checksums); tshark 'lpd' dissector agrees (frame.protocols eth:ethertype:ip:
+# tcp:lpd, "transfer a printer job", Printer/options: PostScript).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 40000 dst 515), [54:66] lpd payload.
+00112233445566778899aabb080045000034000040000006f6a5c000020ac00002149c4002030000000000000000500000006672000002506f73745363726970740a

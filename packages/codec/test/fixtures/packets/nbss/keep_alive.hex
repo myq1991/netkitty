@@ -1,0 +1,4 @@
+# NBSS Session Keep Alive (0x85, RFC 1002) over TCP/139, zero-length payload
+# Synthetically constructed; valid Ethernet/IPv4/TCP framing, correct lengths and checksums.
+000c29445566000c2911223308004500002c000140004006b6acc000020ac000
+0214c15e008b00000001000000015018721072ad000085000000

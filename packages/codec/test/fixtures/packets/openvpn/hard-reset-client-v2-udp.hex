@@ -1,0 +1,5 @@
+# OpenVPN (udp:1194) P_CONTROL_HARD_RESET_CLIENT_V2. opcode 7, key id 0 (opcode/key-id octet 0x38);
+# session id 0102030405060708; message-packet-id array length 0 (no ACKs); message packet-id 0.
+# source: hand-crafted OpenVPN control datagram; eth/ipv4/udp envelope assembled by the netkitty encoder
+# (valid IPv4 header + UDP checksum). Verified as ...:udp:openvpn by the tshark 'openvpn' dissector.
+001122334455778899aabbcc08004500002a000040000011f6a4c000020ac0000214c73804aa001663b03801020304050607080000000000

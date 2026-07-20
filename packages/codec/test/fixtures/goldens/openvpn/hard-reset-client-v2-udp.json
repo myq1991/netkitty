@@ -1,0 +1,55 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "77:88:99:aa:bb:cc",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 42,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 63140,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 51000,
+      "dstport": 1194,
+      "length": 22,
+      "checksum": 25520
+    },
+    "errors": []
+  },
+  {
+    "id": "openvpn",
+    "data": {
+      "opcode": 7,
+      "keyId": 0,
+      "body": "01020304050607080000000000"
+    },
+    "errors": []
+  }
+]

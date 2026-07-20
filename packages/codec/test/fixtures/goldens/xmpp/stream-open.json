@@ -1,0 +1,72 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "aa:bb:cc:dd:ee:ff",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 177,
+      "id": 7238,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 39394,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 55000,
+      "dstport": 5222,
+      "seq": 1,
+      "ack": 1,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 65535,
+      "checksum": 39964,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "xmpp",
+    "data": {
+      "message": "3c3f786d6c2076657273696f6e3d27312e30273f3e3c73747265616d3a73747265616d20746f3d276578616d706c652e636f6d2720786d6c6e733d276a61626265723a636c69656e742720786d6c6e733a73747265616d3d27687474703a2f2f6574686572782e6a61626265722e6f72672f73747265616d73272076657273696f6e3d27312e30273e",
+      "rootElement": "stream:stream",
+      "isStreamHeader": true,
+      "hasXmlDeclaration": true
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,7 @@
+# HART-IP (udp:5094) Session Initiate Request. Header: version 1, message type 0 (Request),
+# message id 0 (Session Initiate), status 0, sequence number 1, byte count 13 (8-byte header +
+# 5-byte payload); payload: master/host type 0x01 + inactivity-close timer 0x0000ea60 (60000 ms).
+# source: constructed spec-accurate frame (FieldComm HCF_SPEC-085). eth/ipv4/udp envelope assembled by
+# the netkitty encoder (valid IPv4 + UDP checksums); tshark 'hart_ip' dissector agrees.
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 40000 dst 5094), [42:50] hart_ip header, [50:55] payload.
+001b1b000001001b1b000002080045000029000040000011f6a5c000020ac00002149c4013e600156886010000000001000d010000ea60

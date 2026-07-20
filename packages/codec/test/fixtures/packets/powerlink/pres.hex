@@ -1,0 +1,7 @@
+# Ethernet POWERLINK (EtherType 0x88AB) PRes — Poll Response. Common header: MessageType 4 (PRes,
+# reserved bit 0), Destination node 240, Source node 1 (a controlled node). PRes body: flags 0x01 (RD
+# ready), flags2 0x00, PDOVersion 0x20, reserved, Size 0x0025 = 37, then 37 bytes of mapped PDO payload
+# that exactly fill the 60-byte frame (no Ethernet padding).
+# source: constructed spec-accurate frame (EPSG DS 301). eth [0:14], EtherType 88ab; EPL common [14:17];
+# tshark 'epl' dissector agrees (mtyp=4 dest=240 src=1 pres.size=37).
+01111e00000200e04c68000288ab04f00101002000002500112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233ff

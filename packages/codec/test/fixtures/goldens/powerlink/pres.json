@@ -1,0 +1,22 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:11:1e:00:00:02",
+      "smac": "00:e0:4c:68:00:02",
+      "etherType": "88ab"
+    },
+    "errors": []
+  },
+  {
+    "id": "powerlink",
+    "data": {
+      "reserved": 0,
+      "messageType": 4,
+      "destination": 240,
+      "source": 1,
+      "payload": "01002000002500112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233ff"
+    },
+    "errors": []
+  }
+]

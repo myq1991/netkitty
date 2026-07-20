@@ -1,0 +1,11 @@
+# iSCSI (tcp:3260) Login Request PDU (RFC 7143). 48-byte BHS: opcode 0x03 (Login Request) with the
+# Immediate (I) bit set (byte0 0x43); byte1 0x87 = Final/Transit set, CSG=1 (Operational), NSG=3
+# (Full Feature); TotalAHSLength 0; DataSegmentLength 62; ISID 40:00:01:37:00:00, TSIH 0; Initiator
+# Task Tag 0xabcdef01; CID/CmdSN/ExpStatSN 0. Data segment: login key=value pairs
+# "InitiatorName=iqn.2020-01.com.example:init\0SessionType=Normal\0" (62 bytes) + 2 bytes of zero pad.
+# source: constructed spec-accurate frame; eth/ipv4/tcp envelope assembled by the netkitty encoder
+# (valid IPv4 + TCP checksums); tshark 'iscsi' dissector agrees (frame.protocols eth:ethertype:ip:tcp:iscsi,
+# Login Command with all BHS fields + the two login key/value pairs).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 50000 dst 3260), [54:102] iSCSI BHS, [102:164] data
+# segment, [164:166] 4-byte-alignment zero padding.
+00112233445500aabbccddee080045000098000040000006f641c000020ac0000214c3500cbc00000000000000005000000003c50000438700000000003e4000013700000000abcdef0100000000000000000000000000000000000000000000000000000000496e69746961746f724e616d653d69716e2e323032302d30312e636f6d2e6578616d706c653a696e69740053657373696f6e547970653d4e6f726d616c000000

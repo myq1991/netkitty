@@ -19,6 +19,8 @@
       "pppoe-disc",
       "pppoe-sess",
       "ptp",
+      "powerlink",
+      "sercos3",
       "vlan",
       "raw"
     ],
@@ -130,6 +132,17 @@
       "whois",
       "ident",
       "sunrpc",
+      "ffhse",
+      "gopher",
+      "hartip",
+      "iscsi",
+      "ldp",
+      "lpd",
+      "nbss",
+      "openvpn",
+      "pptp",
+      "stomp",
+      "xmpp",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -178,6 +191,13 @@
       "ripng",
       "ssdp",
       "sunrpc",
+      "babel",
+      "dtls",
+      "ffhse",
+      "hartip",
+      "ldp",
+      "openvpn",
+      "wccp",
       "raw"
     ],
     "ntp": [
@@ -295,6 +315,8 @@
       "pppoe-disc",
       "pppoe-sess",
       "ptp",
+      "powerlink",
+      "sercos3",
       "vlan",
       "raw"
     ],
@@ -314,6 +336,8 @@
       "pppoe-disc",
       "pppoe-sess",
       "ptp",
+      "powerlink",
+      "sercos3",
       "vlan",
       "raw"
     ],
@@ -414,6 +438,8 @@
       "pppoe-disc",
       "pppoe-sess",
       "ptp",
+      "powerlink",
+      "sercos3",
       "vlan",
       "raw"
     ],
@@ -507,6 +533,54 @@
     "sunrpc": [
       "raw"
     ],
+    "babel": [
+      "raw"
+    ],
+    "dtls": [
+      "raw"
+    ],
+    "ffhse": [
+      "raw"
+    ],
+    "gopher": [
+      "raw"
+    ],
+    "hartip": [
+      "raw"
+    ],
+    "iscsi": [
+      "raw"
+    ],
+    "ldp": [
+      "raw"
+    ],
+    "lpd": [
+      "raw"
+    ],
+    "nbss": [
+      "raw"
+    ],
+    "openvpn": [
+      "raw"
+    ],
+    "powerlink": [
+      "raw"
+    ],
+    "pptp": [
+      "raw"
+    ],
+    "stomp": [
+      "raw"
+    ],
+    "sercos3": [
+      "raw"
+    ],
+    "wccp": [
+      "raw"
+    ],
+    "xmpp": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -523,6 +597,8 @@
       "pppoe-disc",
       "pppoe-sess",
       "ptp",
+      "powerlink",
+      "sercos3",
       "vlan",
       "raw"
     ],
@@ -615,6 +691,14 @@
       "ptp": {
         "field": "etherType",
         "value": "88f7"
+      },
+      "powerlink": {
+        "field": "etherType",
+        "value": "88ab"
+      },
+      "sercos3": {
+        "field": "etherType",
+        "value": "88cd"
       },
       "vlan": {
         "field": "etherType",
@@ -979,6 +1063,50 @@
         "field": "dstport",
         "value": 111
       },
+      "ffhse": {
+        "field": "dstport",
+        "value": 1089
+      },
+      "gopher": {
+        "field": "dstport",
+        "value": 70
+      },
+      "hartip": {
+        "field": "dstport",
+        "value": 5094
+      },
+      "iscsi": {
+        "field": "dstport",
+        "value": 3260
+      },
+      "ldp": {
+        "field": "dstport",
+        "value": 646
+      },
+      "lpd": {
+        "field": "dstport",
+        "value": 515
+      },
+      "nbss": {
+        "field": "dstport",
+        "value": 139
+      },
+      "openvpn": {
+        "field": "dstport",
+        "value": 1194
+      },
+      "pptp": {
+        "field": "dstport",
+        "value": 1723
+      },
+      "stomp": {
+        "field": "dstport",
+        "value": 61613
+      },
+      "xmpp": {
+        "field": "dstport",
+        "value": 5222
+      },
       "tls-alert": {
         "field": "dstport",
         "value": 443
@@ -1162,6 +1290,34 @@
         "field": "dstport",
         "value": 111
       },
+      "babel": {
+        "field": "dstport",
+        "value": 6696
+      },
+      "dtls": {
+        "field": "dstport",
+        "value": 443
+      },
+      "ffhse": {
+        "field": "dstport",
+        "value": 1089
+      },
+      "hartip": {
+        "field": "dstport",
+        "value": 5094
+      },
+      "ldp": {
+        "field": "dstport",
+        "value": 646
+      },
+      "openvpn": {
+        "field": "dstport",
+        "value": 1194
+      },
+      "wccp": {
+        "field": "dstport",
+        "value": 2048
+      },
       "raw": null
     },
     "ntp": {
@@ -1324,6 +1480,14 @@
         "field": "protocolType",
         "value": "88f7"
       },
+      "powerlink": {
+        "field": "protocolType",
+        "value": "88ab"
+      },
+      "sercos3": {
+        "field": "protocolType",
+        "value": "88cd"
+      },
       "vlan": {
         "field": "protocolType",
         "value": "8100"
@@ -1390,6 +1554,14 @@
       "ptp": {
         "field": "protocolType",
         "value": "88f7"
+      },
+      "powerlink": {
+        "field": "protocolType",
+        "value": "88ab"
+      },
+      "sercos3": {
+        "field": "protocolType",
+        "value": "88cd"
       },
       "vlan": {
         "field": "protocolType",
@@ -1539,6 +1711,14 @@
         "field": "etherType",
         "value": "88f7"
       },
+      "powerlink": {
+        "field": "etherType",
+        "value": "88ab"
+      },
+      "sercos3": {
+        "field": "etherType",
+        "value": "88cd"
+      },
       "vlan": {
         "field": "etherType",
         "value": "8100"
@@ -1680,6 +1860,54 @@
     "sunrpc": {
       "raw": null
     },
+    "babel": {
+      "raw": null
+    },
+    "dtls": {
+      "raw": null
+    },
+    "ffhse": {
+      "raw": null
+    },
+    "gopher": {
+      "raw": null
+    },
+    "hartip": {
+      "raw": null
+    },
+    "iscsi": {
+      "raw": null
+    },
+    "ldp": {
+      "raw": null
+    },
+    "lpd": {
+      "raw": null
+    },
+    "nbss": {
+      "raw": null
+    },
+    "openvpn": {
+      "raw": null
+    },
+    "powerlink": {
+      "raw": null
+    },
+    "pptp": {
+      "raw": null
+    },
+    "stomp": {
+      "raw": null
+    },
+    "sercos3": {
+      "raw": null
+    },
+    "wccp": {
+      "raw": null
+    },
+    "xmpp": {
+      "raw": null
+    },
     "vlan": {
       "arp": {
         "field": "etherType",
@@ -1740,6 +1968,14 @@
       "ptp": {
         "field": "etherType",
         "value": "88f7"
+      },
+      "powerlink": {
+        "field": "etherType",
+        "value": "88ab"
+      },
+      "sercos3": {
+        "field": "etherType",
+        "value": "88cd"
       },
       "vlan": {
         "field": "etherType",

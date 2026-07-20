@@ -1,0 +1,9 @@
+# Babel routing protocol (RFC 8966, udp:6696) packet carrying a single Hello TLV.
+# Babel header: Magic 42 (0x2a), Version 2, Body Length 8. Body: one Hello TLV (Type 4, Length 6)
+# with Flags 0x0000, Seqno 0x0002, Interval 0x0064 (100 centiseconds). No packet trailer.
+# source: constructed spec-accurate frame (RFC 8966). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 + UDP checksums); tshark 'babel' dissector agrees (frame.protocols
+# eth:ethertype:ip:udp:babel, Message hello / Seqno 0x0002 / Interval 100).
+# bytes: [0:14] eth (dst 01:00:5e:00:01:87), [14:34] ipv4 (192.0.2.10 -> 224.0.0.111, proto 17),
+# [34:42] udp (6696 -> 6696, len 20), [42:54] babel (4-byte header + 8-byte Hello TLV).
+01005e000187001122334455080045000028000040000111d74bc000020ae000006f1a281a280014fa852a0200080406000000020064

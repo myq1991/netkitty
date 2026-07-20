@@ -1,0 +1,14 @@
+# STOMP 1.2 (Simple Text Oriented Messaging Protocol, tcp:61613 — the ActiveMQ default) CONNECT frame.
+# The client opens a connection to the broker (dst port 61613) and sends the first frame of the STOMP
+# handshake: a COMMAND line "CONNECT", then header lines (accept-version:1.2, host:stomp.example.com,
+# login:admin), a blank line, an empty body, and the terminating NUL (0x00). LF line endings. The whole
+# payload is kept verbatim (byte-perfect); the COMMAND line and common headers are parsed for display
+# into {command:"CONNECT", destination:"", contentType:"", contentLength:0}.
+# source: CONSTRUCTED — the payload is a spec-accurate STOMP 1.2 CONNECT frame; the eth+ipv4+tcp envelope
+# (52:54:00:12:34:56 -> 52:54:00:ab:cd:ef, 192.0.2.10:51820 -> 192.0.2.20:61613) was synthesized by the
+# netkitty encoder so checksums/lengths are valid. tshark 4.6.7 in this environment ships no STOMP
+# dissector (verified: "stomp" is not in `tshark -G protocols`), so it labels the payload eth:ip:tcp:data;
+# the frame is nonetheless a valid STOMP-on-61613 CONNECT. Verified [eth,ipv4,tcp,stomp] decode +
+# byte-perfect round-trip via new Codec([STOMP]).
+# byte breakdown: 14 eth | 20 ipv4 (proto 6) | 20 tcp (dstport 0xf0ad=61613) | 64 STOMP payload (NUL-terminated)
+525400123456525400abcdef080045000068000040000006f671c000020ac0000214ca6cf0ad000000000000000050000000fb120000434f4e4e4543540a6163636570742d76657273696f6e3a312e320a686f73743a73746f6d702e6578616d706c652e636f6d0a6c6f67696e3a61646d696e0a0a00

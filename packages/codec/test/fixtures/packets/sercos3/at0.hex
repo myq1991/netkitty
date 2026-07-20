@@ -1,0 +1,5 @@
+# Sercos III AT0 (Acknowledge Telegram, telegram 0) carrying the Master Sync Telegram (MST), phase CP2.
+# EtherType 0x88CD. Byte0=0x60 (P-Telegram, AT, CycleCountValid, telegram 0), byte1=0x02 (Phase CP2),
+# CRC32=0xefcdab90 (little-endian on wire). Hand-constructed and verified with tshark (frame.protocols
+# = eth:ethertype:siii; dissects as AT0 / MST / Phase CP2).
+01111111111100112233445588cd600290abcdef000100000a010000b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2

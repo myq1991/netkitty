@@ -1,0 +1,11 @@
+# DTLS 1.2 (RFC 6347) over UDP — a single record-layer record carrying a Handshake ClientHello.
+# Record header: ContentType 22 (handshake), Version 0xfefd (DTLS 1.2), Epoch 0, SequenceNumber 0,
+# Length 58; Fragment: DTLS handshake ClientHello (msg_type 1, seq 0, unfragmented) with client_version
+# 0xfefd, 32-byte random, empty session_id, empty cookie, cipher suites 002f/0035, null compression, no
+# extensions.
+# CONSTRUCTED: spec-accurate DTLS record assembled by the netkitty encoder in an eth/ipv4/udp envelope
+# (valid IPv4 + UDP checksums); verified with tshark (frame.protocols = eth:ethertype:ip:udp:dtls,
+# Content Type Handshake (22), Version DTLS 1.2 (0xfefd), Handshake Client Hello).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 50000 dst 443), [42:55] dtls record header,
+# [55:113] dtls fragment (ClientHello).
+aabbccddeeff11223344556608004500006300004000001166800a00000a0a000001c35001bb004f053816fefd0000000000000000003a0100002e000000000000002efefd0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2000000004002f003501000000

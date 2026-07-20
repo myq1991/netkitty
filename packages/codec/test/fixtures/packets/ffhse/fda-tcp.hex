@@ -1,0 +1,10 @@
+# FOUNDATION Fieldbus HSE (IEC 61158) over TCP port 1090 — an FDA (Field Device Access) message.
+# The FDA message has no record/length prefix over TCP (unlike Kerberos/SunRPC); Message Length is the
+# sole delimiter, so the on-wire FDA layout is identical to the UDP case.
+# FDA Message Header (12 bytes): version 1, options 0x00, protocol-id-and-type 0x88, service 0x04,
+# FDA address 0x00000001, message length 20 (12-byte header + 8-byte service body).
+# source: constructed spec-accurate frame (FF-588 §6.3 / Wireshark 'ff' dissector layout). eth/ipv4/tcp
+# envelope assembled by the netkitty encoder (valid IPv4 + TCP checksums); tshark frame.protocols =
+# eth:ethertype:ip:tcp:ff (ff.hdr.ver=1, ff.hdr.len=20).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 49152 dst 1090), [54:66] FDA header, [66:74] body.
+00000000000100000000000208004500003c000040000006f69dc000020ac0000214c0000442000000000000000050000000ce5300000100880400000001000000140000100000000002

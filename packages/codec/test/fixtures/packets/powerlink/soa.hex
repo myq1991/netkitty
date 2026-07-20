@@ -1,0 +1,7 @@
+# Ethernet POWERLINK (EtherType 0x88AB) SoA — Start of Asynchronous. Common header: MessageType 5 (SoA,
+# reserved bit 0), Destination node 255 (broadcast), Source node 240 (MN). SoA body: NMTStatus 0x1d,
+# EA/ER flags 0x00, reserved, RequestedServiceID 1 (IdentRequest), RequestedServiceTarget 1, EPLVersion
+# 0x20; the frame is zero-padded to the 60-byte Ethernet minimum.
+# source: constructed spec-accurate frame (EPSG DS 301). eth [0:14], EtherType 88ab; EPL common [14:17];
+# tshark 'epl' dissector agrees (mtyp=5 dest=255 src=240 svid=1).
+01111e00000300e04c68000188ab05fff01d000001012000000000000000000000000000000000000000000000000000000000000000000000000000

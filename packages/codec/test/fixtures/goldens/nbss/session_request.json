@@ -1,0 +1,72 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:0c:29:44:55:66",
+      "smac": "00:0c:29:11:22:33",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 112,
+      "id": 1,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 46696,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 49500,
+      "dstport": 139,
+      "seq": 1,
+      "ack": 1,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 29200,
+      "checksum": 56233,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "nbss",
+    "data": {
+      "type": 129,
+      "flags": 0,
+      "length": 68,
+      "payload": "2045474643454645454341434143414341434143414341434143414341434143410020454345424643454f4546464a434143414341434143414341434143414341414100"
+    },
+    "errors": []
+  }
+]

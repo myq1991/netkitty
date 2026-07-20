@@ -1,0 +1,7 @@
+# LDP (udp:646) Link Hello, multicast to 224.0.0.2 (RFC 5036). Common header: version 1, PDU length 38,
+# LSR ID 1.1.1.1, label space 0. One Hello message (type 0x0100, len 28, msg id 1) carrying Common Hello
+# Parameters (hold time 15s), IPv4 Transport Address (1.1.1.1), and Configuration Sequence Number (1) TLVs.
+# source: constructed spec-accurate frame (RFC 5036). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 checksum); tshark 'ldp' dissector agrees (common header + Hello message + all 3 TLVs).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 646 dst 646), [42:52] ldp common header, [52:84] Hello message.
+01005e00000200000000000108004500004600004000011197a301010101e00000020286028600320713000100260101010100000100001c0000000104000004000f000004010004010101010402000400000001

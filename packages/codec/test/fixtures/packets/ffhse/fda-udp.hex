@@ -1,0 +1,8 @@
+# FOUNDATION Fieldbus HSE (IEC 61158) over UDP port 1089 — an FDA (Field Device Access) message.
+# FDA Message Header (12 bytes): version 1, options 0x00 (no trailer fields), protocol-id-and-type 0x88,
+# service 0x04, FDA address 0x00000001, message length 20 (12-byte header + 8-byte service body).
+# source: constructed spec-accurate frame (FF-588 §6.3 / Wireshark 'ff' dissector layout). eth/ipv4/udp
+# envelope assembled by the netkitty encoder (valid IPv4 checksum, UDP checksum honored); tshark
+# frame.protocols = eth:ethertype:ip:udp:ff (ff.hdr.ver=1, ff.hdr.len=20).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 49152 dst 1089), [42:54] FDA header, [54:62] body.
+000000000001000000000002080045000030000040000011f69ec000020ac0000214c0000441001c1e3b0100880400000001000000140000100000000001

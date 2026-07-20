@@ -1,0 +1,5 @@
+# WCCP v2 Here-I-Am (udp:2048) — 8-byte message header (type 0x0A, version 0x0200, length 36) + two
+# component TLVs: Security Info (type 0, no security) and Service Info (type 1, standard HTTP service).
+# Synthesized frame (eth/ipv4/udp/wccp); verified by tshark as frame.protocols eth:ethertype:ip:udp:wccp.
+01005e00000000000c07ac0108004500004800004000401126a30a0000010a000002080008000034d938
+0000000a02000024000000040000000000010018000000000000000000000000000000000000000000000000

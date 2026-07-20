@@ -1,0 +1,9 @@
+# PPTP (tcp:1723) Start-Control-Connection-Request. Common header: length 156, PDU type 1 (control
+# message), magic cookie 0x1a2b3c4d; control header: control message type 1 (SCCRQ), reserved0 0;
+# body: protocol version 1.0, framing caps async, bearer caps analog, max channels 0, firmware rev 1,
+# host name "local", vendor string "linux".
+# source: constructed spec-accurate frame (RFC 2637). eth/ipv4/tcp envelope assembled by the netkitty
+# encoder (valid IPv4 + TCP checksums); tshark 'pptp' dissector agrees (frame.protocols eth:...:tcp:pptp,
+# SCCRQ fields decode). bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 51000 dst 1723),
+# [54:66] pptp structured header, [66:210] SCCRQ body.
+00112233445566778899aabb0800450000c4000040000006f615c000020ac0000214c73806bb000000000000000050000000766c0000009c00011a2b3c4d00010000010000000000000100000001000000016c6f63616c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006c696e75780000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
