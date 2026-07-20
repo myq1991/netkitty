@@ -93,12 +93,12 @@ export class EthernetII extends BaseHeader {
         if (!this.prevCodecModule) return true
         //Tunnels that carry a bare Ethernet frame with no inner protocol-type field: claim their payload
         //as Ethernet unconditionally.
-        const specialScenes: string[] = ['trill', 'vxlan', 'nvgre', 'mpls', 'qinq', 'gre']
+        const specialScenes: string[] = ['trill', 'vxlan', 'nvgre', 'mpls', 'qinq']
         if (specialScenes.includes(this.prevCodecModule.id)) return true
-        //GENEVE carries a Protocol Type: only its Transparent Ethernet Bridging payload (0x6558) is an
-        //inner Ethernet frame. Other types route to IPv4/IPv6 (ethertype demux) or fall through to Raw —
-        //so an unknown type is not mislabeled as a fabricated Ethernet layer.
-        if (this.prevCodecModule.id === 'geneve') return this.prevCodecModule.instance.protocolType.getValue() === UInt16ToHex(0x6558)
+        //GENEVE and GRE carry a Protocol Type: only their Transparent Ethernet Bridging payload (0x6558)
+        //is an inner Ethernet frame. Other types route to IPv4/IPv6 (ethertype demux) or fall through to
+        //Raw — so an unknown type is not mislabeled as a fabricated Ethernet layer.
+        if (this.prevCodecModule.id === 'geneve' || this.prevCodecModule.id === 'gre') return this.prevCodecModule.instance.protocolType.getValue() === UInt16ToHex(0x6558)
         return false
     }
 }

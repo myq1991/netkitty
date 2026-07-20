@@ -39,9 +39,9 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
     assert.deepStrictEqual(menu, {
         eth: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
         vlan: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
-        ipv4: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'raw'],
-        ipv6: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'raw'],
-        'ipv6-hopopt': ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'raw'],
+        ipv4: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'raw'],
+        ipv6: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'raw'],
+        'ipv6-hopopt': ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'raw'],
         arp: ['raw'],
         goose: ['raw'],
         sv: ['raw'],
@@ -69,6 +69,8 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         // GENEVE declares protocolType as an ethertype producer, so (like eth/vlan) it offers the
         // ethertype-keyed children; in practice only ipv4/ipv6 (and TEB→eth) actually match a geneve parent.
         geneve: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
+        // GRE (over IP proto 47) likewise declares protocolType as an ethertype producer.
+        gre: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'vlan', 'raw'],
         'tls-handshake': ['raw'],
         'tls-alert': ['raw'],
         'tls-ccsp': ['raw'],
@@ -104,6 +106,9 @@ test('allowedNextLayers: ipv4 uses protocol, ipv6 uses nxt', (): void => {
     assert.deepStrictEqual(discriminatorOf('ipv4', 'tcp'), {field: 'protocol', value: 6})
     assert.deepStrictEqual(discriminatorOf('ipv6', 'tcp'), {field: 'nxt', value: 6})
     assert.deepStrictEqual(discriminatorOf('ipv4', 'udp'), {field: 'protocol', value: 17})
+    // GRE is carried over IP as protocol 47.
+    assert.deepStrictEqual(discriminatorOf('ipv4', 'gre'), {field: 'protocol', value: 47})
+    assert.deepStrictEqual(discriminatorOf('ipv6', 'gre'), {field: 'nxt', value: 47})
 })
 
 test('allowedNextLayers: a genuine leaf layer offers only RawData', (): void => {

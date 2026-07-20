@@ -1,0 +1,6 @@
+# GRE (RFC 2784) over IPv4 (IP protocol 47), no flags, protocol type 0x0800 — tunneling a bare inner
+# IPv4/ICMP packet. Exercises typed-tunnel dispatch: GRE's protocolType routes the inner to IPv4 (which
+# accepts a 'gre' parent), NOT the EthernetII fallback.
+# source: standard GRE header + a real inner IP packet emitted via a raw IPPROTO_GRE socket to 127.0.0.1
+# on a debian:12 container's ethernet lo, captured with tcpdump.
+00000000000000000000000008004500006c9d514000402f9f0f7f0000017f0000010000080045000054f631000040010088c0a8019ec0a80101080055e16143000067e811540002dc9908090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637

@@ -185,6 +185,17 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // GRE base header + optional Key/Sequence. proto (hexcode) + flags + key/seq verify the header walk;
+    // the inner eth/ip/icmp layers are compared via their own mappings (duplicate layer skipped).
+    gre: {tsLayer: 'gre', fields: [
+        {nk: 'protocolType', ts: 'gre.proto', kind: 'hexcode'},
+        {nk: 'flags.version', ts: 'gre.flags.version', kind: 'int'},
+        {nk: 'flags.checksum', ts: 'gre.flags.checksum', kind: 'int'},
+        {nk: 'flags.key', ts: 'gre.flags.key', kind: 'int'},
+        {nk: 'flags.sequence', ts: 'gre.flags.sequence_number', kind: 'int'},
+        {nk: 'keyValue', ts: 'gre.key', kind: 'hexcode'},
+        {nk: 'sequenceNumber', ts: 'gre.sequence_number', kind: 'int'}
+    ]},
     // GENEVE base header. proto_type (hexcode) + vni verify the tunnel; the inner eth/ip/icmp layers are
     // compared via their own mappings (the outer+inner duplicate layer is skipped by the duplicate guard).
     geneve: {tsLayer: 'geneve', fields: [

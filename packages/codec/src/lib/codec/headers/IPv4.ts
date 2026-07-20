@@ -357,9 +357,9 @@ export class IPv4 extends BaseHeader {
         //field, so match by the IPv4 version nibble. The tunnel-parent id gate MUST come first — a 4-bit
         //nibble alone is too weak a signature (many TCP/TLS payloads begin 0x4x).
         if (['gtp'].includes(this.prevCodecModule.id) && (this.readBytes(0, 1, true)[0] >> 4) === 4) return true
-        //Typed-tunnel path: GENEVE carries a Protocol Type (an EtherType), so trust that self-describing
+        //Typed-tunnel path: GENEVE/GRE carry a Protocol Type (an EtherType), so trust that self-describing
         //field rather than the weak version nibble — the ethertype demux already routed us here.
-        if (this.prevCodecModule.id === 'geneve' && this.prevCodecModule.instance.protocolType.getValue() === UInt16ToHex(0x0800)) return true
+        if ((this.prevCodecModule.id === 'geneve' || this.prevCodecModule.id === 'gre') && this.prevCodecModule.instance.protocolType.getValue() === UInt16ToHex(0x0800)) return true
         return false
     }
 }

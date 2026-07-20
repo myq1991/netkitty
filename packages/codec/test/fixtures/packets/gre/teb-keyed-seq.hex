@@ -1,0 +1,6 @@
+# GRE (RFC 2784 + RFC 2890 key/sequence) over IPv4, flags K+S, protocol type 0x6558 (Transparent
+# Ethernet Bridging), Key 0x0000007b, Sequence 0x00000001 — tunneling a full inner Ethernet frame,
+# which recurses via EthernetII (guarded to TEB). Exercises the optional Key + Sequence Number fields.
+# source: standard GRE header + a real inner eth frame emitted via a raw IPPROTO_GRE socket on a
+# debian:12 container's ethernet lo, captured with tcpdump.
+000000000000000000000000080045000082a1804000402f9aca7f0000017f000001300065580000007b000000018eba97c187e932c519fcd137080045000054f631000040010088c0a8019ec0a80101080055e16143000067e811540002dc9908090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637
