@@ -1,0 +1,9 @@
+# POP3 (RFC 1939, tcp:110) control-channel command. Client sends `USER alice\r\n` to the server. The
+# whole message is kept verbatim (byte-perfect); the first line is parsed for display (command/argument).
+# POP3 replies use `+OK`/`-ERR` status indicators (not FTP-style 3-digit codes) — see the crafted reply
+# tests in POP3.spec.ts.
+# source: real capture — debian:12 container, a python socket listening on 127.0.0.1:110 sending a real
+# `+OK POP3 server ready\r\n` greeting, with a second python socket connecting and sending `USER
+# alice\r\n`, over the ethernet lo interface, captured with tcpdump (all-zero loopback MACs, ethertype
+# 0800, IPv4/TCP dst port 110 with timestamp options). This frame is the client's USER command.
+0000000000000000000000000800450000403b014000400601b57f0000017f000001e920006e6df2317d2c38d4db80180200fe3400000101080a2da47d502da47d4f5553455220616c6963650d0a

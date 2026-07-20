@@ -252,6 +252,27 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'eot', ts: 'cotp.eot', kind: 'int'},
         {nk: 'tpduNr', ts: 'cotp.tpdu-number', kind: 'int'}
     ]},
+    // HSR (IEC 62439-3, ethertype 0x892f). The 6-byte tag: path (4b) + LSDU size (12b) + sequence + the
+    // carried EtherType. tshark further splits path into netid/laneid but also exposes the whole nibble as
+    // hsr.path. hsr.type is the carried EtherType (0x-hex → hexcode strips 0x).
+    hsr: {tsLayer: 'hsr', fields: [
+        {nk: 'path', ts: 'hsr.path', kind: 'int'},
+        {nk: 'lsduSize', ts: 'hsr.lsdu_size', kind: 'int'},
+        {nk: 'seqNr', ts: 'hsr.sequence_nr', kind: 'int'},
+        {nk: 'etherType', ts: 'hsr.type', kind: 'hexcode'}
+    ]},
+    // SMTP (RFC 5321, tcp:25). The parsed command + parameter (display-only; whole message kept verbatim).
+    // tshark nests them under smtp.command_line_tree (DFS reaches them).
+    smtp: {tsLayer: 'smtp', fields: [
+        {nk: 'command', ts: 'smtp.req.command', kind: 'str'},
+        {nk: 'argument', ts: 'smtp.req.parameter', kind: 'str'}
+    ]},
+    // POP3 (RFC 1939, tcp:110). tshark names the layer 'pop'. command + parameter (display-only) nested
+    // under pop.request_tree.
+    pop3: {tsLayer: 'pop', fields: [
+        {nk: 'command', ts: 'pop.request.command', kind: 'str'},
+        {nk: 'argument', ts: 'pop.request.parameter', kind: 'str'}
+    ]},
     // LLDP (IEEE 802.1AB, ethertype 0x88cc): the TLV values are kept as opaque hex, so tshark's decoded
     // per-TLV scalars (lldp.time_to_live etc.) do not map to a single field — verified by round-trip + golden.
     // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the

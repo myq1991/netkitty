@@ -1,0 +1,6 @@
+# SMTP (RFC 5321, tcp:25) control-channel command. Client sends `EHLO example.com\r\n` to the server. The
+# whole message is kept verbatim (byte-perfect); the first line is parsed for display (command/argument).
+# source: real capture — ubuntu:20.04 container, a python socket listening on 127.0.0.1:25 with a second
+# python socket connecting and sending `EHLO example.com\r\n`, over the ethernet lo interface, captured
+# with tcpdump (all-zero loopback MACs, ethertype 0800, IPv4/TCP dst port 25 with timestamp options).
+000000000000000000000000080045000046875a40004006b5557f0000017f000001d24000192e71188452b6fdce80180200fe3a00000101080a2da3bb4a2da3ba1b45484c4f206578616d706c652e636f6d0d0a

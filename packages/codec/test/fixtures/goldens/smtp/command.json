@@ -1,0 +1,88 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 70,
+      "id": 34650,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 46421,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 53824,
+      "dstport": 25,
+      "seq": 779163780,
+      "ack": 1387724238,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65082,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 765705034,
+          "tsecr": 765704731
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "smtp",
+    "data": {
+      "message": "45484c4f206578616d706c652e636f6d0d0a",
+      "isReply": false,
+      "replyCode": 0,
+      "isMultiline": false,
+      "replyText": "",
+      "command": "EHLO",
+      "argument": "example.com"
+    },
+    "errors": []
+  }
+]

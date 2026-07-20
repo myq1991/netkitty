@@ -80,8 +80,10 @@ test('FTP does not steal POP3/SMTP-style traffic on other ports (no heuristicFal
         {id: 'raw', data: {data: pop3Hex}}
     ])
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(packet)
-    assert.ok(!decoded.some((l: CodecDecodeResult): boolean => l.id === 'ftp'), 'a USER line on port 110 is POP3, not FTP — must not be claimed off the tcp:21 bucket')
-    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'raw'])
+    assert.ok(!decoded.some((l: CodecDecodeResult): boolean => l.id === 'ftp'), 'a USER line on port 110 must not be claimed by FTP off the tcp:21 bucket')
+    // POP3 (now registered, tcp:110) is the rightful owner of this line — confirming each line protocol
+    // is confined to its own port bucket, exactly as the no-heuristicFallback decision intends.
+    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'pop3'])
 })
 
 // A truncated FTP message (cut mid-line) must decode without throwing and re-encode without throwing; a

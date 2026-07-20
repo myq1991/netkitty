@@ -1,0 +1,16 @@
+# HSR (High-availability Seamless Redundancy, IEC 62439-3 Clause 5, ethertype 0x892F) carrying a GOOSE
+# frame. Hand-crafted (no HSR device available): the outer Ethernet frame selects HSR via ethertype
+# 0x892F, then a 6-byte HSR tag carries the ORIGINAL ethertype 0x88b8 (GOOSE), proving GOOSE dispatches
+# over an HSR parent through the `etherType` field. The inner GOOSE APDU bytes are spliced verbatim from
+# test/fixtures/packets/goose/baseline.hex (the bytes after that frame's 14-byte Ethernet header).
+# Byte breakdown:
+#   01154e000104        dst MAC (HSR-style multicast)
+#   001122334455        src MAC
+#   892f                outer EtherType = HSR
+#   -- 6-byte HSR tag --
+#   1099                Path (top 4 bits) = 0x1 (1), LSDUsize (low 12 bits) = 0x099 (153)
+#   002a                SeqNr = 0x002a (42)
+#   88b8                carried EtherType = GOOSE (drives inner dispatch → decodes as goose)
+#   0001009100000000...  GOOSE payload (APPID/Length/reserved + goosePdu), taken from goose/baseline.hex
+# Decodes as [eth, hsr, goose] and round-trips byte-perfect.
+01154e000104001122334455892f1099002a88b80001009100000000618186801a4745446576696365463635302f4c4c4e3024474f2467636230318103009c4082184745446576696365463635302f4c4c4e3024474f4f534531830b463635305f474f4f5345318408386ebbf34217280a85010186010a8701008801018901008a0108ab208301008403030000830100840303000083010084030300008301008403030000

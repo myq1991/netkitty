@@ -25,6 +25,9 @@ test('allowedNextLayers: eth offers ethertype-keyed children plus RawData', (): 
     assert.deepStrictEqual(discriminatorOf('eth', 'ipv4'), {field: 'etherType', value: '0800'})
     assert.deepStrictEqual(discriminatorOf('eth', 'ipv6'), {field: 'etherType', value: '86dd'})
     assert.deepStrictEqual(discriminatorOf('eth', 'lldp'), {field: 'etherType', value: '88cc'})
+    assert.deepStrictEqual(discriminatorOf('eth', 'hsr'), {field: 'etherType', value: '892f'})
+    // HSR carries its inner frame by the original EtherType — GOOSE (0x88b8) dispatches over an HSR parent.
+    assert.deepStrictEqual(discriminatorOf('hsr', 'goose'), {field: 'etherType', value: '88b8'})
     // RawData is always available and carries no discriminator.
     assert.deepStrictEqual(discriminatorOf('eth', 'raw'), null)
 })
@@ -38,8 +41,8 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         menu[codecSchema.id] = codec.allowedNextLayers(codecSchema.id).map((n: NextLayer): string => n.id)
     }
     assert.deepStrictEqual(menu, {
-        eth: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'vlan', 'raw'],
-        vlan: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'vlan', 'raw'],
+        eth: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
+        vlan: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
         ipv4: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
         ipv6: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
         'ipv6-hopopt': ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
@@ -49,7 +52,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         icmp: ['raw'],
         icmpv6: ['raw'],
         // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
-        tcp: ['stun', 'modbus', 'dnp3', 'c37118', 'enip', 'mqtt', 'tacacs', 'sip', 'http', 'ftp', 'rtsp', 'tpkt', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
+        tcp: ['stun', 'modbus', 'dnp3', 'c37118', 'enip', 'mqtt', 'tacacs', 'sip', 'http', 'ftp', 'rtsp', 'tpkt', 'smtp', 'pop3', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
         udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'dnp3', 'c37118', 'bacnet', 'enip', 'coap', 'sip', 'raw'],
         ntp: ['raw'],
         stun: ['raw'],
@@ -69,9 +72,12 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         l2tp: ['raw'],
         // GENEVE declares protocolType as an ethertype producer, so (like eth/vlan) it offers the
         // ethertype-keyed children; in practice only ipv4/ipv6 (and TEB→eth) actually match a geneve parent.
-        geneve: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'vlan', 'raw'],
+        geneve: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
         // GRE (over IP proto 47) likewise declares protocolType as an ethertype producer.
-        gre: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'vlan', 'raw'],
+        gre: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
+        // HSR (IEC 62439-3) is a VLAN-like L2 redundancy tag: it declares its carried etherType as an
+        // ethertype producer, so it offers the same ethertype-keyed children as eth/vlan.
+        hsr: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
         bfd: ['raw'],
         vrrp: ['raw'],
         ospf: ['raw'],
@@ -89,6 +95,8 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         http: ['raw'],
         ftp: ['raw'],
         rtsp: ['raw'],
+        smtp: ['raw'],
+        pop3: ['raw'],
         // TPKT's child COTP is an unkeyed heuristic layer (matched by prev.id==='tpkt'), so like the
         // TLS/IEC104 heuristic children it does not appear in the reverse demux menu — tpkt lists raw only.
         tpkt: ['raw'],
@@ -166,6 +174,8 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('tcp', 'ftp'), {field: 'dstport', value: 21})
     assert.deepStrictEqual(discriminatorOf('tcp', 'rtsp'), {field: 'dstport', value: 554})
     assert.deepStrictEqual(discriminatorOf('tcp', 'tpkt'), {field: 'dstport', value: 102})
+    assert.deepStrictEqual(discriminatorOf('tcp', 'smtp'), {field: 'dstport', value: 25})
+    assert.deepStrictEqual(discriminatorOf('tcp', 'pop3'), {field: 'dstport', value: 110})
     // udp now offers NTP on its well-known port 123.
     assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'dnp3', 'c37118', 'bacnet', 'enip', 'coap', 'sip', 'raw'])
     assert.deepStrictEqual(discriminatorOf('udp', 'ntp'), {field: 'dstport', value: 123})
