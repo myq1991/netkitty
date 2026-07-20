@@ -1,0 +1,9 @@
+# Redis RESP (RESP2/RESP3, tcp:6379) client command. The client sends the array-of-bulk-strings frame
+# `*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n` — i.e. `SET foo bar` — to the server. The whole message is
+# kept verbatim (byte-perfect); the leading byte / first line is parsed for display (respType='array',
+# isRequest=true, command='SET', preview='*3'). See the crafted RESP2/RESP3 response tests in Redis.spec.ts.
+# source: real capture — python:3-slim container, a python socket listening on 127.0.0.1:6379 with a second
+# python socket connecting and sending the real RESP `SET foo bar` command over the ethernet lo interface,
+# captured with tcpdump (LINKTYPE 1 / EN10MB, all-zero loopback MACs, ethertype 0800, IPv4/TCP dst port 6379
+# with timestamp options). This frame is the client's SET command.
+000000000000000000000000080045000053aff8400040068caa7f0000017f000001c7ac18eb0fb1cac5a85e6cd980180200fe4700000101080a2dc70ebc2dc70ebc2a330d0a24330d0a5345540d0a24330d0a666f6f0d0a24330d0a6261720d0a

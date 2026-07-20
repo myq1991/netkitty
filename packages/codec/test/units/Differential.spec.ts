@@ -288,6 +288,16 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
     // NNTP (RFC 3977, tcp:119): tshark marks nntp.request but does NOT structure the request command line
     // into fields, so there is no authoritative field to map — the command/argument parse is verified by
     // round-trip + golden instead (like LLDP's opaque TLVs).
+    // OPC UA Connection Protocol (tcp:4840). tshark names the layer 'opcua'. The 8-byte transport header:
+    // message type (HEL/ACK/MSG/…) + chunk + size. The message body is verified by round-trip + golden.
+    opcua: {tsLayer: 'opcua', fields: [
+        {nk: 'messageType', ts: 'opcua.transport.type', kind: 'str'},
+        {nk: 'chunk', ts: 'opcua.transport.chunk', kind: 'str'},
+        {nk: 'messageSize', ts: 'opcua.transport.size', kind: 'int'}
+    ]},
+    // Redis RESP (tcp:6379): tshark names the layer 'resp' and nests repeated resp.bulk_string keys, which
+    // collapse last-wins under -T json — so the command verb (first bulk string) is not reliably mappable.
+    // The respType/command parse is verified by round-trip + golden instead (like NNTP/LLDP).
     // LLDP (IEEE 802.1AB, ethertype 0x88cc): the TLV values are kept as opaque hex, so tshark's decoded
     // per-TLV scalars (lldp.time_to_live etc.) do not map to a single field — verified by round-trip + golden.
     // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the

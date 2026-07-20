@@ -1,0 +1,8 @@
+# OPC UA Connection Protocol (OPC UA TCP, IEC 62541-6, tcp:4840) HELLO message. 8-byte frame header:
+# MessageType "HEL" (48 45 4c), Chunk/IsFinal "F" (46), MessageSize 56 = 0x38 LITTLE-ENDIAN (38 00 00 00,
+# counts the 8-byte header + 48-byte body). HELLO body (all sub-fields little-endian): ProtocolVersion 0,
+# ReceiveBufferSize 65536, SendBufferSize 65536, MaxMessageSize 0, MaxChunkCount 0, EndpointUrl length 24
+# then UTF-8 "opc.tcp://localhost:4840". source: CONSTRUCTED (not a live capture) — a spec-accurate OPC UA
+# HELLO body wrapped in an eth+ipv4+tcp(dst 4840) envelope assembled by the netkitty encoder (valid IPv4/
+# TCP checksums); verified to decode [eth,ipv4,tcp,opcua] and round-trip byte-for-byte.
+0000000000000000000000000800450000600000400000067c967f0000017f000001c35012e8000000000000000050000000862a000048454c46380000000000000000000100000001000000000000000000180000006f70632e7463703a2f2f6c6f63616c686f73743a34383430
