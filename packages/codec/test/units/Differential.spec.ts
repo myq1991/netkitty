@@ -185,6 +185,16 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // C37.118 (IEEE C37.118.2 synchrophasor). tshark names the layer 'synphasor'. Frame type / version /
+    // size / id / fraction verify the common header; SOC (tshark renders it as an ISO date) and the CHK
+    // are verified byte-for-byte by round-trip + golden.
+    c37118: {tsLayer: 'synphasor', fields: [
+        {nk: 'sync.frameType', ts: 'synphasor.frtype', kind: 'int'},
+        {nk: 'sync.version', ts: 'synphasor.version', kind: 'int'},
+        {nk: 'framesize', ts: 'synphasor.frsize', kind: 'int'},
+        {nk: 'idcode', ts: 'synphasor.idcode_stream_source', kind: 'int'},
+        {nk: 'fractionOfSecond', ts: 'synphasor.fracsec_raw', kind: 'int'}
+    ]},
     // DNP3 (IEEE 1815, tcp/udp:20000) Data Link header. The control sub-bits and LE dest/src addresses
     // verify the header decode; the header CRC (tshark shows it LE-interpreted as a value, we keep the
     // raw bytes) and the data-block payload are verified byte-for-byte by round-trip + golden.

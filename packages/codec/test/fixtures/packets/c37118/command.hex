@@ -1,0 +1,5 @@
+# IEEE C37.118.2 synchrophasor command frame (tcp:4712). SYNC 0xAA + frame type 4 (command), version 1;
+# FRAMESIZE 18, IDCODE 1, SOC 0x5F000000, FRACSEC 0; command word 0x0001 (turn on transmission);
+# CHK 0x1551 (CRC-CCITT). source: standard C37.118 command frame (valid CRC-CCITT) over a TCP socket to
+# 127.0.0.1:4712 on a debian:12 container's ethernet lo, captured with tcpdump (PSH data segment).
+0000000000000000000000000800450000464bdb40004006f0d47f0000017f000001a83c12680ff24207750e16d880180200fe3a00000101080a2d30ec472d30ec47aa41001200015f0000000000000000011551

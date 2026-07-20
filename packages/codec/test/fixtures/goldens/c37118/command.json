@@ -1,0 +1,94 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 70,
+      "id": 19419,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 61652,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 43068,
+      "dstport": 4712,
+      "seq": 267534855,
+      "ack": 1963857624,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65082,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 758180935,
+          "tsecr": 758180935
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "c37118",
+    "data": {
+      "leadIn": "aa",
+      "sync": {
+        "reserved": 0,
+        "frameType": 4,
+        "version": 1
+      },
+      "framesize": 18,
+      "idcode": 1,
+      "soc": 1593835520,
+      "timeQuality": 0,
+      "fractionOfSecond": 0,
+      "body": "0001",
+      "chk": "1551"
+    },
+    "errors": []
+  }
+]
