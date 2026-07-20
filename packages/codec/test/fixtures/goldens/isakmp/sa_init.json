@@ -1,0 +1,86 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 276,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 9660,
+      "sip": "10.0.0.10",
+      "dip": "10.0.0.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 500,
+      "dstport": 500,
+      "length": 256,
+      "checksum": 37643
+    },
+    "errors": []
+  },
+  {
+    "id": "isakmp",
+    "data": {
+      "initiatorSPI": "1122334455667788",
+      "responderSPI": "0000000000000000",
+      "nextPayload": 33,
+      "version": {
+        "major": 2,
+        "minor": 0
+      },
+      "exchangeType": 34,
+      "flags": 8,
+      "messageId": 0,
+      "length": 248,
+      "payloads": [
+        {
+          "nextPayload": 34,
+          "critical": false,
+          "reserved": 0,
+          "payloadLength": 48,
+          "body": "0000002c010100040000000c0100000c800e0080000000080200000200000008030000020300000804000002"
+        },
+        {
+          "nextPayload": 40,
+          "critical": false,
+          "reserved": 0,
+          "payloadLength": 136,
+          "body": "0002000001080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a"
+        },
+        {
+          "nextPayload": 0,
+          "critical": false,
+          "reserved": 0,
+          "payloadLength": 36,
+          "body": "030e19242f3a45505b66717c87929da8b3bec9d4dfeaf5000b16212c37424d58"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

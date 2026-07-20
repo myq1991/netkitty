@@ -1,0 +1,21 @@
+# ISAKMP / IKEv2 IKE_SA_INIT request (RFC 7296) over UDP/IPv4 port 500.
+# CONSTRUCTED (not a live capture): assembled spec-accurately via the netkitty encoder, then verified
+#   byte-for-byte against Wireshark/tshark, which dissects it fully as eth:ethertype:ip:udp:isakmp —
+#   version 2.0, exchange type IKE_SA_INIT (34), flags 0x08 (Initiator), length 248, and the complete
+#   SA -> KE -> Nonce payload chain (SA proposal with ENCR AES-CBC-128 / PRF-HMAC-SHA1 / INTEG-HMAC-SHA1-96 / DH group 2).
+# source: netkitty codec.encode([eth,ipv4,udp,isakmp]); confirmed with `tshark -Y isakmp -V`.
+#
+# ISAKMP starts at frame offset 42 (eth 14 + ipv4 20 + udp 8). 28-byte fixed header:
+#   1122334455667788  initiatorSPI (8)
+#   0000000000000000  responderSPI (8, zero in an SA_INIT request)
+#   21                nextPayload = 33 (Security Association) -> selects the first payload's type
+#   20                version = 2.0 (major nibble 2, minor nibble 0 -> IKEv2)
+#   22                exchangeType = 34 (IKE_SA_INIT)
+#   08                flags = 0x08 (Initiator)
+#   00000000          messageId
+#   000000f8          length = 248 (total message: 28 header + 48 SA + 136 KE + 36 Nonce)
+# Payload chain (each generic header = nextPayload(1) criticalReserved(1) payloadLength(2), then body):
+#   22 00 0030 ...    SA    payload: nextPayload=34 (KE),    payloadLength=48  (1 proposal, 4 transforms)
+#   28 00 0088 ...    KE    payload: nextPayload=40 (Nonce), payloadLength=136 (DH group 2 + 128B key data)
+#   00 00 0024 ...    Nonce payload: nextPayload=0  (last),  payloadLength=36  (32B nonce) -> terminates the chain
+00112233445566778899aabb08004500011400004000401125bc0a00000a0a00001401f401f40100930b112233445566778800000000000000002120220800000000000000f8220000300000002c010100040000000c0100000c800e0080000000080200000200000008030000020300000804000002280000880002000001080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a00000024030e19242f3a45505b66717c87929da8b3bec9d4dfeaf5000b16212c37424d58

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "02:00:00:00:00:01",
+      "smac": "02:00:00:00:00:02",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 156,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 6,
+      "checksum": 63725,
+      "sip": "192.168.0.10",
+      "dip": "192.168.0.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 51000,
+      "dstport": 3868,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 64081,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "diameter",
+    "data": {
+      "version": 1,
+      "messageLength": 116,
+      "commandFlags": 128,
+      "commandCode": 257,
+      "applicationId": 0,
+      "hopByHopId": 287454020,
+      "endToEndId": 1432778632,
+      "avps": [
+        {
+          "code": 264,
+          "flags": 64,
+          "length": 26,
+          "data": "636c69656e742e6578616d706c652e636f6d",
+          "padding": "0000"
+        },
+        {
+          "code": 296,
+          "flags": 64,
+          "length": 19,
+          "data": "6578616d706c652e636f6d",
+          "padding": "00"
+        },
+        {
+          "code": 257,
+          "flags": 64,
+          "length": 14,
+          "data": "0001c0a8000a",
+          "padding": "0000"
+        },
+        {
+          "code": 266,
+          "flags": 64,
+          "length": 12,
+          "data": "00000000",
+          "padding": ""
+        },
+        {
+          "code": 269,
+          "flags": 0,
+          "length": 20,
+          "data": "667265654469616d65746572",
+          "padding": ""
+        }
+      ]
+    },
+    "errors": []
+  }
+]

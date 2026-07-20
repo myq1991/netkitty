@@ -1,0 +1,24 @@
+# Diameter Capabilities-Exchange-Request (CER, Command Code 257) over TCP port 3868 (RFC 6733).
+# CONSTRUCTED, not captured: the eth/IPv4/TCP envelope was assembled by the netkitty encoder (so the
+# IPv4 and TCP checksums are valid) around a hand-built, spec-accurate CER. Independently verified with
+# Wireshark: `Protocols in frame: eth:ethertype:ip:tcp:diameter`, IPv4 + TCP checksums Good, Command
+# Code Capabilities-Exchange (257), and Origin-Host / Origin-Realm / Host-IP-Address / Vendor-Id /
+# Product-Name all dissected.
+#
+# Diameter header (20 bytes, big-endian), at frame offset 54 (eth 14 + IPv4 20 + TCP 20):
+#   01              Version = 1
+#   000074          Message Length = 116 (0x74 — the whole message incl. header + padded AVPs)
+#   80              Command Flags = R (Request)
+#   000101          Command Code = 257 (Capabilities-Exchange)
+#   00000000        Application-Id = 0 (Diameter Common Messages)
+#   11223344        Hop-by-Hop Identifier
+#   55667788        End-to-End Identifier
+#
+# AVPs (each: Code(4) Flags(1) Length(3) [Vendor-Id(4) if V] data pad-to-4). Padding is NOT counted in
+# the AVP Length but IS part of the Message Length; it is preserved verbatim so the round-trip is exact.
+#   00000108 40 00001a  Origin-Host (264) M, len 26: "client.example.com" (18B) + 2 pad bytes (0000)
+#   00000128 40 000013  Origin-Realm (296) M, len 19: "example.com" (11B) + 1 pad byte (00)
+#   00000101 40 00000e  Host-IP-Address (257) M, len 14: 0001 (IPv4) c0a8000a (192.168.0.10) + 2 pad (0000)
+#   0000010a 40 00000c  Vendor-Id (266) M, len 12: 00000000 (IETF) — len%4==0, no padding
+#   0000010d 00 000014  Product-Name (269) not-M, len 20: "freeDiameter" (12B) — no padding
+02000000000102000000000208004500009c000040000006f8edc0a8000ac0a80014c7380f1c000000000000000050000000fa5100000100007480000101000000001122334455667788000001084000001a636c69656e742e6578616d706c652e636f6d000000000128400000136578616d706c652e636f6d00000001014000000e0001c0a8000a00000000010a4000000c000000000000010d00000014667265654469616d65746572

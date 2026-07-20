@@ -1,0 +1,60 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "02:00:00:00:00:02",
+      "smac": "02:00:00:00:00:01",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 176,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 26153,
+      "sip": "10.9.0.1",
+      "dip": "10.9.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 51820,
+      "dstport": 51820,
+      "length": 156,
+      "checksum": 52792
+    },
+    "errors": []
+  },
+  {
+    "id": "wireguard",
+    "data": {
+      "messageType": 1,
+      "reserved": "000000",
+      "sender": 1061821445,
+      "ephemeral": "b58d31e21e32c9fed1e8a78b84c99ddd23c9cb881c2b7e64c31fa59a5276d525",
+      "static": "e1de766229997480a57b8bff342bc0907ffa6016e16db9c8a2130065ec00f4c818d9931e29872e2246e84e366c7189c7",
+      "timestamp": "30fc07a963428b82bf0c77787cbb5f852d27d9813cdd177a64b240bc",
+      "mac1": "82b0ea275d973b43239707393b4960bf",
+      "mac2": "00000000000000000000000000000000"
+    },
+    "errors": []
+  }
+]

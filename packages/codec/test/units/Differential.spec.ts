@@ -320,6 +320,29 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
     pgsql: {tsLayer: 'pgsql', fields: [
         {nk: 'length', ts: 'pgsql.length', kind: 'int'}
     ]},
+    // Diameter (RFC 6733, tcp:3868). tshark names the layer 'diameter'. version/flags/command-code/length
+    // verify the 20-byte header (rendered as 0x-hex → kind int compares numerically). The AVPs (nested,
+    // repeated) are verified by round-trip + golden.
+    diameter: {tsLayer: 'diameter', fields: [
+        {nk: 'version', ts: 'diameter.version', kind: 'int'},
+        {nk: 'commandFlags', ts: 'diameter.flags', kind: 'int'},
+        {nk: 'commandCode', ts: 'diameter.cmd.code', kind: 'int'},
+        {nk: 'messageLength', ts: 'diameter.length', kind: 'int'}
+    ]},
+    // ISAKMP/IKE (RFC 7296, udp:500). next-payload / exchange-type / major-version verify the 28-byte
+    // header (isakmp.mjver is nested under isakmp.version_tree, reached by the DFS). The SPIs are colon-
+    // formatted by tshark (not mappable to our bare hex) and the payload chain is verified by round-trip.
+    isakmp: {tsLayer: 'isakmp', fields: [
+        {nk: 'nextPayload', ts: 'isakmp.nextpayload', kind: 'int'},
+        {nk: 'exchangeType', ts: 'isakmp.exchangetype', kind: 'int'},
+        {nk: 'version.major', ts: 'isakmp.mjver', kind: 'int'}
+    ]},
+    // WireGuard (udp:51820). tshark names the layer 'wg'. message type + sender index verify the header;
+    // the crypto blobs are opaque and verified by round-trip + golden. wg.sender is 0x-hex → kind int.
+    wireguard: {tsLayer: 'wg', fields: [
+        {nk: 'messageType', ts: 'wg.type', kind: 'int'},
+        {nk: 'sender', ts: 'wg.sender', kind: 'int'}
+    ]},
     // R-GOOSE/R-SV (IEC 61850-90-5 Session, udp:102): tshark only reaches its R-GOOSE dissector via a CLTP
     // (ISO 8602) UD-TPDU heuristic — the common direct-in-UDP wire form this codec models is dissected as
     // opaque 'data', so tshark exposes no r-session fields to map. The 90-5 session byte layout was instead
