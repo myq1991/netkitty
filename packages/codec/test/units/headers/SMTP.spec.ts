@@ -80,8 +80,10 @@ test('SMTP does not steal FTP/IRC-style traffic on other ports (no heuristicFall
         {id: 'raw', data: {data: ircHex}}
     ])
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(packet)
-    assert.ok(!decoded.some((l: CodecDecodeResult): boolean => l.id === 'smtp'), 'a QUIT line on port 6667 is IRC, not SMTP — must not be claimed off the tcp:25/587 buckets')
-    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'raw'])
+    assert.ok(!decoded.some((l: CodecDecodeResult): boolean => l.id === 'smtp'), 'a QUIT line on port 6667 must not be claimed by SMTP off the tcp:25/587 buckets')
+    // IRC (now registered, tcp:6667) is the rightful owner of this line — confirming each line protocol is
+    // confined to its own port bucket, exactly as the no-heuristicFallback decision intends.
+    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'irc'])
 })
 
 // A truncated SMTP message (cut mid-line) must decode without throwing and re-encode without throwing; a

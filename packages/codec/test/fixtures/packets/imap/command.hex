@@ -1,0 +1,9 @@
+# IMAP (RFC 3501, tcp:143) control-channel command. Client sends `a001 LOGIN alice secret\r\n` to the
+# server. The whole message is kept verbatim (byte-perfect); the first line is parsed for display
+# (kind/tag/command/status/text). IMAP lines are TAG-prefixed: a tagged command/response `<tag> ...`, an
+# untagged `* ...`, or a continuation `+ ...` — see the crafted response tests in IMAP.spec.ts.
+# source: real capture — python:3.12-slim container, a python socket listening on 127.0.0.1:143 and a
+# second python socket connecting and sending `a001 LOGIN alice secret\r\n`, over the ethernet lo
+# interface, captured with tcpdump (all-zero loopback MACs, ethertype 0800, IPv4/TCP dst port 143 with
+# timestamp options). This frame is the client's tagged LOGIN command.
+00000000000000000000000008004500004d8b2e40004006b17a7f0000017f0000019880008f63f47f758f91a0fe80180200fe4100000101080a2db5f8372db5f76f61303031204c4f47494e20616c696365207365637265740d0a

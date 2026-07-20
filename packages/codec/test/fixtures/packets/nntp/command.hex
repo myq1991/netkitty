@@ -1,0 +1,6 @@
+# NNTP (RFC 3977, tcp:119) control-channel command. Client sends `GROUP misc.test\r\n` to the server. The
+# whole message is kept verbatim (byte-perfect); the first line is parsed for display (command/argument).
+# source: real capture — ubuntu:20.04 container, a python socket listening on 127.0.0.1:119 with a second
+# python socket connecting and sending `GROUP misc.test\r\n`, over the ethernet lo interface, captured
+# with tcpdump (all-zero loopback MACs, ethertype 0800, IPv4/TCP dst port 119 with timestamp options).
+000000000000000000000000080045000045db494000400661677f0000017f000001af400077a41c51359b426a3c80180200fe3900000101080a2db5a3692db5a29d47524f5550206d6973632e746573740d0a

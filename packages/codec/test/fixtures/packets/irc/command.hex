@@ -1,0 +1,9 @@
+# IRC (RFC 1459 / RFC 2812, tcp:6667) command line. Client sends `NICK alice\r\n` to the server. The
+# whole message is kept verbatim (byte-perfect); the first line is parsed for display
+# (prefix/command/params/isNumeric). A server message instead carries a `:prefix` and may use a 3-digit
+# numeric reply code (e.g. `:server 001 alice :Welcome\r\n`) — see the crafted server tests in IRC.spec.ts.
+# source: real capture — debian:12 container, a python socket listening on 127.0.0.1:6667, with a second
+# python socket connecting and sending `NICK alice\r\n` (the server replied `:server 001 alice :Welcome to
+# IRC\r\n`), over the ethernet lo interface, captured with tcpdump (all-zero loopback MACs, ethertype 0800,
+# IPv4/TCP dst port 6667 with timestamp options). This frame is the client's NICK command.
+000000000000000000000000080045000040091740004006339f7f0000017f000001f2b81a0be8107bd90ee243ce80180200fe3400000101080a2db6c42d2db6c3c14e49434b20616c6963650d0a

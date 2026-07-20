@@ -52,7 +52,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         icmp: ['raw'],
         icmpv6: ['raw'],
         // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
-        tcp: ['stun', 'modbus', 'dnp3', 'c37118', 'enip', 'mqtt', 'tacacs', 'sip', 'http', 'ftp', 'rtsp', 'tpkt', 'smtp', 'pop3', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
+        tcp: ['stun', 'modbus', 'dnp3', 'c37118', 'enip', 'mqtt', 'tacacs', 'sip', 'http', 'ftp', 'rtsp', 'tpkt', 'smtp', 'pop3', 'imap', 'nntp', 'irc', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
         udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'dnp3', 'c37118', 'bacnet', 'enip', 'coap', 'sip', 'raw'],
         ntp: ['raw'],
         stun: ['raw'],
@@ -97,6 +97,9 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         rtsp: ['raw'],
         smtp: ['raw'],
         pop3: ['raw'],
+        imap: ['raw'],
+        nntp: ['raw'],
+        irc: ['raw'],
         // TPKT's child COTP is an unkeyed heuristic layer (matched by prev.id==='tpkt'), so like the
         // TLS/IEC104 heuristic children it does not appear in the reverse demux menu — tpkt lists raw only.
         tpkt: ['raw'],
@@ -176,6 +179,9 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('tcp', 'tpkt'), {field: 'dstport', value: 102})
     assert.deepStrictEqual(discriminatorOf('tcp', 'smtp'), {field: 'dstport', value: 25})
     assert.deepStrictEqual(discriminatorOf('tcp', 'pop3'), {field: 'dstport', value: 110})
+    assert.deepStrictEqual(discriminatorOf('tcp', 'imap'), {field: 'dstport', value: 143})
+    assert.deepStrictEqual(discriminatorOf('tcp', 'nntp'), {field: 'dstport', value: 119})
+    assert.deepStrictEqual(discriminatorOf('tcp', 'irc'), {field: 'dstport', value: 6667})
     // udp now offers NTP on its well-known port 123.
     assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'geneve', 'bfd', 'dnp3', 'c37118', 'bacnet', 'enip', 'coap', 'sip', 'raw'])
     assert.deepStrictEqual(discriminatorOf('udp', 'ntp'), {field: 'dstport', value: 123})

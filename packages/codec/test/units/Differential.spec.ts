@@ -273,6 +273,21 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'command', ts: 'pop.request.command', kind: 'str'},
         {nk: 'argument', ts: 'pop.request.parameter', kind: 'str'}
     ]},
+    // IMAP (RFC 3501, tcp:143). The parsed tag + command (display-only; whole message kept verbatim).
+    // tshark nests them under imap.line_tree (DFS reaches imap.request_tag / imap.request.command).
+    imap: {tsLayer: 'imap', fields: [
+        {nk: 'tag', ts: 'imap.request_tag', kind: 'str'},
+        {nk: 'command', ts: 'imap.request.command', kind: 'str'}
+    ]},
+    // IRC (RFC 2812, tcp:6667). The parsed command (display-only). tshark nests it under irc.request_tree
+    // (DFS reaches irc.request.command). Params are split into an array by tshark (DFS-unreliable), so
+    // only the command is mapped; the rest is covered by round-trip + golden.
+    irc: {tsLayer: 'irc', fields: [
+        {nk: 'command', ts: 'irc.request.command', kind: 'str'}
+    ]},
+    // NNTP (RFC 3977, tcp:119): tshark marks nntp.request but does NOT structure the request command line
+    // into fields, so there is no authoritative field to map — the command/argument parse is verified by
+    // round-trip + golden instead (like LLDP's opaque TLVs).
     // LLDP (IEEE 802.1AB, ethertype 0x88cc): the TLV values are kept as opaque hex, so tshark's decoded
     // per-TLV scalars (lldp.time_to_live etc.) do not map to a single field — verified by round-trip + golden.
     // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the

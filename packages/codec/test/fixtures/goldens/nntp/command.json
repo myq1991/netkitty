@@ -1,0 +1,88 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 69,
+      "id": 56137,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 24935,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 44864,
+      "dstport": 119,
+      "seq": 2753319221,
+      "ack": 2604821052,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65081,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 766878569,
+          "tsecr": 766878365
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "nntp",
+    "data": {
+      "message": "47524f5550206d6973632e746573740d0a",
+      "isReply": false,
+      "replyCode": 0,
+      "isMultiline": false,
+      "replyText": "",
+      "command": "GROUP",
+      "argument": "misc.test"
+    },
+    "errors": []
+  }
+]
