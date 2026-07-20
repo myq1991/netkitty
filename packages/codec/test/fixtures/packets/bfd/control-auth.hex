@@ -1,0 +1,4 @@
+# BFD Control (RFC 5880) with the A (Authentication Present) flag set — Simple Password auth section
+# (Auth Type 1, Auth Len 6, Key ID 1, password "abc"). Length 30. Exercises the verbatim auth section.
+# source: standard BFD payload via a real UDP socket to 127.0.0.1:3784 on a debian:12 container's lo.
+00000000000000000000000008004500003acdbe400040116ef27f0000017f000001da670ec80026fe3920c4031e0000000100000002000f4240000f424000000000010601616263

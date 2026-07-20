@@ -1,0 +1,71 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 58,
+      "id": 52670,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 28402,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 55911,
+      "dstport": 3784,
+      "length": 38,
+      "checksum": 65081
+    },
+    "errors": []
+  },
+  {
+    "id": "bfd",
+    "data": {
+      "version": 1,
+      "diagnostic": 0,
+      "flags": {
+        "state": 3,
+        "poll": false,
+        "final": false,
+        "controlPlaneIndependent": false,
+        "authPresent": true,
+        "demand": false,
+        "multipoint": false
+      },
+      "detectMult": 3,
+      "length": 30,
+      "myDiscriminator": 1,
+      "yourDiscriminator": 2,
+      "desiredMinTxInterval": 1000000,
+      "requiredMinRxInterval": 1000000,
+      "requiredMinEchoRxInterval": 0,
+      "authSection": "010601616263"
+    },
+    "errors": []
+  }
+]

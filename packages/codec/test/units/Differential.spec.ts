@@ -185,6 +185,18 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // BFD Control (RFC 5880). State + discriminators + intervals verify the 24-byte mandatory section.
+    bfd: {tsLayer: 'bfd', fields: [
+        {nk: 'version', ts: 'bfd.version', kind: 'int'},
+        {nk: 'diagnostic', ts: 'bfd.diag', kind: 'int'},
+        {nk: 'flags.state', ts: 'bfd.sta', kind: 'int'},
+        {nk: 'detectMult', ts: 'bfd.detect_time_multiplier', kind: 'int'},
+        {nk: 'length', ts: 'bfd.message_length', kind: 'int'},
+        {nk: 'myDiscriminator', ts: 'bfd.my_discriminator', kind: 'int'},
+        {nk: 'yourDiscriminator', ts: 'bfd.your_discriminator', kind: 'int'},
+        {nk: 'desiredMinTxInterval', ts: 'bfd.desired_min_tx_interval', kind: 'int'},
+        {nk: 'requiredMinRxInterval', ts: 'bfd.required_min_rx_interval', kind: 'int'}
+    ]},
     // GRE base header + optional Key/Sequence. proto (hexcode) + flags + key/seq verify the header walk;
     // the inner eth/ip/icmp layers are compared via their own mappings (duplicate layer skipped).
     gre: {tsLayer: 'gre', fields: [

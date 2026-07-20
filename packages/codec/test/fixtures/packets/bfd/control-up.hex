@@ -1,0 +1,5 @@
+# BFD Control (RFC 5880) over UDP/IPv4 port 3784, session state Up, no auth. Version 1, diag 0,
+# detect-mult 3, length 24, My/Your Discriminator 1/2, desired-min-tx / required-min-rx = 1s (1000000us).
+# source: standard BFD payload (20 c0 03 18 ...) via a real UDP socket to 127.0.0.1:3784 on a debian:12
+# container's ethernet lo, captured with tcpdump.
+0000000000000000000000000800450000347c1b40004011c09b7f0000017f000001dda30ec80020fe3320c003180000000100000002000f4240000f424000000000
