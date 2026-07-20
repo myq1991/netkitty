@@ -1,0 +1,5 @@
+# BACnet/IP (udp:47808) Who-Is broadcast. BVLC: type 0x81 (BACnet/IP), function 0x0B (Original-Broadcast-
+# NPDU), length 12. NPDU: version 1, control 0x20 (dest present), DNET 0xFFFF (global broadcast), DLEN 0,
+# hop count 0xFF. APDU: 0x10 0x08 (unconfirmed-request, Who-Is). source: standard BACnet Who-Is payload
+# via a real UDP socket to 127.0.0.1:47808 on a debian:12 container's ethernet lo, captured with tcpdump.
+0000000000000000000000000800450000281074400040112c4f7f0000017f000001e9c2bac00014fe27810b000c0120ffff00ff1008

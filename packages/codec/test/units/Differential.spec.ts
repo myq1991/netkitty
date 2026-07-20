@@ -185,6 +185,12 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // BACnet/IP (udp:47808). tshark names the BVLC layer 'bvlc'. type + function verify the header; the
+    // BVLC Length (tshark renders it differently) and the NPDU/APDU payload are verified by round-trip.
+    bacnet: {tsLayer: 'bvlc', fields: [
+        {nk: 'type', ts: 'bvlc.type', kind: 'hexcode'},
+        {nk: 'function', ts: 'bvlc.function', kind: 'int'}
+    ]},
     // C37.118 (IEEE C37.118.2 synchrophasor). tshark names the layer 'synphasor'. Frame type / version /
     // size / id / fraction verify the common header; SOC (tshark renders it as an ISO date) and the CHK
     // are verified byte-for-byte by round-trip + golden.
