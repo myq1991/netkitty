@@ -1,0 +1,8 @@
+# SSH-2.0 server identification banner (RFC 4253 §4.2), tcp:22. The connection's first bytes: the
+# US-ASCII line "SSH-2.0-OpenSSH_10.3\r\n". Kept verbatim (byte-perfect); the line is parsed for display
+# into protoVersion "2.0" / softwareVersion "OpenSSH_10.3".
+# source: REAL banner captured from a linuxserver/openssh-server (OpenSSH_10.3) container via `nc` on the
+# loopback (bytes 5353482d322e302d4f70656e5353485f31302e330d0a). The real banner line was then wrapped in
+# an eth+ipv4+tcp frame by the netkitty encoder (src port 22) — the SSH payload is the genuine on-wire
+# server banner; the eth/ipv4/tcp envelope is synthesized. Verified [eth,ipv4,tcp,ssh] decode + byte-perfect round-trip.
+0242ac1100020242ac11000108004500003e000040004006e294ac110001ac1100020016c2d40000000100000001501001f6d7db00005353482d322e302d4f70656e5353485f31302e330d0a

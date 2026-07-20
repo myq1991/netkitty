@@ -1,0 +1,66 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 112,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 63265,
+      "sip": "192.168.1.10",
+      "dip": "192.168.1.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 51234,
+      "dstport": 6343,
+      "length": 92,
+      "checksum": 1298
+    },
+    "errors": []
+  },
+  {
+    "id": "sflow",
+    "data": {
+      "version": 5,
+      "agentAddressType": 1,
+      "agentAddress": "192.168.1.1",
+      "subAgentId": 0,
+      "sequenceNumber": 12345,
+      "sysUptime": 987654321,
+      "numSamples": 1,
+      "samples": [
+        {
+          "sampleType": 2,
+          "sampleLength": 48,
+          "sampleData": "000000010000000600000028000000040000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

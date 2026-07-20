@@ -343,6 +343,40 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'messageType', ts: 'wg.type', kind: 'int'},
         {nk: 'sender', ts: 'wg.sender', kind: 'int'}
     ]},
+    // sFlow v5 (udp:6343). tshark names the layer 'sflow_245'. The datagram header — version/agent-type/
+    // agent-address/sub-agent/sequence/uptime/num-samples. The sample records are verified by round-trip.
+    sflow: {tsLayer: 'sflow_245', fields: [
+        {nk: 'version', ts: 'sflow_245.version', kind: 'int'},
+        {nk: 'agentAddressType', ts: 'sflow_245.agenttype', kind: 'int'},
+        {nk: 'agentAddress', ts: 'sflow_245.agent', kind: 'str'},
+        {nk: 'subAgentId', ts: 'sflow_245.sub_agent_id', kind: 'int'},
+        {nk: 'sequenceNumber', ts: 'sflow_245.sequence_number', kind: 'int'},
+        {nk: 'sysUptime', ts: 'sflow_245.sysuptime', kind: 'int'},
+        {nk: 'numSamples', ts: 'sflow_245.numsamples', kind: 'int'}
+    ]},
+    // AMQP 0-9-1 (tcp:5672). tshark names the layer 'amqp'. The frame header type/channel/length. The
+    // method/body payload is verified by round-trip + golden.
+    amqp: {tsLayer: 'amqp', fields: [
+        {nk: 'type', ts: 'amqp.type', kind: 'int'},
+        {nk: 'channel', ts: 'amqp.channel', kind: 'int'},
+        {nk: 'length', ts: 'amqp.length', kind: 'int'}
+    ]},
+    // Kafka (tcp:9092). tshark names the layer 'kafka'. message size + the request header (api-key /
+    // api-version / correlation-id). The clientId + body are verified by round-trip + golden.
+    kafka: {tsLayer: 'kafka', fields: [
+        {nk: 'messageSize', ts: 'kafka.len', kind: 'int'},
+        {nk: 'apiKey', ts: 'kafka.api_key', kind: 'int'},
+        {nk: 'apiVersion', ts: 'kafka.api_version', kind: 'int'},
+        {nk: 'correlationId', ts: 'kafka.correlation_id', kind: 'int'}
+    ]},
+    // SSH (tcp:22). tshark names the layer 'ssh'. The identification banner maps exactly to ssh.protocol
+    // (the full "SSH-2.0-<software>" line). The Binary Packet Protocol frames are verified by round-trip.
+    ssh: {tsLayer: 'ssh', fields: [
+        {nk: 'identString', ts: 'ssh.protocol', kind: 'str'}
+    ]},
+    // RFB/VNC (tcp:5900): tshark's 'vnc' layer renders the version as "003.008" whereas this codec keeps
+    // the full "RFB 003.008" line + split major/minor — the formats don't line up for a single-field map,
+    // so the version handshake is verified by round-trip + golden instead (like LLDP/NNTP).
     // R-GOOSE/R-SV (IEC 61850-90-5 Session, udp:102): tshark only reaches its R-GOOSE dissector via a CLTP
     // (ISO 8602) UD-TPDU heuristic — the common direct-in-UDP wire form this codec models is dissected as
     // opaque 'data', so tshark exposes no r-session fields to map. The 90-5 session byte layout was instead

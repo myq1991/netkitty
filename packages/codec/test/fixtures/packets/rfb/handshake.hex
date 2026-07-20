@@ -1,0 +1,8 @@
+# RFB / VNC (RFC 6143, tcp:5900) ProtocolVersion handshake. The connection opens with the server's
+# 12-byte greeting "RFB 003.008\n" (bytes 52 46 42 20 30 30 33 2e 30 30 38 0a). The whole payload is kept
+# verbatim (byte-perfect); the greeting is parsed for display into {isVersionHandshake, versionString,
+# major, minor}. source: CONSTRUCTED (not a live capture) — the 12-byte RFB 003.008 greeting (verbatim
+# per RFC 6143 section 7.1.1) wrapped by the netkitty encoder as an eth+ipv4+tcp(src 5900)+rfb frame over
+# loopback (all-zero MACs, ethertype 0800, 127.0.0.1). Verified to decode as [eth,ipv4,tcp,rfb] and
+# round-trip byte-identical.
+0000000000000000000000000800450000340000400000067cc27f0000017f000001170cd43100000000000000005000000066990000524642203030332e3030380a

@@ -1,0 +1,73 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "02:42:ac:11:00:02",
+      "smac": "02:42:ac:11:00:01",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 62,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 6,
+      "checksum": 8853,
+      "sip": "172.17.0.1",
+      "dip": "172.17.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 51000,
+      "dstport": 9092,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 44032,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "kafka",
+    "data": {
+      "messageSize": 18,
+      "apiKey": 18,
+      "apiVersion": 0,
+      "correlationId": 1,
+      "payload": "00086e65746b69747479"
+    },
+    "errors": []
+  }
+]

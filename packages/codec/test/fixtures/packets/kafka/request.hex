@@ -1,0 +1,7 @@
+# Apache Kafka wire protocol (tcp:9092) request: an ApiVersions v0 request. MessageSize 18 (bytes that
+# follow); request header apiKey 18 (ApiVersions), apiVersion 0, correlationId 1, clientId "netkitty";
+# ApiVersions v0 body is empty, so payload is just the clientId nullable string (len 0x0008 + "netkitty").
+# source: CONSTRUCTED — a protocol-accurate Kafka ApiVersions v0 request (real request-header v1 + empty
+# v0 body) wrapped in a netkitty-encoded eth/ipv4/tcp envelope (dst 172.17.0.2:9092, docker bridge MACs),
+# verified to decode as [eth,ipv4,tcp,kafka] and re-encode byte-for-byte.
+0242ac1100020242ac11000108004500003e0000400000062295ac110001ac110002c7382384000000000000000050000000ac00000000000012001200000000000100086e65746b69747479
