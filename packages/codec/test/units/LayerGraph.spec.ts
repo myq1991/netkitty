@@ -49,7 +49,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         icmpv6: ['raw'],
         // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
         tcp: ['stun', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
-        udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'raw'],
+        udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'raw'],
         ntp: ['raw'],
         stun: ['raw'],
         dhcp: ['raw'],
@@ -62,6 +62,7 @@ test('allowedNextLayers golden: full parent→child menu (records the ARP leaf f
         nbns: ['raw'],
         syslog: ['raw'],
         radius: ['raw'],
+        vxlan: ['raw'],
         'tls-handshake': ['raw'],
         'tls-alert': ['raw'],
         'tls-ccsp': ['raw'],
@@ -115,7 +116,7 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('tcp', 'tls-handshake'), {field: 'dstport', value: 443})
     assert.deepStrictEqual(discriminatorOf('tcp', 'IEC104_I_Frame'), {field: 'dstport', value: 2404})
     // udp now offers NTP on its well-known port 123.
-    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'raw'])
+    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'raw'])
     assert.deepStrictEqual(discriminatorOf('udp', 'ntp'), {field: 'dstport', value: 123})
     assert.deepStrictEqual(discriminatorOf('udp', 'stun'), {field: 'dstport', value: 3478})
     assert.deepStrictEqual(discriminatorOf('udp', 'dhcp'), {field: 'dstport', value: 67})
@@ -128,6 +129,7 @@ test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus Ra
     assert.deepStrictEqual(discriminatorOf('udp', 'nbns'), {field: 'dstport', value: 137})
     assert.deepStrictEqual(discriminatorOf('udp', 'syslog'), {field: 'dstport', value: 514})
     assert.deepStrictEqual(discriminatorOf('udp', 'radius'), {field: 'dstport', value: 1812})
+    assert.deepStrictEqual(discriminatorOf('udp', 'vxlan'), {field: 'dstport', value: 4789})
 })
 
 // 2b: the discriminator to set when adding a child (RawData / heuristic children return null).

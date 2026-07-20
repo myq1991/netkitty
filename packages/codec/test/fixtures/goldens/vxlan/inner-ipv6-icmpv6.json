@@ -1,0 +1,110 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:01:01:2a",
+      "smac": "c2:22:5e:d1:37:39",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 126,
+      "id": 46530,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 17,
+      "checksum": 26477,
+      "sip": "172.17.0.3",
+      "dip": "239.1.1.42"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 38159,
+      "dstport": 4789,
+      "length": 106,
+      "checksum": 40123
+    },
+    "errors": []
+  },
+  {
+    "id": "vxlan",
+    "data": {
+      "flags": 8,
+      "reserved1": "000000",
+      "vni": 42,
+      "reserved2": "00"
+    },
+    "errors": []
+  },
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "33:33:00:00:00:16",
+      "smac": "56:d3:67:4c:7a:4b",
+      "etherType": "86dd"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6",
+    "data": {
+      "version": 6,
+      "tclass": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "flow": 0,
+      "plen": 36,
+      "nxt": 0,
+      "hllm": 1,
+      "sip": "fe80:0000:0000:0000:54d3:67ff:fe4c:7a4b",
+      "dip": "ff02:0000:0000:0000:0000:0000:0000:0016"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv6-hopopt",
+    "data": {
+      "nxt": 58,
+      "len": 0,
+      "items": [
+        {
+          "type": "Router-Alert",
+          "alert": "0000"
+        },
+        {
+          "type": "PadN",
+          "n": 0
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "icmpv6",
+    "data": {
+      "type": 143,
+      "code": 0,
+      "checksum": 49414,
+      "message": "0000000104000000ff0200000000000000000001ff4c7a4b"
+    },
+    "errors": []
+  }
+]

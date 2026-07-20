@@ -163,6 +163,12 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'identifier', ts: 'radius.id', kind: 'int'},
         {nk: 'length', ts: 'radius.length', kind: 'int'}
     ]},
+    // VXLAN: verify the 24-bit VNI. (tshark's vxlan.flags is a 16-bit view vs our 8-bit flags byte, so
+    // it is not mapped.) The inner eth/ipv6/icmpv6 layers are compared via their own mappings — the
+    // outer+inner 'eth' pair appears twice in frame.protocols and is skipped by the duplicate-layer guard.
+    vxlan: {tsLayer: 'vxlan', fields: [
+        {nk: 'vni', ts: 'vxlan.vni', kind: 'int'}
+    ]},
     dhcpv6: {tsLayer: 'dhcpv6', fields: [
         {nk: 'msgType', ts: 'dhcpv6.msgtype', kind: 'int'},
         // tshark shows the xid as 0x-hex; our transactionId is a bare hex string → hexcode strips 0x.
