@@ -2,11 +2,15 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {Codec} from '../../src/lib/codec/Codec'
 import {LoadPacket} from '../lib/Fixtures'
+import {writeJsonGolden, loadJsonGolden, goldenExists} from '../lib/Golden'
 import {NextLayer, ConsistencyIssue} from '../../src/lib/codec/types/LayerGraph'
 import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
 import {CodecSchema} from '../../src/lib/codec/types/CodecSchema'
 
 const codec: Codec = new Codec()
+
+// Regenerate the derived snapshot below with:  UPDATE_GOLDEN=1 node --test dist-test/test/units/LayerGraph.spec.js
+const UPDATE: boolean = process.env.UPDATE_GOLDEN === '1'
 
 function nextIds(parentId: string): string[] {
     return codec.allowedNextLayers(parentId).map((n: NextLayer): string => n.id)
@@ -32,110 +36,28 @@ test('allowedNextLayers: eth offers ethertype-keyed children plus RawData', (): 
     assert.deepStrictEqual(discriminatorOf('eth', 'raw'), null)
 })
 
-// Golden snapshot of the full parent→child menu, derived from the per-schema demuxProducers
-// declarations. Records the ARP-leaf fix: with producers declared per schema (not inferred from a
-// schema property named 'protocol'), ARP no longer wrongly offers ipproto children — it is a leaf.
-test('allowedNextLayers golden: full parent→child menu (records the ARP leaf fix)', (): void => {
+// Golden SNAPSHOT of the entire demux graph — every parent's ordered child menu AND the discriminator
+// {field,value} to reach each child — derived live from the per-schema demuxProducers. This is a
+// regenerable snapshot (UPDATE_GOLDEN=1) rather than a hand-maintained literal, so adding a protocol needs
+// no edit here: registering it and regenerating the goldens captures its menu + discriminator. A demux
+// change that is NOT intended (e.g. the historical ARP-leaf fix, or a port collision) shows up as a
+// snapshot diff. The file is test/fixtures/goldens/_layergraph.json.
+test('demux graph snapshot: full parent→child menu + discriminators', (): void => {
     const menu: Record<string, string[]> = {}
+    const discriminators: Record<string, Record<string, {field: string, value: string | number} | null>> = {}
     for (const codecSchema of codec.CODEC_SCHEMAS as CodecSchema[]) {
-        menu[codecSchema.id] = codec.allowedNextLayers(codecSchema.id).map((n: NextLayer): string => n.id)
+        const nexts: NextLayer[] = codec.allowedNextLayers(codecSchema.id)
+        menu[codecSchema.id] = nexts.map((n: NextLayer): string => n.id)
+        discriminators[codecSchema.id] = {}
+        for (const n of nexts) discriminators[codecSchema.id][n.id] = n.discriminator
     }
-    assert.deepStrictEqual(menu, {
-        eth: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
-        vlan: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
-        ipv4: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
-        ipv6: ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
-        'ipv6-hopopt': ['icmp', 'ipv6-hopopt', 'icmpv6', 'tcp', 'udp', 'gre', 'vrrp', 'ospf', 'raw'],
-        arp: ['raw'],
-        goose: ['raw'],
-        sv: ['raw'],
-        icmp: ['raw'],
-        icmpv6: ['raw'],
-        // tcp gained port-keyed children (TLS on 443, IEC104 on 2404) via the tcpport demux dimension.
-        tcp: ['stun', 'mysql', 'pgsql', 'diameter', 'amqp', 'kafka', 'rfb', 'ssh', 'ldap', 'kerberos', 'telnet', 'memcached', 'socks5', 'modbus', 'dnp3', 'c37118', 'enip', 'opcua', 'mqtt', 'redis', 'tacacs', 'sip', 'http', 'ftp', 'rtsp', 'tpkt', 'smtp', 'pop3', 'imap', 'nntp', 'irc', 'tls-alert', 'tls-appdata', 'tls-ccsp', 'tls-handshake', 'tls-heartbeat', 'IEC104_I_Frame', 'IEC104_S_Frame', 'IEC104_U_Frame', 'raw'],
-        udp: ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'r-session', 'netflow5', 'isakmp', 'wireguard', 'sflow', 'kerberos', 'geneve', 'bfd', 'dnp3', 'c37118', 'bacnet', 'enip', 'coap', 'sip', 'raw'],
-        ntp: ['raw'],
-        stun: ['raw'],
-        dhcp: ['raw'],
-        dns: ['raw'],
-        snmp: ['raw'],
-        mdns: ['raw'],
-        dhcpv6: ['raw'],
-        tftp: ['raw'],
-        llmnr: ['raw'],
-        nbns: ['raw'],
-        syslog: ['raw'],
-        radius: ['raw'],
-        vxlan: ['raw'],
-        gtp: ['raw'],
-        rmcp: ['raw'],
-        l2tp: ['raw'],
-        // GENEVE declares protocolType as an ethertype producer, so (like eth/vlan) it offers the
-        // ethertype-keyed children; in practice only ipv4/ipv6 (and TEB→eth) actually match a geneve parent.
-        geneve: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
-        // GRE (over IP proto 47) likewise declares protocolType as an ethertype producer.
-        gre: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
-        // HSR (IEC 62439-3) is a VLAN-like L2 redundancy tag: it declares its carried etherType as an
-        // ethertype producer, so it offers the same ethertype-keyed children as eth/vlan.
-        hsr: ['arp', 'goose', 'sv', 'ipv4', 'ipv6', 'lldp', 'pnio', 'ecat', 'hsr', 'vlan', 'raw'],
-        bfd: ['raw'],
-        vrrp: ['raw'],
-        ospf: ['raw'],
-        modbus: ['raw'],
-        dnp3: ['raw'],
-        c37118: ['raw'],
-        bacnet: ['raw'],
-        enip: ['raw'],
-        coap: ['raw'],
-        mqtt: ['raw'],
-        tacacs: ['raw'],
-        sip: ['raw'],
-        pnio: ['raw'],
-        ecat: ['raw'],
-        http: ['raw'],
-        ftp: ['raw'],
-        rtsp: ['raw'],
-        smtp: ['raw'],
-        pop3: ['raw'],
-        imap: ['raw'],
-        nntp: ['raw'],
-        irc: ['raw'],
-        opcua: ['raw'],
-        redis: ['raw'],
-        netflow5: ['raw'],
-        mysql: ['raw'],
-        pgsql: ['raw'],
-        diameter: ['raw'],
-        isakmp: ['raw'],
-        wireguard: ['raw'],
-        sflow: ['raw'],
-        amqp: ['raw'],
-        kafka: ['raw'],
-        rfb: ['raw'],
-        ssh: ['raw'],
-        ldap: ['raw'],
-        kerberos: ['raw'],
-        telnet: ['raw'],
-        memcached: ['raw'],
-        socks5: ['raw'],
-        // R-GOOSE/R-SV (IEC 61850-90-5 Session) is a leaf in Slice 1 — each payload item's APDU is kept as
-        // bounded raw hex rather than recursing into the GOOSE/SV decoders (structuring is Slice 2).
-        'r-session': ['raw'],
-        // TPKT's child COTP is an unkeyed heuristic layer (matched by prev.id==='tpkt'), so like the
-        // TLS/IEC104 heuristic children it does not appear in the reverse demux menu — tpkt lists raw only.
-        tpkt: ['raw'],
-        cotp: ['raw'],
-        lldp: ['raw'],
-        'tls-handshake': ['raw'],
-        'tls-alert': ['raw'],
-        'tls-ccsp': ['raw'],
-        'tls-appdata': ['raw'],
-        'tls-heartbeat': ['raw'],
-        IEC104_I_Frame: ['raw'],
-        IEC104_S_Frame: ['raw'],
-        IEC104_U_Frame: ['raw'],
-        raw: ['raw']
-    })
+    const snapshot: {menu: typeof menu, discriminators: typeof discriminators} = {menu, discriminators}
+    if (UPDATE) {
+        writeJsonGolden('_layergraph', snapshot)
+        return
+    }
+    assert.ok(goldenExists('_layergraph'), 'no _layergraph snapshot — run UPDATE_GOLDEN=1 to create it')
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(snapshot)), loadJsonGolden('_layergraph'), 'the demux menu/discriminator graph drifted from its snapshot — run UPDATE_GOLDEN=1 if intended')
 })
 
 // Boundary: ARP is a leaf (declares no demuxProducers). It must not offer any demux child, and a
@@ -161,15 +83,10 @@ test('allowedNextLayers: ipv4 uses protocol, ipv6 uses nxt', (): void => {
     assert.deepStrictEqual(discriminatorOf('ipv4', 'tcp'), {field: 'protocol', value: 6})
     assert.deepStrictEqual(discriminatorOf('ipv6', 'tcp'), {field: 'nxt', value: 6})
     assert.deepStrictEqual(discriminatorOf('ipv4', 'udp'), {field: 'protocol', value: 17})
-    // GRE is carried over IP as protocol 47.
+    // GRE/VRRP/OSPF are carried over IP by protocol number.
     assert.deepStrictEqual(discriminatorOf('ipv4', 'gre'), {field: 'protocol', value: 47})
     assert.deepStrictEqual(discriminatorOf('ipv6', 'gre'), {field: 'nxt', value: 47})
-    // VRRP is carried over IP as protocol 112.
-    assert.deepStrictEqual(discriminatorOf('ipv4', 'vrrp'), {field: 'protocol', value: 112})
-    assert.deepStrictEqual(discriminatorOf('ipv6', 'vrrp'), {field: 'nxt', value: 112})
-    // OSPF is carried over IP as protocol 89.
     assert.deepStrictEqual(discriminatorOf('ipv4', 'ospf'), {field: 'protocol', value: 89})
-    assert.deepStrictEqual(discriminatorOf('ipv6', 'ospf'), {field: 'nxt', value: 89})
 })
 
 test('allowedNextLayers: a genuine leaf layer offers only RawData', (): void => {
@@ -178,80 +95,21 @@ test('allowedNextLayers: a genuine leaf layer offers only RawData', (): void => 
     assert.deepStrictEqual(nextIds('icmp'), ['raw'])
 })
 
-// M1③b: tcp now offers its port-keyed children (TLS on 443, IEC104 on 2404), each listed once with a
-// dstport discriminator hint, plus RawData. udp stays raw-only (no udp protocols registered yet).
-test('allowedNextLayers: tcp offers its port-keyed children (TLS/IEC104) plus RawData', (): void => {
-    const ids: string[] = nextIds('tcp')
-    for (const expected of ['tls-handshake', 'tls-appdata', 'IEC104_I_Frame', 'raw']) {
-        assert.ok(ids.includes(expected), `tcp should offer '${expected}', got ${ids.join(',')}`)
+// Representative port-keyed dispatch anchors (the exhaustive per-port map is covered by the snapshot
+// above; these pin the semantics: a dual content-heuristic child on 443/2404, and a couple of well-known
+// ports, each listed once with a dstport discriminator hint).
+test('allowedNextLayers: tcp/udp offer port-keyed children with dstport discriminators', (): void => {
+    const tcp: string[] = nextIds('tcp')
+    for (const expected of ['tls-handshake', 'IEC104_I_Frame', 'http', 'raw']) {
+        assert.ok(tcp.includes(expected), `tcp should offer '${expected}', got ${tcp.join(',')}`)
     }
     assert.deepStrictEqual(discriminatorOf('tcp', 'tls-handshake'), {field: 'dstport', value: 443})
     assert.deepStrictEqual(discriminatorOf('tcp', 'IEC104_I_Frame'), {field: 'dstport', value: 2404})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'modbus'), {field: 'dstport', value: 502})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'dnp3'), {field: 'dstport', value: 20000})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'c37118'), {field: 'dstport', value: 4712})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'enip'), {field: 'dstport', value: 44818})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'mqtt'), {field: 'dstport', value: 1883})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'tacacs'), {field: 'dstport', value: 49})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'sip'), {field: 'dstport', value: 5060})
     assert.deepStrictEqual(discriminatorOf('tcp', 'http'), {field: 'dstport', value: 80})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'ftp'), {field: 'dstport', value: 21})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'rtsp'), {field: 'dstport', value: 554})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'tpkt'), {field: 'dstport', value: 102})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'smtp'), {field: 'dstport', value: 25})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'pop3'), {field: 'dstport', value: 110})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'imap'), {field: 'dstport', value: 143})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'nntp'), {field: 'dstport', value: 119})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'irc'), {field: 'dstport', value: 6667})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'opcua'), {field: 'dstport', value: 4840})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'redis'), {field: 'dstport', value: 6379})
-    // udp now offers NTP on its well-known port 123.
-    assert.deepStrictEqual(nextIds('udp'), ['ntp', 'stun', 'dhcp', 'dns', 'snmp', 'mdns', 'dhcpv6', 'tftp', 'llmnr', 'nbns', 'syslog', 'radius', 'vxlan', 'gtp', 'rmcp', 'l2tp', 'r-session', 'netflow5', 'isakmp', 'wireguard', 'sflow', 'kerberos', 'geneve', 'bfd', 'dnp3', 'c37118', 'bacnet', 'enip', 'coap', 'sip', 'raw'])
     assert.deepStrictEqual(discriminatorOf('udp', 'ntp'), {field: 'dstport', value: 123})
-    assert.deepStrictEqual(discriminatorOf('udp', 'stun'), {field: 'dstport', value: 3478})
-    assert.deepStrictEqual(discriminatorOf('udp', 'dhcp'), {field: 'dstport', value: 67})
     assert.deepStrictEqual(discriminatorOf('udp', 'dns'), {field: 'dstport', value: 53})
-    assert.deepStrictEqual(discriminatorOf('udp', 'snmp'), {field: 'dstport', value: 161})
-    assert.deepStrictEqual(discriminatorOf('udp', 'mdns'), {field: 'dstport', value: 5353})
-    assert.deepStrictEqual(discriminatorOf('udp', 'dhcpv6'), {field: 'dstport', value: 546})
-    assert.deepStrictEqual(discriminatorOf('udp', 'tftp'), {field: 'dstport', value: 69})
-    assert.deepStrictEqual(discriminatorOf('udp', 'llmnr'), {field: 'dstport', value: 5355})
-    assert.deepStrictEqual(discriminatorOf('udp', 'nbns'), {field: 'dstport', value: 137})
-    assert.deepStrictEqual(discriminatorOf('udp', 'syslog'), {field: 'dstport', value: 514})
-    assert.deepStrictEqual(discriminatorOf('udp', 'radius'), {field: 'dstport', value: 1812})
-    assert.deepStrictEqual(discriminatorOf('udp', 'vxlan'), {field: 'dstport', value: 4789})
-    assert.deepStrictEqual(discriminatorOf('udp', 'gtp'), {field: 'dstport', value: 2152})
-    assert.deepStrictEqual(discriminatorOf('udp', 'rmcp'), {field: 'dstport', value: 623})
-    assert.deepStrictEqual(discriminatorOf('udp', 'l2tp'), {field: 'dstport', value: 1701})
-    assert.deepStrictEqual(discriminatorOf('udp', 'r-session'), {field: 'dstport', value: 102})
-    assert.deepStrictEqual(discriminatorOf('udp', 'netflow5'), {field: 'dstport', value: 2055})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'mysql'), {field: 'dstport', value: 3306})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'pgsql'), {field: 'dstport', value: 5432})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'diameter'), {field: 'dstport', value: 3868})
-    assert.deepStrictEqual(discriminatorOf('udp', 'isakmp'), {field: 'dstport', value: 500})
-    assert.deepStrictEqual(discriminatorOf('udp', 'wireguard'), {field: 'dstport', value: 51820})
-    assert.deepStrictEqual(discriminatorOf('udp', 'sflow'), {field: 'dstport', value: 6343})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'ldap'), {field: 'dstport', value: 389})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'kerberos'), {field: 'dstport', value: 88})
-    assert.deepStrictEqual(discriminatorOf('udp', 'kerberos'), {field: 'dstport', value: 88})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'telnet'), {field: 'dstport', value: 23})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'memcached'), {field: 'dstport', value: 11211})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'socks5'), {field: 'dstport', value: 1080})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'amqp'), {field: 'dstport', value: 5672})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'kafka'), {field: 'dstport', value: 9092})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'rfb'), {field: 'dstport', value: 5900})
-    assert.deepStrictEqual(discriminatorOf('tcp', 'ssh'), {field: 'dstport', value: 22})
-    assert.deepStrictEqual(discriminatorOf('udp', 'geneve'), {field: 'dstport', value: 6081})
-    assert.deepStrictEqual(discriminatorOf('udp', 'bfd'), {field: 'dstport', value: 3784})
-    assert.deepStrictEqual(discriminatorOf('udp', 'dnp3'), {field: 'dstport', value: 20000})
-    assert.deepStrictEqual(discriminatorOf('udp', 'c37118'), {field: 'dstport', value: 4713})
-    assert.deepStrictEqual(discriminatorOf('udp', 'bacnet'), {field: 'dstport', value: 47808})
-    assert.deepStrictEqual(discriminatorOf('udp', 'enip'), {field: 'dstport', value: 44818})
-    assert.deepStrictEqual(discriminatorOf('udp', 'sip'), {field: 'dstport', value: 5060})
-    assert.deepStrictEqual(discriminatorOf('udp', 'coap'), {field: 'dstport', value: 5683})
     // GENEVE routes its inner frame by protocolType (an EtherType).
     assert.deepStrictEqual(discriminatorOf('geneve', 'ipv4'), {field: 'protocolType', value: '0800'})
-    assert.deepStrictEqual(discriminatorOf('geneve', 'ipv6'), {field: 'protocolType', value: '86dd'})
 })
 
 // 2b: the discriminator to set when adding a child (RawData / heuristic children return null).

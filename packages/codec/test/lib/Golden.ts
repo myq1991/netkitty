@@ -35,3 +35,18 @@ export function writeGolden(name: string, golden: GoldenLayer[]): void {
     mkdirSync(path.dirname(file), {recursive: true})
     writeFileSync(file, `${JSON.stringify(golden, null, 2)}\n`)
 }
+
+/**
+ * A generic named JSON snapshot (same UPDATE_GOLDEN regenerate contract as the per-fixture goldens), used
+ * for derived structures that would otherwise be hand-maintained — e.g. the full parent→child demux menu
+ * and discriminator map, which grow with every new protocol. Regenerate with UPDATE_GOLDEN=1.
+ */
+export function writeJsonGolden(name: string, data: unknown): void {
+    const file: string = goldenFile(name)
+    mkdirSync(path.dirname(file), {recursive: true})
+    writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`)
+}
+
+export function loadJsonGolden(name: string): unknown {
+    return JSON.parse(readFileSync(goldenFile(name), 'utf-8'))
+}

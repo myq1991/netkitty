@@ -1,0 +1,1225 @@
+{
+  "menu": {
+    "arp": [
+      "raw"
+    ],
+    "eth": [
+      "arp",
+      "goose",
+      "sv",
+      "ipv4",
+      "ipv6",
+      "lldp",
+      "pnio",
+      "ecat",
+      "hsr",
+      "vlan",
+      "raw"
+    ],
+    "goose": [
+      "raw"
+    ],
+    "sv": [
+      "raw"
+    ],
+    "icmp": [
+      "raw"
+    ],
+    "ipv4": [
+      "icmp",
+      "ipv6-hopopt",
+      "icmpv6",
+      "tcp",
+      "udp",
+      "gre",
+      "vrrp",
+      "ospf",
+      "raw"
+    ],
+    "ipv6": [
+      "icmp",
+      "ipv6-hopopt",
+      "icmpv6",
+      "tcp",
+      "udp",
+      "gre",
+      "vrrp",
+      "ospf",
+      "raw"
+    ],
+    "ipv6-hopopt": [
+      "icmp",
+      "ipv6-hopopt",
+      "icmpv6",
+      "tcp",
+      "udp",
+      "gre",
+      "vrrp",
+      "ospf",
+      "raw"
+    ],
+    "icmpv6": [
+      "raw"
+    ],
+    "raw": [
+      "raw"
+    ],
+    "tcp": [
+      "stun",
+      "mysql",
+      "pgsql",
+      "diameter",
+      "amqp",
+      "kafka",
+      "rfb",
+      "ssh",
+      "ldap",
+      "kerberos",
+      "telnet",
+      "memcached",
+      "socks5",
+      "modbus",
+      "dnp3",
+      "c37118",
+      "enip",
+      "opcua",
+      "mqtt",
+      "redis",
+      "tacacs",
+      "sip",
+      "http",
+      "ftp",
+      "rtsp",
+      "tpkt",
+      "smtp",
+      "pop3",
+      "imap",
+      "nntp",
+      "irc",
+      "tls-alert",
+      "tls-appdata",
+      "tls-ccsp",
+      "tls-handshake",
+      "tls-heartbeat",
+      "IEC104_I_Frame",
+      "IEC104_S_Frame",
+      "IEC104_U_Frame",
+      "raw"
+    ],
+    "udp": [
+      "ntp",
+      "stun",
+      "dhcp",
+      "dns",
+      "snmp",
+      "mdns",
+      "dhcpv6",
+      "tftp",
+      "llmnr",
+      "nbns",
+      "syslog",
+      "radius",
+      "vxlan",
+      "gtp",
+      "rmcp",
+      "l2tp",
+      "r-session",
+      "netflow5",
+      "isakmp",
+      "wireguard",
+      "sflow",
+      "kerberos",
+      "geneve",
+      "bfd",
+      "dnp3",
+      "c37118",
+      "bacnet",
+      "enip",
+      "coap",
+      "sip",
+      "raw"
+    ],
+    "ntp": [
+      "raw"
+    ],
+    "stun": [
+      "raw"
+    ],
+    "dhcp": [
+      "raw"
+    ],
+    "dns": [
+      "raw"
+    ],
+    "snmp": [
+      "raw"
+    ],
+    "mdns": [
+      "raw"
+    ],
+    "dhcpv6": [
+      "raw"
+    ],
+    "tftp": [
+      "raw"
+    ],
+    "llmnr": [
+      "raw"
+    ],
+    "nbns": [
+      "raw"
+    ],
+    "syslog": [
+      "raw"
+    ],
+    "radius": [
+      "raw"
+    ],
+    "vxlan": [
+      "raw"
+    ],
+    "gtp": [
+      "raw"
+    ],
+    "rmcp": [
+      "raw"
+    ],
+    "l2tp": [
+      "raw"
+    ],
+    "r-session": [
+      "raw"
+    ],
+    "netflow5": [
+      "raw"
+    ],
+    "mysql": [
+      "raw"
+    ],
+    "pgsql": [
+      "raw"
+    ],
+    "diameter": [
+      "raw"
+    ],
+    "isakmp": [
+      "raw"
+    ],
+    "wireguard": [
+      "raw"
+    ],
+    "sflow": [
+      "raw"
+    ],
+    "amqp": [
+      "raw"
+    ],
+    "kafka": [
+      "raw"
+    ],
+    "rfb": [
+      "raw"
+    ],
+    "ssh": [
+      "raw"
+    ],
+    "ldap": [
+      "raw"
+    ],
+    "kerberos": [
+      "raw"
+    ],
+    "telnet": [
+      "raw"
+    ],
+    "memcached": [
+      "raw"
+    ],
+    "socks5": [
+      "raw"
+    ],
+    "geneve": [
+      "arp",
+      "goose",
+      "sv",
+      "ipv4",
+      "ipv6",
+      "lldp",
+      "pnio",
+      "ecat",
+      "hsr",
+      "vlan",
+      "raw"
+    ],
+    "gre": [
+      "arp",
+      "goose",
+      "sv",
+      "ipv4",
+      "ipv6",
+      "lldp",
+      "pnio",
+      "ecat",
+      "hsr",
+      "vlan",
+      "raw"
+    ],
+    "bfd": [
+      "raw"
+    ],
+    "vrrp": [
+      "raw"
+    ],
+    "ospf": [
+      "raw"
+    ],
+    "modbus": [
+      "raw"
+    ],
+    "dnp3": [
+      "raw"
+    ],
+    "c37118": [
+      "raw"
+    ],
+    "bacnet": [
+      "raw"
+    ],
+    "enip": [
+      "raw"
+    ],
+    "opcua": [
+      "raw"
+    ],
+    "coap": [
+      "raw"
+    ],
+    "mqtt": [
+      "raw"
+    ],
+    "redis": [
+      "raw"
+    ],
+    "tacacs": [
+      "raw"
+    ],
+    "lldp": [
+      "raw"
+    ],
+    "sip": [
+      "raw"
+    ],
+    "pnio": [
+      "raw"
+    ],
+    "ecat": [
+      "raw"
+    ],
+    "http": [
+      "raw"
+    ],
+    "ftp": [
+      "raw"
+    ],
+    "rtsp": [
+      "raw"
+    ],
+    "tpkt": [
+      "raw"
+    ],
+    "cotp": [
+      "raw"
+    ],
+    "smtp": [
+      "raw"
+    ],
+    "pop3": [
+      "raw"
+    ],
+    "imap": [
+      "raw"
+    ],
+    "nntp": [
+      "raw"
+    ],
+    "irc": [
+      "raw"
+    ],
+    "hsr": [
+      "arp",
+      "goose",
+      "sv",
+      "ipv4",
+      "ipv6",
+      "lldp",
+      "pnio",
+      "ecat",
+      "hsr",
+      "vlan",
+      "raw"
+    ],
+    "vlan": [
+      "arp",
+      "goose",
+      "sv",
+      "ipv4",
+      "ipv6",
+      "lldp",
+      "pnio",
+      "ecat",
+      "hsr",
+      "vlan",
+      "raw"
+    ],
+    "tls-alert": [
+      "raw"
+    ],
+    "tls-appdata": [
+      "raw"
+    ],
+    "tls-ccsp": [
+      "raw"
+    ],
+    "tls-handshake": [
+      "raw"
+    ],
+    "tls-heartbeat": [
+      "raw"
+    ],
+    "IEC104_I_Frame": [
+      "raw"
+    ],
+    "IEC104_S_Frame": [
+      "raw"
+    ],
+    "IEC104_U_Frame": [
+      "raw"
+    ]
+  },
+  "discriminators": {
+    "arp": {
+      "raw": null
+    },
+    "eth": {
+      "arp": {
+        "field": "etherType",
+        "value": "0806"
+      },
+      "goose": {
+        "field": "etherType",
+        "value": "88b8"
+      },
+      "sv": {
+        "field": "etherType",
+        "value": "88ba"
+      },
+      "ipv4": {
+        "field": "etherType",
+        "value": "0800"
+      },
+      "ipv6": {
+        "field": "etherType",
+        "value": "86dd"
+      },
+      "lldp": {
+        "field": "etherType",
+        "value": "88cc"
+      },
+      "pnio": {
+        "field": "etherType",
+        "value": "8892"
+      },
+      "ecat": {
+        "field": "etherType",
+        "value": "88a4"
+      },
+      "hsr": {
+        "field": "etherType",
+        "value": "892f"
+      },
+      "vlan": {
+        "field": "etherType",
+        "value": "8100"
+      },
+      "raw": null
+    },
+    "goose": {
+      "raw": null
+    },
+    "sv": {
+      "raw": null
+    },
+    "icmp": {
+      "raw": null
+    },
+    "ipv4": {
+      "icmp": {
+        "field": "protocol",
+        "value": 1
+      },
+      "ipv6-hopopt": {
+        "field": "protocol",
+        "value": 0
+      },
+      "icmpv6": {
+        "field": "protocol",
+        "value": 58
+      },
+      "tcp": {
+        "field": "protocol",
+        "value": 6
+      },
+      "udp": {
+        "field": "protocol",
+        "value": 17
+      },
+      "gre": {
+        "field": "protocol",
+        "value": 47
+      },
+      "vrrp": {
+        "field": "protocol",
+        "value": 112
+      },
+      "ospf": {
+        "field": "protocol",
+        "value": 89
+      },
+      "raw": null
+    },
+    "ipv6": {
+      "icmp": {
+        "field": "nxt",
+        "value": 1
+      },
+      "ipv6-hopopt": {
+        "field": "nxt",
+        "value": 0
+      },
+      "icmpv6": {
+        "field": "nxt",
+        "value": 58
+      },
+      "tcp": {
+        "field": "nxt",
+        "value": 6
+      },
+      "udp": {
+        "field": "nxt",
+        "value": 17
+      },
+      "gre": {
+        "field": "nxt",
+        "value": 47
+      },
+      "vrrp": {
+        "field": "nxt",
+        "value": 112
+      },
+      "ospf": {
+        "field": "nxt",
+        "value": 89
+      },
+      "raw": null
+    },
+    "ipv6-hopopt": {
+      "icmp": {
+        "field": "nxt",
+        "value": 1
+      },
+      "ipv6-hopopt": {
+        "field": "nxt",
+        "value": 0
+      },
+      "icmpv6": {
+        "field": "nxt",
+        "value": 58
+      },
+      "tcp": {
+        "field": "nxt",
+        "value": 6
+      },
+      "udp": {
+        "field": "nxt",
+        "value": 17
+      },
+      "gre": {
+        "field": "nxt",
+        "value": 47
+      },
+      "vrrp": {
+        "field": "nxt",
+        "value": 112
+      },
+      "ospf": {
+        "field": "nxt",
+        "value": 89
+      },
+      "raw": null
+    },
+    "icmpv6": {
+      "raw": null
+    },
+    "raw": {
+      "raw": null
+    },
+    "tcp": {
+      "stun": {
+        "field": "dstport",
+        "value": 3478
+      },
+      "mysql": {
+        "field": "dstport",
+        "value": 3306
+      },
+      "pgsql": {
+        "field": "dstport",
+        "value": 5432
+      },
+      "diameter": {
+        "field": "dstport",
+        "value": 3868
+      },
+      "amqp": {
+        "field": "dstport",
+        "value": 5672
+      },
+      "kafka": {
+        "field": "dstport",
+        "value": 9092
+      },
+      "rfb": {
+        "field": "dstport",
+        "value": 5900
+      },
+      "ssh": {
+        "field": "dstport",
+        "value": 22
+      },
+      "ldap": {
+        "field": "dstport",
+        "value": 389
+      },
+      "kerberos": {
+        "field": "dstport",
+        "value": 88
+      },
+      "telnet": {
+        "field": "dstport",
+        "value": 23
+      },
+      "memcached": {
+        "field": "dstport",
+        "value": 11211
+      },
+      "socks5": {
+        "field": "dstport",
+        "value": 1080
+      },
+      "modbus": {
+        "field": "dstport",
+        "value": 502
+      },
+      "dnp3": {
+        "field": "dstport",
+        "value": 20000
+      },
+      "c37118": {
+        "field": "dstport",
+        "value": 4712
+      },
+      "enip": {
+        "field": "dstport",
+        "value": 44818
+      },
+      "opcua": {
+        "field": "dstport",
+        "value": 4840
+      },
+      "mqtt": {
+        "field": "dstport",
+        "value": 1883
+      },
+      "redis": {
+        "field": "dstport",
+        "value": 6379
+      },
+      "tacacs": {
+        "field": "dstport",
+        "value": 49
+      },
+      "sip": {
+        "field": "dstport",
+        "value": 5060
+      },
+      "http": {
+        "field": "dstport",
+        "value": 80
+      },
+      "ftp": {
+        "field": "dstport",
+        "value": 21
+      },
+      "rtsp": {
+        "field": "dstport",
+        "value": 554
+      },
+      "tpkt": {
+        "field": "dstport",
+        "value": 102
+      },
+      "smtp": {
+        "field": "dstport",
+        "value": 25
+      },
+      "pop3": {
+        "field": "dstport",
+        "value": 110
+      },
+      "imap": {
+        "field": "dstport",
+        "value": 143
+      },
+      "nntp": {
+        "field": "dstport",
+        "value": 119
+      },
+      "irc": {
+        "field": "dstport",
+        "value": 6667
+      },
+      "tls-alert": {
+        "field": "dstport",
+        "value": 443
+      },
+      "tls-appdata": {
+        "field": "dstport",
+        "value": 443
+      },
+      "tls-ccsp": {
+        "field": "dstport",
+        "value": 443
+      },
+      "tls-handshake": {
+        "field": "dstport",
+        "value": 443
+      },
+      "tls-heartbeat": {
+        "field": "dstport",
+        "value": 443
+      },
+      "IEC104_I_Frame": {
+        "field": "dstport",
+        "value": 2404
+      },
+      "IEC104_S_Frame": {
+        "field": "dstport",
+        "value": 2404
+      },
+      "IEC104_U_Frame": {
+        "field": "dstport",
+        "value": 2404
+      },
+      "raw": null
+    },
+    "udp": {
+      "ntp": {
+        "field": "dstport",
+        "value": 123
+      },
+      "stun": {
+        "field": "dstport",
+        "value": 3478
+      },
+      "dhcp": {
+        "field": "dstport",
+        "value": 67
+      },
+      "dns": {
+        "field": "dstport",
+        "value": 53
+      },
+      "snmp": {
+        "field": "dstport",
+        "value": 161
+      },
+      "mdns": {
+        "field": "dstport",
+        "value": 5353
+      },
+      "dhcpv6": {
+        "field": "dstport",
+        "value": 546
+      },
+      "tftp": {
+        "field": "dstport",
+        "value": 69
+      },
+      "llmnr": {
+        "field": "dstport",
+        "value": 5355
+      },
+      "nbns": {
+        "field": "dstport",
+        "value": 137
+      },
+      "syslog": {
+        "field": "dstport",
+        "value": 514
+      },
+      "radius": {
+        "field": "dstport",
+        "value": 1812
+      },
+      "vxlan": {
+        "field": "dstport",
+        "value": 4789
+      },
+      "gtp": {
+        "field": "dstport",
+        "value": 2152
+      },
+      "rmcp": {
+        "field": "dstport",
+        "value": 623
+      },
+      "l2tp": {
+        "field": "dstport",
+        "value": 1701
+      },
+      "r-session": {
+        "field": "dstport",
+        "value": 102
+      },
+      "netflow5": {
+        "field": "dstport",
+        "value": 2055
+      },
+      "isakmp": {
+        "field": "dstport",
+        "value": 500
+      },
+      "wireguard": {
+        "field": "dstport",
+        "value": 51820
+      },
+      "sflow": {
+        "field": "dstport",
+        "value": 6343
+      },
+      "kerberos": {
+        "field": "dstport",
+        "value": 88
+      },
+      "geneve": {
+        "field": "dstport",
+        "value": 6081
+      },
+      "bfd": {
+        "field": "dstport",
+        "value": 3784
+      },
+      "dnp3": {
+        "field": "dstport",
+        "value": 20000
+      },
+      "c37118": {
+        "field": "dstport",
+        "value": 4713
+      },
+      "bacnet": {
+        "field": "dstport",
+        "value": 47808
+      },
+      "enip": {
+        "field": "dstport",
+        "value": 44818
+      },
+      "coap": {
+        "field": "dstport",
+        "value": 5683
+      },
+      "sip": {
+        "field": "dstport",
+        "value": 5060
+      },
+      "raw": null
+    },
+    "ntp": {
+      "raw": null
+    },
+    "stun": {
+      "raw": null
+    },
+    "dhcp": {
+      "raw": null
+    },
+    "dns": {
+      "raw": null
+    },
+    "snmp": {
+      "raw": null
+    },
+    "mdns": {
+      "raw": null
+    },
+    "dhcpv6": {
+      "raw": null
+    },
+    "tftp": {
+      "raw": null
+    },
+    "llmnr": {
+      "raw": null
+    },
+    "nbns": {
+      "raw": null
+    },
+    "syslog": {
+      "raw": null
+    },
+    "radius": {
+      "raw": null
+    },
+    "vxlan": {
+      "raw": null
+    },
+    "gtp": {
+      "raw": null
+    },
+    "rmcp": {
+      "raw": null
+    },
+    "l2tp": {
+      "raw": null
+    },
+    "r-session": {
+      "raw": null
+    },
+    "netflow5": {
+      "raw": null
+    },
+    "mysql": {
+      "raw": null
+    },
+    "pgsql": {
+      "raw": null
+    },
+    "diameter": {
+      "raw": null
+    },
+    "isakmp": {
+      "raw": null
+    },
+    "wireguard": {
+      "raw": null
+    },
+    "sflow": {
+      "raw": null
+    },
+    "amqp": {
+      "raw": null
+    },
+    "kafka": {
+      "raw": null
+    },
+    "rfb": {
+      "raw": null
+    },
+    "ssh": {
+      "raw": null
+    },
+    "ldap": {
+      "raw": null
+    },
+    "kerberos": {
+      "raw": null
+    },
+    "telnet": {
+      "raw": null
+    },
+    "memcached": {
+      "raw": null
+    },
+    "socks5": {
+      "raw": null
+    },
+    "geneve": {
+      "arp": {
+        "field": "protocolType",
+        "value": "0806"
+      },
+      "goose": {
+        "field": "protocolType",
+        "value": "88b8"
+      },
+      "sv": {
+        "field": "protocolType",
+        "value": "88ba"
+      },
+      "ipv4": {
+        "field": "protocolType",
+        "value": "0800"
+      },
+      "ipv6": {
+        "field": "protocolType",
+        "value": "86dd"
+      },
+      "lldp": {
+        "field": "protocolType",
+        "value": "88cc"
+      },
+      "pnio": {
+        "field": "protocolType",
+        "value": "8892"
+      },
+      "ecat": {
+        "field": "protocolType",
+        "value": "88a4"
+      },
+      "hsr": {
+        "field": "protocolType",
+        "value": "892f"
+      },
+      "vlan": {
+        "field": "protocolType",
+        "value": "8100"
+      },
+      "raw": null
+    },
+    "gre": {
+      "arp": {
+        "field": "protocolType",
+        "value": "0806"
+      },
+      "goose": {
+        "field": "protocolType",
+        "value": "88b8"
+      },
+      "sv": {
+        "field": "protocolType",
+        "value": "88ba"
+      },
+      "ipv4": {
+        "field": "protocolType",
+        "value": "0800"
+      },
+      "ipv6": {
+        "field": "protocolType",
+        "value": "86dd"
+      },
+      "lldp": {
+        "field": "protocolType",
+        "value": "88cc"
+      },
+      "pnio": {
+        "field": "protocolType",
+        "value": "8892"
+      },
+      "ecat": {
+        "field": "protocolType",
+        "value": "88a4"
+      },
+      "hsr": {
+        "field": "protocolType",
+        "value": "892f"
+      },
+      "vlan": {
+        "field": "protocolType",
+        "value": "8100"
+      },
+      "raw": null
+    },
+    "bfd": {
+      "raw": null
+    },
+    "vrrp": {
+      "raw": null
+    },
+    "ospf": {
+      "raw": null
+    },
+    "modbus": {
+      "raw": null
+    },
+    "dnp3": {
+      "raw": null
+    },
+    "c37118": {
+      "raw": null
+    },
+    "bacnet": {
+      "raw": null
+    },
+    "enip": {
+      "raw": null
+    },
+    "opcua": {
+      "raw": null
+    },
+    "coap": {
+      "raw": null
+    },
+    "mqtt": {
+      "raw": null
+    },
+    "redis": {
+      "raw": null
+    },
+    "tacacs": {
+      "raw": null
+    },
+    "lldp": {
+      "raw": null
+    },
+    "sip": {
+      "raw": null
+    },
+    "pnio": {
+      "raw": null
+    },
+    "ecat": {
+      "raw": null
+    },
+    "http": {
+      "raw": null
+    },
+    "ftp": {
+      "raw": null
+    },
+    "rtsp": {
+      "raw": null
+    },
+    "tpkt": {
+      "raw": null
+    },
+    "cotp": {
+      "raw": null
+    },
+    "smtp": {
+      "raw": null
+    },
+    "pop3": {
+      "raw": null
+    },
+    "imap": {
+      "raw": null
+    },
+    "nntp": {
+      "raw": null
+    },
+    "irc": {
+      "raw": null
+    },
+    "hsr": {
+      "arp": {
+        "field": "etherType",
+        "value": "0806"
+      },
+      "goose": {
+        "field": "etherType",
+        "value": "88b8"
+      },
+      "sv": {
+        "field": "etherType",
+        "value": "88ba"
+      },
+      "ipv4": {
+        "field": "etherType",
+        "value": "0800"
+      },
+      "ipv6": {
+        "field": "etherType",
+        "value": "86dd"
+      },
+      "lldp": {
+        "field": "etherType",
+        "value": "88cc"
+      },
+      "pnio": {
+        "field": "etherType",
+        "value": "8892"
+      },
+      "ecat": {
+        "field": "etherType",
+        "value": "88a4"
+      },
+      "hsr": {
+        "field": "etherType",
+        "value": "892f"
+      },
+      "vlan": {
+        "field": "etherType",
+        "value": "8100"
+      },
+      "raw": null
+    },
+    "vlan": {
+      "arp": {
+        "field": "etherType",
+        "value": "0806"
+      },
+      "goose": {
+        "field": "etherType",
+        "value": "88b8"
+      },
+      "sv": {
+        "field": "etherType",
+        "value": "88ba"
+      },
+      "ipv4": {
+        "field": "etherType",
+        "value": "0800"
+      },
+      "ipv6": {
+        "field": "etherType",
+        "value": "86dd"
+      },
+      "lldp": {
+        "field": "etherType",
+        "value": "88cc"
+      },
+      "pnio": {
+        "field": "etherType",
+        "value": "8892"
+      },
+      "ecat": {
+        "field": "etherType",
+        "value": "88a4"
+      },
+      "hsr": {
+        "field": "etherType",
+        "value": "892f"
+      },
+      "vlan": {
+        "field": "etherType",
+        "value": "8100"
+      },
+      "raw": null
+    },
+    "tls-alert": {
+      "raw": null
+    },
+    "tls-appdata": {
+      "raw": null
+    },
+    "tls-ccsp": {
+      "raw": null
+    },
+    "tls-handshake": {
+      "raw": null
+    },
+    "tls-heartbeat": {
+      "raw": null
+    },
+    "IEC104_I_Frame": {
+      "raw": null
+    },
+    "IEC104_S_Frame": {
+      "raw": null
+    },
+    "IEC104_U_Frame": {
+      "raw": null
+    }
+  }
+}
