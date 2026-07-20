@@ -1,0 +1,12 @@
+# TPKT (RFC 1006, tcp:102) + COTP DT (ISO 8073 / X.224) carrying opaque ISO Session/MMS user data.
+# The MMS-stack framing layers of IEC 61850; everything above COTP is kept verbatim for now.
+# Hand-crafted spec-accurate frame (no MMS device available), assembled via the codec so the IPv4/TCP
+# checksums are correct. Byte breakdown (offsets are decimal, into the 76-byte frame):
+#   [0..13]  Ethernet II  : dst 00:00:00:00:00:00, src 00:00:00:00:00:00, ethertype 0800 (IPv4)
+#   [14..33] IPv4 (20B)   : 45 00 | total len 003e=62 | id 0000 | 4000 | ttl 00 | proto 06 (TCP)
+#                           | csum 66b8 | src 10.0.0.1 (0a000001) | dst 10.0.0.2 (0a000002)
+#   [34..53] TCP (20B)    : srcport c350=50000 | dstport 0066=102 | seq/ack 0 | dataoff 50 | csum 9b74
+#   [54..57] TPKT (4B)    : 03 (version=3) 00 (reserved) 0016 (length=22 = the whole TPKT PDU: 4 + 18)
+#   [58..60] COTP hdr(3B) : 02 (LI=2, header octets after LI) f0 (PDU Type=DT) 80 (EOT=1 | TPDU-NR=0)
+#   [61..75] COTP data    : 0100010061093007020103a0020500 (15B opaque ISO Session/MMS payload, verbatim)
+00000000000000000000000008004500003e00004000000666b80a0000010a000002c35000660000000000000000500000009b7400000300001602f0800100010061093007020103a0020500

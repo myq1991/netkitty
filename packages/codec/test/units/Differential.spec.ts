@@ -224,6 +224,34 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'requestUri', ts: 'http.request.uri', kind: 'str'},
         {nk: 'version', ts: 'http.request.version', kind: 'str'}
     ]},
+    // FTP control channel (RFC 959, tcp:21). The parsed command + argument (display-only; the whole line
+    // is kept verbatim for byte-perfect). tshark nests these under the request-line group (DFS reaches them).
+    ftp: {tsLayer: 'ftp', fields: [
+        {nk: 'command', ts: 'ftp.request.command', kind: 'str'},
+        {nk: 'argument', ts: 'ftp.request.arg', kind: 'str'}
+    ]},
+    // RTSP (RFC 2326, tcp:554). The parsed method/URI + CSeq (display-only; whole message kept verbatim).
+    // tshark nests method/url under rtsp.request_tree (DFS reaches them); rtsp.cseq is a top-level int.
+    rtsp: {tsLayer: 'rtsp', fields: [
+        {nk: 'method', ts: 'rtsp.method', kind: 'str'},
+        {nk: 'requestUri', ts: 'rtsp.url', kind: 'str'},
+        {nk: 'cseq', ts: 'rtsp.cseq', kind: 'int'}
+    ]},
+    // TPKT (RFC 1006, tcp:102) — the ISO-transport framing over TCP. version/reserved/length verify the
+    // 4-byte header.
+    tpkt: {tsLayer: 'tpkt', fields: [
+        {nk: 'version', ts: 'tpkt.version', kind: 'int'},
+        {nk: 'reserved', ts: 'tpkt.reserved', kind: 'int'},
+        {nk: 'length', ts: 'tpkt.length', kind: 'int'}
+    ]},
+    // COTP (ISO 8073, child of TPKT). li + the DT EOT/TPDU-NR verify the header. pduType is deliberately
+    // NOT mapped: netkitty stores the full PDU-type octet (DT=0xF0=240) whereas tshark's cotp.type is the
+    // high nibble (0x0f=15); the type is covered by round-trip + golden. eot is a boolean → Number()→0/1.
+    cotp: {tsLayer: 'cotp', fields: [
+        {nk: 'li', ts: 'cotp.li', kind: 'int'},
+        {nk: 'eot', ts: 'cotp.eot', kind: 'int'},
+        {nk: 'tpduNr', ts: 'cotp.tpdu-number', kind: 'int'}
+    ]},
     // LLDP (IEEE 802.1AB, ethertype 0x88cc): the TLV values are kept as opaque hex, so tshark's decoded
     // per-TLV scalars (lldp.time_to_live etc.) do not map to a single field — verified by round-trip + golden.
     // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the

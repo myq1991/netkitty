@@ -1,0 +1,83 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 62,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 6,
+      "checksum": 26296,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 50000,
+      "dstport": 102,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 39796,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "tpkt",
+    "data": {
+      "version": 3,
+      "reserved": 0,
+      "length": 22
+    },
+    "errors": []
+  },
+  {
+    "id": "cotp",
+    "data": {
+      "li": 2,
+      "pduType": 240,
+      "eot": true,
+      "tpduNr": 0,
+      "headerRest": "",
+      "data": "0100010061093007020103a0020500"
+    },
+    "errors": []
+  }
+]

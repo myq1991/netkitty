@@ -1,0 +1,88 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 68,
+      "id": 55152,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 25921,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 41124,
+      "dstport": 21,
+      "seq": 105047337,
+      "ack": 1557511835,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65080,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 764415485,
+          "tsecr": 764415281
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "ftp",
+    "data": {
+      "message": "5553455220616e6f6e796d6f75730d0a",
+      "isReply": false,
+      "replyCode": 0,
+      "isMultiline": false,
+      "replyText": "",
+      "command": "USER",
+      "argument": "anonymous"
+    },
+    "errors": []
+  }
+]

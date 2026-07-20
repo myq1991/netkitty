@@ -1,0 +1,6 @@
+# FTP (RFC 959, tcp:21) control-channel command. Client sends `USER anonymous\r\n` to the server. The
+# whole message is kept verbatim (byte-perfect); the first line is parsed for display (command/argument).
+# source: real capture — debian:12 container, a python socket listening on 127.0.0.1:21 with a second
+# python socket connecting and sending `USER anonymous\r\n`, over the ethernet lo interface, captured
+# with tcpdump (all-zero loopback MACs, ethertype 0800, IPv4/TCP dst port 21 with timestamp options).
+000000000000000000000000080045000044d7704000400665417f0000017f000001a0a400150642e5295cd5be9b80180200fe3800000101080a2d900dfd2d900d315553455220616e6f6e796d6f75730d0a
