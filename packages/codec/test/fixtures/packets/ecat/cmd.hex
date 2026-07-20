@@ -1,0 +1,12 @@
+# EtherCAT (IEC 61158 Type 12, ethertype 0x88A4) — one command datagram, padded to the 60-byte minimum.
+# Hand-crafted (no EtherCAT device available), spec-accurate. Byte breakdown:
+#   0a0b0c0d0e0f            dst MAC
+#   112233445566            src MAC
+#   88a4                    EtherType 0x88A4 (EtherCAT)
+#   1010                    EtherCAT header, LITTLE-ENDIAN uint16 h=0x1010 → length=0x1010&0x7FF=16,
+#                           reserved=(h>>11)&1=0, type=(h>>12)&0xF=1 (command/DLPDU)
+#   01 00 00000010 0400 0000 01020304 0100   one datagram (16 bytes = the length field):
+#                           Cmd=0x01, Idx=0x00, Address=0x00000010, Len=0x0004 (LE), IRQ=0x0000,
+#                           Data=01020304, WKC=0x0001 (LE) → 10-byte hdr + 4 data + 2 WKC = 16 bytes
+#   00 * 28                 Ethernet padding to reach the 60-byte minimum frame; falls to RawData on decode
+0a0b0c0d0e0f11223344556688a4101001000000001004000000010203040100000000000000000000000000000000000000000000000000000000000000

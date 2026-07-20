@@ -1,0 +1,15 @@
+# PROFINET Real-Time (PN-IO cyclic, EtherType 0x8892) — a hand-crafted, spec-accurate cyclic RT frame
+# (no PROFINET device available; hand-built like the C37.118 fixture). Byte breakdown of the 60-byte frame:
+#   [0..5]   dst MAC   01:0e:cf:00:00:00  (PROFINET multicast range)
+#   [6..11]  src MAC   00:11:22:33:44:55
+#   [12..13] ethertype 8892               (PROFINET-RT)
+#   [14..15] FrameID   8000               (cyclic RT_CLASS_1/2 range 0x8000-0xBFFF)
+#   [16..55] IO data   40 bytes           (0x01..0x28)
+#   [56..57] APDU-Status CycleCounter 1234
+#   [58]     APDU-Status DataStatus       35
+#   [59]     APDU-Status TransferStatus   00
+# Total 60 bytes = the Ethernet minimum exactly, so no trailing padding. The pnio `data` field is
+# everything after the FrameID: the 40 IO-data bytes + the 4-byte APDU-Status = 44 bytes, kept verbatim.
+010ecf0000000011223344558892800001020304050607
+08090a0b0c0d0e0f101112131415161718191a1b1c1d1e
+1f20212223242526272812343500

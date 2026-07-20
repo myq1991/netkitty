@@ -15,9 +15,11 @@ test('TCP baseline: field decode + byte-perfect round-trip', async (): Promise<v
     assert.strictEqual(tcp.hdrLen, 44, 'header with options must decode full data-offset length')
 })
 
-test('TCP with HTTP payload: payload falls to raw layer + round-trip', async (): Promise<void> => {
+test('TCP with HTTP payload: payload decodes as http (now registered) + round-trip', async (): Promise<void> => {
+    // Previously HTTP had no codec so this GET fell to raw; with the HTTP header registered it is now
+    // decoded as an http layer. The TCP round-trip is byte-perfect either way.
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('tcp/http-get').buffer)
-    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'raw'])
+    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'http'])
 })
 
 test('TCP truncated mid-header: decode survives', async (): Promise<void> => {

@@ -234,10 +234,11 @@ test('a non-TLS payload on tcp:443 falls to raw, not mis-decoded as TLS', async 
         {id: 'ipv4', data: {sip: '1.2.3.4', dip: '5.6.7.8', protocol: 6}},
         {id: 'tcp', data: {srcport: 12345, dstport: 443}}
     ])
-    // "GET / HTTP/1.1\r\n" — first byte 0x47 is not a TLS content type (0x14–0x18), so the tcpport:443
-    // bucket's TLS candidates all reject it by content and it falls through to raw.
-    const withHttp: Buffer = Buffer.concat([packet, Buffer.from('474554202f20485454502f312e310d0a', 'hex')])
-    const decoded: CodecDecodeResult[] = await codec.decode(withHttp)
+    // An opaque binary payload — first byte 0x00 is not a TLS content type (0x14–0x18) and matches no
+    // other content signature (not an HTTP method line, not a STUN cookie, …), so the tcpport:443 bucket's
+    // TLS candidates all reject it by content and it falls through to raw.
+    const withJunk: Buffer = Buffer.concat([packet, Buffer.from('0011223344556677', 'hex')])
+    const decoded: CodecDecodeResult[] = await codec.decode(withJunk)
     assert.ok(decoded.every((l: CodecDecodeResult): boolean => !l.id.startsWith('tls')), 'not mis-decoded as TLS')
     assert.ok(decoded.some((l: CodecDecodeResult): boolean => l.id === 'raw'), 'payload lands in raw')
 })

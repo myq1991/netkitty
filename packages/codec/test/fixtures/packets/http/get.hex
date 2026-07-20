@@ -1,0 +1,6 @@
+# HTTP/1.1 (RFC 7230, tcp:8000) GET request. Text message: request-line + Host/User-Agent/Accept
+# headers, CRLF line endings, no body. The whole message is kept verbatim (byte-perfect); the start
+# line is parsed for display. source: real capture — debian:12 container running `python3 -m http.server
+# 8000`, requested with `curl http://127.0.0.1:8000/` over the ethernet lo interface, captured with
+# tcpdump (all-zero loopback MACs, ethertype 0800, IPv4/TCP with timestamp options).
+000000000000000000000000080045000082aa4a4000400692297f0000017f00000195461f40e9937826a485c35080180200fe7600000101080a2d7d23bc2d7d23bc474554202f20485454502f312e310d0a486f73743a203132372e302e302e313a383030300d0a557365722d4167656e743a206375726c2f372e38382e310d0a4163636570743a202a2f2a0d0a0d0a

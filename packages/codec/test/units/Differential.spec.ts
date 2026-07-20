@@ -201,6 +201,29 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'method', ts: 'sip.Method', kind: 'str'},
         {nk: 'requestUri', ts: 'sip.r-uri', kind: 'str'}
     ]},
+    // PROFINET-RT (IEC 61158, ethertype 0x8892). tshark names the layer 'pn_rt'. frameId verifies the
+    // 2-byte Frame ID (tshark shows it as a decimal). The IO data + APDU-Status (deferred structuring) are
+    // kept verbatim and verified by round-trip + golden.
+    pnio: {tsLayer: 'pn_rt', fields: [
+        {nk: 'frameId', ts: 'pn_rt.frame_id', kind: 'int'}
+    ]},
+    // EtherCAT (IEC 61158 Type 12, ethertype 0x88a4). tshark names the frame-header layer 'ecatf' and
+    // renders the fields as 0x-hex; kind 'int' compares numerically (Number('0x0010')===16). The little-
+    // endian header split (11-bit length / 1-bit reserved / 4-bit type) is verified against tshark here;
+    // the datagram chain (deferred structuring) is verified byte-for-byte by round-trip + golden.
+    ecat: {tsLayer: 'ecatf', fields: [
+        {nk: 'length', ts: 'ecatf.length', kind: 'int'},
+        {nk: 'reserved', ts: 'ecatf.reserved', kind: 'int'},
+        {nk: 'type', ts: 'ecatf.type', kind: 'int'}
+    ]},
+    // HTTP/1.x (RFC 7230, tcp:80). The parsed request-line method/URI/version (display-only; the whole
+    // message is kept verbatim for byte-perfect). tshark nests these under the request-line group, which
+    // getTsharkField's DFS reaches.
+    http: {tsLayer: 'http', fields: [
+        {nk: 'method', ts: 'http.request.method', kind: 'str'},
+        {nk: 'requestUri', ts: 'http.request.uri', kind: 'str'},
+        {nk: 'version', ts: 'http.request.version', kind: 'str'}
+    ]},
     // LLDP (IEEE 802.1AB, ethertype 0x88cc): the TLV values are kept as opaque hex, so tshark's decoded
     // per-TLV scalars (lldp.time_to_live etc.) do not map to a single field — verified by round-trip + golden.
     // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the
