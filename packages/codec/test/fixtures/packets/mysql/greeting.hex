@@ -1,0 +1,8 @@
+# MySQL protocol (tcp:3306) server initial handshake greeting (seq 0). 4-byte packet header: payloadLength
+# 74 (3-byte LITTLE-ENDIAN 4a 00 00), sequenceId 0; payload begins with protocol version 0x0a and the
+# NUL-terminated server version string "8.0.46", then the handshake (thread id, auth-plugin-data,
+# capability flags, "caching_sha2_password").
+# source: REAL capture — mysql:8.0 (server 8.0.46) container, greeting sent to a `mysql` client connecting
+# to 127.0.0.1:3306, captured with tcpdump -i lo "tcp port 3306" on the container's ethernet loopback
+# (kernel TCP with timestamp options); the full eth+ipv4+tcp+MySQL frame is the raw captured bytes.
+0000000000000000000000000800450000821a4940004006222b7f0000017f0000010ceaafbc218b97417dd3df5480180200fe7600000101080a2df847e82df847e74a0000000a382e302e343600090000004d3f065e4228535e00ffffff0200ffdf1500000000000000000000350d3c2704417b0949772b480063616368696e675f736861325f70617373776f726400

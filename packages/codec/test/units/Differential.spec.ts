@@ -298,6 +298,28 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
     // Redis RESP (tcp:6379): tshark names the layer 'resp' and nests repeated resp.bulk_string keys, which
     // collapse last-wins under -T json — so the command verb (first bulk string) is not reliably mappable.
     // The respType/command parse is verified by round-trip + golden instead (like NNTP/LLDP).
+    // NetFlow v5 (Cisco, udp:2055). tshark names the layer 'cflow'. version/count/sequence + the header
+    // timestamp/engine fields verify the 24-byte header (unix_secs is nested under cflow.timestamp_tree,
+    // reached by the DFS). The 48-byte flow records are verified by round-trip + golden.
+    netflow5: {tsLayer: 'cflow', fields: [
+        {nk: 'version', ts: 'cflow.version', kind: 'int'},
+        {nk: 'count', ts: 'cflow.count', kind: 'int'},
+        {nk: 'flowSequence', ts: 'cflow.sequence', kind: 'int'},
+        {nk: 'unixSecs', ts: 'cflow.unix_secs', kind: 'int'},
+        {nk: 'engineType', ts: 'cflow.engine_type', kind: 'int'}
+    ]},
+    // MySQL (tcp:3306). tshark names the layer 'mysql'. The 4-byte packet header: length + sequence number.
+    // The phase-dependent payload is verified by round-trip + golden.
+    mysql: {tsLayer: 'mysql', fields: [
+        {nk: 'payloadLength', ts: 'mysql.packet_length', kind: 'int'},
+        {nk: 'sequenceId', ts: 'mysql.packet_number', kind: 'int'}
+    ]},
+    // PostgreSQL (tcp:5432). tshark names the layer 'pgsql'. Only the message length is mapped: tshark
+    // renders pgsql.type as a human name ("Simple query") rather than the on-wire type letter, so the
+    // messageType is verified by round-trip + golden instead.
+    pgsql: {tsLayer: 'pgsql', fields: [
+        {nk: 'length', ts: 'pgsql.length', kind: 'int'}
+    ]},
     // R-GOOSE/R-SV (IEC 61850-90-5 Session, udp:102): tshark only reaches its R-GOOSE dissector via a CLTP
     // (ISO 8602) UD-TPDU heuristic — the common direct-in-UDP wire form this codec models is dissected as
     // opaque 'data', so tshark exposes no r-session fields to map. The 90-5 session byte layout was instead

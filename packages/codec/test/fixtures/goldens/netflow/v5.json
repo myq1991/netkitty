@@ -1,0 +1,107 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 148,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 29602,
+      "sip": "192.168.10.5",
+      "dip": "203.0.113.9"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 9995,
+      "dstport": 2055,
+      "length": 128,
+      "checksum": 46964
+    },
+    "errors": []
+  },
+  {
+    "id": "netflow5",
+    "data": {
+      "version": 5,
+      "count": 2,
+      "sysUptime": 100600,
+      "unixSecs": 1710000000,
+      "unixNsecs": 0,
+      "flowSequence": 1024,
+      "engineType": 0,
+      "engineId": 0,
+      "samplingInterval": 0,
+      "records": [
+        {
+          "srcAddr": "192.168.10.5",
+          "dstAddr": "8.8.8.8",
+          "nextHop": "192.168.10.1",
+          "input": 2,
+          "output": 3,
+          "dPkts": 12,
+          "dOctets": 1480,
+          "first": 100000,
+          "last": 100500,
+          "srcPort": 51514,
+          "dstPort": 443,
+          "pad1": 0,
+          "tcpFlags": 27,
+          "prot": 6,
+          "tos": 0,
+          "srcAs": 64500,
+          "dstAs": 15169,
+          "srcMask": 24,
+          "dstMask": 32,
+          "pad2": 0
+        },
+        {
+          "srcAddr": "10.0.0.23",
+          "dstAddr": "172.217.16.14",
+          "nextHop": "10.0.0.1",
+          "input": 4,
+          "output": 5,
+          "dPkts": 3,
+          "dOctets": 220,
+          "first": 100200,
+          "last": 100260,
+          "srcPort": 33012,
+          "dstPort": 53,
+          "pad1": 0,
+          "tcpFlags": 0,
+          "prot": 17,
+          "tos": 0,
+          "srcAs": 65001,
+          "dstAs": 15169,
+          "srcMask": 16,
+          "dstMask": 24,
+          "pad2": 0
+        }
+      ]
+    },
+    "errors": []
+  }
+]

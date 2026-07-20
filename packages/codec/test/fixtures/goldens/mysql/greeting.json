@@ -1,0 +1,84 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 130,
+      "id": 6729,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 8747,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 3306,
+      "dstport": 44988,
+      "seq": 562796353,
+      "ack": 2111037268,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65142,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 771246056,
+          "tsecr": 771246055
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "mysql",
+    "data": {
+      "payloadLength": 74,
+      "sequenceId": 0,
+      "payload": "0a382e302e343600090000004d3f065e4228535e00ffffff0200ffdf1500000000000000000000350d3c2704417b0949772b480063616368696e675f736861325f70617373776f726400"
+    },
+    "errors": []
+  }
+]

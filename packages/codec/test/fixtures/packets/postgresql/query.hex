@@ -1,0 +1,9 @@
+# PostgreSQL v3 (tcp:5432) simple Query message: type 'Q' (0x51), length 14 (0x0000000e, BE — includes
+# the 4 length bytes, not the type byte), body "SELECT 1;\0" (10 bytes). PG payload: 510000000e53454c45435420313b00.
+# source: REAL PostgreSQL wire traffic — `psql -h 127.0.0.1 -c "SELECT 1;"` against the official `postgres`
+# Docker container, captured on macOS lo0 with tcpdump. The IPv4/TCP layers and the PG payload are genuine
+# (real TCP seq/ack + timestamp options). Two honest adjustments to wrap the loopback capture into a real
+# Ethernet frame: a synthetic 14-byte Ethernet II header (zero MACs, ethertype 0x0800) is prepended (lo has
+# no L2 header), and the IPv4 header checksum — which loopback offloads to 0x0000 — is filled in with its
+# correct computed value (0x3cb3) so the packet is a valid on-wire Ethernet frame that round-trips.
+0000000000000000000000000800450000430000400040063cb37f0000017f000001d44a1538f65ccf09c3bf4fd7801818e3fe3700000101080aa9df21f94ddf4851510000000e53454c45435420313b00
