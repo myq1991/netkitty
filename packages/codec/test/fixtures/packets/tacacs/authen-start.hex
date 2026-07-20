@@ -1,0 +1,5 @@
+# TACACS+ (RFC 8907, tcp:49) Authentication START. Header: version 0xc0 (major 12, minor 0), type 1
+# (authentication), seq_no 1, flags 0, session id 0x12345678, length 8. Body (8 bytes, normally XOR-
+# obfuscated with the shared secret) kept verbatim. source: standard TACACS+ START frame over a TCP
+# socket to 127.0.0.1:49 on a debian:12 container's ethernet lo, captured with tcpdump (PSH segment).
+000000000000000000000000080045000048c8f64000400673b77f0000017f000001c99000314136ab1d8328c2dd80180200fe3c00000101080a2d6711a42d6711a4c00101001234567800000008deadbeefcafef00d

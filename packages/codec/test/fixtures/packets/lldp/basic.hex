@@ -1,0 +1,5 @@
+# LLDP (IEEE 802.1AB, ethertype 0x88CC) — a minimal LLDPDU: Chassis ID (MAC 00:11:22:33:44:55), Port ID
+# (MAC), Time To Live (120s), End Of LLDPDU, then Ethernet padding to the 60-byte minimum frame. dst is
+# the LLDP multicast 01:80:c2:00:00:0e. source: standard LLDPDU sent via an AF_PACKET raw socket on a
+# debian:12 container's ethernet lo (kernel-framed), captured with tcpdump.
+0180c200000e00112233445588cc02070400112233445504070300112233445506020078000000000000000000000000000000000000000000000000

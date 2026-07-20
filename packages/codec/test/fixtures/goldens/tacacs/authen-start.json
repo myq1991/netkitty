@@ -1,0 +1,91 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 72,
+      "id": 51446,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 29623,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 51600,
+      "dstport": 49,
+      "seq": 1094101789,
+      "ack": 2200486621,
+      "hdrLen": 32,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 512,
+      "checksum": 65084,
+      "urgPtr": 0,
+      "options": [
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "NOP"
+        },
+        {
+          "option": "TS",
+          "tsval": 761729444,
+          "tsecr": 761729444
+        }
+      ]
+    },
+    "errors": []
+  },
+  {
+    "id": "tacacs",
+    "data": {
+      "version": {
+        "major": 12,
+        "minor": 0
+      },
+      "type": 1,
+      "seqNo": 1,
+      "flags": 0,
+      "sessionId": 305419896,
+      "length": 8,
+      "body": "deadbeefcafef00d"
+    },
+    "errors": []
+  }
+]

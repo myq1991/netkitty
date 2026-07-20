@@ -185,6 +185,24 @@ const MAPPINGS: {[layerId: string]: LayerMap} = {
         {nk: 'sequence', ts: 'rmcp.sequence', kind: 'int'},
         {nk: 'messageClass.class', ts: 'rmcp.class', kind: 'int'}
     ]},
+    // TACACS+ (RFC 8907, tcp:49). type/seq/session/length verify the header; the version nibbles are
+    // rendered byte-positioned by tshark (majvers=0xc0) so they are covered by round-trip + golden, as is
+    // the encrypted body.
+    tacacs: {tsLayer: 'tacplus', fields: [
+        {nk: 'type', ts: 'tacplus.type', kind: 'int'},
+        {nk: 'seqNo', ts: 'tacplus.seqno', kind: 'int'},
+        {nk: 'flags', ts: 'tacplus.flags', kind: 'int'},
+        {nk: 'sessionId', ts: 'tacplus.session_id', kind: 'int'},
+        {nk: 'length', ts: 'tacplus.packet_len', kind: 'int'}
+    ]},
+    // SIP (RFC 3261, tcp/udp:5060). The parsed request-line method + URI (display-only; the whole message
+    // is kept verbatim for byte-perfect). tshark exposes sip.Method / sip.r-uri as clean tokens.
+    sip: {tsLayer: 'sip', fields: [
+        {nk: 'method', ts: 'sip.Method', kind: 'str'},
+        {nk: 'requestUri', ts: 'sip.r-uri', kind: 'str'}
+    ]},
+    // LLDP (IEEE 802.1AB, ethertype 0x88cc): the TLV values are kept as opaque hex, so tshark's decoded
+    // per-TLV scalars (lldp.time_to_live etc.) do not map to a single field — verified by round-trip + golden.
     // MQTT (OASIS 3.1.1/5.0, tcp:1883). Message type (tshark nests it under mqtt.hdrflags_tree) + the
     // varint Remaining Length. The variable header/payload is verified by round-trip + golden.
     mqtt: {tsLayer: 'mqtt', fields: [
