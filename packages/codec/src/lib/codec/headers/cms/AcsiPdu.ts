@@ -75,6 +75,24 @@ export const ASSOCIATE_NEGOTIATE_RESPONSE: AsnType = {
  */
 export const GET_ALL_DATA_VALUES_REQUEST: AsnType = GET_ALL_DATA_DEFINITION_REQUEST
 
+/**
+ * Associate-RequestPDU (SC 1, §8.2.1.4). Both fields OPTIONAL: an optional server access-point reference
+ * and an optional authentication parameter (signature certificate + signed UTC time + signed value). A real
+ * frame carries both absent (service data `00` = the 2-bit preamble, both cleared). VisibleString129 =
+ * VisibleString(SIZE(0..129)); UtcTime = OCTET STRING(SIZE(8)).
+ */
+export const ASSOCIATE_REQUEST: AsnType = {
+    k: 'seq',
+    fields: [
+        {name: 'serverAccessPointReference', type: {k: 'vstr', min: 0, max: 129}, optional: true},
+        {name: 'authenticationParameter', type: {k: 'seq', fields: [
+            {name: 'signatureCertificate', type: {k: 'octstr'}},
+            {name: 'signedTime', type: {k: 'octstr', size: 8}},
+            {name: 'signedValue', type: {k: 'octstr'}}
+        ]}, optional: true}
+    ]
+}
+
 export interface ServicePdu {
     request?: AsnType
     response?: AsnType
@@ -87,6 +105,7 @@ export interface ServicePdu {
  * only the request is structured for now.
  */
 export const SERVICE_PDU: Record<number, ServicePdu> = {
+    1: {request: ASSOCIATE_REQUEST},
     83: {request: GET_ALL_DATA_VALUES_REQUEST},
     154: {request: ASSOCIATE_NEGOTIATE_REQUEST, response: ASSOCIATE_NEGOTIATE_RESPONSE},
     155: {request: GET_ALL_DATA_DEFINITION_REQUEST}
@@ -99,6 +118,7 @@ export const SERVICE_NAMES: Record<number, string> = {
     3: 'Release',
     48: 'GetDataValues',
     83: 'GetAllDataValues',
+    153: 'Test',
     154: 'AssociateNegotiate',
     155: 'GetAllDataDefinition',
     156: 'GetAllCBValues'

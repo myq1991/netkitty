@@ -72,6 +72,15 @@ test('CMS GetAllDataValues (SC 83) request PER-decodes its object reference', as
     }, 'the request PER-decodes to its logical-node reference')
 })
 
+// Associate (SC 1): the basic association service. Its request is a SEQUENCE of two OPTIONAL fields; a
+// real frame carries both absent (PER preamble 00).
+test('CMS Associate (SC 1) request PER-decodes (both optional fields absent)', async (): Promise<void> => {
+    const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('cms/associate-request-basic').buffer)
+    const cms: any = Layer(decoded, 'cms').data
+    assert.strictEqual(cms.serviceCode, 1, 'SC 1 = Associate')
+    assert.deepStrictEqual(cms.serviceDataDecoded, {service: 'Associate', direction: 'request'}, 'both optional fields absent')
+})
+
 // CMS also runs in the clear on port 9102 (the 国密 TLCP port) in some deployments.
 test('CMS decodes plaintext AssociateNegotiate on port 9102', async (): Promise<void> => {
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('cms/associate-negotiate-9102').buffer)

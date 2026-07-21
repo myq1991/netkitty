@@ -1,0 +1,5 @@
+# CMS Associate (SC 1) request — real frame over plain TCP:8102 (DL/T 2811-2024 §8.2.1).
+# The basic association service (distinct from SC 154 AssociateNegotiate). Extracted from a real capture
+# (getalldata.pcapng); only the hex is committed, never the pcap. Service data `00` is the PER preamble
+# with both OPTIONAL fields (serverAccessPointReference, authenticationParameter) absent.
+00000000000000000000000008004500002f00004000000666c70a0000010a000002c3501fa600000000000000005000000091b0000001010300233300
