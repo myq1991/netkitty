@@ -144,7 +144,9 @@ export class PerDecoder {
 
     #decodeVisibleString(type: {min?: number, max?: number}): string {
         if (type.min !== undefined && type.max !== undefined) {
-            if (type.max === type.min) return this.#reader.readOctets(type.min).toString('latin1')
+            //Fixed size: no length field. Content octet-aligns unless the whole string is ≤ 16 bits
+            //(X.691 small-string exception — 8 bits/char, so a 1- or 2-char fixed string packs unaligned).
+            if (type.max === type.min) return this.#reader.readCharString(type.min, type.min * 8 > 16)
             const count: number = this.#reader.readConstrainedInt(type.min, type.max)
             return this.#reader.readOctets(count).toString('latin1')
         }

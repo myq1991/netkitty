@@ -70,7 +70,14 @@
       "serviceCode": 155,
       "frameLength": 20,
       "reqId": 13092,
-      "serviceData": "220053573131313130335357492f4c4c4e30"
+      "serviceData": "220053573131313130335357492f4c4c4e30",
+      "serviceDataDecoded": {
+        "service": "GetAllDataDefinition",
+        "direction": "request",
+        "reference": {
+          "lnReference": "SW111103SWI/LLN0"
+        }
+      }
     },
     "errors": []
   }

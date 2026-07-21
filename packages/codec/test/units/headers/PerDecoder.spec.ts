@@ -71,6 +71,26 @@ test('PerDecoder: a BOOLEAN then an unaligned INTEGER(0..255) decodes both corre
     assert.deepStrictEqual(out, {a: true, b: 0x55})
 })
 
+test('PerDecoder: a fixed 2-char VisibleString after a bit-packed field packs UNALIGNED (<=16-bit exception)', (): void => {
+    // flag=true(1 bit), code=VisibleString(SIZE(2))="XX" must NOT octet-align. 1|"XX" -> [0xAC,0x2C,0x00].
+    const type: AsnType = {k: 'seq', fields: [
+        {name: 'flag', type: {k: 'bool'}},
+        {name: 'code', type: {k: 'vstr', min: 2, max: 2}}
+    ]}
+    const out: any = new PerDecoder(Buffer.from([0xac, 0x2c, 0x00])).decode(type)
+    assert.deepStrictEqual(out, {flag: true, code: 'XX'})
+})
+
+test('PerDecoder: a fixed 3-char VisibleString (>16 bits) octet-aligns its content', (): void => {
+    // flag=true(1 bit), code=VisibleString(SIZE(3))="ABC" aligns -> 0x80, then "ABC".
+    const type: AsnType = {k: 'seq', fields: [
+        {name: 'flag', type: {k: 'bool'}},
+        {name: 'code', type: {k: 'vstr', min: 3, max: 3}}
+    ]}
+    const out: any = new PerDecoder(Buffer.from([0x80, 0x41, 0x42, 0x43])).decode(type)
+    assert.deepStrictEqual(out, {flag: true, code: 'ABC'})
+})
+
 test('PerDecoder: a mandatory self-recursive descriptor bails instead of overflowing the stack', (): void => {
     const table: AsnTypeTable = {Rec: {k: 'seq', fields: [{name: 'child', type: {k: 'ref', name: 'Rec'}}]}}
     const decoder: PerDecoder = new PerDecoder(Buffer.from([0x00]), table)

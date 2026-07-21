@@ -33,6 +33,13 @@ test('CMS GetAllDataDefinition (real frames) round-trips with the service data v
     assert.strictEqual(cms.serviceCode, 155, 'SC 155 = GetAllDataDefinition')
     assert.strictEqual(cms.reqId, 13092, 'ReqID')
     assert.ok(cms.serviceData.includes(Buffer.from('SW111103SWI/LLN0').toString('hex')), 'service data carries the 61850 object reference')
+    // Display-only ALIGNED-PER structuring of the service data area (DL/T 2811 §6.10). The object
+    // reference decoding cleanly confirms both the request PDU structure and the ALIGNED-PER mode.
+    assert.deepStrictEqual(cms.serviceDataDecoded, {
+        service: 'GetAllDataDefinition',
+        direction: 'request',
+        reference: {lnReference: 'SW111103SWI/LLN0'}
+    }, 'the request PER-decodes to its logical-node reference (fc / referenceAfter absent)')
 
     const data: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('cms/response-data').buffer)
     const rsp: any = Layer(data, 'cms').data

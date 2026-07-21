@@ -120,4 +120,17 @@ export class PerReader {
         if (length.fragmented) return ''
         return this.readOctets(length.value).toString('latin1')
     }
+
+    /**
+     * Read n characters of a known-multiplier character string (8 bits/char in ALIGNED-PER, e.g.
+     * VisibleString). Aligned-PER octet-aligns the content, EXCEPT a fixed string whose whole size is ≤ 16
+     * bits packs its 8-bit chars contiguously with no alignment (X.691 small-string exception). Pass
+     * aligned=false for that case.
+     */
+    readCharString(n: number, aligned: boolean): string {
+        if (aligned) return this.readOctets(n).toString('latin1')
+        let out: string = ''
+        for (let i: number = 0; i < n; i++) out += String.fromCharCode(this.readBits(8))
+        return out
+    }
 }

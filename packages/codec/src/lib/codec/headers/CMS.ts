@@ -3,6 +3,8 @@ import {ProtocolJSONSchema} from '../../schema/ProtocolJSONSchema'
 import {DemuxProducer} from '../types/DemuxProducer'
 import {BufferToHex} from '../../helper/BufferToHex'
 import {HexToBuffer} from '../../helper/HexToBuffer'
+import {PerDecoder, AsnType} from './cms/PerDecoder'
+import {SERVICE_PDU, SERVICE_NAMES, ServicePdu} from './cms/AcsiPdu'
 
 /**
  * CMS — China smart-substation communication (DL/T 2811-2024, "变电站二次系统通信报文规范"), the
@@ -114,14 +116,55 @@ export class CMS extends BaseHeader {
                         let end: number = 4 + fl
                         if (end > available) end = available
                         //Service data begins after the 2-byte ReqID (offset 6).
-                        this.instance.serviceData.setValue(end > 6 ? BufferToHex(this.readBytes(6, end - 6)) : '')
+                        if (end <= 6) return
+                        const buf: Buffer = this.readBytes(6, end - 6)
+                        this.instance.serviceData.setValue(BufferToHex(buf))
+                        //Display-only: structure the service data area per the Service Code (§6.10, PER).
+                        const decoded: object | undefined = CMS.#decodeServiceData(
+                            this.instance.serviceCode.getValue(0),
+                            !!this.instance.resp.getValue(false),
+                            !!this.instance.err.getValue(false),
+                            buf
+                        )
+                        if (decoded !== undefined) this.instance.serviceDataDecoded.setValue(decoded)
                     },
                     encode: function (this: CMS): void {
                         const data: string = this.instance.serviceData.getValue('')
                         if (data) this.writeBytes(6, HexToBuffer(data))
                     }
-                }
+                },
+                //Display-only structured view of the service data area, decoded with ALIGNED BASIC-PER
+                //(DL/T 2811 §6.10) per the Service Code. Populated on decode by the serviceData closure
+                //above; it has no encode closure, so `serviceData` (hex) stays the authoritative encode
+                //form and the structured view can never perturb the re-emitted bytes.
+                serviceDataDecoded: {type: 'object', label: 'Service Data (decoded)'}
             }
+        }
+    }
+
+    /**
+     * Best-effort ALIGNED BASIC-PER decode of the service data area for display. Returns a plain tree
+     * {service, direction, …fields} when the Service Code + direction has a transcribed ASN.1 descriptor,
+     * `incomplete: true` if the decoder bailed partway, or undefined when nothing is structured (leaving
+     * the verbatim hex as the only view). Never throws.
+     */
+    static #decodeServiceData(serviceCode: number, isResponse: boolean, isError: boolean, buf: Buffer): object | undefined {
+        const entry: ServicePdu | undefined = SERVICE_PDU[serviceCode]
+        if (!entry) return undefined
+        //Error responses carry a ServiceError, not the normal response PDU — not structured in this slice.
+        const type: AsnType | undefined = isError ? undefined : (isResponse ? entry.response : entry.request)
+        if (!type) return undefined
+        try {
+            const decoder: PerDecoder = new PerDecoder(buf)
+            const tree: unknown = decoder.decode(type)
+            const head: object = {
+                service: SERVICE_NAMES[serviceCode] ?? String(serviceCode),
+                direction: isResponse ? 'response' : 'request'
+            }
+            const body: object = (tree !== null && typeof tree === 'object') ? tree as object : {}
+            return decoder.bailed ? {...head, ...body, incomplete: true} : {...head, ...body}
+        } catch {
+            return undefined
         }
     }
 
