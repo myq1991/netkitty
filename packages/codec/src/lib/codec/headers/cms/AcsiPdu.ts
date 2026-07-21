@@ -67,6 +67,14 @@ export const ASSOCIATE_NEGOTIATE_RESPONSE: AsnType = {
     ]
 }
 
+/**
+ * GetAllDataValues-RequestPDU (SC 83, §8.3.4.3) is structurally identical to GetAllDataDefinition's request
+ * (a reference CHOICE plus optional functional-constraint and paging cursor) per the standard, so it reuses
+ * the same PER descriptor. Its response, by contrast, carries `Data` values encoded as GB/T 33602 TLV, not
+ * PER, and is decoded separately (not via this PER descriptor table).
+ */
+export const GET_ALL_DATA_VALUES_REQUEST: AsnType = GET_ALL_DATA_DEFINITION_REQUEST
+
 export interface ServicePdu {
     request?: AsnType
     response?: AsnType
@@ -79,6 +87,7 @@ export interface ServicePdu {
  * only the request is structured for now.
  */
 export const SERVICE_PDU: Record<number, ServicePdu> = {
+    83: {request: GET_ALL_DATA_VALUES_REQUEST},
     154: {request: ASSOCIATE_NEGOTIATE_REQUEST, response: ASSOCIATE_NEGOTIATE_RESPONSE},
     155: {request: GET_ALL_DATA_DEFINITION_REQUEST}
 }

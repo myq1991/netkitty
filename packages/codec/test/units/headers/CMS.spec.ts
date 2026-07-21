@@ -59,6 +59,19 @@ test('CMS GetAllDataDefinition (real frames) round-trips with the service data v
     assert.strictEqual(rsp.serviceData.length / 2, 442, 'service data = FL - 2-byte ReqID, kept verbatim')
 })
 
+// GetAllDataValues (SC 83): the request shares GetAllDataDefinition's reference-CHOICE PER structure.
+// (Its response carries Data values as GB/T 33602 TLV, decoded separately.)
+test('CMS GetAllDataValues (SC 83) request PER-decodes its object reference', async (): Promise<void> => {
+    const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('cms/getalldatavalues-request').buffer)
+    const cms: any = Layer(decoded, 'cms').data
+    assert.strictEqual(cms.serviceCode, 83, 'SC 83 = GetAllDataValues')
+    assert.deepStrictEqual(cms.serviceDataDecoded, {
+        service: 'GetAllDataValues',
+        direction: 'request',
+        reference: {lnReference: 'SW111103SWI/LLN0'}
+    }, 'the request PER-decodes to its logical-node reference')
+})
+
 // Negative: a mid-PDU TCP-continuation segment (whose first byte's low nibble is not the PI 0x01) must
 // NOT be claimed as CMS, and non-8102 traffic must not be claimed; truncation survives.
 test('CMS is not claimed for continuation segments or non-8102 traffic; truncation survives', async (): Promise<void> => {

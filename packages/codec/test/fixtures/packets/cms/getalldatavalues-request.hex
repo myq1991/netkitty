@@ -1,0 +1,5 @@
+# CMS GetAllDataValues (SC 83) request — real frame over plain TCP:8102 (DL/T 2811-2024 §8.3.4).
+# Extracted from a real capture (getalldata.pcapng); only the hex is committed, never the pcap. The request
+# is structurally identical to GetAllDataDefinition (a reference CHOICE), PER-encoded: service data
+# `22 00` + "SW111103SWI/LLN0" -> preamble 00 + choice-index 1 (lnReference) + length 16 + the reference.
+00000000000000000000000008004500004000004000000666b60a0000010a000002c3501fa6000000000000000050000000005a0000015314006436220053573131313130335357492f4c4c4e30
