@@ -26,8 +26,99 @@ export class ISOSession extends BaseHeader {
     //begins with a BER tag (0x61 / 0x31), which is not in this set, so the walk stops at the boundary.
     static #VALID_SI: Set<number> = new Set([1, 5, 8, 9, 13, 14, 25, 26])
 
+    //ACSE (ISO 8650) APDU tags, for naming the connection-phase PDU carried inside a CONNECT/ACCEPT SPDU.
+    static readonly #ACSE_NAMES: Record<number, string> = {
+        0x60: 'AARQ', 0x61: 'AARE', 0x62: 'RLRQ', 0x63: 'RLRE', 0x64: 'ABRT'
+    }
+
     public get SCHEMA(): ProtocolJSONSchema {
         return (ISOSession.#schemaCache ??= ISOSession.#buildSchema())
+    }
+
+    /** A clamping, never-throwing BER TLV read at `pos`: {tag, contentStart, contentLength} or null past end. */
+    static #readTLV(buf: Buffer, pos: number): {tag: number, contentStart: number, contentLength: number} | null {
+        if (pos + 2 > buf.length) return null
+        const tag: number = buf[pos]
+        const lengthOctet: number = buf[pos + 1]
+        let contentStart: number = pos + 2
+        let contentLength: number
+        if (lengthOctet < 0x80) {
+            contentLength = lengthOctet
+        } else if (lengthOctet === 0x80) {
+            contentLength = buf.length - contentStart //indefinite: run to end (kept verbatim)
+        } else {
+            const n: number = lengthOctet & 0x7f
+            if (contentStart + n > buf.length) return null
+            contentLength = 0
+            for (let i: number = 0; i < n; i++) contentLength = (contentLength << 8) | buf[contentStart + i]
+            contentStart += n
+        }
+        if (contentStart + contentLength > buf.length) contentLength = buf.length - contentStart
+        if (contentLength < 0) contentLength = 0
+        return {tag: tag, contentStart: contentStart, contentLength: contentLength}
+    }
+
+    /** Find the first direct child TLV with the given tag within [start, end). */
+    static #findChild(buf: Buffer, start: number, end: number, wantTag: number): {tag: number, contentStart: number, contentLength: number} | null {
+        let pos: number = start
+        while (pos < end) {
+            const tlv: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(buf, pos)
+            if (!tlv) break
+            if (tlv.tag === wantTag) return tlv
+            const next: number = tlv.contentStart + tlv.contentLength
+            if (next <= pos) break
+            pos = next
+        }
+        return null
+    }
+
+    /** Locate the SS-user-data (PGI 0xc1 / extended 0xc2) inside a CONNECT/ACCEPT SPDU's ISO 8327 params. */
+    static #sessionUserData(params: Buffer): Buffer | null {
+        let pos: number = 0
+        while (pos + 2 <= params.length) {
+            const pi: number = params[pos]
+            let li: number = params[pos + 1]
+            let contentStart: number = pos + 2
+            if (li === 0xff) {
+                if (contentStart + 2 > params.length) break
+                li = (params[contentStart] << 8) | params[contentStart + 1]
+                contentStart += 2
+            }
+            if (pi === 0xc1 || pi === 0xc2) {
+                const end: number = Math.min(contentStart + li, params.length)
+                return params.subarray(contentStart, end)
+            }
+            const next: number = contentStart + li
+            if (next <= pos) break
+            pos = next
+        }
+        return null
+    }
+
+    /**
+     * Detect the ACSE APDU tag inside a CONNECT/ACCEPT SPDU's user data (best-effort, never-throwing):
+     * the ISO 8823 Presentation CP-type/CPA-type (0x31) → normal-mode-parameters [2] (0xa2) →
+     * fully-encoded-data (0x61) → PDV-list (0x30) → presentation-data-values [0] (0xa0) → the ACSE tag.
+     * Returns the tag (0x60 AARQ / 0x61 AARE / …) or -1.
+     */
+    static #detectAcse(userData: Buffer): number {
+        const cp: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(userData, 0)
+        if (!cp || cp.tag !== 0x31) return -1
+        const nmp: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(userData, cp.contentStart, cp.contentStart + cp.contentLength, 0xa2)
+        if (!nmp) return -1
+        const fed: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(userData, nmp.contentStart, nmp.contentStart + nmp.contentLength, 0x61)
+        if (!fed) return -1
+        const pdv: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(userData, fed.contentStart)
+        if (!pdv || pdv.tag !== 0x30) return -1
+        const values: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(userData, pdv.contentStart, pdv.contentStart + pdv.contentLength, 0xa0)
+        if (!values || values.contentStart >= userData.length) return -1
+        //Only report a genuine ACSE APDU tag (AARQ 0x60 … ABRT 0x64); anything else leaves acseType unset
+        //rather than labelling a non-ACSE byte.
+        const tag: number = userData[values.contentStart]
+        return (tag >= 0x60 && tag <= 0x64) ? tag : -1
     }
 
     static #buildSchema(): ProtocolJSONSchema {
@@ -66,6 +157,17 @@ export class ISOSession extends BaseHeader {
                         //the Presentation/MMS remainder as a child (empty-param SPDUs do no non-dry read).
                         if (offset > 0) this.readBytes(0, offset)
                         this.instance.spdus.setValue(spdus)
+                        //Connection phase: a CONNECT (13) / ACCEPT (14) SPDU embeds the ACSE APDU in its
+                        //user data (the presentation is not a following child here). Surface its type for
+                        //display; the params stay verbatim so the byte round-trip is unaffected.
+                        for (const spdu of spdus) {
+                            if (spdu.si !== 13 && spdu.si !== 14) continue
+                            const userData: Buffer | null = ISOSession.#sessionUserData(HexToBuffer(spdu.params))
+                            if (!userData) continue
+                            const acseTag: number = ISOSession.#detectAcse(userData)
+                            if (acseTag >= 0) this.instance.acseType.setValue(ISOSession.#ACSE_NAMES[acseTag] ?? `0x${acseTag.toString(16)}`)
+                            break
+                        }
                     },
                     encode: function (this: ISOSession): void {
                         const spdus: any[] | undefined = this.instance.spdus.getValue()
@@ -82,7 +184,10 @@ export class ISOSession extends BaseHeader {
                             offset += 2 + params.length
                         }
                     }
-                }
+                },
+                //Display-only: the ACSE APDU type (AARQ/AARE/…) parsed from a CONNECT/ACCEPT SPDU's user
+                //data on decode. No encode closure — the SPDU params above stay the encode authority.
+                acseType: {type: 'string', label: 'ACSE APDU'}
             }
         }
     }

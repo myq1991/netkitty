@@ -1,0 +1,97 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 237,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 6,
+      "checksum": 26121,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 50000,
+      "dstport": 102,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 32253,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "tpkt",
+    "data": {
+      "version": 3,
+      "reserved": 0,
+      "length": 197
+    },
+    "errors": []
+  },
+  {
+    "id": "cotp",
+    "data": {
+      "li": 2,
+      "pduType": 240,
+      "eot": true,
+      "tpduNr": 0,
+      "headerRest": "",
+      "data": ""
+    },
+    "errors": []
+  },
+  {
+    "id": "iso-session",
+    "data": {
+      "spdus": [
+        {
+          "si": 13,
+          "li": 188,
+          "params": "0506130100160102140200023302000134020002c1a63181a3a003800101a2819b80020780810400000001820400000002a423300f0201010604520100013004060251013010020103060528ca220201300406025101880206006160305e020101a059605780020780a107060528ca220101a20406022902a303020102a60406022901a703020101be32283006025101020103a027a82580027d00810114820114830104a416800101810305fb00820c036e1d000000000064000198"
+        }
+      ],
+      "acseType": "AARQ"
+    },
+    "errors": []
+  }
+]

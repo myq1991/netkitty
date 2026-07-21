@@ -41,6 +41,22 @@ test('ISO Session: a CONNECT SPDU with parameters round-trips and hands off its 
     assert.strictEqual((await codec.encode(decoded)).packet.toString('hex'), packet.toString('hex'), 'byte-perfect')
 })
 
+// The MMS connection phase: real ICCP/TASE.2 Associate PDUs whose ISO 8327 CONNECT (SI 13) / ACCEPT
+// (SI 14) SPDU embeds the ACSE APDU in its user data. The session bytes round-trip verbatim and the ACSE
+// APDU type (AARQ / AARE) is surfaced for display.
+test('ISO Session: a CONNECT SPDU exposes the embedded ACSE AARQ; ACCEPT exposes AARE', async (): Promise<void> => {
+    const request: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('mms/associate-request').buffer)
+    AssertLayers(request, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp', 'iso-session'])
+    const reqSession: any = Layer(request, 'iso-session').data
+    assert.strictEqual(reqSession.spdus[0].si, 13, 'CONNECT SPDU')
+    assert.strictEqual(reqSession.acseType, 'AARQ', 'ACSE Associate Request embedded in the CONNECT user data')
+
+    const response: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('mms/associate-response').buffer)
+    const rspSession: any = Layer(response, 'iso-session').data
+    assert.strictEqual(rspSession.spdus[0].si, 14, 'ACCEPT SPDU')
+    assert.strictEqual(rspSession.acseType, 'AARE', 'ACSE Associate Response embedded in the ACCEPT user data')
+})
+
 // Off-parent guard: a TCP payload that happens to start with a session SI byte must NOT be claimed as
 // iso-session (it only rides above COTP); and a COTP DT that is NOT end-of-TSDU (EOT=0, i.e. fragmented)
 // keeps its user data in cotp.data and never exposes a session child.
