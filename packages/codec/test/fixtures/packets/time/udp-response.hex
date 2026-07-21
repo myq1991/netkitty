@@ -1,0 +1,4 @@
+# Time Protocol (RFC 868) server reply over UDP port 37 — a single 4-byte big-endian
+# seconds-since-1900 value (0xE7A80C80). Synthetic frame built from the codec encoder.
+# eth(00:11:22:33:44:55 <- 66:77:88:99:aa:bb) / ipv4 192.0.2.1 -> 192.0.2.2 / udp 37 -> 50000 / time
+00112233445566778899aabb080045000020000040000011f6c9c0000201c00002020025c350000cc433e7a80c80

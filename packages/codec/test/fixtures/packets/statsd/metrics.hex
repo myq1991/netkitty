@@ -1,0 +1,8 @@
+# StatsD (udp:8125) metrics datagram carrying two newline-separated metrics:
+# "gorets:1|c" (a counter) and "glork:320|ms" (a timer). Text line protocol, kept verbatim.
+# source: constructed spec-accurate frame (Etsy StatsD line protocol). eth/ipv4/udp envelope assembled
+# by the netkitty encoder (valid IPv4 header checksum; UDP checksum computed). No statsd dissector ships
+# with this host's tshark, so the frame is verified structurally (eth/ipv4/udp + verbatim payload) and by
+# the codec's own byte-perfect round-trip; tshark confirms the eth/ipv4/udp envelope and udp.port==8125.
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 51000 dst 8125), [42:65] statsd payload (23 bytes).
+000000000000000000000000080045000033000040000011f69bc000020ac0000214c7381fbd001f4aab676f726574733a317c630a676c6f726b3a3332307c6d73

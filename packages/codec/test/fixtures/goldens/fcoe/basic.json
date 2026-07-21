@@ -1,0 +1,24 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "0e:fc:00:00:00:01",
+      "smac": "0e:fc:00:00:00:02",
+      "etherType": "8906"
+    },
+    "errors": []
+  },
+  {
+    "id": "fcoe",
+    "data": {
+      "version": 0,
+      "reservedFlags": 0,
+      "reserved": "000000000000000000000000",
+      "sof": 46,
+      "fcFrame": "220000ef000000ee082900000000000003e8ffff00000000deadbeef00000000",
+      "eof": 66,
+      "eofReserved": "000000"
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,10 @@
+# IPFIX / NetFlow v10 (udp:4739) Message. Header: version 10, length 44, export time 1546499135
+# (2019-01-03), sequence 0, observation domain 256. Two Sets: a Template Set (Set ID 2) defining
+# Template 256 = {sourceIPv4Address(id 8, len 4), destinationIPv4Address(id 12, len 4)}, then a Data
+# Set (Set ID 256) carrying one flow record 192.0.2.1 -> 192.0.2.2.
+# source: constructed spec-accurate frame (RFC 7011). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 header + UDP checksums); tshark 'cflow' dissector agrees (Version 10, Observation
+# Domain 256, Data Template id=2 -> Template 256 count 2, Data FlowSet id=256).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 45678 dst 4739 len 52), [42:58] ipfix header,
+# [58:74] Template Set, [74:86] Data Set.
+000000000000000000000000080045000048000040000011f6a1c0000201c0000202b26e128300341ead000a002c5c2db43f0000000000000100000200100100000200080004000c00040100000cc0000201c0000202

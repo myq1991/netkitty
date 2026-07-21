@@ -1,0 +1,63 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 57,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 46768,
+      "sip": "192.0.2.1",
+      "dip": "192.0.2.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 4569,
+      "dstport": 4569,
+      "length": 37,
+      "checksum": 11175
+    },
+    "errors": []
+  },
+  {
+    "id": "iax2",
+    "data": {
+      "fullFrame": true,
+      "sourceCall": 1,
+      "retransmit": 0,
+      "destCall": 0,
+      "timestamp": 1,
+      "oSeqno": 0,
+      "iSeqno": 0,
+      "frameType": 6,
+      "subclassC": 0,
+      "subclass": 1,
+      "data": "0b0200020104313233340605616c696365"
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,60 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 216,
+      "id": 7229,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 8150,
+      "sip": "127.0.0.1",
+      "dip": "127.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 2427,
+      "dstport": 2427,
+      "length": 196,
+      "checksum": 17300
+    },
+    "errors": []
+  },
+  {
+    "id": "mgcp",
+    "data": {
+      "message": "4352435820313230302061616c6e2f31407267772e6578616d706c652e6e6574204d47435020312e300d0a433a2041334334374632310d0a4c3a20703a31302c20613a50434d550d0a4d3a2073656e64726563760d0a0d0a763d300d0a6f3d2d2032353637382037353338343920494e20495034203132382e39362e34312e310d0a733d2d0d0a633d494e20495034203132382e39362e34312e310d0a743d3020300d0a6d3d617564696f2033343536205254502f41565020300d0a",
+      "isResponse": false,
+      "verb": "CRCX",
+      "transactionId": "1200",
+      "endpoint": "aaln/1@rgw.example.net",
+      "version": "MGCP 1.0",
+      "responseCode": 0,
+      "comment": ""
+    },
+    "errors": []
+  }
+]

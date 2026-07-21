@@ -1,0 +1,7 @@
+# OLSR (udp:698, RFC 3626) packet carrying one HELLO message. Packet header: length 28, sequence 1.
+# Message: type 1 (HELLO), Vtime 0x50, size 24, originator 192.168.1.1, ttl 1, hop count 0, seq 5;
+# HELLO body: reserved 0000, Htime 0x05, willingness 6, one MPR link (code 10, size 8, neighbor 192.168.1.2).
+# source: constructed spec-accurate frame (RFC 3626). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 header + UDP checksums); tshark 'olsr' dissector agrees (packet header + HELLO message).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 698 dst 698), [42:46] olsr packet header, [46:58] message header, [58:70] HELLO body.
+01005e000001020000000001080045000038000040000111f564c0a80101c0a801ff02ba02ba0024e0f4001c000101500018c0a8010101000005000005060a000008c0a80102

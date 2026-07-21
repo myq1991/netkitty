@@ -1,0 +1,10 @@
+# NHRP (IP proto 54, RFC 2332) Resolution Request. Fixed header (20B): AFN 1 (IPv4), protocol type
+# 0x0800, SNAP 00:00:00:00:00, hop count 255, packet length 52, checksum 0x881c (correct, IP-style
+# ones-complement over the NHRP packet), extension offset 0, version 1, op type 1 (Resolution Request),
+# source NBMA addr type/len 4, subaddr 0. Mandatory part (32B): src/dst proto len 4/4, flags 0,
+# request id 1, source NBMA 10.0.0.1, source proto 172.16.0.1, dest proto 172.16.0.2, one CIE
+# (holding time 900s). Carried directly over IPv4 (src 10.0.0.1 dst 10.0.0.2, proto 54).
+# source: constructed spec-accurate frame (RFC 2332); eth/ipv4 envelope with valid checksums.
+# tshark 'nhrp' dissector agrees: frame.protocols = eth:ethertype:ip:nhrp, checksum Good.
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] nhrp fixed header, [54:86] mandatory part.
+00005e00530100005e00530208004500004800004000ff36677d0a0000010a000002000108000000000000ff0034881c00000101040004040000000000010a000001ac100001ac100002000000000000038400000000

@@ -1,0 +1,4 @@
+# IAX2 (Inter-Asterisk eXchange v2, RFC 5456) NEW message — a Full frame (F=1) on UDP port 4569.
+# Frame Type 6 (IAX), Subclass 1 (NEW); IEs: VERSION=0x0002, CALLEDNUM="1234", USERNAME="alice".
+# Synthesized frame (verified with tshark: eth:ethertype:ip:udp:iax2, dissected as Full packet / NEW).
+00112233445566778899aabb080045000039000040004011b6b0c0000201c000020211d911d900252ba78001000000000001000006010b0200020104313233340605616c696365

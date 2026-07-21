@@ -1,0 +1,54 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:5e:00:53:01",
+      "smac": "00:00:5e:00:53:02",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 72,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 255,
+      "protocol": 54,
+      "checksum": 26493,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "nhrp",
+    "data": {
+      "afn": 1,
+      "protocolType": "0800",
+      "protocolSnap": "0000000000",
+      "hopCount": 255,
+      "packetSize": 52,
+      "checksum": 34844,
+      "extensionOffset": 0,
+      "opVersion": 1,
+      "opType": 1,
+      "shtl": 4,
+      "sstl": 0,
+      "body": "04040000000000010a000001ac100001ac100002000000000000038400000000"
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,9 @@
+# Elasticsearch transport (tcp:9300) request message. Fixed 19-byte header: 'ES' magic (0x4553),
+# message length 22 (bytes after the length field: requestId+status+version+body), request id 1,
+# status 0x00 (request, uncompressed, no error), version 8080099 (Elasticsearch 8.8.0); body is a
+# minimal variable header (header size 6, empty thread-context / features / action).
+# source: constructed spec-accurate frame. eth/ipv4/tcp envelope assembled by the netkitty encoder
+# (valid IPv4 + TCP checksums); tshark 'elasticsearch' dissector agrees (Token ES, length, request id,
+# status flags, version 8.8.0, header size, action) with no malformed sub-parse.
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 51000 dst 9300), [54:73] es header, [73:82] es body.
+00112233445566778899aabb08004500004400004000000666b20a0000010a000002c738245400000000000000005000000006840000455300000016000000000000000100007b4ae3000000060000000000

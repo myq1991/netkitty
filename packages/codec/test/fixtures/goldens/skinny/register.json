@@ -1,0 +1,72 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 88,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 9878,
+      "sip": "10.0.0.10",
+      "dip": "10.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 50000,
+      "dstport": 2000,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 4096,
+      "checksum": 45058,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "skinny",
+    "data": {
+      "dataLength": 40,
+      "headerVersion": 0,
+      "messageId": 1,
+      "body": "5345503030313132323333343435350001000000010000000a0000010800000000000000"
+    },
+    "errors": []
+  }
+]

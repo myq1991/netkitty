@@ -1,0 +1,7 @@
+# Zabbix protocol (tcp:10051) agent active-checks request. Header: Magic "ZBXD" (5a425844),
+# Flags 0x01 (uncompressed), Data Length 50 (little-endian), Reserved 0; body is the JSON request
+# {"request":"active checks","host":"Zabbix server"}.
+# source: constructed spec-accurate frame. eth/ipv4/tcp envelope assembled by the netkitty encoder
+# (valid IPv4 + TCP checksums); tshark 'zabbix' dissector agrees (ZBXD magic + length + JSON body).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 60000 dst 10051), [54:67] zabbix header, [67:117] JSON body.
+000000000000000000000000080045000067000040000006f68dc0000202c0000201ea602743000000000000000050000000d63000005a4258440132000000000000007b2272657175657374223a2261637469766520636865636b73222c22686f7374223a225a616262697820736572766572227d

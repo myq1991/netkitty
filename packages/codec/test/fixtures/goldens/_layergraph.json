@@ -21,6 +21,8 @@
       "ptp",
       "powerlink",
       "sercos3",
+      "fcoe",
+      "macsec",
       "vlan",
       "raw"
     ],
@@ -49,6 +51,7 @@
       "igmp",
       "pim",
       "rsvp",
+      "nhrp",
       "raw"
     ],
     "ipv6": [
@@ -67,6 +70,7 @@
       "igmp",
       "pim",
       "rsvp",
+      "nhrp",
       "raw"
     ],
     "ipv6-hopopt": [
@@ -85,6 +89,7 @@
       "igmp",
       "pim",
       "rsvp",
+      "nhrp",
       "raw"
     ],
     "icmpv6": [
@@ -151,6 +156,11 @@
       "slmp",
       "smb2",
       "smpp",
+      "elasticsearch",
+      "nats",
+      "skinny",
+      "timeproto",
+      "zabbix",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -213,6 +223,15 @@
       "nbds",
       "fins",
       "slmp",
+      "collectd",
+      "glbp",
+      "iax2",
+      "ipfix",
+      "mgcp",
+      "olsr",
+      "opcua-pubsub",
+      "statsd",
+      "timeproto",
       "raw"
     ],
     "ntp": [
@@ -332,6 +351,8 @@
       "ptp",
       "powerlink",
       "sercos3",
+      "fcoe",
+      "macsec",
       "vlan",
       "raw"
     ],
@@ -353,6 +374,8 @@
       "ptp",
       "powerlink",
       "sercos3",
+      "fcoe",
+      "macsec",
       "vlan",
       "raw"
     ],
@@ -455,6 +478,8 @@
       "ptp",
       "powerlink",
       "sercos3",
+      "fcoe",
+      "macsec",
       "vlan",
       "raw"
     ],
@@ -474,6 +499,7 @@
       "igmp",
       "pim",
       "rsvp",
+      "nhrp",
       "raw"
     ],
     "bgp": [
@@ -641,6 +667,54 @@
     "smpp": [
       "raw"
     ],
+    "collectd": [
+      "raw"
+    ],
+    "elasticsearch": [
+      "raw"
+    ],
+    "fcoe": [
+      "raw"
+    ],
+    "glbp": [
+      "raw"
+    ],
+    "iax2": [
+      "raw"
+    ],
+    "ipfix": [
+      "raw"
+    ],
+    "macsec": [
+      "raw"
+    ],
+    "mgcp": [
+      "raw"
+    ],
+    "nats": [
+      "raw"
+    ],
+    "nhrp": [
+      "raw"
+    ],
+    "olsr": [
+      "raw"
+    ],
+    "opcua-pubsub": [
+      "raw"
+    ],
+    "skinny": [
+      "raw"
+    ],
+    "statsd": [
+      "raw"
+    ],
+    "timeproto": [
+      "raw"
+    ],
+    "zabbix": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -659,6 +733,8 @@
       "ptp",
       "powerlink",
       "sercos3",
+      "fcoe",
+      "macsec",
       "vlan",
       "raw"
     ],
@@ -760,6 +836,14 @@
         "field": "etherType",
         "value": "88cd"
       },
+      "fcoe": {
+        "field": "etherType",
+        "value": "8906"
+      },
+      "macsec": {
+        "field": "etherType",
+        "value": "88e5"
+      },
       "vlan": {
         "field": "etherType",
         "value": "8100"
@@ -836,6 +920,10 @@
         "field": "protocol",
         "value": 46
       },
+      "nhrp": {
+        "field": "protocol",
+        "value": 54
+      },
       "raw": null
     },
     "ipv6": {
@@ -899,6 +987,10 @@
         "field": "nxt",
         "value": 46
       },
+      "nhrp": {
+        "field": "nxt",
+        "value": 54
+      },
       "raw": null
     },
     "ipv6-hopopt": {
@@ -961,6 +1053,10 @@
       "rsvp": {
         "field": "nxt",
         "value": 46
+      },
+      "nhrp": {
+        "field": "nxt",
+        "value": 54
       },
       "raw": null
     },
@@ -1198,6 +1294,26 @@
       "smpp": {
         "field": "dstport",
         "value": 2775
+      },
+      "elasticsearch": {
+        "field": "dstport",
+        "value": 9300
+      },
+      "nats": {
+        "field": "dstport",
+        "value": 4222
+      },
+      "skinny": {
+        "field": "dstport",
+        "value": 2000
+      },
+      "timeproto": {
+        "field": "dstport",
+        "value": 37
+      },
+      "zabbix": {
+        "field": "dstport",
+        "value": 10051
       },
       "tls-alert": {
         "field": "dstport",
@@ -1438,6 +1554,42 @@
         "field": "dstport",
         "value": 5007
       },
+      "collectd": {
+        "field": "dstport",
+        "value": 25826
+      },
+      "glbp": {
+        "field": "dstport",
+        "value": 3222
+      },
+      "iax2": {
+        "field": "dstport",
+        "value": 4569
+      },
+      "ipfix": {
+        "field": "dstport",
+        "value": 4739
+      },
+      "mgcp": {
+        "field": "dstport",
+        "value": 2427
+      },
+      "olsr": {
+        "field": "dstport",
+        "value": 698
+      },
+      "opcua-pubsub": {
+        "field": "dstport",
+        "value": 4840
+      },
+      "statsd": {
+        "field": "dstport",
+        "value": 8125
+      },
+      "timeproto": {
+        "field": "dstport",
+        "value": 37
+      },
       "raw": null
     },
     "ntp": {
@@ -1608,6 +1760,14 @@
         "field": "protocolType",
         "value": "88cd"
       },
+      "fcoe": {
+        "field": "protocolType",
+        "value": "8906"
+      },
+      "macsec": {
+        "field": "protocolType",
+        "value": "88e5"
+      },
       "vlan": {
         "field": "protocolType",
         "value": "8100"
@@ -1682,6 +1842,14 @@
       "sercos3": {
         "field": "protocolType",
         "value": "88cd"
+      },
+      "fcoe": {
+        "field": "protocolType",
+        "value": "8906"
+      },
+      "macsec": {
+        "field": "protocolType",
+        "value": "88e5"
       },
       "vlan": {
         "field": "protocolType",
@@ -1839,6 +2007,14 @@
         "field": "etherType",
         "value": "88cd"
       },
+      "fcoe": {
+        "field": "etherType",
+        "value": "8906"
+      },
+      "macsec": {
+        "field": "etherType",
+        "value": "88e5"
+      },
       "vlan": {
         "field": "etherType",
         "value": "8100"
@@ -1905,6 +2081,10 @@
       "rsvp": {
         "field": "nxt",
         "value": 46
+      },
+      "nhrp": {
+        "field": "nxt",
+        "value": 54
       },
       "raw": null
     },
@@ -2073,6 +2253,54 @@
     "smpp": {
       "raw": null
     },
+    "collectd": {
+      "raw": null
+    },
+    "elasticsearch": {
+      "raw": null
+    },
+    "fcoe": {
+      "raw": null
+    },
+    "glbp": {
+      "raw": null
+    },
+    "iax2": {
+      "raw": null
+    },
+    "ipfix": {
+      "raw": null
+    },
+    "macsec": {
+      "raw": null
+    },
+    "mgcp": {
+      "raw": null
+    },
+    "nats": {
+      "raw": null
+    },
+    "nhrp": {
+      "raw": null
+    },
+    "olsr": {
+      "raw": null
+    },
+    "opcua-pubsub": {
+      "raw": null
+    },
+    "skinny": {
+      "raw": null
+    },
+    "statsd": {
+      "raw": null
+    },
+    "timeproto": {
+      "raw": null
+    },
+    "zabbix": {
+      "raw": null
+    },
     "vlan": {
       "arp": {
         "field": "etherType",
@@ -2141,6 +2369,14 @@
       "sercos3": {
         "field": "etherType",
         "value": "88cd"
+      },
+      "fcoe": {
+        "field": "etherType",
+        "value": "8906"
+      },
+      "macsec": {
+        "field": "etherType",
+        "value": "88e5"
       },
       "vlan": {
         "field": "etherType",

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:00:66",
+      "smac": "00:07:b4:00:a0:01",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 48,
+        "ecn": 0
+      },
+      "length": 68,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 0,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 1,
+      "protocol": 17,
+      "checksum": 5762,
+      "sip": "192.0.2.1",
+      "dip": "224.0.0.102"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 3222,
+      "dstport": 3222,
+      "length": 48,
+      "checksum": 48629
+    },
+    "errors": []
+  },
+  {
+    "id": "glbp",
+    "data": {
+      "version": 1,
+      "unknown1": 0,
+      "group": 1,
+      "unknown2": "0000",
+      "ownerId": "0007b400a001",
+      "tlvs": [
+        {
+          "type": 1,
+          "length": 28,
+          "value": "00140064000000000bb8000027100258384000000104c0000101"
+        }
+      ],
+      "trailing": ""
+    },
+    "errors": []
+  }
+]

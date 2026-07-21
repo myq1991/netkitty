@@ -1,0 +1,70 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 69,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 46756,
+      "sip": "192.0.2.1",
+      "dip": "192.0.2.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 57127,
+      "dstport": 25826,
+      "length": 49,
+      "checksum": 42232
+    },
+    "errors": []
+  },
+  {
+    "id": "collectd",
+    "data": {
+      "parts": [
+        {
+          "type": 0,
+          "length": 14,
+          "value": "6c6f63616c686f737400"
+        },
+        {
+          "type": 1,
+          "length": 12,
+          "value": "0000000063b0cdb1"
+        },
+        {
+          "type": 6,
+          "length": 15,
+          "value": "0001010000000000004540"
+        }
+      ],
+      "trailer": ""
+    },
+    "errors": []
+  }
+]

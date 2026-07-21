@@ -1,0 +1,8 @@
+# FCoE (FC-BB-5 / T11, ethertype 0x8906) — a minimal FCoE frame encapsulating one native Fibre Channel
+# frame. Ethernet dst 0e:fc:00:00:00:01 / src 0e:fc:00:00:00:02 (FC-MAP style), ethertype 0x8906.
+# FCoE header (14 bytes): Version 0 + 13 reserved bytes + SOF = 0x2e (SOFi3). Encapsulated FC frame
+# (32 bytes): 24-byte FC header (R_CTL 0x22, D_ID 00:00:ef, CS_CTL 0x00, S_ID 00:00:ee, TYPE 0x08 FCP,
+# F_CTL 0x290000, SEQ_ID/DF_CTL/SEQ_CNT 0, OX_ID 0x03e8, RX_ID 0xffff, Parameter 0) + 4-byte FC payload
+# 0xdeadbeef + 4-byte FC CRC (0). FCoE trailer (4 bytes): EOF = 0x42 (EOFt) + 3 reserved bytes.
+# 64-byte frame — exactly the 60-byte Ethernet minimum plus 4, no padding. Hand-crafted from FC-BB-5.
+0efc000000010efc000000028906000000000000000000000000002e220000ef000000ee082900000000000003e8ffff00000000deadbeef0000000042000000

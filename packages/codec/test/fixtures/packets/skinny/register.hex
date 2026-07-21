@@ -1,0 +1,8 @@
+# Skinny Client Control Protocol (SCCP / "Skinny", Cisco IP phone signalling, tcp:2000) RegisterReq.
+# LITTLE-ENDIAN header: dataLength 40 (0x28 = 4-byte messageId + 36-byte body), headerVersion 0 (Basic),
+# messageId 0x0001 (RegisterReq). Body (StationRegisterMessage): deviceName "SEP001122334455" (16 bytes
+# incl NUL pad), stationUserId 1 (LE), stationInstance 1 (LE), stationIpAddr 10.0.0.1, deviceType 8 (LE,
+# Cisco 7940), maxConcurrentRtpStreams 0 (LE). Phone (10.0.0.10:50000) registering with CallManager
+# (10.0.0.1:2000), PSH+ACK. Verified with tshark: frame.protocols = eth:ethertype:ip:tcp:skinny,
+# Message ID = RegisterReq (1).
+00112233445566778899aabb08004500005800004000400626960a00000a0a000001c35007d0000000000000000050101000b00200002800000000000000010000005345503030313132323333343435350001000000010000000a0000010800000000000000

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "88e5"
+    },
+    "errors": []
+  },
+  {
+    "id": "macsec",
+    "data": {
+      "version": 0,
+      "es": 0,
+      "sc": 1,
+      "scb": 0,
+      "encryption": 1,
+      "changed": 1,
+      "an": 0,
+      "shortLength": 40,
+      "packetNumber": 1,
+      "sci": "0011223344550001",
+      "securedData": "a1b2c3d4e5f60718293a4b5c6d7e8f900102030405060708090a0b0c0d0e0f101112131415161718",
+      "icv": "cafebabedeadbeef0011223344556677"
+    },
+    "errors": []
+  }
+]

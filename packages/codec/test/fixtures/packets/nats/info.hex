@@ -1,0 +1,10 @@
+# NATS (tcp:4222) server INFO message. On connect the server sends the INFO control operation:
+# the verb "INFO" (case-insensitive), a space, then a JSON options object, terminated by CRLF
+# (0d 0a). The whole segment is kept verbatim (byte-perfect); the control line is parsed for
+# display into {operation:"INFO", controlArguments:<json>}.
+# source: CONSTRUCTED — the INFO control line is a spec-accurate NATS client-protocol message
+# (nats.io docs); the eth+ipv4+tcp envelope (docker-bridge MACs/IPs 172.17.0.2:4222 -> 172.17.0.1
+# :51000) was synthesized by the netkitty encoder so checksums/lengths are valid. No local NATS
+# tshark dissector; verified via netkitty [eth,ipv4,tcp,nats] decode + byte-perfect round-trip.
+# byte breakdown: 14 eth | 20 ipv4 (proto 6) | 20 tcp (srcport 0x107e=4222) | 133 nats payload
+0242ac1100010242ac1100020800450000ad0000400000062226ac110002ac110001107ec7380000000000000000500000000c2d0000494e464f207b227365727665725f6964223a224e44484f585858222c227365727665725f6e616d65223a226e6174732d31222c2276657273696f6e223a22322e31302e30222c2270726f746f223a312c22686f7374223a22302e302e302e30222c22706f7274223a343232322c226d61785f7061796c6f6164223a313034383537367d0d0a

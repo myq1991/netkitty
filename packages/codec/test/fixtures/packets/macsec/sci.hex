@@ -1,0 +1,9 @@
+# MACsec (IEEE 802.1AE, ethertype 0x88E5) — an encrypted frame carrying an SCI. SecTAG byte 0 = 0x2C
+# (V=0, ES=0, SC=1, SCB=0, E=1, C=1, AN=0); SL=40 (0x28, short packet); PN=1; SCI = system id
+# 00:11:22:33:44:55 + port 0x0001. Then 40 octets of encrypted secured data + a trailing 16-octet ICV.
+# Bytes: eth[14] 001122334455(dst) 66778899aabb(src) 88e5 | sectag[14] 2c 28 00000001(PN)
+#   0011223344550001(SCI) | securedData[40] | icv[16] cafebabedeadbeef0011223344556677.
+# source: constructed spec-accurate frame (IEEE 802.1AE); tshark 'macsec' dissector agrees
+# (frame.protocols eth:ethertype:macsec:data; TCI SC/E/C set, SL=40, PN=1, SCI, 16-byte ICV).
+00112233445566778899aabb88e52c28000000010011223344550001a1b2c3d4e5f60718293a4b5c6d7e8f900102030405060708090a0b0c0d0e0f101112131415161718cafebabedeadbeef0011223344556677
+

@@ -1,0 +1,16 @@
+# OPC UA PubSub (IEC 62541-14 / OPC 10000-14, udp:4840) UADP NetworkMessage. UADPFlags 0x71 = version 1
+# (low nibble) + PublisherId(0x10) + GroupHeader(0x20) + PayloadHeader(0x40) enabled, ExtendedFlags1(0x80)
+# off. Body (all little-endian): PublisherId Byte 0x2a; GroupHeader GroupFlags 0x09 (WriterGroupId +
+# SequenceNumber) WriterGroupId 1 SequenceNumber 1; PayloadHeader MessageCount 1 DataSetWriterId 1; one
+# DataSetMessage: DataSetFlags1 0x01, FieldCount 1, one Variant Int32 (builtin type 0x06) value 42.
+# This single-message codec decomposes only the always-present UADPFlags octet (version + 4 enable bits,
+# all 8 bits covered so it is byte-perfect) and keeps the flag-conditional remainder verbatim as body hex.
+# source: CONSTRUCTED — the UADP payload is a spec-accurate IEC 62541-14 §7.2 NetworkMessage; the
+# eth+ipv4+udp envelope (192.0.2.10:49320 -> 239.0.0.100:4840, IPv4 multicast) was synthesized by the
+# netkitty encoder so checksums/lengths are valid. tshark 4.x in this environment ships an OpcUa dissector
+# for the TCP binary protocol only (opcua on tcp.port 4840); it does NOT dissect UADP PubSub over UDP
+# (verified: labels the payload eth:ethertype:ip:udp:data, and udp.port==4840,opcua decode-as is refused),
+# so tsharkOK=false. The frame is nonetheless a valid UADP-on-4840 NetworkMessage. Verified
+# [eth,ipv4,udp,opcua-pubsub] decode + byte-perfect round-trip via new Codec([OPCUAPubSub]).
+# byte breakdown: 14 eth | 20 ipv4 (proto 17) | 8 udp (dstport 0x12e8=4840, len 0x001a=26) | 18 uadp
+01005e00006400112233445508004500002e000040000111c850c000020aef000064c0a812e8001ad485712a0901000100010100010100062a000000

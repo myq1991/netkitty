@@ -1,0 +1,6 @@
+# MGCP (RFC 3435, udp:2427) CRCX (CreateConnection) command from a Call Agent to a media gateway. Text
+# message: command line "CRCX 1200 aaln/1@rgw.example.net MGCP 1.0", C:/L:/M: parameter lines, a blank
+# line, then an embedded SDP session description. CRLF line endings; the whole message is kept verbatim
+# (byte-perfect) and the command line is parsed for display.
+# source: hand-crafted RFC 3435 CRCX over UDP 127.0.0.1:2427, IPv4 checksum computed, verified with tshark (frame.protocols eth:ethertype:ip:udp:mgcp:sdp).
+0000000000000000000000000800450000d81c3d400040111fd67f0000017f000001097b097b00c443944352435820313230302061616c6e2f31407267772e6578616d706c652e6e6574204d47435020312e300d0a433a2041334334374632310d0a4c3a20703a31302c20613a50434d550d0a4d3a2073656e64726563760d0a0d0a763d300d0a6f3d2d2032353637382037353338343920494e20495034203132382e39362e34312e310d0a733d2d0d0a633d494e20495034203132382e39362e34312e310d0a743d3020300d0a6d3d617564696f2033343536205254502f41565020300d0a

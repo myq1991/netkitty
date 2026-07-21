@@ -1,0 +1,69 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 72,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 63137,
+      "sip": "192.0.2.1",
+      "dip": "192.0.2.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 45678,
+      "dstport": 4739,
+      "length": 52,
+      "checksum": 7853
+    },
+    "errors": []
+  },
+  {
+    "id": "ipfix",
+    "data": {
+      "version": 10,
+      "length": 44,
+      "exportTime": 1546499135,
+      "sequenceNumber": 0,
+      "observationDomainId": 256,
+      "sets": [
+        {
+          "setId": 2,
+          "setLength": 16,
+          "body": "0100000200080004000c0004"
+        },
+        {
+          "setId": 256,
+          "setLength": 12,
+          "body": "c0000201c0000202"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,6 @@
+# GLBP (Cisco Gateway Load Balancing Protocol) Hello — UDP 3222 → 3222, multicast 224.0.0.102.
+# Header: Version=1, Unknown1=0, Group=1, Unknown2=0000, Owner ID=00:07:b4:00:a0:01.
+# One Hello TLV (type 1, length 28): priority 100, helloint 3000ms, holdint 10000ms, virtual IPv4 192.0.1.1.
+# Synthesized (RFC-less, undocumented protocol); byte layout & field names per Wireshark's GLBP dissector.
+# tshark 4.6.7: frame.protocols = eth:ethertype:ip:udp:glbp
+01005e0000660007b400a001080045c000440000000001111682c0000201e00000660c960c960030bdf50100000100000007b400a001011c00140064000000000bb8000027100258384000000104c0000101

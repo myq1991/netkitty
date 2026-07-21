@@ -1,0 +1,6 @@
+# collectd network protocol (UDP port 25826) datagram: Host + Time + Values parts
+# Synthetic: eth/ipv4/udp(sport 57127 -> dport 25826) + collectd(Host="localhost", Time, 1 gauge value)
+# Verified: tshark frame.protocols = eth:ethertype:ip:udp:collectd
+00112233445566778899aabb080045000045000040004011b6a4c0000201c000
+0202df2764e20031a4f80000000e6c6f63616c686f7374000001000c00000000
+63b0cdb10006000f0001010000000000004540
