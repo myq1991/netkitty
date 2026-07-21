@@ -48,6 +48,24 @@ test('PerDecoder: fully unconstrained INTEGER decodes two\'s-complement (negativ
     assert.strictEqual(new PerDecoder(Buffer.from([0x02, 0xff, 0x00])).decode({k: 'int'}), -256, 'length 2, 0xff00 = -256')
 })
 
+test('PerDecoder: 64-bit INTEGERs are exact via BigInt (number when safe, decimal string when huge)', (): void => {
+    // INT64 = -1 (8 octets of 0xff), fits in a JS number.
+    assert.strictEqual(new PerDecoder(Buffer.from([0x08, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])).decode({k: 'int'}), -1, 'INT64 -1')
+    // INT64 = 2^63-1, exceeds MAX_SAFE_INTEGER -> decimal string, exact.
+    assert.strictEqual(new PerDecoder(Buffer.from([0x08, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])).decode({k: 'int'}), '9223372036854775807', 'INT64 max as string')
+    // INT64U = 2^64-1 (semi-constrained lb 0), exact decimal string.
+    assert.strictEqual(new PerDecoder(Buffer.from([0x08, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])).decode({k: 'int', lb: 0}), '18446744073709551615', 'INT64U max as string')
+})
+
+test('PerDecoder: a fixed BIT STRING <=16 bits packs UNALIGNED after a bit-packed field', (): void => {
+    // flag=true(1 bit) then Quality BIT STRING(SIZE 13). 0xC0 0x00 -> flag true, 13 bits left-aligned "8000".
+    const q: AsnType = {k: 'seq', fields: [{name: 'flag', type: {k: 'bool'}}, {name: 'q', type: {k: 'bitstr', size: 13}}]}
+    assert.deepStrictEqual(new PerDecoder(Buffer.from([0xc0, 0x00])).decode(q), {flag: true, q: '8000'})
+    // flag=true then Dbpos BIT STRING(SIZE 2). 0xC0 -> flag true, 2 bits "10" left-aligned "80".
+    const d: AsnType = {k: 'seq', fields: [{name: 'flag', type: {k: 'bool'}}, {name: 'd', type: {k: 'bitstr', size: 2}}]}
+    assert.deepStrictEqual(new PerDecoder(Buffer.from([0xc0])).decode(d), {flag: true, d: '80'})
+})
+
 test('PerDecoder: CHOICE and recursive ref through the type table', (): void => {
     // Data ::= CHOICE { i INTEGER(0..15), s VisibleString }. index 1 (s) -> 1, align -> 0x80; len 0x01 + "X".
     const table: AsnTypeTable = {Data: {k: 'choice', alts: [

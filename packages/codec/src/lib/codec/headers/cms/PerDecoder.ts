@@ -103,7 +103,7 @@ export class PerDecoder {
         }
     }
 
-    #decodeInt(type: {lb?: number, ub?: number}): number {
+    #decodeInt(type: {lb?: number, ub?: number}): number | string {
         if (type.lb !== undefined && type.ub !== undefined) return this.#reader.readConstrainedInt(type.lb, type.ub)
         //Unconstrained / semi-constrained: a length determinant then that many octets, octet-aligned.
         const length: {value: number, fragmented: boolean} = this.#reader.readLengthDeterminant()
@@ -113,16 +113,24 @@ export class PerDecoder {
         }
         const octets: Buffer = this.#reader.readOctets(length.value)
         if (octets.length === 0) return type.lb ?? 0
-        //Beyond 6 octets a JS number loses integer precision (>2^53); flag the result incomplete rather
-        //than mis-display it (a BigInt path is a prerequisite for shipping 64-bit Data CHOICE leaves).
-        if (octets.length > 6) this.#bailed = true
-        let value: number = 0
-        for (let i: number = 0; i < octets.length; i++) value = (value * 256) + octets[i]
-        //Semi-constrained (lb..MAX): the octets are the unsigned value offset by the lower bound.
-        if (type.lb !== undefined) return type.lb + value
-        //Fully unconstrained INTEGER: the octets are a two's-complement signed value.
-        if (octets[0] & 0x80) value -= Math.pow(2, octets.length * 8)
-        return value
+        //Accumulate with BigInt so any width (up to INT64) is exact — a JS number loses precision past 2^53.
+        let value: bigint = 0n
+        for (let i: number = 0; i < octets.length; i++) value = (value << 8n) | BigInt(octets[i])
+        if (type.lb !== undefined) {
+            //Semi-constrained (lb..MAX): the octets are the unsigned value offset by the lower bound.
+            value += BigInt(type.lb)
+        } else if (octets[0] & 0x80) {
+            //Fully unconstrained INTEGER: the octets are a two's-complement signed value.
+            value -= 1n << BigInt(octets.length * 8)
+        }
+        return PerDecoder.#bigToJson(value)
+    }
+
+    /** Return a BigInt as a plain number when it fits exactly in a JS number, else a decimal string, so the
+     *  display tree stays JSON-serializable and never loses precision on 64-bit values. */
+    static #bigToJson(value: bigint): number | string {
+        if (value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER)) return Number(value)
+        return value.toString()
     }
 
     #decodeEnum(type: {values: string[], ext?: boolean}): string | number {
@@ -136,9 +144,15 @@ export class PerDecoder {
     }
 
     #decodeString(type: {k: 'bitstr' | 'octstr', size?: number}): string {
+        //Fixed-size BIT STRING: `size` is a bit count. Its content octet-aligns unless the whole string is
+        //≤ 16 bits (X.691 small-string exception — Quality SIZE(13), Dbpos/Tcmd/Check SIZE(2) pack unaligned).
+        if (type.k === 'bitstr' && type.size !== undefined) {
+            return this.#reader.readBitString(type.size, type.size > 16)
+        }
         let count: number
         if (type.size !== undefined) {
-            count = type.k === 'bitstr' ? Math.ceil(type.size / 8) : type.size
+            //Fixed-size OCTET STRING: `size` is a byte count.
+            count = type.size
         } else {
             const length: {value: number, fragmented: boolean} = this.#reader.readLengthDeterminant()
             if (length.fragmented) {

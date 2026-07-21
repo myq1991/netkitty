@@ -133,4 +133,19 @@ export class PerReader {
         for (let i: number = 0; i < n; i++) out += String.fromCharCode(this.readBits(8))
         return out
     }
+
+    /**
+     * Read a fixed-size BIT STRING of `nBits` bits, returning it as hex, the bits left-aligned (MSB first)
+     * into ceil(nBits/8) octets with trailing zero padding — the usual BIT STRING display form. Pass
+     * aligned=true (octet-align the content first) for strings wider than 16 bits; ≤16-bit fixed strings
+     * pack unaligned (X.691 small-string exception).
+     */
+    readBitString(nBits: number, aligned: boolean): string {
+        if (aligned) this.align()
+        const out: Buffer = Buffer.alloc(Math.ceil(nBits / 8))
+        for (let i: number = 0; i < nBits; i++) {
+            if (this.readBit()) out[i >> 3] |= 0x80 >> (i & 7)
+        }
+        return out.toString('hex')
+    }
 }
