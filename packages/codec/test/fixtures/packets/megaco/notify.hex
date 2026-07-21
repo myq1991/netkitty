@@ -1,0 +1,7 @@
+# Megaco/H.248 (RFC 3525, udp:2944) text-encoding Transaction Request from a media gateway. First line
+# "MEGACO/1 [123.123.123.4]:55555" (start token / version 1 / message identifier), then a Transaction
+# containing a Context with a Notify command carrying an ObservedEvents descriptor (al/of, on-hook).
+# CRLF line endings; the whole message is kept verbatim (byte-perfect) and the first line is parsed for
+# display (version, message identifier).
+# source: hand-crafted RFC 3525 text Notify over UDP 123.123.123.4:55555 -> 123.123.123.5:2944, IPv4 and UDP checksums computed, verified with tshark (frame.protocols eth:ethertype:ip:udp:megaco).
+0000000000000000000000000800450000d61c3d4000401130da7b7b7b047b7b7b05d9030b8000c232774d454741434f2f31205b3132332e3132332e3132332e345d3a35353535350d0a5472616e73616374696f6e203d203130303030207b0d0a09436f6e74657874203d202d207b0d0a09094e6f74696679203d2031313131303030312f30303030303030302f3030303030303030207b0d0a0909094f627365727665644576656e7473203d32323233207b0d0a0909090931393939303732395432323030303030303a616c2f6f660d0a0909097d0d0a09097d0d0a097d0d0a7d0d0a

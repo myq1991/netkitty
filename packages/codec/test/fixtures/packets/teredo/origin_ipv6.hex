@@ -1,0 +1,9 @@
+# Teredo (RFC 4380, IPv6-over-UDP, udp:3544) message: an Origin indication header followed by an inner
+# IPv6 packet. eth (00:11:22:33:44:55 <- 66:77:88:99:aa:bb, 0x0800) / IPv4 (198.51.100.10 -> 203.0.113.20,
+# proto 17) / UDP (60000 -> 3544, len 56, checksum 0x730f). Teredo payload = Origin indication
+# (Indicator Type 0x0000, obfuscated port 0xefff = mapped 4096 XOR 0xffff, obfuscated address 0x3ffffdde =
+# mapped 192.0.2.33 XOR 0xffffffff) + inner IPv6 (version 6, next header 59 No-Next-Header, hop limit 64,
+# src 2001:0:4136:e378:8000:63bf:3fff:fdd2, dst fe80::1).
+# source: synthetic frame assembled with this codec (eth/ipv4/udp/teredo), UDP+IPv4 checksums computed by
+# the codec; verified by text2pcap + tshark 4.x which dissects it as eth:ethertype:ip:udp:teredo:ipv6.
+00112233445566778899aabb08004500004c000040000011144fc633640acb007114ea600dd80038730f0000efff3ffffdde6000000000003b40200100004136e378800063bf3ffffdd2fe800000000000000000000000000001

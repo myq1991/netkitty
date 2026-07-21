@@ -1,0 +1,16 @@
+# PCWorx (Phoenix Contact ILC/AXC classic PLC, tcp:1962) initial handshake request. 4-byte header:
+# opcode 0x01, service 0x01, length 0x001a=26 (the TOTAL message length INCLUDING the 4-byte header),
+# then a 22-byte opcode/service-specific body "\0\0\0\0\x78\x80\0\x03\0\x0cIBETH01N0_M\0". The exact
+# request bytes (0101001a0000000078800003000c494245544830314e305f4d00) are taken verbatim from Digital
+# Bond's Redpoint pcworx-info.nse scanner (the first of its three probe packets); the length semantics
+# (total incl header) are cross-checked against all three Redpoint requests (0x001a=26=4+22, 0x0016=22,
+# 0x000e=14). The body is kept verbatim (byte-perfect) and not sub-decoded.
+# source: CONSTRUCTED — the PCWorx payload is the real Redpoint handshake request; the eth+ipv4+tcp
+# envelope (MACs 00:a0:45:11:22:33 -> 00:0b:ca:fe:00:01, 192.168.0.10:51000 -> 192.168.0.20:1962) was
+# synthesized by the netkitty encoder so IPv4/TCP checksums/lengths are valid. tshark 4.x in this
+# environment ships no PCWorx dissector (there is no public authoritative spec; "pcworx" is not a valid
+# protocol token), so it labels the payload eth:ethertype:ip:tcp:data (verified, tcp.dstport 1962); the
+# frame is nonetheless a valid PCWorx-on-1962 message. Verified [eth,ipv4,tcp,pcworx] decode +
+# byte-perfect round-trip via new Codec([PCWorx]).
+# bytes: [0:14] eth | [14:34] ipv4 (proto 6) | [34:54] tcp (dstport 0x07aa=1962) | [54:58] pcworx header | [58:80] body
+000bcafe000100a045112233080045000042000040000006f947c0a8000ac0a80014c73807aa000000000000000050000000605a00000101001a0000000078800003000c494245544830314e305f4d00

@@ -1,0 +1,4 @@
+# GELF (Graylog Extended Log Format) chunked datagram over UDP/12201
+# eth / ipv4 / udp(40000->12201) / GELF chunk: magic 0x1e0f, msgId 0123456789abcdef, seq 0 of 2, data 1f8b080000000000
+# Synthetic frame (derived IPv4/UDP checksums). tshark confirms structure via: -d udp.port==12201,gelf
+020000000001020000000002080045000030000040000011f69ec000020ac00002149c402fa9001ccbeb1e0f0123456789abcdef00021f8b080000000000

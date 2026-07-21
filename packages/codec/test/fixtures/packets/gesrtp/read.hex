@@ -1,0 +1,6 @@
+# GE-SRTP (GE Fanuc Series 90 PLC, tcp:18245) READ_SYS_MEMORY request. Fixed 56-byte message header:
+# type 0x02 (transmit), seq 0x06, mailbox dest 0x100e, packet 1/1, service request code 0x04
+# (READ_SYS_MEMORY), segment selector 0x08 (%R register), memory offset 0x0000 (LE = %R1), data length
+# 0x0001 (LE = 1 word). source: constructed frame from the reverse-engineered SRTP layout (TheMadHatt3r
+# ge-ethernet-SRTP; GE publishes no spec). eth/ipv4/tcp envelope assembled to 192.0.2.20:18245.
+000c29112233000c29aabbcc0800450000601c46400040069a33c000020ac0000214c8224745010203040a0b0c0d50182000bd16000002000600000000000001000000000000000100000000000000000000000006c000000000100e000001010408000001000000000000000000

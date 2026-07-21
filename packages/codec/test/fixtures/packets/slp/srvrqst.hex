@@ -1,0 +1,7 @@
+# SLPv2 (udp:427) Service Request. Common header: version 2, function 1 (SrvRqst), length 54,
+# flags 0x0000, next extension offset 0, xid 1, lang tag len 2, lang tag "en"; body: PRList "",
+# service-type "service:service-agent", scope-list "default", predicate "", SLP SPI "".
+# source: constructed spec-accurate frame (RFC 2608). eth/ipv4/udp envelope assembled by the netkitty
+# encoder (valid IPv4 checksum + UDP checksum); tshark 'srvloc' dissector agrees (SrvRqst + all fields).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 51000 dst 427), [42:58] slp header (incl "en"), [58:96] body.
+01005e000116001122334455080045000052000040000011f67cc000020ac0000214c73801ab003e36770201000036000000000000010002656e00000015736572766963653a736572766963652d6167656e74000764656661756c7400000000

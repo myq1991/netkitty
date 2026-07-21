@@ -1,0 +1,7 @@
+# Wake-on-LAN magic packet, carried directly in an Ethernet II frame (EtherType 0x0842).
+# Ethernet: dst ff:ff:ff:ff:ff:ff (broadcast), src 00:aa:bb:cc:dd:ee, ethertype 0842.
+# WoL payload: 6-byte sync stream (ff x6) + target MAC 00:11:22:33:44:55 repeated 16 times (96 bytes);
+# no SecureOn password. Payload 102 bytes, frame 116 bytes.
+# source: constructed spec-accurate frame (AMD Magic Packet Technology). tshark protocols: eth:ethertype:wol
+# bytes: [0:14] eth, [14:20] sync stream, [20:116] 16x target MAC.
+ffffffffffff00aabbccddee0842ffffffffffff001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455001122334455

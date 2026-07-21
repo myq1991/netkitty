@@ -1,0 +1,8 @@
+# BSAP-IP (Bristol/Emerson BSAP over UDP, well-known UDP port 1234) — eth/ipv4/udp/bsap.
+# SYNTHETIC frame. No public authoritative on-wire byte layout exists for the BSAP-IP encapsulation
+# (Wireshark's `bsap` dissector is an unrelated name collision: BSSAP/GSM A-interface over SCCP, not
+# Bristol SCADA), so the 9-byte UDP payload here is OPAQUE placeholder bytes, not a decoded BSAP message.
+# The codec claims it by the well-known port (udp:1234) and carries the payload verbatim as `payload` hex.
+# tshark identifies this as eth:ethertype:ip:udp:data (port 1234) — it has no Bristol BSAP-IP dissector.
+# Structure: eth(14) + ipv4(20) + udp(8, sport=dport=1234) + payload(9) = 51 bytes.
+00112233445566778899aabb080045000025000040000011f6a9c000020ac000021404d204d20011befbaa0100060102030405

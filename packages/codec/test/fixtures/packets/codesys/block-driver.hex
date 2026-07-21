@@ -1,0 +1,3 @@
+# CODESYS V3 block-driver frame (tcp:2455): 8-byte header (magic 00 01 17 e8 + LE length 20) + 20-byte L3 datagram payload.
+# Synthetic frame: no authoritative CODESYS wire spec or tshark dissector exists; layout inferred from the community fridgebuyer/codesys3-dissector. Validated as a well-formed tcp:2455 frame (tshark: eth:ethertype:ip:tcp:data).
+000000000000000000000000080045000044000040000006f695c000020ac0000214c35009970000000000000000500000000d540000000117e814000000c50000400043d158ac105981ac10598200008383

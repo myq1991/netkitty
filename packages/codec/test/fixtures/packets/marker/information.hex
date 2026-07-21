@@ -1,0 +1,9 @@
+# Marker Protocol (IEEE 802.3ad / 802.1AX Slow Protocols, EtherType 0x8809, Subtype 2) — a Marker
+# Information PDU. eth: dst 01:80:c2:00:00:02 (Slow-Protocols multicast), src 00:11:22:33:44:55,
+# ethertype 8809. PDU: subtype 02 (Marker), version 01; Marker Information TLV (type 01, len 0x10):
+# Requester_Port=0x0001, Requester_System=00:11:22:33:44:55, Requester_Transaction_ID=0x2a (42),
+# Pad=0x0000; Terminator TLV (type 00, len 00); then 90 reserved 0x00 octets (110-octet PDU).
+# source: constructed spec-accurate frame (IEEE 802.3ad Clause 43); tshark decodes it as
+# eth:ethertype:slow:marker — "Information SysId=00:11:22:33:44:55, P=1, TId=42".
+# bytes: [0:14] eth, [14:16] subtype+version, [16:32] Marker Information TLV, [32:34] Terminator, [34:124] reserved.
+0180c200000200112233445588090201011000010011223344550000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

@@ -1,0 +1,6 @@
+# BitTorrent peer wire (BEP 3) handshake over TCP. eth/ipv4(192.0.2.10 -> 192.0.2.20)/tcp(src 51413
+# dst 6881). BitTorrent handshake [54:122]: pstrlen 0x13, pstr "BitTorrent protocol", reserved
+# 0000000000100005 (Extension Protocol + DHT + Fast bits), info_hash 0102..1314, peer_id "-UT3600-ABCDEFGHIJKL".
+# source: constructed spec-accurate frame (BEP 3). eth/ipv4/tcp envelope assembled by the netkitty
+# encoder (valid IPv4 + TCP checksums); tshark 'bittorrent' dissector agrees on all handshake fields.
+02000000000102000000000208004500006c000040000006f66dc000020ac0000214c8d51ae100000000000000005000000079d8000013426974546f7272656e742070726f746f636f6c00000000001000050102030405060708090a0b0c0d0e0f10111213142d5554333630302d4142434445464748494a4b4c

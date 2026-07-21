@@ -1,0 +1,7 @@
+# DHCP Failover (tcp:647) POOLREQ message. Header: message length 12, type 1 (POOLREQ);
+# rest of message: payload offset 12, time 0x60000000, xid 1 (no option TLVs).
+# source: constructed spec-accurate frame (draft-ietf-dhc-failover). eth/ipv4/tcp envelope assembled by
+# the netkitty encoder (valid IPv4 + TCP checksums); Wireshark 'dhcpfo' dissector agrees
+# (frame.protocols = eth:ethertype:ip:tcp:dhcpfo; Message length 12, Message Type Pool request (1)).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 647 dst 51000), [54:57] dhcpfo header, [57:66] payload.
+00112233445566778899aabb080045000034000040000006f6c0c0000201c00002020287c73800000000000000005000000000fc0000000c010c6000000000000001

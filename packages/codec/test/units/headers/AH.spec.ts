@@ -28,7 +28,7 @@ test('AH crafted transport frame protecting inner UDP re-encodes byte-identicall
         {id: 'ipv4', data: {sip: '10.0.0.1', dip: '10.0.0.2', protocol: 51}},
         {id: 'ah', data: {nxt: 17, payloadLen: 4, reserved: '0000', spi: 0xcafebabe, sequenceNumber: 42,
             icv: '0011223344556677889900aa'}},
-        {id: 'udp', data: {srcport: 1234, dstport: 5678, checksum: 0x9abc}},
+        {id: 'udp', data: {srcport: 40001, dstport: 40002, checksum: 0x9abc}},
         {id: 'raw', data: {data: 'abcdef'}}
     ])
     const decoded: CodecDecodeResult[] = await codec.decode(packet)

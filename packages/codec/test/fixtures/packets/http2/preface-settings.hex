@@ -1,0 +1,9 @@
+# HTTP/2 cleartext (h2c, tcp:80) connection-preface packet. TCP payload = the 24-byte connection
+# preface "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n" (RFC 7540 §3.5) + one SETTINGS frame (length 12, type 4,
+# flags 0, stream 0) carrying MAX_CONCURRENT_STREAMS=100 (id 0x0003) and INITIAL_WINDOW_SIZE=65535
+# (id 0x0004). source: constructed spec-accurate frame (RFC 7540). eth/ipv4/tcp envelope assembled by
+# the netkitty encoder (valid IPv4 + TCP checksums); tshark 'http2' dissector agrees (Magic preface +
+# SETTINGS: Max concurrent streams 100, Initial Window Size 65535).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 54321 dst 80), [54:78] preface, [78:87] frame header,
+# [87:99] SETTINGS payload.
+000000000000000000000000080045000055000040000006f69fc0000201c0000202d43100500000000000000000500000009b1e0000505249202a20485454502f322e300d0a0d0a534d0d0a0d0a00000c04000000000000030000006400040000ffff

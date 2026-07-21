@@ -1,0 +1,73 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "02:00:00:00:00:01",
+      "smac": "02:00:00:00:00:02",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 108,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 6,
+      "checksum": 63085,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 51413,
+      "dstport": 6881,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 31192,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "bittorrent",
+    "data": {
+      "pstrlen": 19,
+      "pstr": "426974546f7272656e742070726f746f636f6c",
+      "reserved": "0000000000100005",
+      "infoHash": "0102030405060708090a0b0c0d0e0f1011121314",
+      "peerId": "2d5554333630302d4142434445464748494a4b4c"
+    },
+    "errors": []
+  }
+]

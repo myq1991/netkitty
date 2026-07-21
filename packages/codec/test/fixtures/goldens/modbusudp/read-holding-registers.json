@@ -1,0 +1,58 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 40,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 17,
+      "checksum": 9923,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 49152,
+      "dstport": 502,
+      "length": 20,
+      "checksum": 10425
+    },
+    "errors": []
+  },
+  {
+    "id": "modbusudp",
+    "data": {
+      "transactionId": 1,
+      "protocolId": 0,
+      "length": 6,
+      "unitId": 1,
+      "functionCode": 3,
+      "data": "0000000a"
+    },
+    "errors": []
+  }
+]

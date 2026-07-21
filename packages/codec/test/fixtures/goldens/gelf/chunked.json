@@ -1,0 +1,58 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "02:00:00:00:00:01",
+      "smac": "02:00:00:00:00:02",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 48,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 63134,
+      "sip": "192.0.2.10",
+      "dip": "192.0.2.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 40000,
+      "dstport": 12201,
+      "length": 28,
+      "checksum": 52203
+    },
+    "errors": []
+  },
+  {
+    "id": "gelf",
+    "data": {
+      "form": "chunked",
+      "magic": "1e0f",
+      "messageId": "0123456789abcdef",
+      "sequenceNumber": 0,
+      "sequenceCount": 2,
+      "data": "1f8b080000000000"
+    },
+    "errors": []
+  }
+]

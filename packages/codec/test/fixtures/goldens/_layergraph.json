@@ -15,6 +15,7 @@
       "hsr",
       "eapol",
       "lacp",
+      "marker",
       "mpls",
       "pppoe-disc",
       "pppoe-sess",
@@ -23,6 +24,7 @@
       "sercos3",
       "fcoe",
       "macsec",
+      "wol",
       "vlan",
       "raw"
     ],
@@ -123,6 +125,7 @@
       "tacacs",
       "sip",
       "http",
+      "http2",
       "ftp",
       "rtsp",
       "tpkt",
@@ -161,6 +164,12 @@
       "skinny",
       "timeproto",
       "zabbix",
+      "adsams",
+      "codesys",
+      "dhcpfo",
+      "gesrtp",
+      "pcworx",
+      "slp",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -232,6 +241,13 @@
       "opcua-pubsub",
       "statsd",
       "timeproto",
+      "bsap",
+      "gelf",
+      "megaco",
+      "modbusudp",
+      "slp",
+      "teredo",
+      "wsdiscovery",
       "raw"
     ],
     "ntp": [
@@ -345,6 +361,7 @@
       "hsr",
       "eapol",
       "lacp",
+      "marker",
       "mpls",
       "pppoe-disc",
       "pppoe-sess",
@@ -353,6 +370,7 @@
       "sercos3",
       "fcoe",
       "macsec",
+      "wol",
       "vlan",
       "raw"
     ],
@@ -368,6 +386,7 @@
       "hsr",
       "eapol",
       "lacp",
+      "marker",
       "mpls",
       "pppoe-disc",
       "pppoe-sess",
@@ -376,6 +395,7 @@
       "sercos3",
       "fcoe",
       "macsec",
+      "wol",
       "vlan",
       "raw"
     ],
@@ -472,6 +492,7 @@
       "hsr",
       "eapol",
       "lacp",
+      "marker",
       "mpls",
       "pppoe-disc",
       "pppoe-sess",
@@ -480,6 +501,7 @@
       "sercos3",
       "fcoe",
       "macsec",
+      "wol",
       "vlan",
       "raw"
     ],
@@ -715,6 +737,54 @@
     "zabbix": [
       "raw"
     ],
+    "adsams": [
+      "raw"
+    ],
+    "bsap": [
+      "raw"
+    ],
+    "bittorrent": [
+      "raw"
+    ],
+    "codesys": [
+      "raw"
+    ],
+    "dhcpfo": [
+      "raw"
+    ],
+    "gelf": [
+      "raw"
+    ],
+    "gesrtp": [
+      "raw"
+    ],
+    "http2": [
+      "raw"
+    ],
+    "marker": [
+      "raw"
+    ],
+    "megaco": [
+      "raw"
+    ],
+    "modbusudp": [
+      "raw"
+    ],
+    "pcworx": [
+      "raw"
+    ],
+    "slp": [
+      "raw"
+    ],
+    "teredo": [
+      "raw"
+    ],
+    "wsdiscovery": [
+      "raw"
+    ],
+    "wol": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -727,6 +797,7 @@
       "hsr",
       "eapol",
       "lacp",
+      "marker",
       "mpls",
       "pppoe-disc",
       "pppoe-sess",
@@ -735,6 +806,7 @@
       "sercos3",
       "fcoe",
       "macsec",
+      "wol",
       "vlan",
       "raw"
     ],
@@ -812,6 +884,10 @@
         "field": "etherType",
         "value": "8809"
       },
+      "marker": {
+        "field": "etherType",
+        "value": "8809"
+      },
       "mpls": {
         "field": "etherType",
         "value": "8847"
@@ -843,6 +919,10 @@
       "macsec": {
         "field": "etherType",
         "value": "88e5"
+      },
+      "wol": {
+        "field": "etherType",
+        "value": "0842"
       },
       "vlan": {
         "field": "etherType",
@@ -1163,6 +1243,10 @@
         "field": "dstport",
         "value": 80
       },
+      "http2": {
+        "field": "dstport",
+        "value": 80
+      },
       "ftp": {
         "field": "dstport",
         "value": 21
@@ -1314,6 +1398,30 @@
       "zabbix": {
         "field": "dstport",
         "value": 10051
+      },
+      "adsams": {
+        "field": "dstport",
+        "value": 48898
+      },
+      "codesys": {
+        "field": "dstport",
+        "value": 2455
+      },
+      "dhcpfo": {
+        "field": "dstport",
+        "value": 647
+      },
+      "gesrtp": {
+        "field": "dstport",
+        "value": 18245
+      },
+      "pcworx": {
+        "field": "dstport",
+        "value": 1962
+      },
+      "slp": {
+        "field": "dstport",
+        "value": 427
       },
       "tls-alert": {
         "field": "dstport",
@@ -1590,6 +1698,34 @@
         "field": "dstport",
         "value": 37
       },
+      "bsap": {
+        "field": "dstport",
+        "value": 1234
+      },
+      "gelf": {
+        "field": "dstport",
+        "value": 12201
+      },
+      "megaco": {
+        "field": "dstport",
+        "value": 2944
+      },
+      "modbusudp": {
+        "field": "dstport",
+        "value": 502
+      },
+      "slp": {
+        "field": "dstport",
+        "value": 427
+      },
+      "teredo": {
+        "field": "dstport",
+        "value": 3544
+      },
+      "wsdiscovery": {
+        "field": "dstport",
+        "value": 3702
+      },
       "raw": null
     },
     "ntp": {
@@ -1736,6 +1872,10 @@
         "field": "protocolType",
         "value": "8809"
       },
+      "marker": {
+        "field": "protocolType",
+        "value": "8809"
+      },
       "mpls": {
         "field": "protocolType",
         "value": "8847"
@@ -1767,6 +1907,10 @@
       "macsec": {
         "field": "protocolType",
         "value": "88e5"
+      },
+      "wol": {
+        "field": "protocolType",
+        "value": "0842"
       },
       "vlan": {
         "field": "protocolType",
@@ -1819,6 +1963,10 @@
         "field": "protocolType",
         "value": "8809"
       },
+      "marker": {
+        "field": "protocolType",
+        "value": "8809"
+      },
       "mpls": {
         "field": "protocolType",
         "value": "8847"
@@ -1850,6 +1998,10 @@
       "macsec": {
         "field": "protocolType",
         "value": "88e5"
+      },
+      "wol": {
+        "field": "protocolType",
+        "value": "0842"
       },
       "vlan": {
         "field": "protocolType",
@@ -1983,6 +2135,10 @@
         "field": "etherType",
         "value": "8809"
       },
+      "marker": {
+        "field": "etherType",
+        "value": "8809"
+      },
       "mpls": {
         "field": "etherType",
         "value": "8847"
@@ -2014,6 +2170,10 @@
       "macsec": {
         "field": "etherType",
         "value": "88e5"
+      },
+      "wol": {
+        "field": "etherType",
+        "value": "0842"
       },
       "vlan": {
         "field": "etherType",
@@ -2301,6 +2461,54 @@
     "zabbix": {
       "raw": null
     },
+    "adsams": {
+      "raw": null
+    },
+    "bsap": {
+      "raw": null
+    },
+    "bittorrent": {
+      "raw": null
+    },
+    "codesys": {
+      "raw": null
+    },
+    "dhcpfo": {
+      "raw": null
+    },
+    "gelf": {
+      "raw": null
+    },
+    "gesrtp": {
+      "raw": null
+    },
+    "http2": {
+      "raw": null
+    },
+    "marker": {
+      "raw": null
+    },
+    "megaco": {
+      "raw": null
+    },
+    "modbusudp": {
+      "raw": null
+    },
+    "pcworx": {
+      "raw": null
+    },
+    "slp": {
+      "raw": null
+    },
+    "teredo": {
+      "raw": null
+    },
+    "wsdiscovery": {
+      "raw": null
+    },
+    "wol": {
+      "raw": null
+    },
     "vlan": {
       "arp": {
         "field": "etherType",
@@ -2346,6 +2554,10 @@
         "field": "etherType",
         "value": "8809"
       },
+      "marker": {
+        "field": "etherType",
+        "value": "8809"
+      },
       "mpls": {
         "field": "etherType",
         "value": "8847"
@@ -2377,6 +2589,10 @@
       "macsec": {
         "field": "etherType",
         "value": "88e5"
+      },
+      "wol": {
+        "field": "etherType",
+        "value": "0842"
       },
       "vlan": {
         "field": "etherType",

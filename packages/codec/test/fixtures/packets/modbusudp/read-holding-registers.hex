@@ -1,0 +1,5 @@
+# Modbus/UDP (udp:502) Read Holding Registers request. MBAP: transaction 1, protocol 0, length 6,
+# unit 1; PDU: function code 0x03, start address 0x0000, quantity 0x000a (10 registers).
+# Frame: eth (zero MACs, 0x0800) / IPv4 10.0.0.1 -> 10.0.0.2 proto 17 UDP / UDP 49152 -> 502 length 20 /
+# MBAP+PDU. Hand-constructed via the codec encoder (valid IPv4 + UDP checksums), verified with tshark (mbudp).
+00000000000000000000000008004500002800004000401126c30a0000010a000002c00001f6001428b900010000000601030000000a

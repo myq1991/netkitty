@@ -1,0 +1,13 @@
+# Beckhoff ADS/AMS (TwinCAT, tcp:48898) — ADS Read request. AMS/TCP header: reserved 0x0000,
+# length 44 (the 32-byte AMS header + 12-byte data that follow). AMS header (all little-endian):
+# target AmsNetId 192.168.0.1.1.1 port 851 (TC3 runtime), source AmsNetId 192.168.0.2.1.1
+# port 33025, Command Id 2 (Read), State Flags 0x0004 (ADS command, request), Data Length 12,
+# Error Code 0, Invoke Id 1. Read data: index group 0x00004020, index offset 0, length 4.
+# source: constructed spec-accurate frame (Beckhoff AMS/TCP + AMS header spec). eth/ipv4/tcp
+# envelope assembled by the netkitty encoder (valid IPv4 + TCP checksums). NOTE: tshark 4.6.7's
+# 'ams' dissector does not engage on bare-TCP AMS/TCP framing (it is reachable via EtherCAT
+# ecatf.type 2), so frame.protocols shows only eth:ethertype:ip:tcp; the AMS bytes follow the
+# published Beckhoff layout exactly (see ADSAMS.spec.ts field assertions).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 40000 dst 48898), [54:60] AMS/TCP header,
+# [60:92] AMS header, [92:104] Read data (index group/offset/length).
+000105040b0a00010503020108004500005a000040000006f94ac0a80002c0a800019c40bf0200000001000000015010200077ee000000002c000000c0a8000101015303c0a8000201010181020004000c0000000000000001000000204000000000000004000000

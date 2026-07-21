@@ -69,11 +69,11 @@ test('LACP: a TLV Length overrunning the frame falls into reserved and still rou
 test('LACP rejects Subtype != 1, and truncation / garbage survive', async (): Promise<void> => {
     const {packet}: CodecEncodeResult = await codec.encode([
         {id: 'eth', data: {dmac: '01:80:c2:00:00:02', smac: '00:00:00:00:00:aa', etherType: '8809'}},
-        // subtype 2 (Marker) then arbitrary bytes — not claimed by LACP
-        {id: 'raw', data: {data: '020100000000000000000000'}}
+        // subtype 3 (neither LACP=1 nor Marker=2) then arbitrary bytes — not claimed by any Slow Protocol
+        {id: 'raw', data: {data: '030100000000000000000000'}}
     ])
     const decoded: CodecDecodeResult[] = await codec.decode(packet)
-    assert.ok(!decoded.some((l: CodecDecodeResult): boolean => l.id === 'lacp'), 'Marker subtype must not be claimed as LACP')
+    assert.ok(!decoded.some((l: CodecDecodeResult): boolean => l.id === 'lacp'), 'non-LACP subtype must not be claimed as LACP')
     assert.strictEqual(decoded[decoded.length - 1].id, 'raw')
 
     const full: Buffer = LoadPacket('lacp/lacpdu').buffer
