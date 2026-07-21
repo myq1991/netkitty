@@ -1,0 +1,6 @@
+# MMS (ISO 9506) confirmed-request: GetNameList, over the full TPKT/COTP/ISO-Session/Presentation stack.
+# Real ICCP/TASE.2 PDU reassembled from a TCP-segmented capture (mms.cap frame 35, GetDataSetDirectory =
+# MMS getNameList of named-variable-lists), re-wrapped in eth/IPv4/TCP:102 via the codec. Only the hex is
+# committed. MMS PDU: 61 -> 30 -> 020103(context 3) -> a0(confirmed-request) -> 020211 51(invokeID 4433)
+# -> a1(getNameList [1]) -> objectClass namedVariableList(2), objectScope domainSpecific "KIRKLAND".
+00000000000000000000000008004500005500004000000666a10a0000010a000002c3500066000000000000000050000000ce5300000300002d02f080010001006120301e020103a019a01702021151a111a003800102a10a81084b49524b4c414e44

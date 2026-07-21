@@ -41,6 +41,48 @@ test('MMS parses a confirmed-request PDU type and round-trips the BER blob verba
     assert.strictEqual((await codec.encode(decoded)).packet.toString('hex'), packet.toString('hex'), 'byte-perfect')
 })
 
+// Real ICCP/TASE.2 MMS PDUs reassembled from a TCP-segmented capture (mms.cap): the confirmed
+// request/response service and invokeID are extracted from the BER blob for display, and the whole PDU
+// round-trips byte-for-byte.
+test('MMS extracts the confirmed service + invokeID from real Read and GetNameList PDUs', async (): Promise<void> => {
+    const cases: {name: string, pdu: number, invoke: number, service: string}[] = [
+        {name: 'mms/read-request', pdu: 0xa0, invoke: 4432, service: 'read'},
+        {name: 'mms/read-response', pdu: 0xa1, invoke: 4432, service: 'read'},
+        {name: 'mms/getnamelist-request', pdu: 0xa0, invoke: 4433, service: 'getNameList'},
+        {name: 'mms/getnamelist-response', pdu: 0xa1, invoke: 4433, service: 'getNameList'}
+    ]
+    for (const c of cases) {
+        const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket(c.name).buffer)
+        AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp', 'iso-session', 'mms'])
+        const mms: any = Layer(decoded, 'mms').data
+        assert.strictEqual(mms.mmsPduType, c.pdu, `${c.name}: MMS PDU type`)
+        assert.strictEqual(mms.mmsInvokeID, c.invoke, `${c.name}: invokeID`)
+        assert.strictEqual(mms.mmsService, c.service, `${c.name}: confirmed service`)
+    }
+})
+
+// A confirmed-error PDU (0xa2) starts with the invokeID but its second element is modifierPosition/
+// serviceError, NOT a ConfirmedService CHOICE — so the invokeID is extracted but the service stays blank
+// (rather than mislabeling the serviceError's tag as a service).
+test('MMS confirmed-error: invokeID is extracted but no service is inferred', async (): Promise<void> => {
+    // 61 -> 30 -> 020103(ctx 3) -> a0(pdv) -> a2(confirmed-error){ 020102(invokeID 2), a0028000(serviceError) }
+    const message: string = '6110300e020103a009a207020102a0028000'
+    const {packet}: CodecEncodeResult = await codec.encode([
+        ETH, IPV4,
+        {id: 'tcp', data: {srcport: 50000, dstport: 102}},
+        {id: 'tpkt', data: {version: 3, reserved: 0}},
+        {id: 'cotp', data: {pduType: 0xf0, eot: true, tpduNr: 0}},
+        {id: 'iso-session', data: {spdus: [{si: 1, li: 0, params: ''}, {si: 1, li: 0, params: ''}]}},
+        {id: 'mms', data: {message: message}}
+    ])
+    const decoded: CodecDecodeResult[] = await codec.decode(packet)
+    const mms: any = Layer(decoded, 'mms').data
+    assert.strictEqual(mms.mmsPduType, 0xa2, 'confirmed-error PDU')
+    assert.strictEqual(mms.mmsInvokeID, 2, 'invokeID extracted')
+    assert.strictEqual(mms.mmsService, undefined, 'no service inferred for an error PDU')
+    assert.strictEqual((await codec.encode(decoded)).packet.toString('hex'), packet.toString('hex'), 'byte-perfect')
+})
+
 // Off-parent guard: a 0x61 BER blob directly on TCP (no ISO-Session parent) must NOT be claimed as MMS;
 // truncation survives.
 test('MMS is only claimed above ISO Session; truncation survives', async (): Promise<void> => {

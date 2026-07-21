@@ -54,9 +54,27 @@ export class MMS extends BaseHeader {
         return {tag: tag, contentStart: contentStart, contentLength: contentLength}
     }
 
-    /** Parse the Presentation/MMS nesting for display: returns {presentationContext, mmsPduType} best-effort. */
-    static #parse(buf: Buffer): {presentationContext: number, mmsPduType: number} {
-        const result: {presentationContext: number, mmsPduType: number} = {presentationContext: -1, mmsPduType: -1}
+    //MMS ConfirmedServiceRequest/Response CHOICE context tags (ISO 9506-2) → service name, for display.
+    static readonly #SERVICE_NAMES: Record<number, string> = {
+        0: 'status', 1: 'getNameList', 2: 'identify', 3: 'rename', 4: 'read', 5: 'write',
+        6: 'getVariableAccessAttributes', 7: 'defineNamedVariable', 8: 'defineScatteredAccess',
+        9: 'getScatteredAccessAttributes', 10: 'deleteVariableAccess', 11: 'defineNamedVariableList',
+        12: 'getNamedVariableListAttributes', 13: 'deleteNamedVariableList', 14: 'defineNamedType',
+        15: 'getNamedTypeAttributes', 16: 'deleteNamedType', 17: 'input', 18: 'output', 19: 'takeControl',
+        20: 'relinquishControl', 21: 'defineSemaphore', 22: 'deleteSemaphore', 23: 'reportSemaphoreStatus',
+        24: 'reportPoolSemaphoreStatus', 25: 'reportSemaphoreEntryStatus', 26: 'initiateDownloadSequence',
+        27: 'downloadSegment', 28: 'terminateDownloadSequence', 29: 'initiateUploadSequence', 30: 'uploadSegment'
+    }
+
+    /**
+     * Parse the Presentation/MMS nesting for display, best-effort: the presentation context, the MMS PDU
+     * type (0xa0 confirmed-request / 0xa1 confirmed-response / 0xa2 confirmed-error / 0xa3 unconfirmed /
+     * 0x05 NULL …), and — for a confirmed request/response/error — the invokeID and the service (from the
+     * ConfirmedService CHOICE context tag). -1 / '' when a part is absent.
+     */
+    static #parse(buf: Buffer): {presentationContext: number, mmsPduType: number, invokeID: number, service: string} {
+        const result: {presentationContext: number, mmsPduType: number, invokeID: number, service: string} =
+            {presentationContext: -1, mmsPduType: -1, invokeID: -1, service: ''}
         //61 (fully-encoded-data) → 30 (PDV-list) → 02 01 ctx, a0 (presentation-data-values) → MMS PDU.
         const app: {tag: number, contentStart: number, contentLength: number} | null = MMS.#readTLV(buf, 0)
         if (!app || app.tag !== 0x61) return result
@@ -73,12 +91,41 @@ export class MMS extends BaseHeader {
                 for (let i: number = 0; i < tlv.contentLength; i++) value = (value << 8) | buf[tlv.contentStart + i]
                 result.presentationContext = value
             } else if (tlv.tag === 0xa0) {
-                //presentation-data-values [0] → the MMS PDU is the first element inside.
-                if (tlv.contentStart < buf.length) result.mmsPduType = buf[tlv.contentStart]
+                //presentation-data-values [0] → the MMS PDU TLV is inside.
+                const mmsPdu: {tag: number, contentStart: number, contentLength: number} | null = MMS.#readTLV(buf, tlv.contentStart)
+                if (mmsPdu) {
+                    result.mmsPduType = mmsPdu.tag
+                    MMS.#parseConfirmed(buf, mmsPdu, result)
+                }
             }
             pos = tlv.contentStart + tlv.contentLength
         }
         return result
+    }
+
+    /** For a confirmed-request/response/error MMS PDU, extract the invokeID and the service name. */
+    static #parseConfirmed(
+        buf: Buffer,
+        mmsPdu: {tag: number, contentStart: number, contentLength: number},
+        result: {invokeID: number, service: string}
+    ): void {
+        if (mmsPdu.tag !== 0xa0 && mmsPdu.tag !== 0xa1 && mmsPdu.tag !== 0xa2) return
+        //All three begin with the invokeID INTEGER (Confirmed-{Request,Response,Error}PDU).
+        const invokeID: {tag: number, contentStart: number, contentLength: number} | null = MMS.#readTLV(buf, mmsPdu.contentStart)
+        if (!invokeID || invokeID.tag !== 0x02) return
+        let id: number = 0
+        for (let i: number = 0; i < invokeID.contentLength; i++) id = (id << 8) | buf[invokeID.contentStart + i]
+        result.invokeID = id
+        //The ConfirmedService CHOICE is the element after the invokeID ONLY for request/response. A
+        //Confirmed-ErrorPDU's second element is modifierPosition/serviceError, not a service, so skip it.
+        if (mmsPdu.tag !== 0xa0 && mmsPdu.tag !== 0xa1) return
+        const service: {tag: number, contentStart: number, contentLength: number} | null =
+            MMS.#readTLV(buf, invokeID.contentStart + invokeID.contentLength)
+        if (!service) return
+        //Single-byte context tags (0..30) identify the service; a higher (multi-byte) tag's first byte has
+        //low bits 0x1f=31, absent from the map, so it shows as "31" — lossy but never aliases a real name.
+        const tagNumber: number = service.tag & 0x1f
+        result.service = MMS.#SERVICE_NAMES[tagNumber] ?? String(tagNumber)
     }
 
     static #buildSchema(): ProtocolJSONSchema {
@@ -94,18 +141,23 @@ export class MMS extends BaseHeader {
                         const available: number = this.packet.length - this.startPos
                         const buf: Buffer = this.readBytes(0, available)
                         this.instance.message.setValue(BufferToHex(buf))
-                        const parsed: {presentationContext: number, mmsPduType: number} = MMS.#parse(buf)
+                        const parsed: {presentationContext: number, mmsPduType: number, invokeID: number, service: string} = MMS.#parse(buf)
                         this.instance.presentationContext.setValue(parsed.presentationContext)
                         this.instance.mmsPduType.setValue(parsed.mmsPduType)
+                        if (parsed.invokeID >= 0) this.instance.mmsInvokeID.setValue(parsed.invokeID)
+                        if (parsed.service) this.instance.mmsService.setValue(parsed.service)
                     },
                     encode: function (this: MMS): void {
                         this.writeBytes(0, HexToBuffer(this.instance.message.getValue('')))
                     }
                 },
                 //Display-only metadata parsed from the BER blob on decode (no encode — populated by the
-                //message field above), so they never affect the re-emitted bytes.
+                //message field above), so they never affect the re-emitted bytes. invokeID / service are
+                //present only for a confirmed request/response/error PDU.
                 presentationContext: {type: 'integer', label: 'Presentation Context'},
-                mmsPduType: {type: 'integer', label: 'MMS PDU Type'}
+                mmsPduType: {type: 'integer', label: 'MMS PDU Type'},
+                mmsInvokeID: {type: 'integer', label: 'Invoke ID'},
+                mmsService: {type: 'string', label: 'MMS Service'}
             }
         }
     }

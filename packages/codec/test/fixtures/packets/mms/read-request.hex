@@ -1,0 +1,6 @@
+# MMS (ISO 9506) confirmed-request: Read, over the full TPKT/COTP/ISO-Session/Presentation stack.
+# Real ICCP/TASE.2 PDU reassembled from a TCP-segmented capture (mms.cap frame 20, GetDataValue =
+# MMS read); the reassembled TPKT PDU is re-wrapped in eth/IPv4/TCP:102 via the codec so checksums are
+# correct. Only the hex is committed, never the pcap. MMS PDU: 61(fully-encoded-data) -> 30(PDV-list)
+# -> 020103(context 3) -> a0(confirmed-request) -> 020211 50(invokeID 4432) -> a4(read [4]).
+000000000000000000000000080045000097000040000006665f0a0000010a000002c35000660000000000000000500000002a9400000300006f02f0800100010061623060020103a05ba05902021150a453a151a04f3022a020a11e1a084b49524b4c414e441a1242696c61746572616c5f5461626c655f49443011a00f800d54415345325f56657273696f6e3016a0148012537570706f727465645f4665617475726573

@@ -1,0 +1,6 @@
+# MMS (ISO 9506) confirmed-response: GetNameList, over the full TPKT/COTP/ISO-Session/Presentation stack.
+# Real ICCP/TASE.2 PDU reassembled from a TCP-segmented capture (mms.cap frame 38, GetDataSetDirectoryResponse
+# = MMS getNameList response listing dataset names), re-wrapped in eth/IPv4/TCP:102 via the codec. Only the
+# hex is committed. MMS PDU: 61 -> 30 -> 020103(context 3) -> a1(confirmed-response) -> 020211 51(invokeID
+# 4433) -> a1(getNameList [1]) -> listOfIdentifier "EMS_ANALOG_ICCP_IN", "EMS_STATUS_ICCP_IN".
+00000000000000000000000008004500007100004000000666850a0000010a000002c3500066000000000000000050000000292d00000300004902f08001000100613c303a020103a035a13302021151a12da0281a12454d535f414e414c4f475f494343505f494e1a12454d535f5354415455535f494343505f494e810100
