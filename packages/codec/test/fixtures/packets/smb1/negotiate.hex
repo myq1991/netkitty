@@ -1,0 +1,9 @@
+# SMB1 / CIFS (tcp:445) NEGOTIATE Protocol Request over the Direct TCP transport.
+# Transport prefix: 00 + 24-bit stream length 47; SMB1 header 32 bytes (Protocol ff534d42, Command 0x72
+# NEGOTIATE, Flags 0x18, Flags2 0xc853, TID 0xffff, PIDLow 0xfeff, all other ids zero); parameter/data
+# block 15 bytes (WordCount 0, ByteCount 12, dialect string 0x02 "NT LM 0.12" NUL-terminated).
+# source: constructed spec-accurate frame (MS-CIFS). eth/ipv4/tcp envelope assembled by the netkitty
+# encoder (valid IPv4 + TCP checksums); tshark 'smb' dissector agrees (nbss -> smb Negotiate Protocol Request).
+# bytes: [0:14] eth, [14:34] ipv4, [34:54] tcp(src 52000 dst 445), [54:58] transport prefix,
+# [58:90] smb1 header, [90:105] parameter/data block.
+001c42000001001c4200000208004500005b000040000006f67ec000020ac0000214cb2001bd0000000000000000500000002ee100000000002fff534d4272000000001853c8000000000000000000000000fffffffe00000000000c00024e54204c4d20302e313200

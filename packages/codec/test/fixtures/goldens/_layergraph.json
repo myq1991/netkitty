@@ -54,6 +54,7 @@
       "pim",
       "rsvp",
       "nhrp",
+      "sctp",
       "raw"
     ],
     "ipv6": [
@@ -73,6 +74,7 @@
       "pim",
       "rsvp",
       "nhrp",
+      "sctp",
       "raw"
     ],
     "ipv6-hopopt": [
@@ -92,6 +94,7 @@
       "pim",
       "rsvp",
       "nhrp",
+      "sctp",
       "raw"
     ],
     "icmpv6": [
@@ -147,6 +150,7 @@
       "ldp",
       "lpd",
       "nbss",
+      "smb1",
       "openvpn",
       "pptp",
       "stomp",
@@ -170,6 +174,7 @@
       "gesrtp",
       "pcworx",
       "slp",
+      "nfs",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -220,6 +225,7 @@
       "sunrpc",
       "babel",
       "dtls",
+      "quic",
       "ffhse",
       "hartip",
       "ldp",
@@ -232,6 +238,7 @@
       "nbds",
       "fins",
       "slmp",
+      "rtcp",
       "collectd",
       "glbp",
       "iax2",
@@ -248,6 +255,8 @@
       "slp",
       "teredo",
       "wsdiscovery",
+      "nfs",
+      "rtp",
       "raw"
     ],
     "ntp": [
@@ -522,6 +531,7 @@
       "pim",
       "rsvp",
       "nhrp",
+      "sctp",
       "raw"
     ],
     "bgp": [
@@ -785,6 +795,24 @@
     "wol": [
       "raw"
     ],
+    "nfs": [
+      "raw"
+    ],
+    "quic": [
+      "raw"
+    ],
+    "rtcp": [
+      "raw"
+    ],
+    "rtp": [
+      "raw"
+    ],
+    "sctp": [
+      "raw"
+    ],
+    "smb1": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -1004,6 +1032,10 @@
         "field": "protocol",
         "value": 54
       },
+      "sctp": {
+        "field": "protocol",
+        "value": 132
+      },
       "raw": null
     },
     "ipv6": {
@@ -1071,6 +1103,10 @@
         "field": "nxt",
         "value": 54
       },
+      "sctp": {
+        "field": "nxt",
+        "value": 132
+      },
       "raw": null
     },
     "ipv6-hopopt": {
@@ -1137,6 +1173,10 @@
       "nhrp": {
         "field": "nxt",
         "value": 54
+      },
+      "sctp": {
+        "field": "nxt",
+        "value": 132
       },
       "raw": null
     },
@@ -1331,6 +1371,10 @@
         "field": "dstport",
         "value": 139
       },
+      "smb1": {
+        "field": "dstport",
+        "value": 139
+      },
       "openvpn": {
         "field": "dstport",
         "value": 1194
@@ -1422,6 +1466,10 @@
       "slp": {
         "field": "dstport",
         "value": 427
+      },
+      "nfs": {
+        "field": "dstport",
+        "value": 2049
       },
       "tls-alert": {
         "field": "dstport",
@@ -1614,6 +1662,10 @@
         "field": "dstport",
         "value": 443
       },
+      "quic": {
+        "field": "dstport",
+        "value": 443
+      },
       "ffhse": {
         "field": "dstport",
         "value": 1089
@@ -1659,6 +1711,10 @@
         "value": 9600
       },
       "slmp": {
+        "field": "dstport",
+        "value": 5007
+      },
+      "rtcp": {
         "field": "dstport",
         "value": 5007
       },
@@ -1725,6 +1781,14 @@
       "wsdiscovery": {
         "field": "dstport",
         "value": 3702
+      },
+      "nfs": {
+        "field": "dstport",
+        "value": 2049
+      },
+      "rtp": {
+        "field": "dstport",
+        "value": 5004
       },
       "raw": null
     },
@@ -2246,6 +2310,10 @@
         "field": "nxt",
         "value": 54
       },
+      "sctp": {
+        "field": "nxt",
+        "value": 132
+      },
       "raw": null
     },
     "bgp": {
@@ -2507,6 +2575,24 @@
       "raw": null
     },
     "wol": {
+      "raw": null
+    },
+    "nfs": {
+      "raw": null
+    },
+    "quic": {
+      "raw": null
+    },
+    "rtcp": {
+      "raw": null
+    },
+    "rtp": {
+      "raw": null
+    },
+    "sctp": {
+      "raw": null
+    },
+    "smb1": {
       "raw": null
     },
     "vlan": {

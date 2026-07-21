@@ -1,0 +1,9 @@
+# SCTP (RFC 9260) over IPv4 (IP protocol 132) carrying a single INIT chunk. 12-byte common header =
+# Source Port 1234 (0x04d2) + Destination Port 5678 (0x162e) + Verification Tag 0 (INIT always 0) +
+# CRC32c checksum 0x886a6952 (little-endian on the wire); then one INIT chunk: type 1, flags 0,
+# length 20, Initiate Tag 0x12345678, a_rwnd 131071, 5 outbound / 5 inbound streams, Initial TSN 1000.
+# Bytes: eth[14] 001122334455 66778899aabb 0800 | ipv4[20] 4500 0034(len=52) 0001 4000 40 84(proto=132)
+#   b6d6(csum) c0a8010a(src 192.168.1.10) c0a80114(dst 192.168.1.20) | sctp[32] 04d2 162e 00000000(vtag)
+#   886a6952(crc32c) 01 00 0014(chunk INIT len=20) 12345678 0001ffff 0005 0005 000003e8. tshark: 'sctp'.
+# source: constructed via a build script (valid eth/ipv4 envelope, IP + CRC32c checksums computed).
+00112233445566778899aabb080045000034000140004084b6d6c0a8010ac0a8011404d2162e00000000886a695201000014123456780001ffff00050005000003e8

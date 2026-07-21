@@ -1,0 +1,6 @@
+# NFS v3 (RFC 1813, udp:2049) GETATTR CALL carried in an ONC RPC message. xid 0xdeadbeef, msgType 0
+# (CALL), RPC version 2, program 100003 (NFS), program version 3, procedure 1 (GETATTR); AUTH_NULL cred +
+# verf (flavor 0, length 0 each); GETATTR args: nfs_fh3 {length 8, handle 0102030405060708}. UDP length
+# 60, valid UDP checksum.
+# source: hand-crafted NFS GETATTR datagram; verified as eth:ethertype:ip:udp:rpc:nfs by tshark.
+00112233445566778899aabb080045000050000040004011b67ec000020ac0000214c7a90801003c7748deadbeef0000000000000002000186a3000000030000000100000000000000000000000000000000000000080102030405060708

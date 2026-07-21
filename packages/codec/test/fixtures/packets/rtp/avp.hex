@@ -1,0 +1,3 @@
+# RTP/AVP over UDP port 5004 — V2, PT=0 (PCMU), CC=0, no extension, seq=1, ts=8000, ssrc=0x12345678, 4-byte payload
+# Synthetic (hand-built): eth / ipv4 192.168.1.10->192.168.1.20 / udp 5004->5004 / rtp
+00112233445566778899aabb08004500002c000100004011f751c0a8010ac0a80114138c138c0018afab8000000100001f4012345678deadbeef

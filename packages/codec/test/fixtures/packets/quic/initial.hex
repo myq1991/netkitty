@@ -1,0 +1,10 @@
+# QUIC v1 (RFC 9000) Initial packet over UDP/443. Long header: first byte 0xc0 (Header Form=1 Long,
+# Fixed Bit=1, Long Packet Type=0 Initial, type-specific bits 0), Version 0x00000001, DCID Len 8
+# (0001020304050607), SCID Len 4 (aabbccdd); the remaining bytes (token length 0, length 0x11, packet
+# number, AEAD-protected frames) are kept as the opaque payload.
+# source: constructed spec-accurate frame (RFC 9000 §17.2.2). eth/ipv4/udp envelope assembled by the
+# netkitty encoder (valid IPv4 length + UDP length/checksum); tshark reports frame.protocols
+# eth:ethertype:ip:udp:quic and dissects the long header (the fake encrypted body is flagged Malformed,
+# expected for a hand-built Initial without real AEAD).
+# bytes: [0:14] eth, [14:34] ipv4, [34:42] udp(src 50000 dst 443), [42:80] quic long header + opaque body.
+00000000000100000000000208004500004300004000001166a00a00000a0a000001c35001bb002f6ab1c00000000108000102030405060704aabbccdd00110000000102030405060708090a0b0c0d0e0f

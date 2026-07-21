@@ -1,0 +1,55 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 52,
+      "id": 1,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 132,
+      "checksum": 46806,
+      "sip": "192.168.1.10",
+      "dip": "192.168.1.20"
+    },
+    "errors": []
+  },
+  {
+    "id": "sctp",
+    "data": {
+      "srcPort": 1234,
+      "dstPort": 5678,
+      "verificationTag": "00000000",
+      "checksum": "886a6952",
+      "chunks": [
+        {
+          "type": 1,
+          "flags": 0,
+          "length": 20,
+          "value": "123456780001ffff00050005000003e8",
+          "padding": ""
+        }
+      ]
+    },
+    "errors": []
+  }
+]

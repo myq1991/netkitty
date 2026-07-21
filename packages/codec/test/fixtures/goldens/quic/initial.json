@@ -1,0 +1,65 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:01",
+      "smac": "00:00:00:00:00:02",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 67,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 17,
+      "checksum": 26272,
+      "sip": "10.0.0.10",
+      "dip": "10.0.0.1"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 50000,
+      "dstport": 443,
+      "length": 47,
+      "checksum": 27313
+    },
+    "errors": []
+  },
+  {
+    "id": "quic",
+    "data": {
+      "firstByte": {
+        "headerForm": true,
+        "fixedBit": true,
+        "longPacketType": 0,
+        "typeSpecificBits": 0
+      },
+      "version": "00000001",
+      "dcidLength": 8,
+      "dcid": "0001020304050607",
+      "scidLength": 4,
+      "scid": "aabbccdd",
+      "supportedVersions": [],
+      "payload": "00110000000102030405060708090a0b0c0d0e0f"
+    },
+    "errors": []
+  }
+]
