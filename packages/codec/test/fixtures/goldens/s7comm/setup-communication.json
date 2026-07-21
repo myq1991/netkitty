@@ -17,7 +17,7 @@
         "dscp": 0,
         "ecn": 0
       },
-      "length": 62,
+      "length": 65,
       "id": 0,
       "flags": {
         "rb": 0,
@@ -27,7 +27,7 @@
       "fragOffset": 0,
       "ttl": 0,
       "protocol": 6,
-      "checksum": 26296,
+      "checksum": 26293,
       "sip": "10.0.0.1",
       "dip": "10.0.0.2"
     },
@@ -54,7 +54,7 @@
         "fin": false
       },
       "window": 0,
-      "checksum": 39796,
+      "checksum": 34271,
       "urgPtr": 0
     },
     "errors": []
@@ -64,7 +64,7 @@
     "data": {
       "version": 3,
       "reserved": 0,
-      "length": 22
+      "length": 25
     },
     "errors": []
   },
@@ -81,9 +81,18 @@
     "errors": []
   },
   {
-    "id": "raw",
+    "id": "s7comm",
     "data": {
-      "data": "0100010061093007020103a0020500"
+      "protocolId": 50,
+      "rosctr": 1,
+      "redundancyId": "0000",
+      "pduReference": 1024,
+      "parameterLength": 8,
+      "dataLength": 0,
+      "errorClass": 0,
+      "errorCode": 0,
+      "parameter": "f0000001000103c0",
+      "data": ""
     },
     "errors": []
   }

@@ -131,14 +131,32 @@ export class COTP extends BaseHeader {
                     contentEncoding: StringContentEncodingEnum.HEX,
                     decode: function (this: COTP): void {
                         const li: number = this.instance.li.getValue(0)
-                        let end: number = this.packet.length - this.startPos
+                        const available: number = this.packet.length - this.startPos
+                        const dataStart: number = 1 + li
+                        //Expose the user data as a dispatchable CHILD layer (RDP / S7comm / ISO-Session /
+                        //MMS) instead of consuming it here, but ONLY when the upper PDU is fully self-
+                        //contained in this packet: a DT TPDU with EOT set, riding on TPKT, whose TPKT-
+                        //declared length exactly equals the captured remaining bytes. That rules out
+                        //fragmentation (EOT=0, which a single-packet stateless codec cannot reassemble),
+                        //truncation, and a pipelined trailing TPKT PDU (which an unbounded RawData child
+                        //would otherwise swallow). In that case set data='' and return WITHOUT reading, so
+                        //headerLength stops at the header end and the codec dispatches the remaining bytes.
+                        const dt: boolean = COTP.#isDT(this.instance.pduType.getValue(0))
+                        const eot: boolean = this.instance.eot.getValue(false)
+                        if (dt && eot && this.prevCodecModule && this.prevCodecModule.id === 'tpkt') {
+                            const cotpPdu: number = this.prevCodecModule.instance.length.getValue(0) - 4
+                            if (cotpPdu === available && available > dataStart) {
+                                this.instance.data.setValue('')
+                                return
+                            }
+                        }
+                        //Otherwise COTP remains a leaf and keeps the user data verbatim, bounded by the TPKT
+                        //Length so a pipelined trailing PDU is left for a fresh TPKT dispatch.
+                        let end: number = available
                         if (this.prevCodecModule && this.prevCodecModule.id === 'tpkt') {
-                            //The TPKT Length spans the whole TPKT PDU including its 4-byte header, so the
-                            //COTP TPDU is (Length − 4) bytes.
                             const cotpPdu: number = this.prevCodecModule.instance.length.getValue(0) - 4
                             if (cotpPdu >= 0 && cotpPdu < end) end = cotpPdu
                         }
-                        const dataStart: number = 1 + li
                         this.instance.data.setValue(end > dataStart ? BufferToHex(this.readBytes(dataStart, end - dataStart)) : '')
                     },
                     encode: function (this: COTP): void {

@@ -1,0 +1,16 @@
+# S7comm (Siemens S7, tcp:102) Job request — Setup Communication (function 0xF0) — carried inside a
+# COTP DT TPDU inside a TPKT PDU (RFC 1006, the IEC 61850 / S7 ISO-on-TCP stack).
+# Hand-crafted spec-accurate frame (no S7 PLC available), assembled via the codec so the IPv4/TCP
+# checksums are correct (cotp.data carries the S7 PDU verbatim). tshark reports
+# frame.protocols = eth:ethertype:ip:tcp:tpkt:cotp:s7comm. Byte breakdown (offsets decimal, 79-byte frame):
+#   [0..13]  Ethernet II : dst 00:00:00:00:00:00, src 00:00:00:00:00:00, ethertype 0800 (IPv4)
+#   [14..33] IPv4 (20B)  : 45 00 | total len 0041=65 | id 0000 | 4000 | ttl 00 | proto 06 (TCP)
+#                          | csum 66b5 | src 10.0.0.1 (0a000001) | dst 10.0.0.2 (0a000002)
+#   [34..53] TCP (20B)   : srcport c350=50000 | dstport 0066=102 | seq/ack 0 | dataoff 50 | csum 85df
+#   [54..57] TPKT (4B)   : 03 (version=3) 00 (reserved) 0019 (length=25 = the whole TPKT PDU: 4 + 3 + 18)
+#   [58..60] COTP hdr(3B): 02 (LI=2) f0 (PDU Type=DT) 80 (EOT=1 | TPDU-NR=0)
+#   [61..78] S7comm (18B): 32 (protocolId) 01 (ROSCTR=Job) 0000 (redundancyId reserved)
+#                          0400 (pduReference=1024) 0008 (parameterLength=8) 0000 (dataLength=0)
+#                          parameter(8): f0 (func Setup communication) 00 (reserved)
+#                                        0001 (max AmQ calling) 0001 (max AmQ called) 03c0 (PDU length=960)
+00000000000000000000000008004500004100004000000666b50a0000010a000002c350006600000000000000005000000085df00000300001902f08032010000040000080000f0000001000103c0

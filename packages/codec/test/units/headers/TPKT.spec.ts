@@ -14,7 +14,10 @@ const TCP102: CodecDecodeResult = {id: 'tcp', data: {srcport: 50000, dstport: 10
 // MMS-stack framing layers of IEC 61850. `pduType` is stored as the FULL PDU-Type octet (DT = 0xF0 = 240).
 test('TPKT + COTP DT: framing decode + byte-perfect round-trip', async (): Promise<void> => {
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('tpkt/cotp-dt').buffer)
-    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp'])
+    // A fully-contained DT+EOT TPDU now exposes its user data as a child layer instead of keeping it in
+    // cotp.data; here the ISO-Session/MMS payload (first byte 0x01, not an S7comm 0x32) is claimed by no
+    // registered upper header yet, so it falls to a trailing raw layer.
+    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp', 'raw'])
     const tpkt: any = Layer(decoded, 'tpkt').data
     assert.strictEqual(tpkt.version, 3, 'TPKT version is always 3')
     assert.strictEqual(tpkt.reserved, 0)
@@ -25,7 +28,8 @@ test('TPKT + COTP DT: framing decode + byte-perfect round-trip', async (): Promi
     assert.strictEqual(cotp.eot, true, 'EOT (end of TSDU) set')
     assert.strictEqual(cotp.tpduNr, 0)
     assert.strictEqual(cotp.headerRest, '', 'a DT TPDU structures its whole header, so no verbatim rest')
-    assert.strictEqual(cotp.data, '0100010061093007020103a0020500', 'ISO Session/MMS user data kept verbatim')
+    assert.strictEqual(cotp.data, '', 'DT+EOT user data is exposed as a child layer, not kept in cotp.data')
+    assert.strictEqual((Layer(decoded, 'raw').data as any).data, '0100010061093007020103a0020500', 'ISO Session/MMS user data now in the child raw layer')
 })
 
 // A non-DT TPDU (CR, Connect Request, 0xE0) keeps its type-specific header verbatim as `headerRest`
