@@ -62,10 +62,15 @@
   {
     "id": "cms",
     "data": {
-      "flags": 1,
-      "serviceType": 154,
-      "length": 11,
-      "body": "2233800003020000020201"
+      "next": false,
+      "resp": false,
+      "err": false,
+      "bak": false,
+      "protocolType": 1,
+      "serviceCode": 154,
+      "frameLength": 11,
+      "reqId": 13090,
+      "serviceData": "800003020000020201"
     },
     "errors": []
   }
