@@ -1,0 +1,5 @@
+# RDP X.224 Negotiation Request (MS-RDPBCGR) carried in a COTP Connection Request over TPKT/tcp:3389.
+# eth/ipv4/tcp(dstport 3389) + TPKT(v3) + COTP CR (0xE0) + RDP Negotiation Request: type 0x01, flags 0,
+# length 8 (LE), requestedProtocols 0x00000001 (TLS). source: constructed spec-accurate frame;
+# tshark dissects eth:ip:tcp:tpkt:cotp:rdp (x224/negReq).
+00112233445566778899aabb08004500003b000040004006b6b9c0000201c0000202c3500d3d000000000000000050000000514300000300001306e000000000000100080001000000

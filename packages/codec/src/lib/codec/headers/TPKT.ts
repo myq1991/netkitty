@@ -83,11 +83,12 @@ export class TPKT extends BaseHeader {
 
     public readonly nickname: string = 'TPKT'
 
-    public readonly matchKeys: string[] = ['tcpport:102']
+    //TPKT rides on TCP port 102 (ISO-on-TCP / MMS / S7) and 3389 (RDP, which layers X.224 over TPKT).
+    public readonly matchKeys: string[] = ['tcpport:102', 'tcpport:3389']
 
     public match(): boolean {
-        //TPKT rides on TCP port 102 (selected via the tcpport:102 bucket). Require the full 4-byte header
-        //and the Version == 3 content signature so non-TPKT traffic on port 102 falls through to raw.
+        //Selected via the tcpport:102 / tcpport:3389 buckets. Require the full 4-byte header and the
+        //Version == 3 content signature so non-TPKT traffic on those ports falls through to raw.
         if (!this.prevCodecModule || this.prevCodecModule.id !== 'tcp') return false
         if (this.packet.length - this.startPos < 4) return false
         return this.readBytes(0, 1, true)[0] === 3

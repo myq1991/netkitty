@@ -1,0 +1,93 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:11:22:33:44:55",
+      "smac": "66:77:88:99:aa:bb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 59,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 46777,
+      "sip": "192.0.2.1",
+      "dip": "192.0.2.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 50000,
+      "dstport": 3389,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 20803,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "tpkt",
+    "data": {
+      "version": 3,
+      "reserved": 0,
+      "length": 19
+    },
+    "errors": []
+  },
+  {
+    "id": "cotp",
+    "data": {
+      "li": 6,
+      "pduType": 224,
+      "eot": false,
+      "tpduNr": 0,
+      "headerRest": "0000000000",
+      "data": ""
+    },
+    "errors": []
+  },
+  {
+    "id": "rdp",
+    "data": {
+      "negotiationType": 1,
+      "flags": 0,
+      "length": 8,
+      "requestedProtocols": 1
+    },
+    "errors": []
+  }
+]

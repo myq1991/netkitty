@@ -857,6 +857,9 @@
       "cdp",
       "raw"
     ],
+    "rdp": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -2759,6 +2762,9 @@
         "field": "ouiProtocol",
         "value": "00000c2000"
       },
+      "raw": null
+    },
+    "rdp": {
       "raw": null
     },
     "vlan": {

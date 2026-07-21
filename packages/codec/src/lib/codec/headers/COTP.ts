@@ -141,9 +141,13 @@ export class COTP extends BaseHeader {
                         //truncation, and a pipelined trailing TPKT PDU (which an unbounded RawData child
                         //would otherwise swallow). In that case set data='' and return WITHOUT reading, so
                         //headerLength stops at the header end and the codec dispatches the remaining bytes.
-                        const dt: boolean = COTP.#isDT(this.instance.pduType.getValue(0))
+                        const pduType: number = this.instance.pduType.getValue(0)
+                        const dt: boolean = COTP.#isDT(pduType)
                         const eot: boolean = this.instance.eot.getValue(false)
-                        if (dt && eot && this.prevCodecModule && this.prevCodecModule.id === 'tpkt') {
+                        //A DT with EOT set, or a Connection Request (0xE0) / Connection Confirm (0xD0)
+                        //whose user data (an RDP Negotiation Request/Response) is single-PDU by nature.
+                        const exposeChild: boolean = (dt && eot) || pduType === 0xe0 || pduType === 0xd0
+                        if (exposeChild && this.prevCodecModule && this.prevCodecModule.id === 'tpkt') {
                             const cotpPdu: number = this.prevCodecModule.instance.length.getValue(0) - 4
                             if (cotpPdu === available && available > dataStart) {
                                 this.instance.data.setValue('')

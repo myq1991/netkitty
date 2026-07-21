@@ -41,11 +41,14 @@ test('COTP CR (Connect Request) keeps its type-specific header verbatim and roun
         {id: 'cotp', data: {li: 7, pduType: 0xe0, headerRest: 'aabbccddeeff', data: 'deadbeef'}}
     ])
     const decoded: CodecDecodeResult[] = await codec.decode(packet)
-    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp'])
+    // A CR now also exposes its user data as a child (it carries the RDP Negotiation); this crafted
+    // non-RDP data (deadbeef) is claimed by no upper header, so it falls to a trailing raw layer.
+    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp', 'raw'])
     const cotp: any = Layer(decoded, 'cotp').data
     assert.strictEqual(cotp.pduType, 0xe0, 'CR PDU Type preserved')
     assert.strictEqual(cotp.headerRest, 'aabbccddeeff', 'CR type-specific header kept verbatim')
-    assert.strictEqual(cotp.data, 'deadbeef', 'user data preserved on a non-DT TPDU')
+    assert.strictEqual(cotp.data, '', 'CR user data is exposed as a child layer, not kept in cotp.data')
+    assert.strictEqual((Layer(decoded, 'raw').data as any).data, 'deadbeef', 'non-RDP user data now in the child raw layer')
     assert.strictEqual(cotp.eot, false, 'EOT is meaningless (false) for a non-DT TPDU')
     // Derived TPKT Length = 4 (header) + 8 (COTP: LI + PDU Type + 6 header bytes + 4 data).
     assert.strictEqual(Layer(decoded, 'tpkt').data.length, 16, 'omitted TPKT Length derived from the stack above')
