@@ -1,0 +1,4 @@
+# 802.3 + LLC/SNAP encapsulating IPv4. LLC DSAP/SSAP 0xAA + control 0x03, SNAP OUI 0x000000 +
+# EtherType 0x0800, so SNAP routes to IPv4 through the shared ethertype demux (SNAP is a drop-in
+# ethertype parent). source: constructed spec-accurate frame; tshark dissects eth:llc:snap:ip.
+01000ccccccc001122334455001caaaa03000000080045000014000040004006b6e0c0000201c0000202

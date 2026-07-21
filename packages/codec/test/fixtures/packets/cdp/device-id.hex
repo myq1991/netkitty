@@ -1,0 +1,4 @@
+# 802.3 + LLC/SNAP + CDP. SNAP OUI 0x00000C + PID 0x2000 -> Cisco Discovery Protocol. CDP version 2,
+# TTL 180, checksum 0xe2c8, one Device ID TLV (type 0x0001) value "SW1" (535731).
+# source: constructed spec-accurate frame; tshark dissects eth:llc:cdp.
+01000ccccccc0011223344550020aaaa0300000c200002b4e2c800010007535731

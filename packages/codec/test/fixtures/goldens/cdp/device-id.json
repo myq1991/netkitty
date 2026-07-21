@@ -1,0 +1,45 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:0c:cc:cc:cc",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0020"
+    },
+    "errors": []
+  },
+  {
+    "id": "llc",
+    "data": {
+      "dsap": 170,
+      "ssap": 170,
+      "control": "03"
+    },
+    "errors": []
+  },
+  {
+    "id": "snap",
+    "data": {
+      "oui": "00000c",
+      "etherType": "2000",
+      "ouiProtocol": "00000c2000"
+    },
+    "errors": []
+  },
+  {
+    "id": "cdp",
+    "data": {
+      "version": 2,
+      "ttl": 180,
+      "checksum": "e2c8",
+      "tlvs": [
+        {
+          "type": 1,
+          "length": 7,
+          "value": "535731"
+        }
+      ]
+    },
+    "errors": []
+  }
+]

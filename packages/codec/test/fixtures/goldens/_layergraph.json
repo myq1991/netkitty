@@ -815,12 +815,46 @@
     ],
     "llc": [
       "stp",
+      "isis",
+      "snap",
       "raw"
     ],
     "stp": [
       "raw"
     ],
     "s7comm": [
+      "raw"
+    ],
+    "cdp": [
+      "raw"
+    ],
+    "isis": [
+      "raw"
+    ],
+    "snap": [
+      "arp",
+      "goose",
+      "sv",
+      "ipv4",
+      "ipv6",
+      "lldp",
+      "pnio",
+      "ecat",
+      "hsr",
+      "eapol",
+      "lacp",
+      "marker",
+      "mpls",
+      "pppoe-disc",
+      "pppoe-sess",
+      "ptp",
+      "powerlink",
+      "sercos3",
+      "fcoe",
+      "macsec",
+      "wol",
+      "vlan",
+      "cdp",
       "raw"
     ],
     "vlan": [
@@ -2610,12 +2644,121 @@
         "field": "dsap",
         "value": 66
       },
+      "isis": {
+        "field": "dsap",
+        "value": 254
+      },
+      "snap": {
+        "field": "dsap",
+        "value": 170
+      },
       "raw": null
     },
     "stp": {
       "raw": null
     },
     "s7comm": {
+      "raw": null
+    },
+    "cdp": {
+      "raw": null
+    },
+    "isis": {
+      "raw": null
+    },
+    "snap": {
+      "arp": {
+        "field": "etherType",
+        "value": "0806"
+      },
+      "goose": {
+        "field": "etherType",
+        "value": "88b8"
+      },
+      "sv": {
+        "field": "etherType",
+        "value": "88ba"
+      },
+      "ipv4": {
+        "field": "etherType",
+        "value": "0800"
+      },
+      "ipv6": {
+        "field": "etherType",
+        "value": "86dd"
+      },
+      "lldp": {
+        "field": "etherType",
+        "value": "88cc"
+      },
+      "pnio": {
+        "field": "etherType",
+        "value": "8892"
+      },
+      "ecat": {
+        "field": "etherType",
+        "value": "88a4"
+      },
+      "hsr": {
+        "field": "etherType",
+        "value": "892f"
+      },
+      "eapol": {
+        "field": "etherType",
+        "value": "888e"
+      },
+      "lacp": {
+        "field": "etherType",
+        "value": "8809"
+      },
+      "marker": {
+        "field": "etherType",
+        "value": "8809"
+      },
+      "mpls": {
+        "field": "etherType",
+        "value": "8847"
+      },
+      "pppoe-disc": {
+        "field": "etherType",
+        "value": "8863"
+      },
+      "pppoe-sess": {
+        "field": "etherType",
+        "value": "8864"
+      },
+      "ptp": {
+        "field": "etherType",
+        "value": "88f7"
+      },
+      "powerlink": {
+        "field": "etherType",
+        "value": "88ab"
+      },
+      "sercos3": {
+        "field": "etherType",
+        "value": "88cd"
+      },
+      "fcoe": {
+        "field": "etherType",
+        "value": "8906"
+      },
+      "macsec": {
+        "field": "etherType",
+        "value": "88e5"
+      },
+      "wol": {
+        "field": "etherType",
+        "value": "0842"
+      },
+      "vlan": {
+        "field": "etherType",
+        "value": "8100"
+      },
+      "cdp": {
+        "field": "ouiProtocol",
+        "value": "00000c2000"
+      },
       "raw": null
     },
     "vlan": {
