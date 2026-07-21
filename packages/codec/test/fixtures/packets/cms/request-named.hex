@@ -1,0 +1,5 @@
+# CMS (China smart-substation new-gen comm, DL/T 860 CMS) over plain TCP:8102 — real frame.
+# extracted from pcaps/getalldata.pcapng frame 14. Header: flags(1: 0x01 req / 0x41 resp) +
+# service(1) + length(2 LE) + body (ACSI PDU). source: real capture, hex extracted (pcap not committed).
+# note: IPv4 checksum normalized from the capture-side offload placeholder (0x0000) to the correct on-wire value.
+7897c3f800026c1ff763d6cb080045000040a3b440008006d03ac0a8027ac0a802fec6f01fa6b0f6d0fc64aed580501800ff86fb0000019b14002433220053573131313130335357492f4c4c4e30

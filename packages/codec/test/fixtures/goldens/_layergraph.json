@@ -175,6 +175,7 @@
       "pcworx",
       "slp",
       "nfs",
+      "cms",
       "tls-alert",
       "tls-appdata",
       "tls-ccsp",
@@ -863,6 +864,9 @@
     "iso-session": [
       "raw"
     ],
+    "cms": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -1520,6 +1524,10 @@
       "nfs": {
         "field": "dstport",
         "value": 2049
+      },
+      "cms": {
+        "field": "dstport",
+        "value": 8102
       },
       "tls-alert": {
         "field": "dstport",
@@ -2771,6 +2779,9 @@
       "raw": null
     },
     "iso-session": {
+      "raw": null
+    },
+    "cms": {
       "raw": null
     },
     "vlan": {

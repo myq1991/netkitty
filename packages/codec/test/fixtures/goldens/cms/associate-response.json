@@ -1,0 +1,72 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "6c:1f:f7:63:d6:cb",
+      "smac": "78:97:c3:f8:00:02",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 61,
+      "id": 2529,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 64,
+      "protocol": 6,
+      "checksum": 43537,
+      "sip": "192.168.2.254",
+      "dip": "192.168.2.122"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 8102,
+      "dstport": 50928,
+      "seq": 1689179483,
+      "ack": 2968965365,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": true,
+        "push": true,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 502,
+      "checksum": 54578,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "cms",
+    "data": {
+      "flags": 65,
+      "serviceType": 154,
+      "length": 17,
+      "body": "22338000030200000202010556312e3030"
+    },
+    "errors": []
+  }
+]
