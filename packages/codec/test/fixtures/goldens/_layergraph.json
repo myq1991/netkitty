@@ -860,6 +860,9 @@
     "rdp": [
       "raw"
     ],
+    "iso-session": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -2765,6 +2768,9 @@
       "raw": null
     },
     "rdp": {
+      "raw": null
+    },
+    "iso-session": {
       "raw": null
     },
     "vlan": {
