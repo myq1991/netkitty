@@ -2,8 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // A 40-byte inner IPv6 packet (version 6, next header 59 No-Next-Header, hop limit 64) used as the
 // tunneled Teredo payload across the crafted cases — Teredo keeps it verbatim as `payload` hex.

@@ -3,7 +3,7 @@ import assert from 'node:assert'
 import {tsharkAvailable, tsharkLayers, TsharkLayers} from '../lib/Tshark'
 import {AllPacketFixtureNames, LoadPacket} from '../lib/Fixtures'
 import {Decode} from '../lib/RoundTrip'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
 
 /**
  * Differential oracle: netkitty's decoded value for a field must equal Wireshark/tshark's own

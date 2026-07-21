@@ -2,11 +2,11 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer} from '../lib/RoundTrip'
-import {Codec} from '../../src/lib/codec/Codec'
-import {ARP} from '../../src/lib/codec/PacketHeaders'
-import {BaseHeader} from '../../src/lib/codec/abstracts/BaseHeader'
-import {ProtocolJSONSchema} from '../../src/lib/schema/ProtocolJSONSchema'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
+import {Codec} from '../../src/Codec'
+import {ARP} from '../../src/PacketHeaders'
+import {BaseHeader} from '../../src/abstracts/BaseHeader'
+import {ProtocolJSONSchema} from '../../src/schema/ProtocolJSONSchema'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
 
 test('unknown ethertype falls to raw layer + round-trip', async (): Promise<void> => {
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('codec/unknown-ethertype').buffer)

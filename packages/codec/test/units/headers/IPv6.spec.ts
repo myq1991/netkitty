@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertLayers, AssertDecodeSurvives, Layer, Decode, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 test('IPv6 with Hop-by-Hop options header: field decode + round-trip', async (): Promise<void> => {
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('ipv6/hopbyhop-icmpv6').buffer)

@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // Real LLMNR query (RFC 4795, DNS wire format) on UDP 5355 for "wpad" A. The codec is a thin DNS subclass.
 test('LLMNR query: DNS-format question decode + byte-perfect round-trip', async (): Promise<void> => {

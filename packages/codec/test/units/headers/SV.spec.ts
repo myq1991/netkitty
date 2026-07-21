@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {codec, Layer, AssertRoundTrip} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // This real IEC 61850-9-2 frame carries a savPdu whose BER cannot be parsed.
 // Decode must never throw (error accumulation), must SURFACE the unparsed bytes as a

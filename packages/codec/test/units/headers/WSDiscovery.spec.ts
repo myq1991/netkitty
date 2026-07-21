@@ -2,8 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // WS-Discovery (OASIS, udp:3702) Probe — a SOAP/XML datagram kept verbatim, byte-perfect round-trip. The
 // WS-Addressing Action is parsed into display-only metadata (full Action URI + short message type).

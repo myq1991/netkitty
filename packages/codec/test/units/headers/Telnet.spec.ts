@@ -2,8 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // Real busybox telnetd initial option negotiation (RFC 854) on TCP port 23: IAC WILL ECHO, IAC WILL
 // SGA, IAC DO NAWS, then the shell prompt. The whole payload is kept verbatim (byte-perfect), and the

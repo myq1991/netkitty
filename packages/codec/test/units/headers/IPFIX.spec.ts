@@ -2,8 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // IPFIX / NetFlow v10 (udp:4739) — 16-byte Message Header + a Template Set (id 2) and a Data Set (id 256).
 test('IPFIX: header + template/data sets + byte-perfect round-trip', async (): Promise<void> => {

@@ -2,10 +2,10 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertLayers, Layer} from '../../lib/RoundTrip'
-import {Codec} from '../../../src/lib/codec/Codec'
-import {RTCP} from '../../../src/lib/codec/headers/RTCP'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {Codec} from '../../../src/Codec'
+import {RTCP} from '../../../src/headers/RTCP'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // RTCP is not yet wired into the shared PacketHeaders registry, so build a codec with the full built-in
 // stack PLUS the RTCP draft appended (the Codec constructor merges custom codecs with the built-ins).

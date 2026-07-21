@@ -1,8 +1,8 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {BaseHeader} from '../../src/lib/codec/abstracts/BaseHeader'
-import {ProtocolJSONSchema} from '../../src/lib/schema/ProtocolJSONSchema'
-import {CodecData} from '../../src/lib/codec/types/CodecData'
+import {BaseHeader} from '../../src/abstracts/BaseHeader'
+import {ProtocolJSONSchema} from '../../src/schema/ProtocolJSONSchema'
+import {CodecData} from '../../src/types/CodecData'
 
 /**
  * Minimal concrete header that exposes the protected bit helpers so their precision can be tested

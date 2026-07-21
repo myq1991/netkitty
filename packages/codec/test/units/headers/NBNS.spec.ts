@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // Real NBNS name query (RFC 1002) on UDP 137 from samba nmblookup. DNS wire format + first-level name.
 test('NBNS name query: first-level name decode + byte-perfect round-trip', async (): Promise<void> => {

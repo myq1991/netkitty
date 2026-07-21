@@ -2,8 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // IKEv2 IKE_SA_INIT (RFC 7296) on UDP 500: the 28-byte fixed header (split version nibbles) plus a
 // generic-payload chain SA(33) -> KE(34) -> Nonce(40) -> 0. Byte-perfect through the payload walk.

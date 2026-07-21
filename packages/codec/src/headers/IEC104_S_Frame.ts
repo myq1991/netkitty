@@ -1,0 +1,113 @@
+import {ProtocolJSONSchema} from '../schema/ProtocolJSONSchema'
+import {BufferToUInt8} from '../helper/BufferToNumber'
+import {BufferToHex} from '../helper/BufferToHex'
+import {HexToBuffer} from '../helper/HexToBuffer'
+import {BaseHeader} from '../abstracts/BaseHeader'
+import {CodecModule} from '../types/CodecModule'
+import {UInt8ToBuffer} from '../helper/NumberToBuffer'
+
+
+export class IEC104_S_Frame extends BaseHeader {
+    public SCHEMA: ProtocolJSONSchema = {
+        type: 'object',
+        properties: {
+            startByte: {
+                type: 'integer',
+                label: 'Start Byte',
+                minimum: 0,
+                maximum: 255,
+                decode: (): void => {
+                    this.instance.startByte.setValue(BufferToUInt8(this.readBytes(0, 1)))
+                },
+                encode: (): void => {
+                    this.writeBytes(0, UInt8ToBuffer(this.instance.startByte.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))))
+                }
+            },
+            apduLength: {
+                type: 'integer',
+                label: 'APDU Length',
+                minimum: 0,
+                maximum: 255,
+                decode: (): void => {
+                    this.instance.apduLength.setValue(BufferToUInt8(this.readBytes(1, 1)))
+                },
+                encode: (): void => {
+                    this.writeBytes(1, UInt8ToBuffer(this.instance.apduLength.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found'))))
+                }
+            },
+            controlField: {
+                type: 'string',
+                label: 'Control Field',
+                decode: (): void => {
+                    this.instance.controlField.setValue(BufferToHex(this.readBytes(2, 4)))
+                },
+                encode: (): void => {
+                    this.writeBytes(2, HexToBuffer(this.instance.controlField.getValue('0', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))))
+                }
+            },
+            //Receive sequence number N(R): a 15-bit value in control octets 3-4, stored
+            //little-endian and left-shifted by 1. Exposed read-only for analysis (S-frames exist
+            //precisely to acknowledge this sequence number); controlField holds the authoritative bytes.
+            rxSequence: {
+                type: 'integer',
+                label: 'Rx Sequence Number N(R)',
+                decode: (): void => {
+                    this.instance.rxSequence.setValue(this.readBytes(4, 2).readUInt16LE() >> 1)
+                }
+            },
+            apciType: {
+                type: 'string',
+                label: 'APCI Type',
+                minimum: 0,
+                maximum: 3,
+                decode: (): void => {
+                    const controlType: number = this.readBits(2, 1, 7, 1)
+                    switch (controlType) {
+                        case 1: {
+                            this.instance.apciType.setValue('S-Format')
+                        }
+                            break
+                        default: {
+                            this.recordError(this.instance.apciType.getPath(), 'Illegal acpiType!')
+                            this.instance.apciType.setValue(controlType)
+                        }
+                    }
+                },
+                encode: (): void => {
+                    const controlType: string = this.instance.apciType.getValue('0', (nodePath: string): void => this.recordError(nodePath, 'Not Found'))
+                    switch (controlType) {
+                        case 'S-Format': {
+                            this.writeBits(2, 1, 7, 1, 1)
+                        }
+                            break
+                        default: {
+                            this.writeBits(2, 1, 7, 1, this.instance.apciType.getValue(0, (nodePath: string): void => this.recordError(nodePath, 'Not Found')))
+                        }
+                    }
+                }
+            }
+        }
+    }
+    public id: string = 'IEC104_S_Frame'
+    public readonly matchKeys: string[] = ['tcpport:2404']
+    public readonly heuristicFallback: boolean = true
+    public name: string = 'IEC 60870-5-104'
+    public nickname: string = 'iec60870_104'
+
+    public match(): boolean {
+        if (!this.prevCodecModules) return false
+        //IEC 104 always rides on TCP port 2404 (see IEC104_I_Frame.match for rationale).
+        if (!this.prevCodecModules.some((module: CodecModule): boolean =>
+            module.id === 'tcp' && (module.instance.srcport.getValue() === 2404 || module.instance.dstport.getValue() === 2404))) return false
+        if (BufferToUInt8(this.readBytes(0, 1)) != 104) return false
+        const type: number = this.readBits(2, 1, 6, 2)
+        switch (type) {
+            case 1: {
+                return true
+            }
+            default: {
+                return false
+            }
+        }
+    };
+}

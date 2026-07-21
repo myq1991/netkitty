@@ -2,10 +2,10 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertLayers, Layer} from '../../lib/RoundTrip'
-import {Codec} from '../../../src/lib/codec/Codec'
-import {SMB1} from '../../../src/lib/codec/headers/SMB1'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {Codec} from '../../../src/Codec'
+import {SMB1} from '../../../src/headers/SMB1'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 //SMB1 is not (yet) in the built-in registry, so this spec drives a codec that layers SMB1 on top of the
 //built-ins. The Layer/AssertLayers helpers are codec-agnostic (they inspect decode results only).

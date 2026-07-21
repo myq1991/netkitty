@@ -1,7 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {BufferToInt16, BufferToInt32, BufferToInt8, BufferToUInt16, BufferToUInt32, BufferToUInt8} from '../../src/lib/helper/BufferToNumber'
-import {BufferToIPv4} from '../../src/lib/helper/BufferToIP'
+import {BufferToInt16, BufferToInt32, BufferToInt8, BufferToUInt16, BufferToUInt32, BufferToUInt8} from '../../src/helper/BufferToNumber'
+import {BufferToIPv4} from '../../src/helper/BufferToIP'
 
 // Direct tests for the native Buffer↔number/IP read helpers (previously untested — the codec's
 // scalar-field reads all flow through these). Pins full-width, short/truncated, empty, signed, and

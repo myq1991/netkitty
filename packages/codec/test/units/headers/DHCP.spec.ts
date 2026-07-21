@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // Real DHCP DISCOVER (client → server, broadcast) captured from dhclient against dnsmasq. RFC 2131.
 test('DHCP discover: fixed header + options decode + byte-perfect round-trip', async (): Promise<void> => {

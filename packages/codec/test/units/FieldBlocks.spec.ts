@@ -1,9 +1,9 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {BaseHeader} from '../../src/lib/codec/abstracts/BaseHeader'
-import {ProtocolJSONSchema} from '../../src/lib/schema/ProtocolJSONSchema'
-import {ProtocolFieldJSONSchema} from '../../src/lib/schema/ProtocolFieldJSONSchema'
-import {CodecData} from '../../src/lib/codec/types/CodecData'
+import {BaseHeader} from '../../src/abstracts/BaseHeader'
+import {ProtocolJSONSchema} from '../../src/schema/ProtocolJSONSchema'
+import {ProtocolFieldJSONSchema} from '../../src/schema/ProtocolFieldJSONSchema'
+import {CodecData} from '../../src/types/CodecData'
 
 /**
  * Direct tests for the declarative field building blocks (BaseHeader.fieldUInt). The migrated

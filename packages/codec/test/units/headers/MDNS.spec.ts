@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // mDNS reuses the DNS wire format; the codec is a thin subclass on UDP 5353. Real avahi capture. RFC 6762.
 test('mDNS query: DNS-format questions decode + byte-perfect round-trip', async (): Promise<void> => {

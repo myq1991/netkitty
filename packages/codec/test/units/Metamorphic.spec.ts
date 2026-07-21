@@ -1,9 +1,9 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {Codec} from '../../src/lib/codec/Codec'
+import {Codec} from '../../src/Codec'
 import {AllPacketFixtureNames, LoadPacket} from '../lib/Fixtures'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../src/types/CodecEncodeResult'
 
 /**
  * Schema-driven metamorphic test. It explores the input space that hand-made fixtures never cover:

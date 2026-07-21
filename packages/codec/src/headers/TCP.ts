@@ -1,0 +1,944 @@
+import {ProtocolJSONSchema} from '../schema/ProtocolJSONSchema'
+import {BaseHeader} from '../abstracts/BaseHeader'
+import {DemuxProducer} from '../types/DemuxProducer'
+import {BufferToUInt16, BufferToUInt32, BufferToUInt64, BufferToUInt8} from '../helper/BufferToNumber'
+import {UInt16ToBuffer, UInt32ToBuffer, UInt64ToBuffer, UInt8ToBuffer} from '../helper/NumberToBuffer'
+import {IPv6ToBuffer} from '../helper/IPToBuffer'
+import {CodecModule} from '../types/CodecModule'
+import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
+import {UInt64ToHex} from '../helper/NumberToHex'
+import {HexToUInt64} from '../helper/HexToNumber'
+
+enum TCPOption {
+    End_of_Option_List = 'EOL',
+    No_Operation = 'NOP',
+    Maximum_Segment_Size = 'MSS',
+    Window_Scale = 'Window-Scale',
+    Selective_Acknowledgment_Permitted = 'SACK-Permitted',
+    Selective_Acknowledgment = 'SACK',
+    Timestamp = 'TS',
+    User_Timeout = 'UTO',
+    TCP_Authentication_Option = 'TCP-AO'
+}
+
+type OPTION_EOL = {
+    option: TCPOption.End_of_Option_List
+}
+
+type OPTION_NOP = {
+    option: TCPOption.No_Operation
+}
+
+type OPTION_MSS = {
+    option: TCPOption.Maximum_Segment_Size
+    mss: number
+}
+
+type OPTION_WINDOW_SCALE = {
+    option: TCPOption.Window_Scale
+    shift: number
+}
+
+type OPTION_SACK_PERMITTED = {
+    option: TCPOption.Selective_Acknowledgment_Permitted
+}
+
+type OPTION_SACK = {
+    option: TCPOption.Selective_Acknowledgment
+    blocks: string[]
+}
+
+type OPTION_TS = {
+    option: TCPOption.Timestamp
+    tsval: number
+    tsecr: number
+}
+
+type OPTION_UTO = {
+    option: TCPOption.User_Timeout
+    timeout: number
+    granularity: number
+}
+
+type OPTION_TCP_AO = {
+    option: TCPOption.TCP_Authentication_Option
+    data: string
+}
+
+type OPTION_DEFAULT = {
+    kind: number
+    data: string
+}
+
+type OptionItem =
+    OPTION_EOL
+    | OPTION_NOP
+    | OPTION_MSS
+    | OPTION_WINDOW_SCALE
+    | OPTION_SACK_PERMITTED
+    | OPTION_SACK
+    | OPTION_TS
+    | OPTION_UTO
+    | OPTION_TCP_AO
+    | OPTION_DEFAULT
+
+export class TCP extends BaseHeader {
+
+    /**
+     * Calculate TCP Checksum
+     * @param tcpHeaderBuffer
+     * @protected
+     */
+    protected calculateTCPChecksum(tcpHeaderBuffer: Buffer): number {
+        const tcpHeaderLength: number = tcpHeaderBuffer.length
+        //The checksum needs the IP pseudo-header from the layer below. Building a malformed
+        //stack (e.g. TCP with no IP beneath) is a legitimate use case, so record an error and
+        //skip the checksum rather than dereferencing a missing previous layer and throwing.
+        if (!this.prevCodecModule) {
+            this.recordError(this.instance.checksum.getPath(), 'Cannot compute TCP checksum: no IP layer beneath TCP')
+            return 0
+        }
+        const ipVersion: number = this.prevCodecModule.instance.version.getValue()
+        let pseudoHeaderBuffer: Buffer = Buffer.from([])
+        const sourceIp: string = this.prevCodecModule.instance.sip.getValue()
+        const destinationIp: string = this.prevCodecModule.instance.dip.getValue()
+        if (ipVersion === 4) {
+            //4 Bytes
+            const sourceIPv4Buffer: Buffer = Buffer.from(sourceIp.split('.').map((value: string): number => parseInt(value)))
+            const destinationIPv4Buffer: Buffer = Buffer.from(destinationIp.split('.').map((value: string): number => parseInt(value)))
+            //IPv4 Pseudo header
+            pseudoHeaderBuffer = Buffer.concat([
+                sourceIPv4Buffer,
+                destinationIPv4Buffer,
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(6), //Protocol type (TCP = 6)
+                Buffer.from([(tcpHeaderLength >> 8) & 0xFF]),
+                Buffer.from([tcpHeaderLength & 0xFF])
+            ])
+        } else if (ipVersion === 6) {
+            //16 Bytes
+            const sourceIPv6Buffer: Buffer = IPv6ToBuffer(sourceIp)
+            const destinationIPv6Buffer: Buffer = IPv6ToBuffer(destinationIp)
+            //IPv6 Pseudo header
+            pseudoHeaderBuffer = Buffer.concat([
+                sourceIPv6Buffer,
+                destinationIPv6Buffer,
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(0), //Reserved field
+                UInt8ToBuffer(6), //Protocol type (TCP = 6)
+                Buffer.from([(tcpHeaderLength >> 8) & 0xFF]),
+                Buffer.from([tcpHeaderLength & 0xFF])
+            ])
+        } else {
+            return 0
+        }
+        const dataBuffer: Buffer = Buffer.concat([pseudoHeaderBuffer, tcpHeaderBuffer])
+        const data: Uint8Array = Uint8Array.from(dataBuffer)
+        let sum: number = 0
+        for (let i: number = 0; i < data.length; i += 2) sum += (data[i] << 8) + (data[i + 1] || 0)
+        while (sum >>> 16) sum = (sum & 0xFFFF) + (sum >>> 16)
+        return (~sum) & 0xFFFF
+    }
+
+    static #schemaCache: ProtocolJSONSchema | undefined
+
+    //Class-cached SCHEMA (④): field closures are functions taking dynamic `this` via .call(this).
+    //fieldUInt is a static factory, so `this.fieldUInt` below resolves against the class.
+    public get SCHEMA(): ProtocolJSONSchema {
+        return (TCP.#schemaCache ??= TCP.#buildSchema())
+    }
+
+    static #buildSchema(): ProtocolJSONSchema {
+        return {
+        type: 'object',
+        summary: '${srcport} → ${dstport} Seq=${seq} Ack=${ack} Win=${window}',
+        properties: {
+            //Migrated to the declarative field building block (byte-identical; golden/round-trip unchanged).
+            srcport: this.fieldUInt('srcport', 0, 2, 'Source Port'),
+            dstport: this.fieldUInt('dstport', 2, 2, 'Destination Port'),
+            seq: {
+                type: 'integer',
+                label: 'Sequence Number',
+                minimum: 0,
+                maximum: 4294967295,
+                decode: function (this: TCP): void {
+                    this.instance.seq.setValue(BufferToUInt32(this.readBytes(4, 4)))
+                },
+                encode: function (this: TCP): void {
+                    let seqNum: number = this.instance.seq.getValue(0)
+                    if (seqNum > 4294967295) {
+                        this.recordError(this.instance.seq.getPath(), 'Maximum value is 4294967295')
+                        seqNum = 4294967295
+                    }
+                    if (seqNum < 0) {
+                        this.recordError(this.instance.seq.getPath(), 'Minimum value is 0')
+                        seqNum = 0
+                    }
+                    this.instance.seq.setValue(seqNum)
+                    this.writeBytes(4, UInt32ToBuffer(seqNum))
+                }
+            },
+            ack: {
+                type: 'integer',
+                label: 'Acknowledgment Number',
+                minimum: 0,
+                maximum: 4294967295,
+                decode: function (this: TCP): void {
+                    this.instance.ack.setValue(BufferToUInt32(this.readBytes(8, 4)))
+                },
+                encode: function (this: TCP): void {
+                    let ackNum: number = this.instance.ack.getValue(0)
+                    if (ackNum > 4294967295) {
+                        this.recordError(this.instance.ack.getPath(), 'Maximum value is 4294967295')
+                        ackNum = 4294967295
+                    }
+                    if (ackNum < 0) {
+                        this.recordError(this.instance.ack.getPath(), 'Minimum value is 0')
+                        ackNum = 0
+                    }
+                    this.instance.ack.setValue(ackNum)
+                    this.writeBytes(8, UInt32ToBuffer(ackNum))
+                }
+            },
+            hdrLen: {
+                type: 'integer',
+                label: 'Header Length',
+                minimum: 0,
+                maximum: 60,
+                decode: function (this: TCP): void {
+                    this.instance.hdrLen.setValue(this.readBits(12, 1, 0, 4) * 4)
+                },
+                encode: function (this: TCP): void {
+                    const hdrLen: number = this.instance.hdrLen.getValue(0)
+                    if (hdrLen) {
+                        this.instance.hdrLen.setValue(hdrLen)
+                        this.writeBits(12, 1, 0, 4, hdrLen ? Math.floor(hdrLen / 4) : 0)
+                    } else {
+                        this.addPostSelfEncodeHandler((): void => {
+                            this.instance.hdrLen.setValue(Math.floor(this.length / 4) * 4)
+                            this.writeBits(12, 1, 0, 4, Math.floor(this.length / 4))
+                        }, 1)
+                    }
+                }
+            },
+            flags: {
+                type: 'object',
+                label: 'Flags',
+                properties: {
+                    res: {
+                        type: 'integer',
+                        label: 'Reserved',
+                        minimum: 0,
+                        maximum: 7,
+                        decode: function (this: TCP): void {
+                            this.instance.flags.res.setValue(this.readBits(12, 1, 4, 3))
+                        },
+                        encode: function (this: TCP): void {
+                            let reserved: number = this.instance.flags.res.getValue(0)
+                            if (reserved > 7) {
+                                this.recordError(this.instance.flags.res.getPath(), 'Maximum value is 7')
+                                reserved = 7
+                            }
+                            if (reserved < 0) {
+                                this.recordError(this.instance.flags.res.getPath(), 'Minimum value is 0')
+                                reserved = 0
+                            }
+                            this.instance.flags.res.setValue(reserved)
+                            this.writeBits(12, 1, 4, 3, reserved)
+                        }
+                    },
+                    ae: {
+                        type: 'boolean',
+                        label: 'Accurate ECN',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.ae.setValue(!!this.readBits(12, 1, 7, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const accurateECN: boolean = !!this.instance.flags.ae.getValue()
+                            this.instance.flags.ae.setValue(accurateECN)
+                            this.writeBits(12, 1, 7, 1, accurateECN ? 1 : 0)
+                        }
+                    },
+                    cwr: {
+                        type: 'boolean',
+                        label: 'Congestion Window Reduced',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.cwr.setValue(!!this.readBits(13, 1, 0, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const congestionWindowReduced: boolean = !!this.instance.flags.cwr.getValue()
+                            this.instance.flags.cwr.setValue(congestionWindowReduced)
+                            this.writeBits(13, 1, 0, 1, congestionWindowReduced ? 1 : 0)
+                        }
+                    },
+                    ece: {
+                        type: 'boolean',
+                        label: 'ECN-Echo',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.ece.setValue(!!this.readBits(13, 1, 1, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const ECNEcho: boolean = !!this.instance.flags.ece.getValue()
+                            this.instance.flags.ece.setValue(ECNEcho)
+                            this.writeBits(13, 1, 1, 1, ECNEcho ? 1 : 0)
+                        }
+                    },
+                    urg: {
+                        type: 'boolean',
+                        label: 'Urgent',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.urg.setValue(!!this.readBits(13, 1, 2, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const urgent: boolean = !!this.instance.flags.urg.getValue()
+                            this.instance.flags.urg.setValue(urgent)
+                            this.writeBits(13, 1, 2, 1, urgent ? 1 : 0)
+                        }
+                    },
+                    ack: {
+                        type: 'boolean',
+                        label: 'Acknowledgment',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.ack.setValue(!!this.readBits(13, 1, 3, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const acknowledgment: boolean = !!this.instance.flags.ack.getValue()
+                            this.instance.flags.ack.setValue(acknowledgment)
+                            this.writeBits(13, 1, 3, 1, acknowledgment ? 1 : 0)
+                        }
+                    },
+                    push: {
+                        type: 'boolean',
+                        label: 'Push',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.push.setValue(!!this.readBits(13, 1, 4, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const push: boolean = !!this.instance.flags.push.getValue()
+                            this.instance.flags.push.setValue(push)
+                            this.writeBits(13, 1, 4, 1, push ? 1 : 0)
+                        }
+                    },
+                    rst: {
+                        type: 'boolean',
+                        label: 'Reset',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.rst.setValue(!!this.readBits(13, 1, 5, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const reset: boolean = !!this.instance.flags.rst.getValue()
+                            this.instance.flags.rst.setValue(reset)
+                            this.writeBits(13, 1, 5, 1, reset ? 1 : 0)
+                        }
+                    },
+                    syn: {
+                        type: 'boolean',
+                        label: 'Syn',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.syn.setValue(!!this.readBits(13, 1, 6, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const syn: boolean = !!this.instance.flags.syn.getValue()
+                            this.instance.flags.syn.setValue(syn)
+                            this.writeBits(13, 1, 6, 1, syn ? 1 : 0)
+                        }
+                    },
+                    fin: {
+                        type: 'boolean',
+                        label: 'Fin',
+                        decode: function (this: TCP): void {
+                            this.instance.flags.fin.setValue(!!this.readBits(13, 1, 7, 1))
+                        },
+                        encode: function (this: TCP): void {
+                            const fin: boolean = !!this.instance.flags.fin.getValue()
+                            this.instance.flags.fin.setValue(fin)
+                            this.writeBits(13, 1, 7, 1, fin ? 1 : 0)
+                        }
+                    }
+                }
+            },
+            window: {
+                type: 'integer',
+                label: 'Window Size',
+                minimum: 0,
+                maximum: 65535,
+                decode: function (this: TCP): void {
+                    this.instance.window.setValue(BufferToUInt16(this.readBytes(14, 2)))
+                },
+                encode: function (this: TCP): void {
+                    let windowSize: number = this.instance.window.getValue(0)
+                    if (windowSize > 65535) {
+                        this.recordError(this.instance.window.getPath(), 'Maximum value is 65535')
+                        windowSize = 65535
+                    }
+                    if (windowSize < 0) {
+                        this.recordError(this.instance.window.getPath(), 'Minimum value is 0')
+                        windowSize = 0
+                    }
+                    this.instance.window.setValue(windowSize)
+                    this.writeBytes(14, UInt16ToBuffer(windowSize))
+                }
+            },
+            checksum: {
+                type: 'integer',
+                label: 'Checksum',
+                minimum: 0,
+                maximum: 65535,
+                decode: function (this: TCP): void {
+                    this.instance.checksum.setValue(BufferToUInt16(this.readBytes(16, 2)))
+                },
+                encode: function (this: TCP): void {
+                    const checksum: number = this.instance.checksum.getValue(0)
+                    if (checksum) {
+                        this.instance.checksum.setValue(checksum)
+                        this.writeBytes(16, UInt16ToBuffer(checksum))
+                    } else {
+                        this.instance.checksum.setValue(checksum)
+                        this.writeBytes(16, UInt16ToBuffer(checksum))
+                        this.addPostPacketEncodeHandler((): void => {
+                            //Calculate checksum after packet encoded
+                            let startPos: number = 0
+                            let endPos: number = 0
+                            this.codecModules.forEach((codecModule: CodecModule): void => {
+                                if (codecModule === this) startPos = codecModule.startPos
+                                endPos = codecModule.endPos > endPos ? codecModule.endPos : endPos
+                            })
+                            const calcChecksum: number = this.calculateTCPChecksum(this.packet.subarray(startPos, endPos))
+                            this.instance.checksum.setValue(calcChecksum)
+                            this.writeBytes(16, UInt16ToBuffer(calcChecksum))
+                        }, 100)
+                    }
+                }
+            },
+            urgPtr: {
+                type: 'integer',
+                label: 'Urgent Pointer',
+                minimum: 0,
+                maximum: 65535,
+                decode: function (this: TCP): void {
+                    this.instance.urgPtr.setValue(BufferToUInt16(this.readBytes(18, 2)))
+                },
+                encode: function (this: TCP): void {
+                    let urgPtr: number = this.instance.urgPtr.getValue(0)
+                    if (urgPtr > 65535) {
+                        this.recordError(this.instance.urgPtr.getPath(), 'Maximum value is 65535')
+                        urgPtr = 65535
+                    }
+                    if (urgPtr < 0) {
+                        this.recordError(this.instance.urgPtr.getPath(), 'Minimum value is 0')
+                        urgPtr = 0
+                    }
+                    this.instance.urgPtr.setValue(urgPtr)
+                    this.writeBytes(18, UInt16ToBuffer(urgPtr))
+                }
+            },
+            options: {
+                type: 'array',
+                label: 'Options',
+                items: {
+                    anyOf: [
+                        //Kind = 0 (End of Option List, EOL)
+                        {
+                            type: 'object',
+                            label: 'End of Option List',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.End_of_Option_List],
+                                    const: TCPOption.End_of_Option_List,
+                                    hidden: true
+                                }
+                            }
+                        },
+                        //Kind = 1 (No-Operation, NOP)
+                        {
+                            type: 'object',
+                            label: 'No-Operation',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.No_Operation],
+                                    const: TCPOption.No_Operation,
+                                    hidden: true
+                                }
+                            }
+                        },
+                        //Kind = 2 (Maximum Segment Size, MSS)
+                        {
+                            type: 'object',
+                            label: 'Maximum Segment Size',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.Maximum_Segment_Size],
+                                    const: TCPOption.Maximum_Segment_Size,
+                                    hidden: true
+                                },
+                                mss: {
+                                    type: 'integer',
+                                    label: 'MSS',
+                                    maximum: 65535,
+                                    minimum: 0
+                                }
+                            }
+                        },
+                        //Kind = 3 (Window Scale)
+                        {
+                            type: 'object',
+                            label: 'Window Scale',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.Window_Scale],
+                                    const: TCPOption.Window_Scale,
+                                    hidden: true
+                                },
+                                shift: {
+                                    type: 'integer',
+                                    label: 'Shift count',
+                                    minimum: 0,
+                                    maximum: 14
+                                }
+                            }
+                        },
+                        //Kind = 4 (Selective Acknowledgment Permitted, SACK-Permitted)
+                        {
+                            type: 'object',
+                            label: 'Selective Acknowledgment Permitted',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.Selective_Acknowledgment_Permitted],
+                                    const: TCPOption.Selective_Acknowledgment_Permitted,
+                                    hidden: true
+                                }
+                            }
+                        },
+                        //Kind = 5 (Selective Acknowledgment, SACK)
+                        {
+                            type: 'object',
+                            label: 'Selective Acknowledgment',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.Selective_Acknowledgment],
+                                    const: TCPOption.Selective_Acknowledgment,
+                                    hidden: true
+                                },
+                                blocks: {
+                                    type: 'array',
+                                    label: 'SACK Blocks',
+                                    items: {
+                                        type: 'string',
+                                        maxLength: 16,
+                                        minLength: 16,
+                                        contentEncoding: StringContentEncodingEnum.HEX
+                                    }
+                                }
+                            }
+                        },
+                        //Kind = 8 (Timestamp, TS)
+                        {
+                            type: 'object',
+                            label: 'Timestamp',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.Timestamp],
+                                    const: TCPOption.Timestamp,
+                                    hidden: true
+                                },
+                                tsval: {
+                                    type: 'integer',
+                                    label: 'TSval',
+                                    minimum: 0,
+                                    maximum: 4294967295
+                                },
+                                tsecr: {
+                                    type: 'integer',
+                                    label: 'TSecr',
+                                    minimum: 0,
+                                    maximum: 4294967295
+                                }
+                            }
+                        },
+                        //Kind = 28 (User Timeout, UTO)
+                        {
+                            type: 'object',
+                            label: 'User Timeout',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.User_Timeout],
+                                    const: TCPOption.User_Timeout,
+                                    hidden: true
+                                },
+                                timeout: {
+                                    type: 'integer',
+                                    label: 'Timeout',
+                                    minimum: 0,
+                                    maximum: 32767
+                                },
+                                granularity: {
+                                    type: 'integer',
+                                    label: 'Granularity',
+                                    enum: [0, 1]
+                                }
+                            }
+                        },
+                        //Kind = 29 (TCP Authentication Option, TCP-AO)
+                        {
+                            type: 'object',
+                            label: 'TCP Authentication Option',
+                            properties: {
+                                option: {
+                                    type: 'string',
+                                    label: 'Option',
+                                    enum: [TCPOption.TCP_Authentication_Option],
+                                    const: TCPOption.TCP_Authentication_Option,
+                                    hidden: true
+                                },
+                                data: {
+                                    type: 'string',
+                                    label: 'Data',
+                                    contentEncoding: StringContentEncodingEnum.HEX
+                                }
+                            }
+                        },
+                        //Default
+                        {
+                            type: 'object',
+                            label: 'Default',
+                            properties: {
+                                kind: {
+                                    type: 'integer',
+                                    label: 'Kind'
+                                },
+                                data: {
+                                    type: 'string',
+                                    contentEncoding: StringContentEncodingEnum.HEX,
+                                    label: 'Data'
+                                }
+                            }
+                        }
+                    ]
+                },
+                decode: function (this: TCP): void {
+                    const hdrLen: number = this.instance.hdrLen.getValue()
+                    const optionsLength: number = hdrLen - this.length
+                    if (!optionsLength) return
+                    let optionOffset: number = this.length
+                    const options: OptionItem[] = []
+                    let index: number = 0
+                    while (optionOffset < hdrLen) {
+                        const kind: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                        optionOffset += 1
+                        switch (kind) {
+                            //Kind = 0 (End of Option List, EOL)
+                            case 0: {
+                                options.push({
+                                    option: TCPOption.End_of_Option_List
+                                })
+                            }
+                                break
+                            //Kind = 1 (No-Operation, NOP)
+                            case 1: {
+                                options.push({
+                                    option: TCPOption.No_Operation
+                                })
+                            }
+                                break
+                            //Kind = 2 (Maximum Segment Size, MSS)
+                            case 2: {
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                if (length !== 4) this.recordError(this.instance.options.getPath(index), 'MSS option TLV length should be 4')
+                                optionOffset += 1
+                                const value: number = BufferToUInt16(this.readBytes(optionOffset, 2))
+                                optionOffset += 2
+                                options.push({
+                                    option: TCPOption.Maximum_Segment_Size,
+                                    mss: value
+                                })
+                            }
+                                break
+                            //Kind = 3 (Window Scale)
+                            case 3: {
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                if (length !== 3) this.recordError(this.instance.options.getPath(index), 'Window Scale option TLV length should be 3')
+                                optionOffset += 1
+                                const value: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (value < 0 || value > 14) this.recordError(this.instance.options.getPath(index), 'Window Scale option TLV value should between 0 and 14')
+                                options.push({
+                                    option: TCPOption.Window_Scale,
+                                    shift: value
+                                })
+                            }
+                                break
+                            //Kind = 4 (Selective Acknowledgment Permitted, SACK-Permitted)
+                            case 4: {
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (length !== 2) this.recordError(this.instance.options.getPath(index), 'SACK-Permitted option TLV length should be 2')
+                                options.push({
+                                    option: TCPOption.Selective_Acknowledgment_Permitted
+                                })
+                            }
+                                break
+                            //Kind = 5 (Selective Acknowledgment, SACK)
+                            case 5: {
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                let sackBlockTotalLength: number = length - 2
+                                if (sackBlockTotalLength < 0) {
+                                    this.recordError(this.instance.options.getPath(index), 'SACK option block count should not less than 0')
+                                    sackBlockTotalLength = 0
+                                }
+                                let sackBlockCount: number = sackBlockTotalLength ? Math.floor(sackBlockTotalLength / 8) : 0
+                                const sackBlocks: string[] = []
+                                while (sackBlockCount > 0) {
+                                    sackBlocks.push(UInt64ToHex(BigInt(`0x${BufferToUInt64(this.readBytes(optionOffset, 8)).toString(16)}`)))
+                                    optionOffset += 8
+                                    sackBlockCount -= 1
+                                }
+                                options.push({
+                                    option: TCPOption.Selective_Acknowledgment,
+                                    blocks: sackBlocks
+                                })
+                            }
+                                break
+                            //Kind = 8 (Timestamp, TS)
+                            case 8: {
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (length !== 10) this.recordError(this.instance.options.getPath(index), 'Timestamp option TLV length should be 10')
+                                const tsval: number = BufferToUInt32(this.readBytes(optionOffset, 4))
+                                optionOffset += 4
+                                const tsecr: number = BufferToUInt32(this.readBytes(optionOffset, 4))
+                                optionOffset += 4
+                                options.push({
+                                    option: TCPOption.Timestamp,
+                                    tsval: tsval,
+                                    tsecr: tsecr
+                                })
+                            }
+                                break
+                            //Kind = 28 (User Timeout, UTO)
+                            case 28: {
+                                //RFC 5482: Kind=28, Length=4, then a single 16-bit value whose top
+                                //bit is Granularity (G) and low 15 bits are the User Timeout.
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                if (length !== 4) this.recordError(this.instance.options.getPath(index), 'UTO option TLV length should be 4')
+                                const value: number = BufferToUInt16(this.readBytes(optionOffset, 2))
+                                optionOffset += 2
+                                options.push({
+                                    option: TCPOption.User_Timeout,
+                                    granularity: (value >> 15) & 0x01,
+                                    timeout: value & 0x7fff
+                                })
+                            }
+                                break
+                            //Kind = 29 (TCP Authentication Option, TCP-AO)
+                            case 29: {
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                optionOffset += 1
+                                let dataLength: number = length - 2
+                                if (dataLength < 0) {
+                                    this.recordError(this.instance.options.getPath(index), 'TCP Authentication Option TLV length should not less than 2')
+                                    dataLength = 0
+                                }
+                                let data: Buffer
+                                if (dataLength) {
+                                    data = this.readBytes(optionOffset, dataLength)
+                                    optionOffset += dataLength
+                                } else {
+                                    data = Buffer.from([])
+                                }
+                                options.push({
+                                    option: TCPOption.TCP_Authentication_Option,
+                                    data: data.toString('hex')
+                                })
+                            }
+                                break
+                            default: {
+                                const length: number = BufferToUInt8(this.readBytes(optionOffset, 1))
+                                let dataLength: number = length - 2
+                                if (dataLength < 0) {
+                                    this.recordError(this.instance.options.getPath(index), 'Option TLV length should not less than 2')
+                                    dataLength = 0
+                                }
+                                let data: Buffer
+                                if (dataLength) {
+                                    data = this.readBytes(optionOffset, dataLength)
+                                    optionOffset += dataLength
+                                } else {
+                                    data = Buffer.from([])
+                                }
+                                options.push({
+                                    kind: kind,
+                                    data: data.toString('hex')
+                                })
+                            }
+                        }
+                        index += 1
+                    }
+                    this.instance.options.setValue(options)
+                },
+                encode: function (this: TCP): void {
+                    const options: (OptionItem[]) | undefined = this.instance.options.getValue()
+                    if (!options) return
+                    let optionOffset: number = this.length
+                    options.forEach((optionItem: OptionItem): void => {
+                        const namedOptionItem: OPTION_EOL | OPTION_NOP | OPTION_MSS | OPTION_WINDOW_SCALE | OPTION_SACK_PERMITTED | OPTION_SACK | OPTION_TS | OPTION_UTO | OPTION_TCP_AO = optionItem as any
+                        switch (namedOptionItem.option) {
+                            case TCPOption.End_of_Option_List: {
+                                const optionEOL: OPTION_EOL = optionItem as OPTION_EOL
+                                this.writeBytes(optionOffset, UInt8ToBuffer(0))
+                                optionOffset += 1
+                                return
+                            }
+                            case TCPOption.No_Operation: {
+                                const optionNOP: OPTION_NOP = optionItem as OPTION_NOP
+                                this.writeBytes(optionOffset, UInt8ToBuffer(1))
+                                optionOffset += 1
+                                return
+                            }
+                            case TCPOption.Maximum_Segment_Size: {
+                                const optionMSS: OPTION_MSS = optionItem as OPTION_MSS
+                                const mssBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(2),
+                                    UInt8ToBuffer(4),
+                                    UInt16ToBuffer(optionMSS.mss)
+                                ])
+                                this.writeBytes(optionOffset, mssBuffer)
+                                optionOffset += mssBuffer.length
+                                return
+                            }
+                            case TCPOption.Window_Scale: {
+                                const optionWS: OPTION_WINDOW_SCALE = optionItem as OPTION_WINDOW_SCALE
+                                const wsBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(3),
+                                    UInt8ToBuffer(3),
+                                    UInt8ToBuffer(optionWS.shift)
+                                ])
+                                this.writeBytes(optionOffset, wsBuffer)
+                                optionOffset += wsBuffer.length
+                                return
+                            }
+                            case TCPOption.Selective_Acknowledgment_Permitted: {
+                                const optionSackPermitted: OPTION_SACK_PERMITTED = optionItem as OPTION_SACK_PERMITTED
+                                const sackPermittedBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(4),
+                                    UInt8ToBuffer(2)
+                                ])
+                                this.writeBytes(optionOffset, sackPermittedBuffer)
+                                optionOffset += sackPermittedBuffer.length
+                                return
+                            }
+                            case TCPOption.Selective_Acknowledgment: {
+                                const optionSack: OPTION_SACK = optionItem as OPTION_SACK
+                                const kindBuffer: Buffer = UInt8ToBuffer(5)
+                                const length: number = 2
+                                let blocksBuffer: Buffer = Buffer.from([])
+                                optionSack.blocks.forEach((block: string): void => {
+                                    blocksBuffer = Buffer.concat([blocksBuffer, UInt64ToBuffer(HexToUInt64(block))])
+                                })
+                                const sackBuffer: Buffer = Buffer.concat([kindBuffer, UInt8ToBuffer(length + blocksBuffer.length), blocksBuffer])
+                                this.writeBytes(optionOffset, sackBuffer)
+                                optionOffset += sackBuffer.length
+                                return
+                            }
+                            case TCPOption.Timestamp: {
+                                const optionTS: OPTION_TS = optionItem as OPTION_TS
+                                const tsBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(8),
+                                    UInt8ToBuffer(10),
+                                    UInt32ToBuffer(optionTS.tsval ? optionTS.tsval : 0),
+                                    UInt32ToBuffer(optionTS.tsecr ? optionTS.tsecr : 0)
+                                ])
+                                this.writeBytes(optionOffset, tsBuffer)
+                                optionOffset += tsBuffer.length
+                                return
+                            }
+                            case TCPOption.User_Timeout: {
+                                //RFC 5482: Kind=28, Length=4, value = G(top bit) | User Timeout(15 bits).
+                                const optionUTO: OPTION_UTO = optionItem as OPTION_UTO
+                                const granularity: number = optionUTO.granularity ? optionUTO.granularity : 0
+                                const timeout: number = optionUTO.timeout ? optionUTO.timeout : 0
+                                const value: number = ((granularity & 0x01) << 15) | (timeout & 0x7fff)
+                                const utoBuffer: Buffer = Buffer.concat([
+                                    UInt8ToBuffer(28),
+                                    UInt8ToBuffer(4),
+                                    UInt16ToBuffer(value)
+                                ])
+                                this.writeBytes(optionOffset, utoBuffer)
+                                optionOffset += utoBuffer.length
+                                return
+                            }
+                            case TCPOption.TCP_Authentication_Option: {
+                                const optionTcpAo: OPTION_TCP_AO = optionItem as OPTION_TCP_AO
+                                const kindBuffer: Buffer = UInt8ToBuffer(29)
+                                const dataBuffer: Buffer = Buffer.from(optionTcpAo.data, 'hex')
+                                const lengthBuffer: Buffer = UInt8ToBuffer(dataBuffer.length + 2)
+                                const tcpAoBuffer: Buffer = Buffer.concat([kindBuffer, lengthBuffer, dataBuffer])
+                                this.writeBytes(optionOffset, tcpAoBuffer)
+                                optionOffset += tcpAoBuffer.length
+                                return
+                            }
+                            default: {
+                                const defaultOptionItem: OPTION_DEFAULT = optionItem as OPTION_DEFAULT
+                                const kind: number = defaultOptionItem.kind
+                                const hexBuffer: Buffer = Buffer.from(defaultOptionItem.data.toString(), 'hex')
+                                const length: number = hexBuffer.length + 2
+                                const defaultOptionBuffer: Buffer = Buffer.concat([UInt8ToBuffer(kind), UInt8ToBuffer(length), hexBuffer])
+                                this.writeBytes(optionOffset, defaultOptionBuffer)
+                                optionOffset += defaultOptionBuffer.length
+                            }
+                        }
+                    })
+                    if (this.length > 60) return this.recordError(this.instance.options.getPath(), 'Options too large')
+                    const padLength: number = (4 - this.length % 4) % 4
+                    if (padLength) {
+                        //Add Padding
+                        this.writeBytes(this.length, Buffer.alloc(padLength, 0))
+                    }
+                }
+            }
+        }
+    }
+    }
+
+    public readonly id: string = 'tcp'
+
+    public readonly matchKeys: string[] = ['ipproto:6']
+
+    //Produces a port demux key from BOTH ports (a protocol's well-known port may be src or dst).
+    public readonly demuxProducers: DemuxProducer[] = [
+        {field: 'dstport', namespace: 'tcpport', kind: 'uint'},
+        {field: 'srcport', namespace: 'tcpport', kind: 'uint'}
+    ]
+
+    public readonly name: string = 'Transmission Control Protocol'
+
+    public readonly nickname: string = 'TCP'
+
+    public match(): boolean {
+        if (!this.prevCodecModule) return false
+        //TCP sits above IPv4 (protocol field) or IPv6 (next-header field) — accept its demux value from
+        //either, so match() stays consistent with the shared 'ipproto:6' dispatch key.
+        if (this.prevCodecModule.instance.protocol.getValue() === 0x06) return true
+        if (this.prevCodecModule.instance.nxt.getValue() === 0x06) return true
+        return false
+    }
+
+}

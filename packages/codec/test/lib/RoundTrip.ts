@@ -1,7 +1,7 @@
 import assert from 'node:assert'
-import {Codec} from '../../src/lib/codec/Codec'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../src/lib/codec/types/CodecEncodeResult'
+import {Codec} from '../../src/Codec'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../src/types/CodecEncodeResult'
 
 export const codec: Codec = new Codec()
 

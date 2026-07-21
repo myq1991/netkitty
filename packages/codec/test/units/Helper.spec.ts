@@ -1,10 +1,10 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {BufferToHex} from '../../src/lib/helper/BufferToHex'
-import {HexToBuffer} from '../../src/lib/helper/HexToBuffer'
-import {IPv4ToBuffer, IPv6ToBuffer} from '../../src/lib/helper/IPToBuffer'
-import {BufferToIPv4, BufferToIPv6} from '../../src/lib/helper/BufferToIP'
-import {Int8ToBERHex} from '../../src/lib/helper/NumberToBERHex'
+import {BufferToHex} from '../../src/helper/BufferToHex'
+import {HexToBuffer} from '../../src/helper/HexToBuffer'
+import {IPv4ToBuffer, IPv6ToBuffer} from '../../src/helper/IPToBuffer'
+import {BufferToIPv4, BufferToIPv6} from '../../src/helper/BufferToIP'
+import {Int8ToBERHex} from '../../src/helper/NumberToBERHex'
 
 test('BufferToHex / HexToBuffer round-trip', (): void => {
     const buffer: Buffer = Buffer.from([0x00, 0x1f, 0xff, 0x80])

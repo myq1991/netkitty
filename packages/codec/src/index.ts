@@ -1,59 +1,59 @@
 /**
  * Base header abstract class
  */
-export {BaseHeader} from './lib/codec/abstracts/BaseHeader'
+export {BaseHeader} from './abstracts/BaseHeader'
 /**
  * Network packet codec
  */
-export {Codec} from './lib/codec/Codec'
+export {Codec} from './Codec'
 /**
  * Flexible Object for codec data instance
  */
-export {FlexibleObject} from './lib/codec/lib/FlexibleObject'
+export {FlexibleObject} from './lib/FlexibleObject'
 /**
  * Types
  */
-export {type CodecEncodeResult} from './lib/codec/types/CodecEncodeResult'
-export {type CodecEncodeInput} from './lib/codec/types/CodecEncodeInput'
-export {type CodecDecodeResult} from './lib/codec/types/CodecDecodeResult'
-export {type CodecSchema} from './lib/codec/types/CodecSchema'
-export {type HeaderTreeNode} from './lib/codec/types/HeaderTreeNode'
-export {type CodecModuleConstructor} from './lib/codec/types/CodecModuleConstructor'
-export {type CodecModule} from './lib/codec/types/CodecModule'
-export {type CodecErrorInfo} from './lib/codec/types/CodecErrorInfo'
-export {type NextLayer, type ConsistencyIssue} from './lib/codec/types/LayerGraph'
-export {type DissectionField, type DissectionLayer} from './lib/codec/types/Dissection'
+export {type CodecEncodeResult} from './types/CodecEncodeResult'
+export {type CodecEncodeInput} from './types/CodecEncodeInput'
+export {type CodecDecodeResult} from './types/CodecDecodeResult'
+export {type CodecSchema} from './types/CodecSchema'
+export {type HeaderTreeNode} from './types/HeaderTreeNode'
+export {type CodecModuleConstructor} from './types/CodecModuleConstructor'
+export {type CodecModule} from './types/CodecModule'
+export {type CodecErrorInfo} from './types/CodecErrorInfo'
+export {type NextLayer, type ConsistencyIssue} from './types/LayerGraph'
+export {type DissectionField, type DissectionLayer} from './types/Dissection'
 /**
  * Schemas
  */
-export {type ProtocolFieldJSONSchema} from './lib/schema/ProtocolFieldJSONSchema'
-export {type ProtocolFieldJSONSchemaDefinition} from './lib/schema/ProtocolFieldJSONSchemaDefinition'
-export {type ProtocolJSONSchema} from './lib/schema/ProtocolJSONSchema'
+export {type ProtocolFieldJSONSchema} from './schema/ProtocolFieldJSONSchema'
+export {type ProtocolFieldJSONSchemaDefinition} from './schema/ProtocolFieldJSONSchemaDefinition'
+export {type ProtocolJSONSchema} from './schema/ProtocolJSONSchema'
 /**
  * Enums
  */
-export {StringContentEncodingEnum} from './lib/codec/lib/StringContentEncodingEnum'
+export {StringContentEncodingEnum} from './lib/StringContentEncodingEnum'
 /**
  * Protocol header classes (Ethernet, IPv4/6, TCP/UDP, ARP, TLS, GOOSE, SV, IEC104, ...)
  */
-export * from './lib/codec/PacketHeaders'
+export * from './PacketHeaders'
 /**
  * Helper conversion functions
  */
 export {
     BufferToHex
-} from './lib/helper/BufferToHex'
+} from './helper/BufferToHex'
 export {
     HexToBuffer
-} from './lib/helper/HexToBuffer'
+} from './helper/HexToBuffer'
 export {
     BufferToIPv4,
     BufferToIPv6
-} from './lib/helper/BufferToIP'
+} from './helper/BufferToIP'
 export {
     IPv4ToBuffer,
     IPv6ToBuffer
-} from './lib/helper/IPToBuffer'
+} from './helper/IPToBuffer'
 export {
     BufferToFloat32,
     BufferToInt16,
@@ -64,7 +64,7 @@ export {
     BufferToUInt32,
     BufferToUInt64,
     BufferToUInt8
-} from './lib/helper/BufferToNumber'
+} from './helper/BufferToNumber'
 export {
     HexToFloat32,
     HexToInt16,
@@ -75,7 +75,7 @@ export {
     HexToUInt32,
     HexToUInt64,
     HexToUInt8
-} from './lib/helper/HexToNumber'
+} from './helper/HexToNumber'
 export {
     Int16ToBERBuffer,
     Int32ToBERBuffer,
@@ -85,7 +85,7 @@ export {
     UInt32ToBERBuffer,
     UInt64ToBERBuffer,
     UInt8ToBERBuffer
-} from './lib/helper/NumberToBERBuffer'
+} from './helper/NumberToBERBuffer'
 export {
     Int16ToBERHex,
     Int32ToBERHex,
@@ -95,7 +95,7 @@ export {
     UInt32ToBERHex,
     UInt64ToBERHex,
     UInt8ToBERHex
-} from './lib/helper/NumberToBERHex'
+} from './helper/NumberToBERHex'
 export {
     Float32ToBuffer,
     Int16ToBuffer,
@@ -106,7 +106,7 @@ export {
     UInt32ToBuffer,
     UInt64ToBuffer,
     UInt8ToBuffer
-} from './lib/helper/NumberToBuffer'
+} from './helper/NumberToBuffer'
 export {
     Float32ToHex,
     Int16ToHex,
@@ -117,4 +117,4 @@ export {
     UInt32ToHex,
     UInt64ToHex,
     UInt8ToHex
-} from './lib/helper/NumberToHex'
+} from './helper/NumberToHex'

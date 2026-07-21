@@ -2,8 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // The CONNECT frame's verbatim payload (COMMAND line + headers + blank line + NUL), as hex.
 const CONNECT_MSG: string = '434f4e4e4543540a6163636570742d76657273696f6e3a312e320a686f73743a73746f6d702e6578616d706c652e636f6d0a6c6f67696e3a61646d696e0a0a00'

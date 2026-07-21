@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 test('TCP baseline: field decode + byte-perfect round-trip', async (): Promise<void> => {
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('tcp/baseline').buffer)

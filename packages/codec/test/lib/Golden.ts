@@ -1,6 +1,6 @@
 import {readFileSync, writeFileSync, mkdirSync, existsSync} from 'node:fs'
 import path from 'node:path'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
 
 /**
  * Golden decode-tree snapshots. Byte round-trip only proves decode and encode are mutual inverses;

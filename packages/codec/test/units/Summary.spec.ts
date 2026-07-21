@@ -1,8 +1,8 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {Codec} from '../../src/lib/codec/Codec'
+import {Codec} from '../../src/Codec'
 import {LoadPacket} from '../lib/Fixtures'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
 
 const codec: Codec = new Codec()
 

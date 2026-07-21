@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, LayerIds, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // Real LDAPv3 bindRequest (simple auth, cn=admin,dc=example,dc=org), captured from ldapwhoami against
 // osixia/openldap on loopback. RFC 4511, ASN.1 BER: SEQUENCE { messageID INTEGER, protocolOp }.

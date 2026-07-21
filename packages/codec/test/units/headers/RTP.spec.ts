@@ -2,10 +2,10 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
-import {RTP} from '../../../src/lib/codec/headers/RTP'
-import {Codec} from '../../../src/lib/codec/Codec'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
+import {RTP} from '../../../src/headers/RTP'
+import {Codec} from '../../../src/Codec'
 
 //RTP has no built-in registration (SDP-negotiated dynamic ports); exercise it with a codec that adds RTP
 //on top of every built-in, so the default ports 5004/5006/5008 route to it.

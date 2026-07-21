@@ -2,11 +2,11 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {Codec} from '../../../src/lib/codec/Codec'
-import {S7comm} from '../../../src/lib/codec/headers/S7comm'
-import {FlexibleObject} from '../../../src/lib/codec/lib/FlexibleObject'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {Codec} from '../../../src/Codec'
+import {S7comm} from '../../../src/headers/S7comm'
+import {FlexibleObject} from '../../../src/lib/FlexibleObject'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // ⚠️ Integration note: S7comm rides ON TOP of a COTP DT TPDU (prev.id === 'cotp' + 0x32 signature). The
 // built-in COTP header currently CONSUMES its whole ISO/MMS user data into `cotp.data` (its headerLength

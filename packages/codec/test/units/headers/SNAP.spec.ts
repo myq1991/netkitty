@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // SNAP over LLC re-exposes an EtherType, so IPv4 (and ARP/IPv6) route through the shared ethertype demux
 // exactly as they do over Ethernet II / 802.1Q — the load-bearing property of the SNAP design.

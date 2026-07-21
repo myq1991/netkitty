@@ -2,9 +2,9 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
-import {CodecEncodeInput} from '../../../src/lib/codec/types/CodecEncodeInput'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
+import {CodecEncodeInput} from '../../../src/types/CodecEncodeInput'
 
 const ETH: CodecEncodeInput = {id: 'eth', data: {dmac: '02:00:00:00:00:01', smac: '02:00:00:00:00:02', etherType: '0800'}}
 const IPV4: CodecEncodeInput = {id: 'ipv4', data: {sip: '192.0.2.10', dip: '192.0.2.20', protocol: 17}}

@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {AllPacketFixtureNames, LoadPacket} from '../lib/Fixtures'
 import {codec} from '../lib/RoundTrip'
-import {CodecEncodeResult} from '../../src/lib/codec/types/CodecEncodeResult'
+import {CodecEncodeResult} from '../../src/types/CodecEncodeResult'
 
 /**
  * Deterministic PRNG (mulberry32) so a fuzz failure always reproduces from the fixed seed.

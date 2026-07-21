@@ -1,8 +1,8 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {Codec} from '../../src/lib/codec/Codec'
+import {Codec} from '../../src/Codec'
 import {LoadPacket} from '../lib/Fixtures'
-import {DissectionField, DissectionLayer} from '../../src/lib/codec/types/Dissection'
+import {DissectionField, DissectionLayer} from '../../src/types/Dissection'
 
 const codec: Codec = new Codec()
 

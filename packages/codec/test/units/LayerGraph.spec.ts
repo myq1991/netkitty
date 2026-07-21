@@ -1,11 +1,11 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {Codec} from '../../src/lib/codec/Codec'
+import {Codec} from '../../src/Codec'
 import {LoadPacket} from '../lib/Fixtures'
 import {writeJsonGolden, loadJsonGolden, goldenExists} from '../lib/Golden'
-import {NextLayer, ConsistencyIssue} from '../../src/lib/codec/types/LayerGraph'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
-import {CodecSchema} from '../../src/lib/codec/types/CodecSchema'
+import {NextLayer, ConsistencyIssue} from '../../src/types/LayerGraph'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
+import {CodecSchema} from '../../src/types/CodecSchema'
 
 const codec: Codec = new Codec()
 

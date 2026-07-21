@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {PerDecoder, AsnType, AsnTypeTable} from '../../../src/lib/codec/headers/cms/PerDecoder'
+import {PerDecoder, AsnType, AsnTypeTable} from '../../../src/headers/cms/PerDecoder'
 
 // The ALIGNED-PER descriptor interpreter, validated against hand-computed encodings. Each buffer below is
 // assembled bit-by-bit from the aligned-PER rules so the decode is checked against a known ground truth.

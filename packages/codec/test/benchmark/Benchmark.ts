@@ -1,6 +1,6 @@
 import {AllPacketFixtureNames, LoadPacket} from '../lib/Fixtures'
-import {Codec} from '../../src/lib/codec/Codec'
-import {CodecDecodeResult} from '../../src/lib/codec/types/CodecDecodeResult'
+import {Codec} from '../../src/Codec'
+import {CodecDecodeResult} from '../../src/types/CodecDecodeResult'
 
 /**
  * Throughput benchmark for the codec decode/encode hot path. Not a test (no .spec suffix, so the

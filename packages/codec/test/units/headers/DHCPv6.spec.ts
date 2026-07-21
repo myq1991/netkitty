@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // Real DHCPv6 SOLICIT (client → server) over IPv6, from dhclient -6 against dnsmasq. RFC 8415.
 test('DHCPv6 solicit: message + options decode + byte-perfect round-trip', async (): Promise<void> => {

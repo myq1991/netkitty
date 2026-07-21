@@ -2,8 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // GTP-U G-PDU (3GPP TS 29.281) on UDP 2152 tunneling an inner IPv4/ICMP packet. The inner IP is decoded
 // RECURSIVELY (IPv4/IPv6 accept a GTP tunnel parent, matching by version nibble) — the L3 tunnel showcase.

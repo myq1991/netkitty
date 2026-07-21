@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, Layer, Decode, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 test('TLS 1.2 application data record: field decode + round-trip', async (): Promise<void> => {
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('tls/tls12-record').buffer)

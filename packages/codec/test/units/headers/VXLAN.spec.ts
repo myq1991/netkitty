@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {LoadPacket} from '../../lib/Fixtures'
 import {AssertRoundTrip, AssertDecodeSurvives, AssertLayers, Layer, codec} from '../../lib/RoundTrip'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
 
 // Real VXLAN (RFC 7348) on UDP 4789 encapsulating an inner Ethernet frame (IPv6/ICMPv6). The inner
 // frame is decoded RECURSIVELY as a fresh eth/ip/… stack — the tunnel showcase for the demux design.

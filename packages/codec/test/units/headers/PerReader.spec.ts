@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {PerReader} from '../../../src/lib/codec/headers/cms/PerReader'
+import {PerReader} from '../../../src/headers/cms/PerReader'
 
 // The PER bit-cursor primitives, validated against hand-computed ALIGNED-PER encodings.
 

@@ -1,10 +1,10 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
 import {AssertLayers, Layer} from '../../lib/RoundTrip'
-import {WebSocket} from '../../../src/lib/codec/headers/WebSocket'
-import {Codec} from '../../../src/lib/codec/Codec'
-import {CodecDecodeResult} from '../../../src/lib/codec/types/CodecDecodeResult'
-import {CodecEncodeResult} from '../../../src/lib/codec/types/CodecEncodeResult'
+import {WebSocket} from '../../../src/headers/WebSocket'
+import {Codec} from '../../../src/Codec'
+import {CodecDecodeResult} from '../../../src/types/CodecDecodeResult'
+import {CodecEncodeResult} from '../../../src/types/CodecEncodeResult'
 
 // WebSocket is decode-as-only (its stream is selected by a prior HTTP Upgrade, which a single-packet
 // codec cannot track), so it is exercised with a codec that explicitly includes it.
