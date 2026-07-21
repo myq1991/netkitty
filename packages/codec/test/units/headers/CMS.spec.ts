@@ -57,6 +57,23 @@ test('CMS GetAllDataDefinition (real frames) round-trips with the service data v
     assert.strictEqual(rsp.serviceCode, 155, 'GetAllDataDefinition response')
     assert.strictEqual(rsp.frameLength, 444, 'FL')
     assert.strictEqual(rsp.serviceData.length / 2, 442, 'service data = FL - 2-byte ReqID, kept verbatim')
+    // The M-coded response body is kept verbatim, but its readable IEC 61850 identifiers are surfaced.
+    assert.ok(Array.isArray(rsp.serviceDataStrings), 'readable identifiers extracted')
+    for (const name of ['INC', 'stVal', 'vendor', 'swRev', 'model', 'cfgRev']) {
+        assert.ok(rsp.serviceDataStrings.includes(name), `definition response names ${name}`)
+    }
+})
+
+// A GetAllDataValues (SC 83) response: the M-coded value body is kept verbatim, and its readable IEC 61850
+// data-object names are surfaced best-effort.
+test('CMS GetAllDataValues (SC 83) response surfaces its readable object names', async (): Promise<void> => {
+    const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('cms/getalldatavalues-response').buffer)
+    const cms: any = Layer(decoded, 'cms').data
+    assert.strictEqual(cms.serviceCode, 83, 'GetAllDataValues response')
+    assert.strictEqual(cms.resp, true, 'response')
+    for (const name of ['Mod', 'Beh', 'Health', 'NamPlt', 'Proxy']) {
+        assert.ok(cms.serviceDataStrings.includes(name), `value response names ${name}`)
+    }
 })
 
 // GetAllDataValues (SC 83): the request shares GetAllDataDefinition's reference-CHOICE PER structure.

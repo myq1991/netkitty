@@ -126,7 +126,16 @@ export class CMS extends BaseHeader {
                             !!this.instance.err.getValue(false),
                             buf
                         )
-                        if (decoded !== undefined) this.instance.serviceDataDecoded.setValue(decoded)
+                        if (decoded !== undefined) {
+                            this.instance.serviceDataDecoded.setValue(decoded)
+                        } else {
+                            //No transcribed structure (e.g. a data/definition response, whose GB/T 33603
+                            //"M-coding" body framing is not fully specified in the available standards).
+                            //Best-effort: surface the readable IEC 61850 identifiers (object/attribute names,
+                            //CDC types, string values) as display metadata — not a structural decode.
+                            const strings: string[] = CMS.#extractStrings(buf)
+                            if (strings.length) this.instance.serviceDataStrings.setValue(strings)
+                        }
                     },
                     encode: function (this: CMS): void {
                         const data: string = this.instance.serviceData.getValue('')
@@ -137,7 +146,10 @@ export class CMS extends BaseHeader {
                 //(DL/T 2811 §6.10) per the Service Code. Populated on decode by the serviceData closure
                 //above; it has no encode closure, so `serviceData` (hex) stays the authoritative encode
                 //form and the structured view can never perturb the re-emitted bytes.
-                serviceDataDecoded: {type: 'object', label: 'Service Data (decoded)'}
+                serviceDataDecoded: {type: 'object', label: 'Service Data (decoded)'},
+                //Display-only best-effort readable identifiers extracted from a service data area that has
+                //no transcribed structure (the GB/T 33603 M-coded responses). No encode closure.
+                serviceDataStrings: {type: 'array', label: 'Readable Identifiers', items: {type: 'string'}}
             }
         }
     }
@@ -148,6 +160,33 @@ export class CMS extends BaseHeader {
      * `incomplete: true` if the decoder bailed partway, or undefined when nothing is structured (leaving
      * the verbatim hex as the only view). Never throws.
      */
+    /**
+     * Best-effort readable-identifier extraction from an M-coded (GB/T 33603) service data area whose exact
+     * framing is not fully specified in the available standards. IEC 61850 names/values are length-prefixed
+     * in the low 7 bits of a leading octet; this collects each run of `len` identifier characters
+     * ([A-Za-z0-9_/]) that starts with a letter — the object/attribute names, CDC types and string values
+     * (Mod, stVal, INC, vendor, …). Bounded and never-throwing. This is display metadata, not a structural
+     * decode: it makes no claim about the record structure and never affects the re-emitted bytes.
+     */
+    static #extractStrings(buf: Buffer): string[] {
+        const isId = (b: number): boolean =>
+            (b >= 0x30 && b <= 0x39) || (b >= 0x41 && b <= 0x5a) || (b >= 0x61 && b <= 0x7a) || b === 0x5f || b === 0x2f
+        const isAlpha = (b: number): boolean => (b >= 0x41 && b <= 0x5a) || (b >= 0x61 && b <= 0x7a)
+        const out: string[] = []
+        for (let i: number = 0; i + 1 < buf.length && out.length < 256; i++) {
+            const len: number = buf[i] & 0x7f
+            if (len < 2 || i + 1 + len > buf.length) continue
+            if (!isAlpha(buf[i + 1])) continue
+            let ok: boolean = true
+            for (let j: number = 1; j < len; j++) if (!isId(buf[i + 1 + j])) { ok = false; break }
+            if (ok) {
+                out.push(buf.subarray(i + 1, i + 1 + len).toString('latin1'))
+                i += len
+            }
+        }
+        return out
+    }
+
     static #decodeServiceData(serviceCode: number, isResponse: boolean, isError: boolean, buf: Buffer): object | undefined {
         const entry: ServicePdu | undefined = SERVICE_PDU[serviceCode]
         if (!entry) return undefined

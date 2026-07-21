@@ -1,0 +1,91 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "00:00:00:00:00:00",
+      "smac": "00:00:00:00:00:00",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 332,
+      "id": 0,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 0,
+      "protocol": 6,
+      "checksum": 26026,
+      "sip": "10.0.0.1",
+      "dip": "10.0.0.2"
+    },
+    "errors": []
+  },
+  {
+    "id": "tcp",
+    "data": {
+      "srcport": 8102,
+      "dstport": 50000,
+      "seq": 0,
+      "ack": 0,
+      "hdrLen": 20,
+      "flags": {
+        "res": 0,
+        "ae": false,
+        "cwr": false,
+        "ece": false,
+        "urg": false,
+        "ack": false,
+        "push": false,
+        "rst": false,
+        "syn": false,
+        "fin": false
+      },
+      "window": 0,
+      "checksum": 51321,
+      "urgPtr": 0
+    },
+    "errors": []
+  },
+  {
+    "id": "cms",
+    "data": {
+      "next": false,
+      "resp": true,
+      "err": false,
+      "bak": false,
+      "protocolType": 1,
+      "serviceCode": 83,
+      "frameLength": 288,
+      "reqId": 13925,
+      "serviceData": "8007034d6f6410042080a00024000000000000000a20800342656810032080a00024000000000000000a064865616c746810032080a00024000000000000000a064e616d506c741005800453574b4a800080008806e993ade7898c8000065068794e616d100a800453574b4a800556312e303080084231393043423530800556312e3030800e4e6f2e393837363534333231300a8014435347442d323532382d5a2d45323447342d5a4b800a323032352e31312e3139800556332e37358013323032342f30362f31385f30343a33333a353380083343414644353034095068794865616c746810032080a00024000000000000000a0550726f787910091a800090000000000000000a186a00020000800550726f7879880550726f787900",
+      "serviceDataStrings": [
+        "Mod",
+        "Beh",
+        "Health",
+        "NamPlt",
+        "SWKJ",
+        "PhyNam",
+        "SWKJ",
+        "B190CB50",
+        "PhyHealth",
+        "Proxy",
+        "Proxy",
+        "Proxy"
+      ]
+    },
+    "errors": []
+  }
+]
