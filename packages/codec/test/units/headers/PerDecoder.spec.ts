@@ -36,6 +36,18 @@ test('PerDecoder: DEFAULT-valued absent component takes its default', (): void =
     assert.deepStrictEqual(out, {x: 7})
 })
 
+test('PerDecoder: semi-constrained INTEGER(0..MAX) reads a length determinant then unsigned octets', (): void => {
+    // INT32U: length 0x03 then 02 00 00 = 131072 (the real AssociateNegotiate asduSize).
+    const out: any = new PerDecoder(Buffer.from([0x03, 0x02, 0x00, 0x00])).decode({k: 'int', lb: 0})
+    assert.strictEqual(out, 131072)
+})
+
+test('PerDecoder: fully unconstrained INTEGER decodes two\'s-complement (negative and positive)', (): void => {
+    assert.strictEqual(new PerDecoder(Buffer.from([0x01, 0xff])).decode({k: 'int'}), -1, 'length 1, 0xff = -1')
+    assert.strictEqual(new PerDecoder(Buffer.from([0x01, 0x7f])).decode({k: 'int'}), 127, 'length 1, 0x7f = 127')
+    assert.strictEqual(new PerDecoder(Buffer.from([0x02, 0xff, 0x00])).decode({k: 'int'}), -256, 'length 2, 0xff00 = -256')
+})
+
 test('PerDecoder: CHOICE and recursive ref through the type table', (): void => {
     // Data ::= CHOICE { i INTEGER(0..15), s VisibleString }. index 1 (s) -> 1, align -> 0x80; len 0x01 + "X".
     const table: AsnTypeTable = {Data: {k: 'choice', alts: [

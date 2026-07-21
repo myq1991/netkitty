@@ -17,12 +17,22 @@ test('CMS AssociateNegotiate request/response (real frames): APCH + ReqID decode
     assert.strictEqual(req.serviceCode, 154, 'SC 154 = AssociateNegotiate')
     assert.strictEqual(req.frameLength, 11, 'FL = ASDU length (little-endian)')
     assert.strictEqual(req.reqId, 13090, 'ReqID (little-endian)')
+    // The service data PER-decodes to the negotiated sizes and version (§8.15.1.3).
+    assert.deepStrictEqual(req.serviceDataDecoded, {
+        service: 'AssociateNegotiate', direction: 'request',
+        apduSize: 32768, asduSize: 131072, protocolVersion: 0x201
+    }, 'AssociateNegotiate request: apduSize (INT16U) + asduSize/protocolVersion (INT32U)')
 
     const response: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('cms/associate-response').buffer)
     const rsp: any = Layer(response, 'cms').data
     assert.strictEqual(rsp.resp, true, 'a response (Resp bit set)')
     assert.strictEqual(rsp.serviceCode, 154, 'same service')
     assert.strictEqual(rsp.reqId, 13090, 'response uses the request ReqID (DL/T 2811 §6.2.1.2 b)')
+    // The response adds the model version, an unbounded VisibleString (length determinant + content).
+    assert.deepStrictEqual(rsp.serviceDataDecoded, {
+        service: 'AssociateNegotiate', direction: 'response',
+        apduSize: 32768, asduSize: 131072, protocolVersion: 0x201, modelVersion: 'V1.00'
+    }, 'AssociateNegotiate response adds modelVersion')
 })
 
 // GetAllDataDefinition (SC 155): the request carries an IEC 61850 object reference in its service data;

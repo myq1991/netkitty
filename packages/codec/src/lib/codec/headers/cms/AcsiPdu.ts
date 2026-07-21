@@ -34,6 +34,39 @@ export const GET_ALL_DATA_DEFINITION_REQUEST: AsnType = {
     ]
 }
 
+//Common ACSI integer/string base types (DL/T 2811-2024 §7.1). INT16U is fully constrained (fixed width
+//in PER); INT32U is semi-constrained INTEGER(0..MAX) (length-prefixed octets); a bare VisibleString has no
+//SIZE bound (length determinant + content).
+const INT16U: AsnType = {k: 'int', lb: 0, ub: 65535}
+const INT32U: AsnType = {k: 'int', lb: 0}
+const VISIBLE_STRING: AsnType = {k: 'vstr'}
+
+/**
+ * AssociateNegotiate-RequestPDU / -ResponsePDU (SC 154, §8.15.1.3). The session-opening capability
+ * exchange: negotiated APDU size, declared max ASDU size, and protocol version (0x201 = 2.1); the
+ * response adds the model version string. All fields mandatory, not extensible. Verified against a real
+ * frame whose 9-byte service data `fd e8 03 02 00 00 02 02 01` decodes to
+ * {apduSize: 65000, asduSize: 131072, protocolVersion: 513}.
+ */
+export const ASSOCIATE_NEGOTIATE_REQUEST: AsnType = {
+    k: 'seq',
+    fields: [
+        {name: 'apduSize', type: INT16U},
+        {name: 'asduSize', type: INT32U},
+        {name: 'protocolVersion', type: INT32U}
+    ]
+}
+
+export const ASSOCIATE_NEGOTIATE_RESPONSE: AsnType = {
+    k: 'seq',
+    fields: [
+        {name: 'apduSize', type: INT16U},
+        {name: 'asduSize', type: INT32U},
+        {name: 'protocolVersion', type: INT32U},
+        {name: 'modelVersion', type: VISIBLE_STRING}
+    ]
+}
+
 export interface ServicePdu {
     request?: AsnType
     response?: AsnType
@@ -46,6 +79,7 @@ export interface ServicePdu {
  * only the request is structured for now.
  */
 export const SERVICE_PDU: Record<number, ServicePdu> = {
+    154: {request: ASSOCIATE_NEGOTIATE_REQUEST, response: ASSOCIATE_NEGOTIATE_RESPONSE},
     155: {request: GET_ALL_DATA_DEFINITION_REQUEST}
 }
 

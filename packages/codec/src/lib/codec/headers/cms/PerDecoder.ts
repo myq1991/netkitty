@@ -112,8 +112,16 @@ export class PerDecoder {
             return 0
         }
         const octets: Buffer = this.#reader.readOctets(length.value)
+        if (octets.length === 0) return type.lb ?? 0
+        //Beyond 6 octets a JS number loses integer precision (>2^53); flag the result incomplete rather
+        //than mis-display it (a BigInt path is a prerequisite for shipping 64-bit Data CHOICE leaves).
+        if (octets.length > 6) this.#bailed = true
         let value: number = 0
         for (let i: number = 0; i < octets.length; i++) value = (value * 256) + octets[i]
+        //Semi-constrained (lb..MAX): the octets are the unsigned value offset by the lower bound.
+        if (type.lb !== undefined) return type.lb + value
+        //Fully unconstrained INTEGER: the octets are a two's-complement signed value.
+        if (octets[0] & 0x80) value -= Math.pow(2, octets.length * 8)
         return value
     }
 

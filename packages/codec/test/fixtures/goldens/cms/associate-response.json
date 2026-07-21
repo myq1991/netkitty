@@ -70,7 +70,15 @@
       "serviceCode": 154,
       "frameLength": 17,
       "reqId": 13090,
-      "serviceData": "8000030200000202010556312e3030"
+      "serviceData": "8000030200000202010556312e3030",
+      "serviceDataDecoded": {
+        "service": "AssociateNegotiate",
+        "direction": "response",
+        "apduSize": 32768,
+        "asduSize": 131072,
+        "protocolVersion": 513,
+        "modelVersion": "V1.00"
+      }
     },
     "errors": []
   }
