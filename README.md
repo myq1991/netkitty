@@ -12,7 +12,7 @@ generation. Ships as one aggregate package (`netkitty`) over a workspaces monore
 
 | Package | Import via | What it does | Runtime |
 | --- | --- | --- | --- |
-| [`@netkitty/codec`](./packages/codec) | `netkitty/codec`, `netkitty/codec/header`, `netkitty/helper` | Schema-driven encode/decode of packet headers (Ethernet, VLAN, ARP, IPv4/6, TCP/UDP, ICMP/ICMPv6, TLS, GOOSE/SV, IEC 104) | node + browser |
+| [`@netkitty/codec`](./packages/codec) | `netkitty/codec`, `netkitty/codec/header`, `netkitty/helper` | Schema-driven encode/decode of 188 packet headers — Ethernet/VLAN/ARP, IPv4/6, TCP/UDP/SCTP, TLS, DNS/DHCP/HTTP, and industrial/OT protocols (GOOSE/SV, IEC 104, Modbus, DNP3, S7comm, MMS, CMS, …) | node + browser |
 | [`@netkitty/pcap-core`](./packages/pcap-core) | (core of `netkitty/pcap`) | Pure-buffer pcap/pcapng parsing and generation, no Node deps | node + browser |
 | [`@netkitty/pcap`](./packages/pcap) | `netkitty/pcap` | Node streaming pcap/pcapng read / write / parse | node |
 | [`@netkitty/analysis`](./packages/analysis) | `netkitty/analysis` | Streaming, Wireshark-style cross-packet analysis over a worker | node + browser |
