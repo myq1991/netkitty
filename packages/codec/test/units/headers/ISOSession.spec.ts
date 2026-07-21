@@ -53,6 +53,9 @@ test('ISO Session: a CONNECT SPDU exposes the embedded ACSE AARQ; ACCEPT exposes
     assert.strictEqual(reqSession.acseAppContext, '1.0.9506.1.1', 'ACSE application-context-name OID (ISO 9506 MMS)')
     assert.strictEqual(reqSession.acseCalledApTitle, '1.1.2', 'called-AP-title [2] OID')
     assert.strictEqual(reqSession.acseCallingApTitle, '1.1.1', 'calling-AP-title [6] OID')
+    assert.strictEqual(reqSession.mmsInitMaxServOutstandingCalling, 20, 'MMS initiate proposedMaxServOutstandingCalling')
+    assert.strictEqual(reqSession.mmsInitNestingLevel, 4, 'MMS initiate data-structure nesting level')
+    assert.strictEqual(reqSession.mmsInitVersion, 1, 'MMS initiate version')
 
     const response: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('mms/associate-response').buffer)
     const rspSession: any = Layer(response, 'iso-session').data

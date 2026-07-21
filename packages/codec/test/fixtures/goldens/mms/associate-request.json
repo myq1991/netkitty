@@ -93,7 +93,11 @@
       "acseType": "AARQ",
       "acseAppContext": "1.0.9506.1.1",
       "acseCalledApTitle": "1.1.2",
-      "acseCallingApTitle": "1.1.1"
+      "acseCallingApTitle": "1.1.1",
+      "mmsInitMaxServOutstandingCalling": 20,
+      "mmsInitMaxServOutstandingCalled": 20,
+      "mmsInitNestingLevel": 4,
+      "mmsInitVersion": 1
     },
     "errors": []
   }

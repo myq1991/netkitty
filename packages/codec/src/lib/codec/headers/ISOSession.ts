@@ -135,6 +135,45 @@ export class ISOSession extends BaseHeader {
         return ISOSession.#decodeOid(buf, oid.contentStart, oid.contentLength)
     }
 
+    /** Read a small INTEGER (≤ 6 octets) from the first direct child with `wantTag` within [start, end), or -1. */
+    static #acseInt(buf: Buffer, start: number, end: number, wantTag: number): number {
+        const tlv: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#findChild(buf, start, end, wantTag)
+        if (!tlv) return -1
+        let value: number = 0
+        const limit: number = Math.min(tlv.contentLength, 6)
+        for (let i: number = 0; i < limit; i++) value = (value * 256) + buf[tlv.contentStart + i]
+        return value
+    }
+
+    /**
+     * Extract the MMS initiate parameters carried in the ACSE user-information (best-effort, never-throwing):
+     * ACSE user-information [30] (0xbe) → EXTERNAL (0x28) → encoding [0] (0xa0) → MMS initiate PDU (0xa8
+     * request / 0xa9 response) → proposedMaxServOutstandingCalling [1], -Called [2], nesting-level [3], and
+     * the (proposed/negotiated) version number inside init-detail [4] → [0]. -1 for any absent part.
+     */
+    static #mmsInitiate(buf: Buffer, acse: {contentStart: number, contentLength: number}): {maxCalling: number, maxCalled: number, nesting: number, version: number} {
+        const out: {maxCalling: number, maxCalled: number, nesting: number, version: number} = {maxCalling: -1, maxCalled: -1, nesting: -1, version: -1}
+        const ui: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(buf, acse.contentStart, acse.contentStart + acse.contentLength, 0xbe)
+        if (!ui) return out
+        const ext: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(buf, ui.contentStart, ui.contentStart + ui.contentLength, 0x28)
+        if (!ext) return out
+        const enc: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(buf, ext.contentStart, ext.contentStart + ext.contentLength, 0xa0)
+        if (!enc) return out
+        const init: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(buf, enc.contentStart)
+        if (!init || (init.tag !== 0xa8 && init.tag !== 0xa9)) return out
+        const end: number = init.contentStart + init.contentLength
+        out.maxCalling = ISOSession.#acseInt(buf, init.contentStart, end, 0x81)
+        out.maxCalled = ISOSession.#acseInt(buf, init.contentStart, end, 0x82)
+        out.nesting = ISOSession.#acseInt(buf, init.contentStart, end, 0x83)
+        const detail: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(buf, init.contentStart, end, 0xa4)
+        if (detail) out.version = ISOSession.#acseInt(buf, detail.contentStart, detail.contentStart + detail.contentLength, 0x80)
+        return out
+    }
+
     /** Decode a BER OBJECT IDENTIFIER body to a dotted string (never-throwing, clamped). */
     static #decodeOid(buf: Buffer, start: number, length: number): string {
         if (length <= 0 || start + length > buf.length) return ''
@@ -216,6 +255,12 @@ export class ISOSession extends BaseHeader {
                                     const responding: string = ISOSession.#acseOid(userData, acse, 0xa4)
                                     if (responding) this.instance.acseRespondingApTitle.setValue(responding)
                                 }
+                                //MMS initiate parameters carried in the ACSE user-information.
+                                const init: {maxCalling: number, maxCalled: number, nesting: number, version: number} = ISOSession.#mmsInitiate(userData, acse)
+                                if (init.maxCalling >= 0) this.instance.mmsInitMaxServOutstandingCalling.setValue(init.maxCalling)
+                                if (init.maxCalled >= 0) this.instance.mmsInitMaxServOutstandingCalled.setValue(init.maxCalled)
+                                if (init.nesting >= 0) this.instance.mmsInitNestingLevel.setValue(init.nesting)
+                                if (init.version >= 0) this.instance.mmsInitVersion.setValue(init.version)
                             }
                             break
                         }
@@ -243,7 +288,11 @@ export class ISOSession extends BaseHeader {
                 acseAppContext: {type: 'string', label: 'ACSE Application Context'},
                 acseCalledApTitle: {type: 'string', label: 'ACSE Called AP-Title'},
                 acseCallingApTitle: {type: 'string', label: 'ACSE Calling AP-Title'},
-                acseRespondingApTitle: {type: 'string', label: 'ACSE Responding AP-Title'}
+                acseRespondingApTitle: {type: 'string', label: 'ACSE Responding AP-Title'},
+                mmsInitMaxServOutstandingCalling: {type: 'integer', label: 'MMS Init Max Serv Outstanding Calling'},
+                mmsInitMaxServOutstandingCalled: {type: 'integer', label: 'MMS Init Max Serv Outstanding Called'},
+                mmsInitNestingLevel: {type: 'integer', label: 'MMS Init Data Structure Nesting Level'},
+                mmsInitVersion: {type: 'integer', label: 'MMS Init Version'}
             }
         }
     }

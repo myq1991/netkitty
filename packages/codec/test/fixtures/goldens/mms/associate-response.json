@@ -92,7 +92,11 @@
       ],
       "acseType": "AARE",
       "acseAppContext": "1.0.9506.1.1",
-      "acseRespondingApTitle": "1.1.2"
+      "acseRespondingApTitle": "1.1.2",
+      "mmsInitMaxServOutstandingCalling": 20,
+      "mmsInitMaxServOutstandingCalled": 20,
+      "mmsInitNestingLevel": 4,
+      "mmsInitVersion": 1
     },
     "errors": []
   }
