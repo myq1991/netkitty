@@ -867,6 +867,9 @@
     "cms": [
       "raw"
     ],
+    "mms": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -2782,6 +2785,9 @@
       "raw": null
     },
     "cms": {
+      "raw": null
+    },
+    "mms": {
       "raw": null
     },
     "vlan": {

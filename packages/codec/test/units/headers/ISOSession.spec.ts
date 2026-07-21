@@ -12,12 +12,12 @@ const IPV4 = {id: 'ipv4', data: {sip: '192.0.2.1', dip: '192.0.2.2', protocol: 6
 // iso-session layer above COTP, and the Presentation/MMS PDU that follows is handed off as a child.
 test('ISO Session: MMS data-phase SPDUs decode above COTP and round-trip byte-perfect', async (): Promise<void> => {
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('tpkt/cotp-dt').buffer)
-    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp', 'iso-session', 'raw'])
+    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'tpkt', 'cotp', 'iso-session', 'mms'])
     const session: any = Layer(decoded, 'iso-session').data
     assert.strictEqual(session.spdus.length, 2, 'GIVE-TOKENS + DATA-TRANSFER')
     assert.deepStrictEqual(session.spdus[0], {si: 1, li: 0, params: ''}, 'GIVE-TOKENS SPDU (SI 1, no params)')
     assert.deepStrictEqual(session.spdus[1], {si: 1, li: 0, params: ''}, 'DATA-TRANSFER SPDU (SI 1, no params)')
-    assert.strictEqual((Layer(decoded, 'raw').data as any).data, '61093007020103a0020500', 'Presentation/MMS PDU is the child')
+    assert.strictEqual((Layer(decoded, 'mms').data as any).message, '61093007020103a0020500', 'Presentation/MMS PDU is the mms child')
 })
 
 // A connection-phase CONNECT SPDU (SI 13) with variable parameters is kept verbatim, and the presentation

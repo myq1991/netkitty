@@ -99,9 +99,11 @@
     "errors": []
   },
   {
-    "id": "raw",
+    "id": "mms",
     "data": {
-      "data": "61093007020103a0020500"
+      "message": "61093007020103a0020500",
+      "presentationContext": 3,
+      "mmsPduType": 5
     },
     "errors": []
   }
