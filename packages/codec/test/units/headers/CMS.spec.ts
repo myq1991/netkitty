@@ -72,6 +72,18 @@ test('CMS GetAllDataValues (SC 83) request PER-decodes its object reference', as
     }, 'the request PER-decodes to its logical-node reference')
 })
 
+// CMS also runs in the clear on port 9102 (the 国密 TLCP port) in some deployments.
+test('CMS decodes plaintext AssociateNegotiate on port 9102', async (): Promise<void> => {
+    const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('cms/associate-negotiate-9102').buffer)
+    AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'cms'])
+    const cms: any = Layer(decoded, 'cms').data
+    assert.strictEqual(cms.serviceCode, 154, 'SC 154 = AssociateNegotiate')
+    assert.deepStrictEqual(cms.serviceDataDecoded, {
+        service: 'AssociateNegotiate', direction: 'request',
+        apduSize: 65000, asduSize: 131072, protocolVersion: 0x201
+    }, 'PER-decodes on 9102 the same as on 8102')
+})
+
 // Negative: a mid-PDU TCP-continuation segment (whose first byte's low nibble is not the PI 0x01) must
 // NOT be claimed as CMS, and non-8102 traffic must not be claimed; truncation survives.
 test('CMS is not claimed for continuation segments or non-8102 traffic; truncation survives', async (): Promise<void> => {

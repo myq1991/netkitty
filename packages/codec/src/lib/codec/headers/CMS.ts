@@ -174,10 +174,11 @@ export class CMS extends BaseHeader {
 
     public readonly nickname: string = 'CMS'
 
-    public readonly matchKeys: string[] = ['tcpport:8102']
+    public readonly matchKeys: string[] = ['tcpport:8102', 'tcpport:9102']
 
     public match(): boolean {
-        //CMS rides on TCP port 8102 (DL/T 2811 §6.6). Require the 4-byte APCH and the Protocol type
+        //CMS rides on TCP port 8102 (DL/T 2811 §6.6); some deployments also expose it on 9102 (the 国密
+        //TLCP port), where it can appear in the clear. Require the 4-byte APCH and the Protocol type
         //PI = 0x01 in the low nibble of the Control Code, so non-CMS traffic and mid-PDU TCP-continuation
         //segments (which begin with ASDU data bytes, not an APCH) fall through to raw.
         if (!this.prevCodecModule || this.prevCodecModule.id !== 'tcp') return false

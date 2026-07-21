@@ -1,0 +1,5 @@
+# CMS AssociateNegotiate (SC 154) request over plaintext TCP:9102 (DL/T 2811-2024 §8.15).
+# Real frame from a capture where CMS runs in the clear on 9102 (the 国密 TLCP port) rather than 8102;
+# only the hex is committed, never the pcap. Confirms CMS decodes on 9102 too. Service data
+# fde803020000020201 PER-decodes to apduSize 65000 (INT16U), asduSize 131072, protocolVersion 0x201.
+00000000000000000000000008004500003700004000000666bf0a0000010a000002d1d5238e00000000000000005000000091e80000019a0b000400fde803020000020201
