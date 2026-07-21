@@ -20,7 +20,11 @@ const root = path.resolve(__dirname, '..')
 const headersDir = path.join(root, 'src', 'lib', 'codec', 'headers')
 const packetHeadersPath = path.join(root, 'src', 'lib', 'codec', 'PacketHeaders.ts')
 
-const NON_REGISTERABLE = new Set(['RawData', 'BaseHeader'])
+// RawData/BaseHeader are infrastructure. WebSocket is intentionally NOT auto-registered: it has no port
+// or content signature a single-packet stateless codec can safely match on (it is negotiated by an HTTP
+// Upgrade handshake, which is cross-packet state), so it would over-claim TCP payloads in the default
+// codec. It is a decode-as-only frame codec, reachable via `new Codec([WebSocket])`.
+const NON_REGISTERABLE = new Set(['RawData', 'BaseHeader', 'WebSocket'])
 
 let packetHeaders = fs.readFileSync(packetHeadersPath, 'utf8')
 const registered = new Set([...packetHeaders.matchAll(/export\s*\{\s*(\w+)\s*\}/g)].map((m) => m[1]))
