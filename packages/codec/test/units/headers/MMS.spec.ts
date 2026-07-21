@@ -45,11 +45,16 @@ test('MMS parses a confirmed-request PDU type and round-trips the BER blob verba
 // request/response service and invokeID are extracted from the BER blob for display, and the whole PDU
 // round-trips byte-for-byte.
 test('MMS extracts the confirmed service + invokeID from real Read and GetNameList PDUs', async (): Promise<void> => {
-    const cases: {name: string, pdu: number, invoke: number, service: string}[] = [
-        {name: 'mms/read-request', pdu: 0xa0, invoke: 4432, service: 'read'},
+    // objectNames = the object/variable names referenced in the service body: domain-specific identifiers
+    // (universal VisibleString) plus vmd-/aa-specific and domain-scope names (context-tagged printable
+    // Identifiers). The Read request names all four of its variables; the GetNameList request names the
+    // scope domain; the GetNameList response names the returned datasets. The Read response's value ("1.0")
+    // is a context-tagged Data value (tag >= [3]), not a name, so it is correctly excluded.
+    const cases: {name: string, pdu: number, invoke: number, service: string, names?: string[]}[] = [
+        {name: 'mms/read-request', pdu: 0xa0, invoke: 4432, service: 'read', names: ['KIRKLAND', 'Bilateral_Table_ID', 'TASE2_Version', 'Supported_Features']},
         {name: 'mms/read-response', pdu: 0xa1, invoke: 4432, service: 'read'},
-        {name: 'mms/getnamelist-request', pdu: 0xa0, invoke: 4433, service: 'getNameList'},
-        {name: 'mms/getnamelist-response', pdu: 0xa1, invoke: 4433, service: 'getNameList'}
+        {name: 'mms/getnamelist-request', pdu: 0xa0, invoke: 4433, service: 'getNameList', names: ['KIRKLAND']},
+        {name: 'mms/getnamelist-response', pdu: 0xa1, invoke: 4433, service: 'getNameList', names: ['EMS_ANALOG_ICCP_IN', 'EMS_STATUS_ICCP_IN']}
     ]
     for (const c of cases) {
         const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket(c.name).buffer)
@@ -58,6 +63,7 @@ test('MMS extracts the confirmed service + invokeID from real Read and GetNameLi
         assert.strictEqual(mms.mmsPduType, c.pdu, `${c.name}: MMS PDU type`)
         assert.strictEqual(mms.mmsInvokeID, c.invoke, `${c.name}: invokeID`)
         assert.strictEqual(mms.mmsService, c.service, `${c.name}: confirmed service`)
+        assert.deepStrictEqual(mms.mmsObjectNames, c.names, `${c.name}: object names`)
     }
 })
 

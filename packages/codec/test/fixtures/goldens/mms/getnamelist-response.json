@@ -105,7 +105,11 @@
       "presentationContext": 3,
       "mmsPduType": 161,
       "mmsInvokeID": 4433,
-      "mmsService": "getNameList"
+      "mmsService": "getNameList",
+      "mmsObjectNames": [
+        "EMS_ANALOG_ICCP_IN",
+        "EMS_STATUS_ICCP_IN"
+      ]
     },
     "errors": []
   }

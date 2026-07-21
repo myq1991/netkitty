@@ -72,9 +72,9 @@ export class MMS extends BaseHeader {
      * 0x05 NULL …), and — for a confirmed request/response/error — the invokeID and the service (from the
      * ConfirmedService CHOICE context tag). -1 / '' when a part is absent.
      */
-    static #parse(buf: Buffer): {presentationContext: number, mmsPduType: number, invokeID: number, service: string} {
-        const result: {presentationContext: number, mmsPduType: number, invokeID: number, service: string} =
-            {presentationContext: -1, mmsPduType: -1, invokeID: -1, service: ''}
+    static #parse(buf: Buffer): {presentationContext: number, mmsPduType: number, invokeID: number, service: string, objectNames: string[]} {
+        const result: {presentationContext: number, mmsPduType: number, invokeID: number, service: string, objectNames: string[]} =
+            {presentationContext: -1, mmsPduType: -1, invokeID: -1, service: '', objectNames: []}
         //61 (fully-encoded-data) → 30 (PDV-list) → 02 01 ctx, a0 (presentation-data-values) → MMS PDU.
         const app: {tag: number, contentStart: number, contentLength: number} | null = MMS.#readTLV(buf, 0)
         if (!app || app.tag !== 0x61) return result
@@ -103,11 +103,50 @@ export class MMS extends BaseHeader {
         return result
     }
 
-    /** For a confirmed-request/response/error MMS PDU, extract the invokeID and the service name. */
+    /** True if every byte is printable ASCII (a heuristic Identifier guard for context-tagged names). */
+    static #isPrintable(buf: Buffer): boolean {
+        if (buf.length === 0) return false
+        for (const b of buf) if (b < 0x20 || b > 0x7e) return false
+        return true
+    }
+
+    /**
+     * Recursively collect the object/variable names referenced in an MMS service body into `out` (depth- and
+     * count-bounded, never-throwing). A name is an ObjectName Identifier (VisibleString): the domain-specific
+     * form's domainID/itemID appear as universal VisibleString (BER 0x1a), while the vmd-specific [0],
+     * domain-scope [1] and aa-specific [2] forms are IMPLICIT context-tagged primitives (0x80/0x81/0x82). To
+     * avoid collecting non-name context values (objectClass, error codes, booleans, or Data VALUEs, whose
+     * string alternatives are tags ≥ [3]), the context-primitive forms are taken only when their content is a
+     * printable Identifier.
+     */
+    static #collectVisibleStrings(buf: Buffer, start: number, end: number, out: string[], depth: number): void {
+        if (depth > 32 || out.length >= 64) return
+        let pos: number = start
+        while (pos < end && out.length < 64) {
+            const tlv: {tag: number, contentStart: number, contentLength: number} | null = MMS.#readTLV(buf, pos)
+            if (!tlv) break
+            const constructed: boolean = (tlv.tag & 0x20) !== 0
+            const content: Buffer = buf.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength)
+            if (tlv.tag === 0x1a) {
+                out.push(content.toString('latin1'))
+            } else if (!constructed && (tlv.tag & 0xc0) === 0x80 && (tlv.tag & 0x1f) <= 2 && MMS.#isPrintable(content)) {
+                //vmd-specific [0] / domain-scope [1] / aa-specific [2] Identifier.
+                out.push(content.toString('latin1'))
+            } else if (constructed) {
+                MMS.#collectVisibleStrings(buf, tlv.contentStart, tlv.contentStart + tlv.contentLength, out, depth + 1)
+            }
+            const next: number = tlv.contentStart + tlv.contentLength
+            if (next <= pos) break
+            pos = next
+        }
+    }
+
+    /** For a confirmed-request/response/error MMS PDU, extract the invokeID, the service name, and the
+     *  object/variable names referenced. */
     static #parseConfirmed(
         buf: Buffer,
         mmsPdu: {tag: number, contentStart: number, contentLength: number},
-        result: {invokeID: number, service: string}
+        result: {invokeID: number, service: string, objectNames: string[]}
     ): void {
         if (mmsPdu.tag !== 0xa0 && mmsPdu.tag !== 0xa1 && mmsPdu.tag !== 0xa2) return
         //All three begin with the invokeID INTEGER (Confirmed-{Request,Response,Error}PDU).
@@ -126,6 +165,8 @@ export class MMS extends BaseHeader {
         //low bits 0x1f=31, absent from the map, so it shows as "31" — lossy but never aliases a real name.
         const tagNumber: number = service.tag & 0x1f
         result.service = MMS.#SERVICE_NAMES[tagNumber] ?? String(tagNumber)
+        //Collect the object/variable names referenced within the service body.
+        MMS.#collectVisibleStrings(buf, service.contentStart, service.contentStart + service.contentLength, result.objectNames, 0)
     }
 
     static #buildSchema(): ProtocolJSONSchema {
@@ -141,11 +182,12 @@ export class MMS extends BaseHeader {
                         const available: number = this.packet.length - this.startPos
                         const buf: Buffer = this.readBytes(0, available)
                         this.instance.message.setValue(BufferToHex(buf))
-                        const parsed: {presentationContext: number, mmsPduType: number, invokeID: number, service: string} = MMS.#parse(buf)
+                        const parsed: {presentationContext: number, mmsPduType: number, invokeID: number, service: string, objectNames: string[]} = MMS.#parse(buf)
                         this.instance.presentationContext.setValue(parsed.presentationContext)
                         this.instance.mmsPduType.setValue(parsed.mmsPduType)
                         if (parsed.invokeID >= 0) this.instance.mmsInvokeID.setValue(parsed.invokeID)
                         if (parsed.service) this.instance.mmsService.setValue(parsed.service)
+                        if (parsed.objectNames.length) this.instance.mmsObjectNames.setValue(parsed.objectNames)
                     },
                     encode: function (this: MMS): void {
                         this.writeBytes(0, HexToBuffer(this.instance.message.getValue('')))
@@ -157,7 +199,8 @@ export class MMS extends BaseHeader {
                 presentationContext: {type: 'integer', label: 'Presentation Context'},
                 mmsPduType: {type: 'integer', label: 'MMS PDU Type'},
                 mmsInvokeID: {type: 'integer', label: 'Invoke ID'},
-                mmsService: {type: 'string', label: 'MMS Service'}
+                mmsService: {type: 'string', label: 'MMS Service'},
+                mmsObjectNames: {type: 'array', label: 'Object Names', items: {type: 'string'}}
             }
         }
     }

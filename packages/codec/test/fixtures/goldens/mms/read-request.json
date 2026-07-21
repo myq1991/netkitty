@@ -105,7 +105,13 @@
       "presentationContext": 3,
       "mmsPduType": 160,
       "mmsInvokeID": 4432,
-      "mmsService": "read"
+      "mmsService": "read",
+      "mmsObjectNames": [
+        "KIRKLAND",
+        "Bilateral_Table_ID",
+        "TASE2_Version",
+        "Supported_Features"
+      ]
     },
     "errors": []
   }

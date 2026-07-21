@@ -105,7 +105,10 @@
       "presentationContext": 3,
       "mmsPduType": 160,
       "mmsInvokeID": 4433,
-      "mmsService": "getNameList"
+      "mmsService": "getNameList",
+      "mmsObjectNames": [
+        "KIRKLAND"
+      ]
     },
     "errors": []
   }
