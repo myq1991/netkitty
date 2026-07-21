@@ -96,29 +96,61 @@ export class ISOSession extends BaseHeader {
     }
 
     /**
-     * Detect the ACSE APDU tag inside a CONNECT/ACCEPT SPDU's user data (best-effort, never-throwing):
+     * Detect the ACSE APDU inside a CONNECT/ACCEPT SPDU's user data (best-effort, never-throwing):
      * the ISO 8823 Presentation CP-type/CPA-type (0x31) → normal-mode-parameters [2] (0xa2) →
-     * fully-encoded-data (0x61) → PDV-list (0x30) → presentation-data-values [0] (0xa0) → the ACSE tag.
-     * Returns the tag (0x60 AARQ / 0x61 AARE / …) or -1.
+     * fully-encoded-data (0x61) → PDV-list (0x30) → presentation-data-values [0] (0xa0) → the ACSE APDU.
+     * Returns the ACSE TLV (tag 0x60 AARQ … 0x64 ABRT) or null.
      */
-    static #detectAcse(userData: Buffer): number {
+    static #detectAcse(userData: Buffer): {tag: number, contentStart: number, contentLength: number} | null {
         const cp: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(userData, 0)
-        if (!cp || cp.tag !== 0x31) return -1
+        if (!cp || cp.tag !== 0x31) return null
         const nmp: {tag: number, contentStart: number, contentLength: number} | null =
             ISOSession.#findChild(userData, cp.contentStart, cp.contentStart + cp.contentLength, 0xa2)
-        if (!nmp) return -1
+        if (!nmp) return null
         const fed: {tag: number, contentStart: number, contentLength: number} | null =
             ISOSession.#findChild(userData, nmp.contentStart, nmp.contentStart + nmp.contentLength, 0x61)
-        if (!fed) return -1
+        if (!fed) return null
         const pdv: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(userData, fed.contentStart)
-        if (!pdv || pdv.tag !== 0x30) return -1
+        if (!pdv || pdv.tag !== 0x30) return null
         const values: {tag: number, contentStart: number, contentLength: number} | null =
             ISOSession.#findChild(userData, pdv.contentStart, pdv.contentStart + pdv.contentLength, 0xa0)
-        if (!values || values.contentStart >= userData.length) return -1
-        //Only report a genuine ACSE APDU tag (AARQ 0x60 … ABRT 0x64); anything else leaves acseType unset
-        //rather than labelling a non-ACSE byte.
+        if (!values || values.contentStart >= userData.length) return null
+        //Only report a genuine ACSE APDU (AARQ 0x60 … ABRT 0x64); anything else leaves acseType unset.
         const tag: number = userData[values.contentStart]
-        return (tag >= 0x60 && tag <= 0x64) ? tag : -1
+        if (!(tag >= 0x60 && tag <= 0x64)) return null
+        return ISOSession.#readTLV(userData, values.contentStart)
+    }
+
+    /** The ACSE application-context-name OID (AARQ/AARE field [1] → OBJECT IDENTIFIER) as a dotted string, or ''. */
+    static #acseAppContext(buf: Buffer, acse: {contentStart: number, contentLength: number}): string {
+        const ctx: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(buf, acse.contentStart, acse.contentStart + acse.contentLength, 0xa1)
+        if (!ctx) return ''
+        const oid: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(buf, ctx.contentStart)
+        if (!oid || oid.tag !== 0x06) return ''
+        return ISOSession.#decodeOid(buf, oid.contentStart, oid.contentLength)
+    }
+
+    /** Decode a BER OBJECT IDENTIFIER body to a dotted string (never-throwing, clamped). */
+    static #decodeOid(buf: Buffer, start: number, length: number): string {
+        if (length <= 0 || start + length > buf.length) return ''
+        //Accumulate base-128 subidentifiers (high-bit continuation). Multiplication (not <<7) so arcs above
+        //2^28 don't overflow the 32-bit shift.
+        const subs: number[] = []
+        let value: number = 0
+        for (let i: number = start; i < start + length; i++) {
+            value = value * 128 + (buf[i] & 0x7f)
+            if ((buf[i] & 0x80) === 0) {
+                subs.push(value)
+                value = 0
+            }
+        }
+        if (subs.length === 0) return ''
+        //The first subidentifier encodes the first two arcs: X*40 + Y, X in {0,1,2} (Y unbounded when X=2).
+        const first: number = subs[0]
+        const x: number = first < 40 ? 0 : first < 80 ? 1 : 2
+        const parts: number[] = [x, first - x * 40, ...subs.slice(1)]
+        return parts.join('.')
     }
 
     static #buildSchema(): ProtocolJSONSchema {
@@ -164,8 +196,12 @@ export class ISOSession extends BaseHeader {
                             if (spdu.si !== 13 && spdu.si !== 14) continue
                             const userData: Buffer | null = ISOSession.#sessionUserData(HexToBuffer(spdu.params))
                             if (!userData) continue
-                            const acseTag: number = ISOSession.#detectAcse(userData)
-                            if (acseTag >= 0) this.instance.acseType.setValue(ISOSession.#ACSE_NAMES[acseTag] ?? `0x${acseTag.toString(16)}`)
+                            const acse: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#detectAcse(userData)
+                            if (acse) {
+                                this.instance.acseType.setValue(ISOSession.#ACSE_NAMES[acse.tag] ?? `0x${acse.tag.toString(16)}`)
+                                const appContext: string = ISOSession.#acseAppContext(userData, acse)
+                                if (appContext) this.instance.acseAppContext.setValue(appContext)
+                            }
                             break
                         }
                     },
@@ -185,9 +221,11 @@ export class ISOSession extends BaseHeader {
                         }
                     }
                 },
-                //Display-only: the ACSE APDU type (AARQ/AARE/…) parsed from a CONNECT/ACCEPT SPDU's user
-                //data on decode. No encode closure — the SPDU params above stay the encode authority.
-                acseType: {type: 'string', label: 'ACSE APDU'}
+                //Display-only: the ACSE APDU type (AARQ/AARE/…) and application-context-name OID parsed from
+                //a CONNECT/ACCEPT SPDU's user data on decode. No encode closure — the SPDU params above stay
+                //the encode authority.
+                acseType: {type: 'string', label: 'ACSE APDU'},
+                acseAppContext: {type: 'string', label: 'ACSE Application Context'}
             }
         }
     }

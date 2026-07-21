@@ -50,11 +50,13 @@ test('ISO Session: a CONNECT SPDU exposes the embedded ACSE AARQ; ACCEPT exposes
     const reqSession: any = Layer(request, 'iso-session').data
     assert.strictEqual(reqSession.spdus[0].si, 13, 'CONNECT SPDU')
     assert.strictEqual(reqSession.acseType, 'AARQ', 'ACSE Associate Request embedded in the CONNECT user data')
+    assert.strictEqual(reqSession.acseAppContext, '1.0.9506.1.1', 'ACSE application-context-name OID (ISO 9506 MMS)')
 
     const response: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('mms/associate-response').buffer)
     const rspSession: any = Layer(response, 'iso-session').data
     assert.strictEqual(rspSession.spdus[0].si, 14, 'ACCEPT SPDU')
     assert.strictEqual(rspSession.acseType, 'AARE', 'ACSE Associate Response embedded in the ACCEPT user data')
+    assert.strictEqual(rspSession.acseAppContext, '1.0.9506.1.1', 'ACSE application-context-name OID (ISO 9506 MMS)')
 })
 
 // Off-parent guard: a TCP payload that happens to start with a session SI byte must NOT be claimed as
