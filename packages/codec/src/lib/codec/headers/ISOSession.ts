@@ -121,12 +121,16 @@ export class ISOSession extends BaseHeader {
         return ISOSession.#readTLV(userData, values.contentStart)
     }
 
-    /** The ACSE application-context-name OID (AARQ/AARE field [1] → OBJECT IDENTIFIER) as a dotted string, or ''. */
-    static #acseAppContext(buf: Buffer, acse: {contentStart: number, contentLength: number}): string {
-        const ctx: {tag: number, contentStart: number, contentLength: number} | null =
-            ISOSession.#findChild(buf, acse.contentStart, acse.contentStart + acse.contentLength, 0xa1)
-        if (!ctx) return ''
-        const oid: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(buf, ctx.contentStart)
+    /**
+     * The OID inside a context-tagged ACSE field (e.g. application-context-name [1] = 0xa1, called-AP-title
+     * [2] = 0xa2, responding-AP-title [4] = 0xa4, calling-AP-title [6] = 0xa6, each wrapping an OBJECT
+     * IDENTIFIER form) as a dotted string, or ''.
+     */
+    static #acseOid(buf: Buffer, acse: {contentStart: number, contentLength: number}, wantTag: number): string {
+        const field: {tag: number, contentStart: number, contentLength: number} | null =
+            ISOSession.#findChild(buf, acse.contentStart, acse.contentStart + acse.contentLength, wantTag)
+        if (!field) return ''
+        const oid: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#readTLV(buf, field.contentStart)
         if (!oid || oid.tag !== 0x06) return ''
         return ISOSession.#decodeOid(buf, oid.contentStart, oid.contentLength)
     }
@@ -199,8 +203,19 @@ export class ISOSession extends BaseHeader {
                             const acse: {tag: number, contentStart: number, contentLength: number} | null = ISOSession.#detectAcse(userData)
                             if (acse) {
                                 this.instance.acseType.setValue(ISOSession.#ACSE_NAMES[acse.tag] ?? `0x${acse.tag.toString(16)}`)
-                                const appContext: string = ISOSession.#acseAppContext(userData, acse)
+                                const appContext: string = ISOSession.#acseOid(userData, acse, 0xa1)
                                 if (appContext) this.instance.acseAppContext.setValue(appContext)
+                                if (acse.tag === 0x60) {
+                                    //AARQ: called-AP-title [2], calling-AP-title [6].
+                                    const called: string = ISOSession.#acseOid(userData, acse, 0xa2)
+                                    if (called) this.instance.acseCalledApTitle.setValue(called)
+                                    const calling: string = ISOSession.#acseOid(userData, acse, 0xa6)
+                                    if (calling) this.instance.acseCallingApTitle.setValue(calling)
+                                } else if (acse.tag === 0x61) {
+                                    //AARE: responding-AP-title [4].
+                                    const responding: string = ISOSession.#acseOid(userData, acse, 0xa4)
+                                    if (responding) this.instance.acseRespondingApTitle.setValue(responding)
+                                }
                             }
                             break
                         }
@@ -225,7 +240,10 @@ export class ISOSession extends BaseHeader {
                 //a CONNECT/ACCEPT SPDU's user data on decode. No encode closure — the SPDU params above stay
                 //the encode authority.
                 acseType: {type: 'string', label: 'ACSE APDU'},
-                acseAppContext: {type: 'string', label: 'ACSE Application Context'}
+                acseAppContext: {type: 'string', label: 'ACSE Application Context'},
+                acseCalledApTitle: {type: 'string', label: 'ACSE Called AP-Title'},
+                acseCallingApTitle: {type: 'string', label: 'ACSE Calling AP-Title'},
+                acseRespondingApTitle: {type: 'string', label: 'ACSE Responding AP-Title'}
             }
         }
     }

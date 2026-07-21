@@ -91,7 +91,8 @@
         }
       ],
       "acseType": "AARE",
-      "acseAppContext": "1.0.9506.1.1"
+      "acseAppContext": "1.0.9506.1.1",
+      "acseRespondingApTitle": "1.1.2"
     },
     "errors": []
   }
