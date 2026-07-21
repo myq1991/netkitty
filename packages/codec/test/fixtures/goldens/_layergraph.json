@@ -813,6 +813,13 @@
     "smb1": [
       "raw"
     ],
+    "llc": [
+      "stp",
+      "raw"
+    ],
+    "stp": [
+      "raw"
+    ],
     "vlan": [
       "arp",
       "goose",
@@ -2593,6 +2600,16 @@
       "raw": null
     },
     "smb1": {
+      "raw": null
+    },
+    "llc": {
+      "stp": {
+        "field": "dsap",
+        "value": 66
+      },
+      "raw": null
+    },
+    "stp": {
       "raw": null
     },
     "vlan": {

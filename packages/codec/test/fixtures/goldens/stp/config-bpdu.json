@@ -1,0 +1,45 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:80:c2:00:00:00",
+      "smac": "00:11:22:33:44:55",
+      "etherType": "0026"
+    },
+    "errors": []
+  },
+  {
+    "id": "llc",
+    "data": {
+      "dsap": 66,
+      "ssap": 66,
+      "control": "03"
+    },
+    "errors": []
+  },
+  {
+    "id": "stp",
+    "data": {
+      "protocolIdentifier": "0000",
+      "protocolVersion": 0,
+      "bpduType": 0,
+      "flags": 0,
+      "rootIdentifier": "8000001122334455",
+      "rootPathCost": 0,
+      "bridgeIdentifier": "8000001122334455",
+      "portIdentifier": 32769,
+      "messageAge": 0,
+      "maxAge": 5120,
+      "helloTime": 512,
+      "forwardDelay": 3840
+    },
+    "errors": []
+  },
+  {
+    "id": "raw",
+    "data": {
+      "data": "0000000000000000"
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,9 @@
+# STP Configuration BPDU (IEEE 802.1D) in an IEEE 802.3 (length-encapsulated) frame.
+# eth[14]: dst 01:80:c2:00:00:00 (STP multicast) + src 00:11:22:33:44:55 + length 0x0026 (38 = LLC 3 + BPDU 35)
+# llc[3]: DSAP 0x42 + SSAP 0x42 + control 0x03 (U-format UI)
+# bpdu[35]: protocolId 0x0000, version 0 (STP), type 0x00 (Config), flags 0x00,
+#   rootId 8000001122334455, rootPathCost 0, bridgeId 8000001122334455, portId 0x8001,
+#   msgAge 0, maxAge 0x1400 (20s), helloTime 0x0200 (2s), fwdDelay 0x0f00 (15s)
+# + 8 bytes of 802.3 minimum-frame padding (not counted in the length field) -> falls to RawData.
+# source: constructed spec-accurate 802.1D Config BPDU; tshark dissects eth:llc:stp.
+0180c200000000112233445500264242030000000000800000112233445500000000800000112233445580010000140002000f000000000000000000
