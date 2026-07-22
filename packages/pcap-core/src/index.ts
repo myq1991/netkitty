@@ -20,10 +20,10 @@ export {Lz4FrameDecompress} from './Lz4FrameDecompress'
 /**
  * PCAP file buffer generation
  */
-export type {GeneratePCAPInputPacket, GeneratePCAPPacket} from './PCAPGenerator'
-export {GeneratePCAPHeader} from './PCAPGenerator'
-export {GeneratePCAPData} from './PCAPGenerator'
-export {GeneratePCAP} from './PCAPGenerator'
+export type {GeneratePCAPInputPacket, GeneratePCAPPacket} from './PcapGenerator'
+export {GeneratePCAPHeader} from './PcapGenerator'
+export {GeneratePCAPData} from './PcapGenerator'
+export {GeneratePCAP} from './PcapGenerator'
 /**
  * pcapng file buffer generation
  */
