@@ -1,7 +1,7 @@
 import EventEmitter from 'events'
 import {gunzipSync} from 'node:zlib'
 import {FileHandle, FileReadResult, open, readFile} from 'node:fs/promises'
-import {ReadStream, WriteStream} from 'node:fs'
+import {ReadStream, WriteStream, statSync} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './PcapParser'
 import {IPcapPacketInfo, Lz4FrameDecompress, PcapFileFormat} from '@netkitty/pcap-core'
@@ -64,11 +64,30 @@ export class PcapReader extends EventEmitter {
     //packet can't emit 'error' a second time to a consumed one-shot listener and crash the process)
     protected onPacketErrored: boolean = false
 
+    protected sourceSize: number | null = null
+
     /**
      * The detected capture-file format ('pcap' | 'pcapng'), or null before the first bytes are parsed
      */
     public get format(): PcapFileFormat | null {
         return this.parser ? this.parser.format : null
+    }
+
+    /**
+     * Total size of the byte stream the parser walks — the decompressed length for a gzip/LZ4 capture
+     * (the parser reports offsets into the decompressed stream), otherwise the on-disk file size. Used to
+     * turn a packet's offset into a progress ratio. Returns 0 if the file can't be stat'd.
+     */
+    public get totalBytes(): number {
+        if (this.decompressed) return this.decompressed.length
+        if (this.sourceSize === null) {
+            try {
+                this.sourceSize = statSync(this.filename).size
+            } catch {
+                this.sourceSize = 0
+            }
+        }
+        return this.sourceSize
     }
 
     protected get readStream(): ReadStream {

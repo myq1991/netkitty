@@ -115,8 +115,8 @@ await PcapEdit.rewrite({
 })
 ```
 
-- **Retiming:** `shiftTime(seconds, microseconds)`, `setStartTime(seconds, microseconds)`,
-  `scaleTime(factor)`, `constantInterval(microseconds)`.
+- **Retiming (whole file):** `shiftTime(seconds, microseconds)`, `setStartTime(seconds, microseconds)`,
+  `scaleTime(factor)`, `constantInterval(interval, unit?)` (`unit` ∈ `'us' | 'ms' | 's' | 'min'`, default µs).
 - **Ethernet MAC:** `setSourceMac(mac)`, `setDestinationMac(mac)`, `swapMac()` (assume an Ethernet link layer).
 - **`truncate(maxBytes)`** to shorten frames.
 
@@ -126,6 +126,45 @@ deliberately stays free of the codec dependency.
 
 `PcapEdit.patchInPlace(file, info, frame)` overwrites one packet's bytes **without rewriting the file** —
 valid only when the replacement is the same length as the original packet and the file is uncompressed.
+
+### Retime a window of frames
+
+`PcapEdit.retime` applies one timing edit, optionally limited to a **1-based inclusive frame window**
+`range: {from, to?}`. Crucially, when you change the intervals *inside* a window, every frame **after** it
+is shifted by the net time change, so the timeline stays continuous — no gap, and (for an ordered capture)
+no frame runs backwards. `edit` is one of `{type:'scale', factor}`, `{type:'constantInterval', interval, unit?}`,
+`{type:'shift', delta, unit?}`, or `{type:'setStart', seconds, microseconds?}` (only `scale`/`constantInterval`
+honor a range; `shift` with a range shifts the suffix from `from` onward; `setStart` is whole-file).
+
+```ts
+// space frames 100..500 exactly 1 ms apart; frames 501+ slide to keep the following gap intact
+await PcapEdit.retime({
+  input: 'in.pcap', output: 'out.pcap',
+  edit: {type: 'constantInterval', interval: 1, unit: 'ms'},
+  range: {from: 100, to: 500}
+})
+```
+
+Timestamps are microsecond-resolution (a nanosecond capture is retimed at µs precision). `PcapEdit.micros(value, unit)`
+converts a duration to microseconds. Retiming is not composable with `chain()` (its propagation is
+non-local) — use `retime` for one timing edit, or `rewrite` + `chain` for byte edits.
+
+### Progress
+
+`rewrite` and `retime` accept an `onProgress` callback — a **byte-ratio** (total bytes are known up front,
+packet counts are not), throttled to whole-percent steps (`progressPercentStep`, default 1), with a
+guaranteed final `ratio: 1`:
+
+```ts
+await PcapEdit.retime({
+  input: 'big.pcapng.gz', output: 'out.pcapng', format: 'pcapng',
+  edit: {type: 'scale', factor: 0.5},
+  onProgress: ({ratio, read, written}) => process.stdout.write(`\r${(ratio * 100).toFixed(0)}%`)
+})
+```
+
+For a gzip/LZ4 input the ratio is over the **decompressed** size (the up-front decompression shows as 0%
+until the first packet). A throwing progress handler can't abort the operation.
 
 ## Key concepts
 

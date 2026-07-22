@@ -37,6 +37,15 @@ export type PcapEditContext = {
 /** A composable, keep-one-packet edit step. Mutate `ctx` in place (or return a replacement). */
 export type PcapEditTransform = (ctx: PcapEditContext, info: IPcapPacketInfo) => void | PcapEditContext
 
+/** Progress report for a whole-file operation. `ratio` is bytesProcessed/totalBytes, clamped to [0,1]. */
+export interface IPcapProgress {
+    ratio: number
+    bytesProcessed: number
+    totalBytes: number
+    read: number
+    written: number
+}
+
 export interface IPcapRewriteOptions {
     input: string
     output: string
@@ -44,6 +53,10 @@ export interface IPcapRewriteOptions {
     format?: PcapWriterFormat
     onPacket: PcapEditHandler
     includePacketData?: boolean
+    /** byte-ratio progress callback, throttled to whole-percent steps; a final 100% always fires */
+    onProgress?: (progress: IPcapProgress) => void
+    /** emit progress each time this many whole percent are crossed (default 1) */
+    progressPercentStep?: number
 }
 
 export interface IPcapRewriteResult {
@@ -51,7 +64,45 @@ export interface IPcapRewriteResult {
     written: number
 }
 
+/** Time unit for durations (default microseconds). */
+export type TimeUnit = 'us' | 'ms' | 's' | 'min'
+
+/** A 1-based, inclusive frame-index window; `to` omitted means "to the end of the file". */
+export interface FrameRange {
+    from: number
+    to?: number
+}
+
+/**
+ * A single timing edit for PcapEdit.retime:
+ *   scale            — multiply inter-packet gaps by `factor` (anchored at the range/file start)
+ *   constantInterval — space packets by a constant gap (ignores original timing within the range)
+ *   shift            — add a fixed offset to every timestamp from `range.from` onward (whole file if no range)
+ *   setStart         — rebase so the first packet lands at (seconds, microseconds); whole file only
+ */
+export type RetimeEdit =
+    | {type: 'scale', factor: number}
+    | {type: 'constantInterval', interval: number, unit?: TimeUnit}
+    | {type: 'shift', delta: number, unit?: TimeUnit}
+    | {type: 'setStart', seconds: number, microseconds?: number}
+
+export interface IPcapRetimeOptions {
+    input: string
+    output: string
+    format?: PcapWriterFormat
+    edit: RetimeEdit
+    /**
+     * 1-based inclusive frame window; omitted = whole file. 'scale'/'constantInterval' honor from+to (and
+     * propagate the net delta to later frames); 'shift' honors `from` only (suffix shift, `to` ignored);
+     * 'setStart' rejects a range.
+     */
+    range?: FrameRange
+    onProgress?: (progress: IPcapProgress) => void
+    progressPercentStep?: number
+}
+
 const MICROS_PER_SECOND: number = 1000000
+const UNIT_MICROS: Record<TimeUnit, number> = {us: 1, ms: 1000, s: 1000000, min: 60000000}
 
 /**
  * Stream-based capture editing built on PcapReader + PcapWriter. `rewrite` runs every packet of an input
@@ -67,27 +118,92 @@ export class PcapEdit {
      * @param options
      */
     public static async rewrite(options: IPcapRewriteOptions): Promise<IPcapRewriteResult> {
-        if (path.resolve(options.input) === path.resolve(options.output)) {
-            throw new Error('PcapEdit.rewrite: input and output must be different files; rewrite to a temp file, then rename, to edit in place')
-        }
-        //a rewrite always produces a fresh file — PcapWriter would otherwise append to an existing output
-        if (existsSync(options.output)) await rm(options.output)
-        const writer: PcapWriter = new PcapWriter({
-            filename: options.output,
+        return PcapEdit.run({
+            input: options.input,
+            output: options.output,
             format: options.format,
-            includePacketData: options.includePacketData === true
+            includePacketData: options.includePacketData === true,
+            onProgress: options.onProgress,
+            progressPercentStep: options.progressPercentStep,
+            produce: async (frame: Buffer, info: IPcapPacketInfo): Promise<PcapEditContext[]> =>
+                PcapEdit.normalize(await options.onPacket(frame, info), frame, info)
         })
+    }
+
+    /**
+     * Retime a capture by one edit, optionally limited to a 1-based inclusive frame window. For a windowed
+     * 'scale'/'constantInterval', every frame AFTER the window is shifted by the net time change introduced
+     * inside it, so the timeline stays continuous — no hole, and no reordering of an originally-ordered
+     * capture. Timestamps are microsecond-resolution (nanosecond input is truncated). Because propagation
+     * is non-local, retime takes exactly one edit and is not composable with chain(); combine byte edits
+     * (MAC, truncate) via rewrite() instead.
+     * @param options
+     */
+    public static async retime(options: IPcapRetimeOptions): Promise<IPcapRewriteResult> {
+        const apply: (frame: Buffer, info: IPcapPacketInfo) => PcapEditContext = PcapEdit.makeRetimer(options.edit, options.range)
+        return PcapEdit.run({
+            input: options.input,
+            output: options.output,
+            format: options.format,
+            includePacketData: false,
+            onProgress: options.onProgress,
+            progressPercentStep: options.progressPercentStep,
+            produce: (frame: Buffer, info: IPcapPacketInfo): PcapEditContext[] => [apply(frame, info)]
+        })
+    }
+
+    /** Convert a value in the given unit (default microseconds) to integer microseconds. */
+    public static micros(value: number, unit: TimeUnit = 'us'): number {
+        return Math.round(value * PcapEdit.unitMicros(unit))
+    }
+
+    /**
+     * Shared streaming engine for rewrite/retime: read `input`, run each packet through `produce`, write
+     * the results to a fresh `output`, and report throttled byte-ratio progress with a terminal 100%.
+     * @protected
+     */
+    protected static async run(options: {
+        input: string
+        output: string
+        format?: PcapWriterFormat
+        includePacketData: boolean
+        onProgress?: (progress: IPcapProgress) => void
+        progressPercentStep?: number
+        produce: (frame: Buffer, info: IPcapPacketInfo) => Promise<PcapEditContext[]> | PcapEditContext[]
+    }): Promise<IPcapRewriteResult> {
+        if (path.resolve(options.input) === path.resolve(options.output)) {
+            throw new Error('PcapEdit: input and output must be different files; write to a temp file, then rename, to edit in place')
+        }
+        //always a fresh file — PcapWriter would otherwise append to an existing output
+        if (existsSync(options.output)) await rm(options.output)
+        const writer: PcapWriter = new PcapWriter({filename: options.output, format: options.format, includePacketData: options.includePacketData})
+        const step: number = options.progressPercentStep && options.progressPercentStep > 0 ? options.progressPercentStep : 1
         let read: number = 0
         let written: number = 0
+        let lastPercent: number = -1
         let reader: PcapReader
+        const emitProgress = (bytesProcessed: number, force: boolean): void => {
+            if (!options.onProgress) return
+            const totalBytes: number = reader.totalBytes
+            const ratio: number = totalBytes > 0 ? Math.min(1, bytesProcessed / totalBytes) : 1
+            const percent: number = Math.floor(ratio * 100)
+            if (!force && percent < lastPercent + step) return
+            lastPercent = percent
+            try {
+                options.onProgress({ratio: ratio, bytesProcessed: bytesProcessed, totalBytes: totalBytes, read: read, written: written})
+            } catch {
+                //a throwing progress handler must not abort the operation
+            }
+        }
         const handle = async (info: IPcapPacketInfo): Promise<void> => {
             read += 1
             const frame: Buffer = await reader.readPacketData(info)
-            const action: PcapEditAction = await options.onPacket(frame, info)
-            for (const out of PcapEdit.normalize(action, frame, info)) {
+            const outs: PcapEditContext[] = await options.produce(frame, info)
+            for (const out of outs) {
                 writer.write(out.frame, out.seconds, out.microseconds)
                 written += 1
             }
+            emitProgress(info.offset + info.length, false)
         }
         reader = new PcapReader({filename: options.input, onPacket: handle})
         try {
@@ -96,12 +212,71 @@ export class PcapEdit {
                 reader.once('done', (): void => resolve())
                 reader.start().catch(reject)
             })
+            emitProgress(reader.totalBytes, true) //terminal 100%
         } finally {
             //stop the reader (no-op once done) and always flush/close the writer, even on a handler error
             await reader.close().catch((): void => undefined)
             await writer.close()
         }
         return {read: read, written: written}
+    }
+
+    /**
+     * Build the stateful per-packet retiming function. Range membership is decided on the ORIGINAL
+     * info.index; the shift carried to post-range frames is taken from the emitted (rounded/clamped) time
+     * of the last in-range frame, so the window boundary stays exact.
+     * @protected
+     */
+    protected static makeRetimer(edit: RetimeEdit, range?: FrameRange): (frame: Buffer, info: IPcapPacketInfo) => PcapEditContext {
+        const from: number = range ? range.from : 1
+        const to: number = range && range.to !== undefined ? range.to : Number.POSITIVE_INFINITY
+        if (range) {
+            if (!Number.isInteger(range.from) || range.from < 1) throw new Error('PcapEdit.retime: range.from must be a 1-based integer')
+            if (range.to !== undefined && (!Number.isInteger(range.to) || range.to < range.from)) throw new Error('PcapEdit.retime: range.to must be an integer >= range.from')
+            if (edit.type === 'setStart') throw new Error("PcapEdit.retime: 'setStart' does not support a range")
+        }
+        const intervalMicros: number = edit.type === 'constantInterval' ? Math.max(0, Math.floor(edit.interval * PcapEdit.unitMicros(edit.unit))) : 0
+        const shiftMicros: number = edit.type === 'shift' ? Math.round(edit.delta * PcapEdit.unitMicros(edit.unit)) : 0
+        const startMicros: number = edit.type === 'setStart' ? edit.seconds * MICROS_PER_SECOND + (edit.microseconds ?? 0) : 0
+        if (edit.type === 'scale' && !(Number.isFinite(edit.factor) && edit.factor >= 0)) throw new Error('PcapEdit.retime: scale factor must be a finite number >= 0')
+
+        let anchor: number | null = null //working micros of the first in-range frame (scale/constantInterval)
+        let inRangeIndex: number = 0
+        let shift: number = 0 //signed micros added to every frame after the range
+        let base: number | null = null //first-frame micros, for setStart
+
+        return (frame: Buffer, info: IPcapPacketInfo): PcapEditContext => {
+            const ctx: PcapEditContext = {frame: frame, seconds: info.seconds, microseconds: info.microseconds}
+            const t: number = ctx.seconds * MICROS_PER_SECOND + ctx.microseconds
+            if (edit.type === 'setStart') {
+                if (base === null) base = t
+                PcapEdit.setMicros(ctx, startMicros + (t - base))
+                return ctx
+            }
+            if (edit.type === 'shift') {
+                //a windowed shift is a suffix shift: the `to` boundary is inert by design, so shift from `from` on
+                if (info.index >= from) PcapEdit.setMicros(ctx, t + shiftMicros)
+                return ctx
+            }
+            //scale / constantInterval
+            if (info.index < from) return ctx //before the range: untouched
+            if (info.index <= to) {
+                if (anchor === null) {
+                    anchor = t
+                    inRangeIndex = 0
+                }
+                const target: number = edit.type === 'scale' ? Math.round(anchor + (t - anchor) * edit.factor) : anchor + inRangeIndex * intervalMicros
+                const emitted: number = Math.max(0, Math.floor(target))
+                ctx.seconds = Math.floor(emitted / MICROS_PER_SECOND)
+                ctx.microseconds = emitted % MICROS_PER_SECOND
+                shift = emitted - t //from the emitted (post-clamp) value, so the boundary gap is exact
+                inRangeIndex += 1
+                return ctx
+            }
+            //after the range: rigid translation by the net in-range delta, preserving the outbound gap
+            PcapEdit.setMicros(ctx, t + shift)
+            return ctx
+        }
     }
 
     /**
@@ -190,15 +365,16 @@ export class PcapEdit {
     }
 
     /**
-     * Ignore the original timing and space packets by a constant interval in microseconds, starting from
-     * the first packet's timestamp
+     * Ignore the original timing and space packets by a constant interval (in `unit`, default microseconds),
+     * starting from the first packet's timestamp. For a windowed version use PcapEdit.retime.
      */
-    public static constantInterval(microseconds: number): PcapEditTransform {
+    public static constantInterval(interval: number, unit: TimeUnit = 'us'): PcapEditTransform {
+        const intervalMicros: number = Math.max(0, Math.floor(interval * PcapEdit.unitMicros(unit)))
         let index: number = 0
         let start: number = 0
         return (ctx: PcapEditContext): void => {
             if (index === 0) start = PcapEdit.toMicros(ctx)
-            PcapEdit.setMicros(ctx, start + index * microseconds)
+            PcapEdit.setMicros(ctx, start + index * intervalMicros)
             index += 1
         }
     }
@@ -233,6 +409,12 @@ export class PcapEdit {
     }
 
     /* ---- internals ---- */
+
+    private static unitMicros(unit: TimeUnit | undefined): number {
+        const factor: number | undefined = UNIT_MICROS[unit ?? 'us']
+        if (factor === undefined) throw new Error(`PcapEdit: unknown time unit '${unit}' (expected 'us' | 'ms' | 's' | 'min')`)
+        return factor
+    }
 
     private static toMicros(ctx: PcapEditContext): number {
         return ctx.seconds * MICROS_PER_SECOND + ctx.microseconds

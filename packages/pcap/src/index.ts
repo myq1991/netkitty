@@ -21,7 +21,12 @@ export {
     type PcapEditContext,
     type PcapEditTransform,
     type IPcapRewriteOptions,
-    type IPcapRewriteResult
+    type IPcapRewriteResult,
+    type IPcapProgress,
+    type IPcapRetimeOptions,
+    type RetimeEdit,
+    type FrameRange,
+    type TimeUnit
 } from './PcapEdit'
 /**
  * Types and buffer helpers re-exported from the browser-safe core

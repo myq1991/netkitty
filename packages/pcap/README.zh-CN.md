@@ -111,8 +111,8 @@ await PcapEdit.rewrite({
 })
 ```
 
-- **改时间:** `shiftTime(seconds, microseconds)`、`setStartTime(seconds, microseconds)`、
-  `scaleTime(factor)`、`constantInterval(microseconds)`。
+- **改时间(整文件):** `shiftTime(seconds, microseconds)`、`setStartTime(seconds, microseconds)`、
+  `scaleTime(factor)`、`constantInterval(interval, unit?)`(`unit` ∈ `'us' | 'ms' | 's' | 'min'`,默认微秒)。
 - **以太网 MAC:** `setSourceMac(mac)`、`setDestinationMac(mac)`、`swapMac()`(假设是以太网链路层)。
 - **`truncate(maxBytes)`** 截短帧。
 
@@ -121,6 +121,43 @@ await PcapEdit.rewrite({
 
 `PcapEdit.patchInPlace(file, info, frame)` 可以**不重写整个文件**就地覆盖一个包的字节——仅当替换字节和
 原包**等长**且文件未压缩时有效。
+
+### 只改某个帧范围内的时间
+
+`PcapEdit.retime` 施加一个时间编辑,可以用 **1 基、闭区间的帧范围** `range: {from, to?}` 限定。关键在于:
+当你改动范围**内部**的帧间隔后,范围**之后**的每一帧都会按净时间变化量整体平移,从而保持时间线连续——
+不会出现空洞,对本来有序的抓包也不会时间倒流。`edit` 是 `{type:'scale', factor}`、
+`{type:'constantInterval', interval, unit?}`、`{type:'shift', delta, unit?}` 或
+`{type:'setStart', seconds, microseconds?}` 之一(只有 `scale`/`constantInterval` 认范围;带范围的 `shift`
+表示从 `from` 起平移后缀;`setStart` 仅整文件)。
+
+```ts
+// 把第 100..500 帧之间的间隔改成恰好 1 ms;第 501 帧起整体平移,保持随后的间隔不变
+await PcapEdit.retime({
+  input: 'in.pcap', output: 'out.pcap',
+  edit: {type: 'constantInterval', interval: 1, unit: 'ms'},
+  range: {from: 100, to: 500}
+})
+```
+
+时间戳是微秒精度(纳秒抓包按微秒精度改)。`PcapEdit.micros(value, unit)` 把时长换算成微秒。改时间不可与
+`chain()` 组合(它的传播是非局部的)——一次时间编辑用 `retime`,字节编辑用 `rewrite` + `chain`。
+
+### 进度
+
+`rewrite` 和 `retime` 都接受 `onProgress` 回调——按**字节比例**(总字节数一开始就知道,包数不知道),
+按整百分比节流(`progressPercentStep`,默认 1),并保证最后一定回调一次 `ratio: 1`:
+
+```ts
+await PcapEdit.retime({
+  input: 'big.pcapng.gz', output: 'out.pcapng', format: 'pcapng',
+  edit: {type: 'scale', factor: 0.5},
+  onProgress: ({ratio, read, written}) => process.stdout.write(`\r${(ratio * 100).toFixed(0)}%`)
+})
+```
+
+对 gzip/LZ4 输入,比例是相对**解压后**大小的(开头的解压阶段会停在 0% 直到第一个包)。进度回调里抛异常
+不会中断整个操作。
 
 ## 关键概念
 
