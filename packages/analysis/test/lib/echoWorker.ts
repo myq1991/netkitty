@@ -1,5 +1,5 @@
 import {parentPort, MessagePort} from 'node:worker_threads'
-import {WorkerEndpoint} from '../../src/lib/streaming/worker/WorkerEndpoint'
+import {WorkerEndpoint} from '../../src/worker/WorkerEndpoint'
 
 //Test-support worker: exercises the WorkerEndpoint/NodeWorkerChannel round-trip. Not a spec itself.
 const endpoint: WorkerEndpoint = new WorkerEndpoint(parentPort as MessagePort)

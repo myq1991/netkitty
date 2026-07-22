@@ -4,9 +4,9 @@ import {readFileSync, writeFileSync, appendFileSync, rmSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {IPcapPacketInfo, PcapParserCore} from '@netkitty/pcap-core'
-import {Analysis} from '../../src/lib/streaming/Analysis'
-import {FrameRow} from '../../src/lib/streaming/types/FrameRow'
-import {ConversationsReducer, ConversationSummary} from '../../src/lib/streaming/reducers/ConversationsReducer'
+import {Analysis} from '../../src/Analysis'
+import {FrameRow} from '../../src/types/FrameRow'
+import {ConversationsReducer, ConversationSummary} from '../../src/reducers/ConversationsReducer'
 import {FixtureCapturePath} from '../lib/Fixtures'
 
 function totalFrames(buffer: Buffer): number {

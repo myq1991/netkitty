@@ -1,8 +1,8 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {Analysis} from '../../src/lib/streaming/Analysis'
-import {ConversationsReducer, ConversationSummary} from '../../src/lib/streaming/reducers/ConversationsReducer'
-import {EndpointsReducer, EndpointSummary} from '../../src/lib/streaming/reducers/EndpointsReducer'
+import {Analysis} from '../../src/Analysis'
+import {ConversationsReducer, ConversationSummary} from '../../src/reducers/ConversationsReducer'
+import {EndpointsReducer, EndpointSummary} from '../../src/reducers/EndpointsReducer'
 import {FixtureCapturePath} from '../lib/Fixtures'
 
 //The worker-side column scan must produce byte-identical results to the main-thread reducer — it just

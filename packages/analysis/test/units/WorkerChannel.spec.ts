@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import {Worker} from 'node:worker_threads'
 import path from 'node:path'
-import {NodeWorkerChannel} from '../../src/lib/streaming/worker/NodeWorkerChannel'
+import {NodeWorkerChannel} from '../../src/worker/NodeWorkerChannel'
 
 const WORKER_PATH: string = path.resolve(__dirname, '../lib/echoWorker.js')
 

@@ -3,8 +3,8 @@ import assert from 'node:assert'
 import {readFileSync} from 'node:fs'
 import {Codec, CodecDecodeResult} from '@netkitty/codec'
 import {IPcapPacketInfo, PcapParserCore} from '@netkitty/pcap-core'
-import {Analysis} from '../../src/lib/streaming/Analysis'
-import {matchesFilter, parseFilter} from '../../src/lib/streaming/filter/FilterExpression'
+import {Analysis} from '../../src/Analysis'
+import {matchesFilter, parseFilter} from '../../src/filter/FilterExpression'
 import {FixtureCapturePath} from '../lib/Fixtures'
 
 //Decode every frame of a fixture, so the test can compute the expected match set independently.

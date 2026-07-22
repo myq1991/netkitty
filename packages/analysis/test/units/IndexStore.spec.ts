@@ -1,7 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {ColumnarIndexStore} from '../../src/lib/streaming/stores/ColumnarIndexStore'
-import {FrameIndexRecord} from '../../src/lib/streaming/types/FrameIndexRecord'
+import {ColumnarIndexStore} from '../../src/stores/ColumnarIndexStore'
+import {FrameIndexRecord} from '../../src/types/FrameIndexRecord'
 
 //Build a record whose fields are all derived from a seed, so assertions are exact. append() ignores
 //the `index` field (it assigns the global frame number itself), so seed it with a sentinel.

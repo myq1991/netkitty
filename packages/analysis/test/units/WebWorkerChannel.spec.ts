@@ -1,7 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
-import {WebWorkerChannel, WebWorkerLike} from '../../src/lib/streaming/worker/WebWorkerChannel'
-import {WebWorkerEndpoint, WorkerScopeLike} from '../../src/lib/streaming/worker/WebWorkerEndpoint'
+import {WebWorkerChannel, WebWorkerLike} from '../../src/worker/WebWorkerChannel'
+import {WebWorkerEndpoint, WorkerScopeLike} from '../../src/worker/WebWorkerEndpoint'
 
 //An in-memory Web Worker pair: main-side (WebWorkerLike) and worker-side (WorkerScopeLike) each
 //deliver postMessage to the other's onmessage on a microtask. Exercises the same protocol a real

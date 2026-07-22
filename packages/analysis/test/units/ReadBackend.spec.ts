@@ -3,7 +3,7 @@ import assert from 'node:assert'
 import {readFileSync, writeFileSync, rmSync, appendFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
-import {NodeFileReadBackend} from '../../src/lib/streaming/backends/NodeFileReadBackend'
+import {NodeFileReadBackend} from '../../src/backends/NodeFileReadBackend'
 import {FixtureCapturePath} from '../lib/Fixtures'
 
 const CAPTURE: string = FixtureCapturePath('iec104.pcap')

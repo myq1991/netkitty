@@ -1,9 +1,9 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
 import {CodecDecodeResult} from '@netkitty/codec'
-import {Frame} from '../../src/lib/streaming/types/Frame'
-import {UpdateContext} from '../../src/lib/streaming/types/UpdateContext'
-import {RttSample, TcpStreamDiagnostic, TcpStreamReducer} from '../../src/lib/streaming/reducers/TcpStreamReducer'
+import {Frame} from '../../src/types/Frame'
+import {UpdateContext} from '../../src/types/UpdateContext'
+import {RttSample, TcpStreamDiagnostic, TcpStreamReducer} from '../../src/reducers/TcpStreamReducer'
 
 type Packet = {layers: CodecDecodeResult[], timestamp: number, length: number}
 

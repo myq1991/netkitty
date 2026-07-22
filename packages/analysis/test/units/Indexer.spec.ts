@@ -1,10 +1,10 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
 import {CodecDecodeResult} from '@netkitty/codec'
-import {canonicalConversationKey, flowOf, hash32, topProtocolOf} from '../../src/lib/streaming/indexer/ConversationKey'
-import {FrameIndexer} from '../../src/lib/streaming/indexer/FrameIndexer'
-import {ColumnarIndexStore} from '../../src/lib/streaming/stores/ColumnarIndexStore'
-import {FrameIndexRecord} from '../../src/lib/streaming/types/FrameIndexRecord'
+import {canonicalConversationKey, flowOf, hash32, topProtocolOf} from '../../src/indexer/ConversationKey'
+import {FrameIndexer} from '../../src/indexer/FrameIndexer'
+import {ColumnarIndexStore} from '../../src/stores/ColumnarIndexStore'
+import {FrameIndexRecord} from '../../src/types/FrameIndexRecord'
 
 function layer(id: string, data: Record<string, unknown>, protocol: boolean = true): CodecDecodeResult {
     return {id: id, name: id, nickname: id, protocol: protocol, errors: [], data: data as any}
