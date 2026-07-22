@@ -72,7 +72,7 @@ test('PostgreSQL survives truncation and stays confined to its port bucket', asy
     const full: Buffer = LoadPacket('postgresql/query').buffer
     await AssertDecodeSurvives(full.subarray(0, full.length - 3))
 
-    // Non-PG binary on port 5432: first byte 0xff is not a type letter and 0xff…​ is not a plausible
+    // Non-PG binary on port 5432: first byte 0xff is not a type letter and 0xff… is not a plausible
     // startup length ⇒ falls through to raw.
     const {packet: binary}: CodecEncodeResult = await codec.encode([
         {id: 'eth', data: {dmac: '00:00:00:00:00:00', smac: '00:00:00:00:00:00', etherType: '0800'}},

@@ -11,7 +11,7 @@ test('Elasticsearch request: header + body + byte-perfect round-trip', async ():
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('elasticsearch/request').buffer)
     AssertLayers(decoded, ['eth', 'ipv4', 'tcp', 'elasticsearch'])
     const es: any = Layer(decoded, 'elasticsearch').data
-    assert.strictEqual(es.magic, '4553', "'ES' magic")
+    assert.strictEqual(es.magic, '4553', '\'ES\' magic')
     assert.strictEqual(es.messageLength, 22, 'bytes after the length field (requestId+status+version+body)')
     assert.strictEqual(es.requestId, '0000000000000001', 'request id 1 (8-byte, kept verbatim)')
     assert.strictEqual(es.status, 0, 'request, uncompressed, no error')

@@ -111,7 +111,7 @@ export class WSDiscovery extends BaseHeader {
         if (!this.prevCodecModule) return false
         if (this.prevCodecModule.id !== 'udp') return false
         if (this.#payloadLength() <= 0) return false
-        const lead: string = this.readBytes(0, 16, true).toString('latin1').replace(/^[\s﻿]+/, '')
+        const lead: string = this.readBytes(0, 16, true).toString('latin1').replace(/^[\s\uFEFF]+/, '')
         return lead.startsWith('<')
     }
 

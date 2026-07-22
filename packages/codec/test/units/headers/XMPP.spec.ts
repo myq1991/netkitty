@@ -15,13 +15,13 @@ test('XMPP stream open: layers + metadata + byte-perfect round-trip', async (): 
     assert.strictEqual(xmpp.isStreamHeader, true, 'recognized as a stream header')
     assert.strictEqual(xmpp.hasXmlDeclaration, true, 'leading <?xml ...?> declaration present')
     const message: string = Buffer.from(xmpp.message, 'hex').toString('latin1')
-    assert.ok(message.startsWith("<?xml version='1.0'?><stream:stream"), 'verbatim XML preserved')
+    assert.ok(message.startsWith('<?xml version=\'1.0\'?><stream:stream'), 'verbatim XML preserved')
 })
 
 // Crafting: a bare <message> stanza (no XML declaration) on 5269 (server-to-server). The verbatim
 // message must re-encode byte-identically and the metadata must reflect a stanza, not a stream header.
 test('XMPP faithfully encodes a crafted <message> stanza and round-trips byte-for-byte', async (): Promise<void> => {
-    const stanza: string = "<message to='a@b' from='c@d'><body>hi</body></message>"
+    const stanza: string = '<message to=\'a@b\' from=\'c@d\'><body>hi</body></message>'
     const messageHex: string = Buffer.from(stanza, 'latin1').toString('hex')
     const {packet}: CodecEncodeResult = await codec.encode([
         {id: 'eth', data: {dmac: '00:00:00:00:00:00', smac: '00:00:00:00:00:00', etherType: '0800'}},

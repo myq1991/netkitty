@@ -85,7 +85,7 @@ export class Redis extends BaseHeader {
         const arrEol: number = text.indexOf('\r\n')
         if (arrEol < 0) return ''
         //The first element must be a bulk string: `$<len>\r\n<bytes>\r\n`.
-        let pos: number = arrEol + 2
+        const pos: number = arrEol + 2
         if (text[pos] !== '$') return ''
         const lenEol: number = text.indexOf('\r\n', pos)
         if (lenEol < 0) return ''

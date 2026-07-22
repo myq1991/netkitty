@@ -35,7 +35,7 @@ export class MMS extends BaseHeader {
     static #readTLV(buf: Buffer, pos: number): {tag: number, contentStart: number, contentLength: number} | null {
         if (pos + 2 > buf.length) return null
         const tag: number = buf[pos]
-        let lengthOctet: number = buf[pos + 1]
+        const lengthOctet: number = buf[pos + 1]
         let contentStart: number = pos + 2
         let contentLength: number
         if (lengthOctet < 0x80) {

@@ -16,7 +16,7 @@ test('SMB2 NEGOTIATE: transport prefix + LE header + body + byte-perfect round-t
     const smb2: any = Layer(decoded, 'smb2').data
     assert.strictEqual(smb2.transportType, 0, 'Direct TCP session-message type')
     assert.strictEqual(smb2.streamProtocolLength, 104, '24-bit stream length = 64-byte header + 40-byte body')
-    assert.strictEqual(smb2.protocolId, 'fe534d42', "0xFE 'S' 'M' 'B' magic")
+    assert.strictEqual(smb2.protocolId, 'fe534d42', '0xFE \'S\' \'M\' \'B\' magic')
     assert.strictEqual(smb2.structureSize, 64, 'SMB2 header StructureSize is always 64 (little-endian)')
     assert.strictEqual(smb2.command, 0, 'NEGOTIATE')
     assert.strictEqual(smb2.creditReqResp, 1, 'CreditRequest 1 (little-endian)')

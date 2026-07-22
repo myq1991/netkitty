@@ -11,7 +11,7 @@ test('RTPS INFO_TS + DATA: header + submessages + byte-perfect round-trip', asyn
     const decoded: CodecDecodeResult[] = await AssertRoundTrip(LoadPacket('rtps/info-ts-data').buffer)
     AssertLayers(decoded, ['eth', 'ipv4', 'udp', 'rtps'])
     const rtps: any = Layer(decoded, 'rtps').data
-    assert.strictEqual(rtps.magic, '52545053', "magic 'RTPS'")
+    assert.strictEqual(rtps.magic, '52545053', 'magic \'RTPS\'')
     assert.strictEqual(rtps.protocolVersion, '0201', 'RTPS 2.1')
     assert.strictEqual(rtps.vendorId, '0101', 'RTI Connext')
     assert.strictEqual(rtps.guidPrefix, '010f45d2123456789abcdef0')

@@ -36,7 +36,7 @@ test('SMB1 NEGOTIATE: transport prefix + LE header + body + byte-perfect round-t
     const smb1: any = Layer(decoded, 'smb1').data
     assert.strictEqual(smb1.transportType, 0, 'Direct TCP session-message type')
     assert.strictEqual(smb1.streamProtocolLength, 47, '24-bit stream length = 32-byte header + 15-byte body')
-    assert.strictEqual(smb1.protocolId, 'ff534d42', "0xFF 'S' 'M' 'B' magic")
+    assert.strictEqual(smb1.protocolId, 'ff534d42', '0xFF \'S\' \'M\' \'B\' magic')
     assert.strictEqual(smb1.command, 0x72, 'NEGOTIATE')
     assert.strictEqual(smb1.status, 0, 'STATUS_SUCCESS (little-endian)')
     assert.strictEqual(smb1.flags, 0x18, 'Flags 0x18')

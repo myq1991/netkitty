@@ -181,7 +181,6 @@ export class PcapEdit {
         let read: number = 0
         let written: number = 0
         let lastPercent: number = -1
-        let reader: PcapReader
         const emitProgress = (bytesProcessed: number, force: boolean): void => {
             if (!options.onProgress) return
             const totalBytes: number = reader.totalBytes
@@ -205,7 +204,7 @@ export class PcapEdit {
             }
             emitProgress(info.offset + info.length, false)
         }
-        reader = new PcapReader({filename: options.input, onPacket: handle})
+        const reader: PcapReader = new PcapReader({filename: options.input, onPacket: handle})
         try {
             await new Promise<void>((resolve: () => void, reject: (error: Error) => void): void => {
                 reader.once('error', reject)
@@ -233,7 +232,7 @@ export class PcapEdit {
         if (range) {
             if (!Number.isInteger(range.from) || range.from < 1) throw new Error('PcapEdit.retime: range.from must be a 1-based integer')
             if (range.to !== undefined && (!Number.isInteger(range.to) || range.to < range.from)) throw new Error('PcapEdit.retime: range.to must be an integer >= range.from')
-            if (edit.type === 'setStart') throw new Error("PcapEdit.retime: 'setStart' does not support a range")
+            if (edit.type === 'setStart') throw new Error('PcapEdit.retime: a range is not supported for the setStart edit')
         }
         const intervalMicros: number = edit.type === 'constantInterval' ? Math.max(0, Math.floor(edit.interval * PcapEdit.unitMicros(edit.unit))) : 0
         const shiftMicros: number = edit.type === 'shift' ? Math.round(edit.delta * PcapEdit.unitMicros(edit.unit)) : 0
