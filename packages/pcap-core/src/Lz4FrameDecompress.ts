@@ -12,6 +12,14 @@
 const LZ4_FRAME_MAGIC: number = 0x184d2204
 const BLOCK_MAX_SIZE: Record<number, number> = {4: 65536, 5: 262144, 6: 1048576, 7: 4194304}
 
+/**
+ * Decompress a complete LZ4 frame-format buffer into its original bytes (decompress-only, LZ4 frame spec
+ * v1.6.x). Verifies the frame magic and descriptor, walks each data block (compressed or stored) and skips
+ * the optional block/content checksums.
+ * @param input the full LZ4 frame bytes (magic 0x184D2204 .. EndMark)
+ * @returns the decompressed payload; throws on a structurally invalid frame header (too short, bad magic, or
+ *          unsupported version)
+ */
 export function Lz4FrameDecompress(input: Buffer): Buffer {
     if (input.length < 7 || input.readUInt32LE(0) !== LZ4_FRAME_MAGIC) {
         throw new Error('not an LZ4 frame (bad magic number)')

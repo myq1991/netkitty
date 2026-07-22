@@ -17,6 +17,20 @@ import {ProtocolJSONSchema} from './schema/ProtocolJSONSchema'
 import {DemuxProducer, DemuxProducerKind} from './types/DemuxProducer'
 import * as packetHeaders from './PacketHeaders'
 
+/**
+ * The schema-driven packet codec: the entry point a consumer uses to turn bytes into a
+ * layered field tree and back.
+ *
+ * `decode(bytes)` walks the packet layer by layer, selecting each next header by an O(1)
+ * dispatch table keyed on the previous layer's demux value (`ethertype:`/`ipproto:`/
+ * `tcpport:`…), falling back to a content-heuristic chain for headers that must inspect
+ * their own bytes (TLS, IEC104, tunnels), and finally to `RawData` — so decode never
+ * throws and always yields a best-effort result plus a field-path-addressed error list.
+ * `encode(layers)` looks each layer up by protocol id and re-emits it in the given order.
+ * Cross-layer fixups (lengths, checksums) run as post-handlers afterwards. Read-only
+ * projections over the same decode are exposed via `dissect()`, `summary()`,
+ * `allowedNextLayers()`, `childDiscriminator()` and `checkConsistency()`.
+ */
 export class Codec {
 
     readonly #codecModuleConstructors: CodecModuleConstructor[] = []
@@ -58,6 +72,12 @@ export class Codec {
         return this.#codecSchemas
     }
 
+    /**
+     * Build a codec over the built-in protocol headers, optionally extended with custom ones.
+     * Each custom codec whose `PROTOCOL_ID` matches a built-in replaces it in place; the rest
+     * are appended. The dispatch table and heuristic chain are then built from the final set.
+     * @param codecModuleConstructors custom header codecs to override built-ins or add new protocols
+     */
     constructor(codecModuleConstructors: CodecModuleConstructor[] = []) {
         this.#codecModuleConstructors = this.loadHeaderCodecs()
         if (codecModuleConstructors) {

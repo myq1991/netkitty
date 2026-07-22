@@ -58,6 +58,14 @@ export function computeConversations(store: IIndexStore, keyOf: (conversationHas
 
 type EndpointPair = {a: EndpointSummary, b: EndpointSummary}
 
+/**
+ * Built-in Endpoints table, computed by scanning the index columns directly (no re-decode). Groups
+ * every frame's two endpoints, accumulating per-address total/tx/rx packet and byte counts from the
+ * direction bit. Result matches EndpointsReducer.
+ * @param store index columns to scan.
+ * @param keyOf resolves a conversation hash to its `protocol|endpointA|endpointB` key, or null when unknown.
+ * @returns one summary per distinct endpoint address seen.
+ */
 export function computeEndpoints(store: IIndexStore, keyOf: (conversationHash: number) => string | null): EndpointSummary[] {
     const endpoints: Map<string, EndpointSummary> = new Map<string, EndpointSummary>()
     const byHash: Map<number, EndpointPair | null> = new Map<number, EndpointPair | null>()

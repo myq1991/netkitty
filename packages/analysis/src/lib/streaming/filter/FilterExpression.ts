@@ -9,6 +9,10 @@ export type FilterPredicate =
     | {kind: 'protocol', name: string}
     | {kind: 'field', selector: string, value: string}
 
+/**
+ * A parsed display filter: the list of predicates a frame must all satisfy (logical AND). Produced by
+ * {@link parseFilter} and consumed by {@link matchesFilter} / {@link matchesIndexed}.
+ */
 export type FilterExpression = FilterPredicate[]
 
 /** Parse a display filter into an AND-list of predicates. Empty input matches everything. */

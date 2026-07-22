@@ -29,6 +29,23 @@ const MATCH_PROBE_KEY: string = '__matchProbe'
 /** Absolute byte span a field occupies in the packet, collected during a dissect pass. */
 export type FieldByteRange = {offset: number, length: number}
 
+/**
+ * The base class every protocol header extends, and the surface a custom-codec author works against.
+ *
+ * A subclass declares a `SCHEMA` (an executable JSON Schema whose fields carry per-field
+ * `decode`/`encode` closures), a stable `id`/`name`/`nickname`, and a `match()` that decides —
+ * by inspecting the previously decoded layers (`prevCodecModule`/`prevCodecModules`) — whether
+ * this header applies at the current offset. Optional `matchKeys`/`demuxProducers` wire the
+ * header into the codec's O(1) dispatch table instead of the content-heuristic chain.
+ *
+ * Field closures read and write the shared packet buffer through the header-relative helpers
+ * `readBytes`/`writeBytes` (whole octets) and `readBits`/`writeBits` (bit fields), which
+ * auto-expand the buffer on write, and store values on the path-tracking `instance`. Malformed
+ * input is reported via `recordError()` rather than thrown, so decode/encode never crash. Headers
+ * register cross-field/cross-layer fixups (lengths, checksums) with the post-handler methods
+ * (`addPostSelfEncodeHandler`/`addPostSelfDecodeHandler` for layer-internal, `addPostPacketEncodeHandler`/
+ * `addPostPacketDecodeHandler` for packet-level).
+ */
 export abstract class BaseHeader {
 
     protected static get CODEC_INSTANCE(): CodecModule {

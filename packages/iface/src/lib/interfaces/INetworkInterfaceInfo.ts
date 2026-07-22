@@ -1,3 +1,4 @@
+/** One IP address bound to an interface, with its address family and netmask. */
 export interface INetworkInterfaceAddress {
     family: 'ipv4' | 'ipv6'
     address: string
@@ -5,6 +6,7 @@ export interface INetworkInterfaceAddress {
     netmask: string
 }
 
+/** Cumulative traffic counters for one direction of an interface (totals since boot). */
 export interface INetworkInterfaceCounters {
     bytes: number
     packets: number
@@ -12,6 +14,7 @@ export interface INetworkInterfaceCounters {
     dropped: number
 }
 
+/** Full description of one network interface: name, hardware address, state, MTU, addresses and counters. */
 export interface INetworkInterfaceInfo {
     /** OS interface name — a human name on Windows (adapter friendly name), e.g. `eth0` / `en0` / `Ethernet`. */
     name: string

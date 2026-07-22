@@ -16,6 +16,7 @@
  */
 import BigNumber from 'bignumber.js'
 
+/** Input packet for GeneratePcapng: base64 frame bytes plus optional timestamp and interface id. */
 export type GeneratePcapngInputPacket = {
     frameBase64Data: string
     timestamp?: number
@@ -26,6 +27,7 @@ export type GeneratePcapngInputPacket = {
     interfaceId?: number
 }
 
+/** A packet ready for GeneratePcapngEnhancedPacket: raw frame Buffer plus optional timestamp and interface id. */
 export type GeneratePcapngPacket = {
     buffer: Buffer
     timestamp?: number
@@ -36,6 +38,7 @@ export type GeneratePcapngPacket = {
     interfaceId?: number
 }
 
+/** Options for the generated pcapng interface: link-layer type and declared snapshot length. */
 export type GeneratePcapngOptions = {
     //link-layer type of the interface (default 1 = Ethernet); see https://www.tcpdump.org/linktypes.html
     linkLayerType?: number

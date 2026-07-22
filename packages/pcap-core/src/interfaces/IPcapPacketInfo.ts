@@ -1,3 +1,4 @@
+/** Metadata for one parsed packet: its index, byte offsets/lengths within the file, capture timestamp, and (optionally) the base64 frame bytes. */
 export interface IPcapPacketInfo {
     index: number
     offset: number

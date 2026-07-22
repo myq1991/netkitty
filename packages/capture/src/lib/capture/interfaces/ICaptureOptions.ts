@@ -6,6 +6,10 @@
  */
 export type CaptureEmitMode = 'metadata' | 'full'
 
+/**
+ * Options for a live {@link Capture}: which device and BPF filter to use, what each packet delivers
+ * back, and where the backing pcap file is written. Only `device` is required.
+ */
 export interface ICaptureOptions {
     /**
      * Ethernet interface

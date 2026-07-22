@@ -19,13 +19,22 @@ function toSignedBERHex(value: number | bigint): string {
     return (v & mask).toString(16).padStart(bytes * 2, '0')
 }
 
+/** Encode a signed 8-bit integer as a minimal-length BER INTEGER content hex string (two's complement, leading sign byte as needed). */
 export const Int8ToBERHex: (value: number) => string = (value: number): string => toSignedBERHex(value)
+/** Encode a signed 16-bit integer as a minimal-length BER INTEGER content hex string (two's complement, leading sign byte as needed). */
 export const Int16ToBERHex: (value: number) => string = (value: number): string => toSignedBERHex(value)
+/** Encode a signed 32-bit integer as a minimal-length BER INTEGER content hex string (two's complement, leading sign byte as needed). */
 export const Int32ToBERHex: (value: number) => string = (value: number): string => toSignedBERHex(value)
+/** Encode a signed 64-bit bigint as a minimal-length BER INTEGER content hex string (two's complement, leading sign byte as needed). */
 export const Int64ToBERHex: (value: bigint) => string = (value: bigint): string => toSignedBERHex(value)
+/** Encode an unsigned 8-bit integer as a BER INTEGER content hex string (prepends a 00 byte when the high bit is set to keep it positive). */
 export const UInt8ToBERHex: (value: number) => string = (value: number): string => toBERHex(value.toString(16))
+/** Encode an unsigned 16-bit integer as a BER INTEGER content hex string (prepends a 00 byte when the high bit is set to keep it positive). */
 export const UInt16ToBERHex: (value: number) => string = (value: number): string => toBERHex(value.toString(16))
+/** Encode an unsigned 32-bit integer as a BER INTEGER content hex string (prepends a 00 byte when the high bit is set to keep it positive). */
 export const UInt32ToBERHex: (value: number) => string = (value: number): string => toBERHex(value.toString(16))
+/** Encode an unsigned 64-bit bigint as a BER INTEGER content hex string (prepends a 00 byte when the high bit is set to keep it positive). */
 export const UInt64ToBERHex: (value: bigint) => string = (value: bigint): string => toBERHex(BigInt(value).toString(16))
 //Float32 precision is always 8, therefore add '08' prefix for Float32ToHex result
+/** Encode a 32-bit float as an IEC 61850 FLOATING-POINT content hex string (a leading 08 exponent-width byte followed by the big-endian IEEE-754 bytes). */
 export const Float32ToBERHex: (value: number) => string = (value: number): string => `08${Float32ToHex(value)}`

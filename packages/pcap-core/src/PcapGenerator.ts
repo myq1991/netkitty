@@ -7,6 +7,7 @@ import BigNumber from 'bignumber.js'
 //classic libpcap magic number for a microsecond-resolution, big-endian file (0xA1B2C3D4)
 const PCAP_MAGIC_MICROSECONDS_BE: number = 0xa1b2c3d4
 
+/** Input packet for GeneratePCAP: the frame bytes as base64 plus an optional timestamp (ms, or explicit seconds/microseconds). */
 export type GeneratePCAPInputPacket = {
     frameBase64Data: string
     timestamp?: number
@@ -16,6 +17,7 @@ export type GeneratePCAPInputPacket = {
     }
 }
 
+/** A packet ready for GeneratePCAPData: the raw frame Buffer plus an optional timestamp (ms, or explicit seconds/microseconds). */
 export type GeneratePCAPPacket = {
     buffer: Buffer,
     timestamp?: number,

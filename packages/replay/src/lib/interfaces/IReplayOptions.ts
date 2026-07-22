@@ -16,6 +16,11 @@ export type ReplayMode = 'multiplier' | 'topspeed' | 'mbps' | 'pps'
  */
 export type ReplayPrecision = 'auto' | 'sleep' | 'spin'
 
+/**
+ * Options for a {@link Replay} run: which interface to transmit on, how to pace the frames, how many
+ * passes to make, and thread-scheduling knobs for tightening pacing accuracy. Only `device` is
+ * required; every other field has a documented default.
+ */
 export interface IReplayOptions {
     /** Interface to transmit on (name, e.g. `en0` / `eth0` / an Npcap device string). */
     device: string

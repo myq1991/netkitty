@@ -3,6 +3,13 @@ import {BaseHeader} from '../abstracts/BaseHeader'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 import {BufferToHex} from '../helper/BufferToHex'
 
+/**
+ * The forced catch-all header. The codec selects it as the final fallback when no
+ * demux-table or content-heuristic codec matches, so decode never fails: any bytes
+ * left unparsed at the current offset are captured verbatim into a single lower-case
+ * hex `data` field and re-emitted byte-for-byte on encode. Not a protocol
+ * (`isProtocol = false`); matches whenever there is a previous layer to trail.
+ */
 export class RawData extends BaseHeader {
 
     public readonly SCHEMA: ProtocolJSONSchema = {

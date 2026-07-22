@@ -24,8 +24,10 @@ type PcapNgInterface = {
     timestampExponent: number
 }
 
+/** The capture-file container format detected/handled by the parser: classic libpcap or pcapng. */
 export type PcapFileFormat = 'pcap' | 'pcapng'
 
+/** The 24-byte classic-pcap global file header (magic, version, timezone/accuracy, snap length, link-layer type). */
 export type PcapGlobalHeader = {
     magicNumber: number
     majorVersion: number
@@ -36,11 +38,13 @@ export type PcapGlobalHeader = {
     linkLayerType: number
 }
 
+/** Version fields from a pcapng Section Header Block (the pcapng analogue of the global header). */
 export type PcapSectionHeader = {
     majorVersion: number
     minorVersion: number
 }
 
+/** Per-packet record header: capture timestamp (seconds + micro/nanosecond fraction) and captured/original lengths. */
 export type PcapRecordHeader = {
     timestampSeconds: number
     timestampMicroseconds: number

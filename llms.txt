@@ -1,0 +1,109 @@
+# netkitty
+
+> A network toolkit for JavaScript/TypeScript (CommonJS, Node 16+): schema-driven encode/decode of 188
+> packet-header protocols (Ethernet…IPv4/6/TCP/UDP…TLS…GOOSE/SV/IEC104/Modbus/DNP3/S7comm/MMS/CMS…),
+> pcap/pcapng read·write·parse·edit (gzip/LZ4 aware), streaming cross-packet analysis, live capture,
+> interface enumeration, and packet replay / traffic generation. Distributed as an npm-workspaces monorepo
+> of focused `@netkitty/*` packages plus an aggregate `netkitty` package that re-exports them by subpath.
+
+All packages are CommonJS. ESM consumers can `import` them via Node's CJS↔ESM interop. Native-addon packages
+(`capture`, `iface`, `replay`) build from source on install (no prebuilt binaries) and are Node-only; the
+rest are pure and `pcap-core`/`codec` are browser-safe (Buffer only).
+
+Install the aggregate (`npm i netkitty`) and reach each subsystem via `netkitty/<name>`, or depend on the
+individual `@netkitty/*` package — the symbols are identical either way.
+
+## Packages and how to use them
+
+### netkitty/codec — @netkitty/codec (browser-safe)
+Schema-driven `Codec`: decode raw bytes into protocol layers, edit, re-encode back to the exact bytes.
+Decode never throws (errors accumulate on a field-path-addressed list; unknown data becomes `RawData`).
+```ts
+import {Codec, HexToBuffer} from 'netkitty/codec'
+const codec = new Codec()
+const layers = await codec.decode(HexToBuffer('ffffffffffff0011223344550806...'))
+layers[0].id      // 'eth'
+layers[0].data    // {dmac, smac, etherType}
+const {packet} = await codec.encode(layers)   // re-emits the original bytes
+```
+Key exports: `Codec` (`decode`, `encode`, `dissect`, `summary`, `CODEC_SCHEMAS`), `BaseHeader` (extend to add
+a protocol), `RawData`, and byte helpers (`HexToBuffer`, `BufferToHex`, `BufferToNumber`, `NumberToBuffer`,
+`IPToBuffer`, `BufferToIP`, …). Custom codecs passed to `new Codec(customCodecs)` replace built-ins by
+`PROTOCOL_ID`. Supports 188 protocols incl. industrial/OT: Modbus, DNP3, IEC 104, IEC 61850 (GOOSE/SV/MMS),
+S7comm, EtherNet/IP (CIP), PROFINET, BACnet, OPC UA, EtherCAT, POWERLINK, HART-IP, Omron FINS, SLMP, CODESYS.
+
+### netkitty/pcap — @netkitty/pcap (Node)
+Streaming read/write/parse/edit of capture files. Format auto-detected by magic number (classic pcap all
+four variants + pcapng); `.pcap.gz` / `.pcap.lz4` decompressed transparently on read.
+```ts
+import {PcapReader, PcapWriter, PcapEdit} from 'netkitty/pcap'
+// read
+const reader = new PcapReader({filename: 'in.pcapng.gz', onPacket: async (info) => {
+  const frame = await reader.readPacketData(info)   // full frame bytes, pcap or pcapng
+}})
+await reader.start()   // resolves via the 'done' event
+// write (classic pcap, or format:'pcapng')
+const writer = new PcapWriter({filename: 'out.pcap'})
+writer.write(frameBytes, seconds, microseconds); await writer.close()
+// edit: stream a capture through a handler → new file (drop/replace/retime/expand), progress callback
+await PcapEdit.rewrite({input: 'in.pcap', output: 'out.pcap',
+  onPacket: PcapEdit.chain(PcapEdit.setSourceMac('00:11:22:33:44:55'), PcapEdit.constantInterval(1, 'ms'))})
+// windowed retiming with continuity (frames after the window shift by the net delta)
+await PcapEdit.retime({input: 'in.pcap', output: 'out.pcap',
+  edit: {type: 'constantInterval', interval: 1, unit: 'ms'}, range: {from: 100, to: 500}})
+```
+Key exports: `PcapReader` (`start`/`stop`/`close`, `format`, `readPacketData`, `watch` to tail), `PcapWriter`
+(`format: 'pcap'|'pcapng'`), `PcapEdit` (`rewrite`, `retime`, `patchInPlace`, transforms `shiftTime`,
+`setStartTime`, `scaleTime`, `constantInterval`, `setSourceMac`, `setDestinationMac`, `swapMac`, `truncate`),
+`PcapParser`, and re-exports of the generators + `Lz4FrameDecompress` from pcap-core.
+
+### @netkitty/pcap-core — the browser-safe parsing/generating core of netkitty/pcap
+Pure-buffer state machine (no node:fs): feed bytes, get callbacks. Also generators + a pure-JS LZ4 decoder.
+```ts
+import {PcapParserCore, GeneratePCAP, GeneratePcapng, Lz4FrameDecompress} from '@netkitty/pcap-core'
+const parser = new PcapParserCore({onPacket: (info) => {}, onError: (e) => {}})
+parser.write(buf); parser.end(); parser.format   // 'pcap' | 'pcapng'
+const bytes = GeneratePcapng([{frameBase64Data, microsecond: {seconds, microseconds}}])
+const raw = Lz4FrameDecompress(lz4Bytes)          // decompress an LZ4 frame buffer
+```
+
+### netkitty/analysis — @netkitty/analysis (Node + browser via worker)
+Streaming, Wireshark-style cross-packet analysis over a capture file (conversations, endpoints, TCP streams).
+```ts
+import {Analysis} from 'netkitty/analysis'
+const analysis = new Analysis()
+await analysis.open('capture.pcap')          // indexes the file in a worker
+const conversations = await analysis.conversations()
+await analysis.close()
+```
+
+### netkitty/capture — @netkitty/capture (native addon, Node-only)
+Live packet capture over libpcap/Npcap; interface listing.
+```ts
+import {Capture, GetNetworkInterfaces} from 'netkitty/capture'
+GetNetworkInterfaces()                        // devices you can capture on
+const cap = new Capture({device: 'en0', filter: 'tcp port 443'})
+cap.on('packet', (frame) => {}); cap.start()
+```
+
+### netkitty/iface — @netkitty/iface (native addon, Node-only)
+Read-only enumeration of every interface (including down ones), addresses, tx/rx counters — no libpcap needed.
+
+### netkitty/replay — @netkitty/replay (native addon, Node-only)
+Replay a capture at recorded inter-frame timing (or topspeed/mbps/pps) on the fastest per-platform backend.
+The send loop runs on a dedicated native thread, so it never blocks the Node event loop; progress/done/error
+arrive as events.
+```ts
+import {Replay, loadFrames} from 'netkitty/replay'
+const replay = new Replay({device: 'en0', mode: 'multiplier', rate: 1})
+replay.addFrames(await loadFrames('capture.pcap'))
+replay.on('done', (s) => {}); replay.start()   // returns immediately; off-thread
+```
+
+## Notes for tools
+- CommonJS + Node16 module resolution. Types ship as `.d.ts` with TSDoc — read those for full signatures.
+- Native packages need a C/C++ toolchain at install time (and libpcap/Npcap for capture/replay); they never
+  ship prebuilt binaries.
+- Source of truth for the codec is one executable JSON Schema per protocol (field tree + decode/encode
+  closures + Ajv validation + UI metadata). To add a protocol: subclass `BaseHeader`, declare its `SCHEMA`,
+  register it in `PacketHeaders.ts`.

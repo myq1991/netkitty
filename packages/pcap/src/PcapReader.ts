@@ -6,6 +6,7 @@ import DuplexPair from 'duplexpair'
 import {PcapParser} from './PcapParser'
 import {IPcapPacketInfo, Lz4FrameDecompress, PcapFileFormat} from '@netkitty/pcap-core'
 
+/** Construction options for PcapReader: the source file, optional follow/watch and chunk size, and lifecycle callbacks. */
 export interface IPcapReaderOptions {
     filename: string
     watch?: boolean
@@ -17,6 +18,11 @@ export interface IPcapReaderOptions {
     onError?: (err: Error) => void
 }
 
+/**
+ * Streaming reader for pcap/pcapng capture files, transparently decompressing gzip- and LZ4-framed files.
+ * Parses the file chunk by chunk and delivers each packet as an IPcapPacketInfo via the `onPacket` option
+ * (or the `packet` event), serializing async handlers in packet order; optionally watches a growing file.
+ */
 export class PcapReader extends EventEmitter {
 
     protected readonly filename: string

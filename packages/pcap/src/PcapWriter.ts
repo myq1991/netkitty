@@ -9,6 +9,7 @@ import {
     IPcapPacketInfo
 } from '@netkitty/pcap-core'
 
+/** Output capture-file format a PcapWriter emits: classic libpcap or pcapng. */
 export type PcapWriterFormat = 'pcap' | 'pcapng'
 
 //classic pcap record header is 16 bytes; a pcapng Enhanced Packet Block header (block type..original
@@ -16,6 +17,7 @@ export type PcapWriterFormat = 'pcap' | 'pcapng'
 const PCAP_RECORD_HEADER_LENGTH: number = 16
 const PCAPNG_EPB_HEADER_LENGTH: number = 28
 
+/** Construction options for PcapWriter: the target file plus output format and whether to echo frame bytes in emitted info. */
 export interface IPcapWriterOptions {
     filename: string
     /**
@@ -31,6 +33,11 @@ export interface IPcapWriterOptions {
     includePacketData?: boolean
 }
 
+/**
+ * Streaming writer that appends packets to a pcap or pcapng capture file. A new file is opened with the
+ * appropriate header blocks; an existing file is appended to. Call `write(frame, seconds, microseconds)`
+ * per packet and `close()` when done. Emits a `packet` event (with IPcapPacketInfo) per write.
+ */
 export class PcapWriter extends EventEmitter {
 
     public readonly filename: string

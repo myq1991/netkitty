@@ -25,6 +25,7 @@ export type PcapEditPacket = {
  */
 export type PcapEditAction = void | null | false | Buffer | PcapEditPacket | Array<Buffer | PcapEditPacket>
 
+/** Per-packet callback for PcapEdit.rewrite: receives a frame and its info, returns a PcapEditAction (keep/drop/replace/expand). */
 export type PcapEditHandler = (frame: Buffer, info: IPcapPacketInfo) => PcapEditAction | Promise<PcapEditAction>
 
 /** The mutable context a transform edits: the (copied) frame bytes and the packet's timestamp. */
@@ -46,6 +47,7 @@ export interface IPcapProgress {
     written: number
 }
 
+/** Options for PcapEdit.rewrite: input/output paths, output format, the per-packet handler, and progress reporting. */
 export interface IPcapRewriteOptions {
     input: string
     output: string
@@ -59,6 +61,7 @@ export interface IPcapRewriteOptions {
     progressPercentStep?: number
 }
 
+/** Result of a rewrite/retime operation: count of packets read from the input and written to the output. */
 export interface IPcapRewriteResult {
     read: number
     written: number
@@ -86,6 +89,7 @@ export type RetimeEdit =
     | {type: 'shift', delta: number, unit?: TimeUnit}
     | {type: 'setStart', seconds: number, microseconds?: number}
 
+/** Options for PcapEdit.retime: input/output paths, output format, the timing edit to apply, an optional frame range, and progress reporting. */
 export interface IPcapRetimeOptions {
     input: string
     output: string
