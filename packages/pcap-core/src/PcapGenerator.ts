@@ -4,6 +4,9 @@
  */
 import BigNumber from 'bignumber.js'
 
+//classic libpcap magic number for a microsecond-resolution, big-endian file (0xA1B2C3D4)
+const PCAP_MAGIC_MICROSECONDS_BE: number = 0xa1b2c3d4
+
 export type GeneratePCAPInputPacket = {
     frameBase64Data: string
     timestamp?: number
@@ -28,7 +31,7 @@ const headerOptions: {
     gmtOffset: number//The GMT offset in pcap. Default: 0
     timestampAccuracy: number//The accuracy of the timestamps. Default: 0
     snapshotLength: number//The snapshot length of the packets. Default: 65535
-    linkLayerType: number//The type of packets in the file. E.g. 101 for raw IP packets, or 1 for Ethernet packets. See https://www.tcpdump.org/linktypes.html for more details Default: 101 (Raw IP packets)
+    linkLayerType: number//The type of packets in the file. E.g. 1 for Ethernet packets, or 101 for raw IP packets. See https://www.tcpdump.org/linktypes.html for more details Default: 1 (Ethernet)
 } = {
     majorVersion: 2,
     minorVersion: 4,
@@ -54,20 +57,13 @@ function convertMillisecond2Microsecond(ms: number): [number, number] {
     return [seconds, microseconds]
 }
 
-function makeLessThanAMillion(i: number): number {
-    while (i > 1000000) {
-        i = Math.floor(i / 10)
-    }
-    return i
-}
-
 /**
  * Generate pcap file header's buffer
  * @constructor
  */
 export function GeneratePCAPHeader(): Buffer {
     const globalHeader: Buffer = Buffer.alloc(24)
-    globalHeader.writeUInt32BE(2712847316, 0) // 4
+    globalHeader.writeUInt32BE(PCAP_MAGIC_MICROSECONDS_BE, 0) // 4
     globalHeader.writeUInt16BE(headerOptions.majorVersion, 4) // 2
     globalHeader.writeUInt16BE(headerOptions.minorVersion, 6) // 2
     globalHeader.writeInt32BE(headerOptions.gmtOffset, 8) // 4
@@ -89,22 +85,23 @@ export function GeneratePCAPData(packet: GeneratePCAPPacket): Buffer {
     if (packet.microsecond) {
         seconds = packet.microsecond.seconds
         microseconds = packet.microsecond.microseconds
+    } else if (packet.timestamp) {
+        [seconds, microseconds] = convertMillisecond2Microsecond(packet.timestamp)
     } else {
-        if (packet.timestamp) {
-            [seconds, microseconds] = convertMillisecond2Microsecond(packet.timestamp)
-        } else {
-            seconds = 0
-            microseconds = 0
-        }
+        seconds = 0
+        microseconds = 0
     }
-    packetHeader.writeUInt32BE(seconds, 0) // 4
-    if (packet.microsecond) {
-        packetHeader.writeUInt32BE(microseconds, 4) // 4 - if in microsecond precision then remove excess of 1,000,000 (see documentation)
-    } else {
-        packetHeader.writeUInt32BE(makeLessThanAMillion(microseconds), 4) // 4 - if in microsecond precision then remove excess of 1,000,000 (see documentation)
-    }
-    packetHeader.writeUInt32BE(packet.buffer.length, 8) // 4
-    packetHeader.writeUInt32BE(packet.buffer.length, 12) // 4
+    //clamp to safe non-negative integers (a negative/NaN/fractional value would throw or corrupt), then
+    //carry any microsecond overflow into seconds so the µs field stays within its valid 0..999999 range —
+    //matches the pcapng generator's timestamp handling. Seconds wrap at the 32-bit field width.
+    seconds = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0
+    microseconds = Number.isFinite(microseconds) ? Math.max(0, Math.floor(microseconds)) : 0
+    seconds += Math.floor(microseconds / 1000000)
+    microseconds = microseconds % 1000000
+    packetHeader.writeUInt32BE(seconds % 0x100000000, 0) // 4 - timestamp seconds
+    packetHeader.writeUInt32BE(microseconds, 4) // 4 - timestamp microseconds (0..999999)
+    packetHeader.writeUInt32BE(packet.buffer.length, 8) // 4 - captured length
+    packetHeader.writeUInt32BE(packet.buffer.length, 12) // 4 - original length
 
     return Buffer.concat([packetHeader, packet.buffer])
 }
