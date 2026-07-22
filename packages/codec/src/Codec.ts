@@ -59,6 +59,15 @@ export class Codec {
     readonly #rangeTable: Map<string, {lo: number, hi: number, codecModuleConstructor: CodecModuleConstructor}[]> = new Map()
 
     /**
+     * Encode lookup: PROTOCOL_ID → codec constructor. Built once alongside the dispatch table so
+     * #encode resolves each input layer's constructor in O(1) instead of scanning HEADER_CODECS with a
+     * `.find` reading the `PROTOCOL_ID` getter — which constructs a throwaway instance (and, for the
+     * unmigrated headers, rebuilds SCHEMA) per candidate, i.e. ~O(headers) redundant constructions per
+     * encoded layer. First registration wins, preserving the previous `.find` first-match semantics.
+     */
+    readonly #codecConstructorById: Map<string, CodecModuleConstructor> = new Map()
+
+    /**
      * The RawData catch-all. Not part of the dispatch table or heuristic list;
      * used explicitly as the final fallback so decode never fails.
      */
@@ -129,8 +138,13 @@ export class Codec {
         this.#dispatchTable.clear()
         this.#heuristicCodecs.length = 0
         this.#rangeTable.clear()
+        this.#codecConstructorById.clear()
         for (const codecModuleConstructor of this.HEADER_CODECS) {
-            if (codecModuleConstructor.PROTOCOL_ID === RawData.PROTOCOL_ID) {
+            //Read PROTOCOL_ID once (the getter builds a throwaway instance) and register it for O(1)
+            //encode lookup; keep the first registration so this matches the old `.find` first-match.
+            const protocolId: string = codecModuleConstructor.PROTOCOL_ID
+            if (!this.#codecConstructorById.has(protocolId)) this.#codecConstructorById.set(protocolId, codecModuleConstructor)
+            if (protocolId === RawData.PROTOCOL_ID) {
                 this.#rawDataCodec = codecModuleConstructor
                 continue
             }
@@ -299,7 +313,7 @@ export class Codec {
         }
         const codecModules: CodecModule[] = []
         for (const input of inputs) {
-            const codecModuleConstructor: CodecModuleConstructor | undefined = this.HEADER_CODECS.find((codec: CodecModuleConstructor): boolean => codec.PROTOCOL_ID === input.id)
+            const codecModuleConstructor: CodecModuleConstructor | undefined = this.#codecConstructorById.get(input.id)
             if (!codecModuleConstructor) {
                 errors.push({id: input.id, path: '', message: `Unknown protocol id: ${input.id}`})
                 continue
