@@ -1,6 +1,5 @@
 {
   "name": "netkitty-monorepo",
-  "version": "0.0.35",
   "private": true,
   "description": "netkitty monorepo — workspace root for the codec, pcap, pcap-core, analysis, capture and aggregate packages",
   "workspaces": [
@@ -10,7 +9,8 @@
     "clean": "lerna run clean",
     "build": "lerna run build",
     "test": "lerna run test",
-    "test:only": "lerna run test:only"
+    "test:only": "lerna run test:only",
+    "release": "npm run build && lerna publish from-package"
   },
   "repository": {
     "type": "git",
