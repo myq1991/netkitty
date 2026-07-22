@@ -1,7 +1,7 @@
 {
   "name": "@netkitty/iface",
   "version": "0.0.35",
-  "description": "Read-only network interface enumeration, addresses and tx/rx statistics via a native addon (getifaddrs / GetAdaptersAddresses) — lists every interface including down ones, no libpcap/Npcap needed",
+  "description": "Read-only network interface enumeration for Node.js — adapters, IP/MAC addresses and tx/rx statistics (getifaddrs / networkInterfaces) via a native addon.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "gypfile": true,
@@ -29,11 +29,21 @@
   },
   "keywords": [
     "netkitty",
-    "network",
+    "network-interface",
+    "network-interfaces",
     "interface",
+    "iface",
     "getifaddrs",
     "networkInterfaces",
-    "statistics"
+    "network-adapter",
+    "nic",
+    "ip-address",
+    "mac-address",
+    "interface-statistics",
+    "tx-rx",
+    "network",
+    "native-addon",
+    "nodejs"
   ],
   "author": "alex.ma",
   "license": "MIT",
@@ -49,5 +59,12 @@
   "dependencies": {
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myq1991/netkitty.git",
+    "directory": "packages/iface"
+  },
+  "homepage": "https://github.com/myq1991/netkitty/tree/main/packages/iface#readme",
+  "bugs": "https://github.com/myq1991/netkitty/issues"
 }

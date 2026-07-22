@@ -32,9 +32,19 @@
     "netkitty",
     "replay",
     "tcpreplay",
-    "pcap",
+    "pcap-replay",
+    "packet-replay",
+    "replay-pcap",
+    "traffic-generator",
+    "traffic-generation",
     "sendpacket",
-    "packet"
+    "packet-injection",
+    "pcap",
+    "pcapng",
+    "pps",
+    "network",
+    "native-addon",
+    "nodejs"
   ],
   "author": "alex.ma",
   "license": "MIT",
@@ -51,5 +61,12 @@
     "@netkitty/pcap": "^0.0.35",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myq1991/netkitty.git",
+    "directory": "packages/replay"
+  },
+  "homepage": "https://github.com/myq1991/netkitty/tree/main/packages/replay#readme",
+  "bugs": "https://github.com/myq1991/netkitty/issues"
 }

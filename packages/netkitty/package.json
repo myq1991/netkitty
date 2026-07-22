@@ -1,7 +1,7 @@
 {
   "name": "netkitty",
   "version": "0.0.35",
-  "description": "Network tools kit — aggregate package re-exporting the netkitty codec, pcap, analysis and capture subsystems",
+  "description": "Network toolkit for Node.js — packet encode/decode (180+ protocols incl. industrial/OT), pcap/pcapng read-write, cross-packet analysis, live capture and replay.",
   "main": "dist/codec.js",
   "types": "dist/codec.d.ts",
   "exports": {
@@ -41,12 +41,28 @@
   },
   "keywords": [
     "netkitty",
-    "net-analysis",
-    "capture-net-packets",
+    "network-toolkit",
+    "network-tools",
+    "packet",
     "pcap",
+    "pcapng",
+    "packet-capture",
+    "packet-analysis",
+    "protocol-decoder",
+    "packet-decoder",
     "encode",
     "decode",
-    "wireshark"
+    "wireshark",
+    "tcpdump",
+    "deep-packet-inspection",
+    "dpi",
+    "industrial-protocol",
+    "ot",
+    "scada",
+    "modbus",
+    "iec61850",
+    "opcua",
+    "network"
   ],
   "author": "alex.ma",
   "license": "MIT",
@@ -68,5 +84,12 @@
     "reflect-metadata": "^0.2.2",
     "shx": "^0.3.4",
     "typescript": "^5.8.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myq1991/netkitty.git",
+    "directory": "packages/netkitty"
+  },
+  "homepage": "https://github.com/myq1991/netkitty/tree/main/packages/netkitty#readme",
+  "bugs": "https://github.com/myq1991/netkitty/issues"
 }

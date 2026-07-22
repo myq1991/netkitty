@@ -29,14 +29,19 @@
     "cap",
     "tcpdump",
     "libpcap",
-    "wireshark",
+    "pcap-parser",
     "packet-capture",
     "capture-file",
+    "wireshark",
+    "streaming",
+    "stream",
     "gzip",
     "lz4",
     "compression",
+    "nodejs",
     "network",
-    "parser"
+    "parser",
+    "packet"
   ],
   "author": "alex.ma",
   "license": "MIT",
@@ -53,5 +58,12 @@
   "dependencies": {
     "@netkitty/pcap-core": "^0.0.35",
     "duplexpair": "^1.0.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myq1991/netkitty.git",
+    "directory": "packages/pcap"
+  },
+  "homepage": "https://github.com/myq1991/netkitty/tree/main/packages/pcap#readme",
+  "bugs": "https://github.com/myq1991/netkitty/issues"
 }

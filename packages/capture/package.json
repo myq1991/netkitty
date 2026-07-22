@@ -1,7 +1,7 @@
 {
   "name": "@netkitty/capture",
   "version": "0.0.35",
-  "description": "Live network packet capture over libpcap/Npcap via a native addon",
+  "description": "Live network packet capture (sniffer) over libpcap/Npcap via a native Node.js addon.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "gypfile": true,
@@ -31,10 +31,19 @@
   "keywords": [
     "netkitty",
     "capture",
+    "packet-capture",
     "pcap",
     "npcap",
     "libpcap",
-    "wireshark"
+    "wpcap",
+    "sniffer",
+    "packet-sniffer",
+    "live-capture",
+    "raw-socket",
+    "network",
+    "wireshark",
+    "native-addon",
+    "nodejs"
   ],
   "author": "alex.ma",
   "license": "MIT",
@@ -59,5 +68,12 @@
     "socket-ipc": "^4.0.2",
     "sort-array": "^5.0.0",
     "xpipe": "^1.0.8"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myq1991/netkitty.git",
+    "directory": "packages/capture"
+  },
+  "homepage": "https://github.com/myq1991/netkitty/tree/main/packages/capture#readme",
+  "bugs": "https://github.com/myq1991/netkitty/issues"
 }

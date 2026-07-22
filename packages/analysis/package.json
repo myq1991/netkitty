@@ -1,7 +1,7 @@
 {
   "name": "@netkitty/analysis",
   "version": "0.0.35",
-  "description": "Cross-packet flow and TCP stream analysis layered above the netkitty codec",
+  "description": "Streaming cross-packet network analysis over the netkitty codec: TCP stream reassembly, flow tracking and Wireshark-style follow-stream, off a worker.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -24,10 +24,19 @@
   },
   "keywords": [
     "netkitty",
-    "analysis",
+    "network-analysis",
+    "packet-analysis",
     "flow",
+    "flow-analysis",
+    "tcp-stream",
+    "stream-reassembly",
+    "follow-tcp-stream",
     "tcp",
-    "wireshark"
+    "wireshark",
+    "deep-packet-inspection",
+    "dpi",
+    "pcap",
+    "network"
   ],
   "author": "alex.ma",
   "license": "MIT",
@@ -44,5 +53,12 @@
   "dependencies": {
     "@netkitty/codec": "^0.0.35",
     "@netkitty/pcap-core": "^0.0.35"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myq1991/netkitty.git",
+    "directory": "packages/analysis"
+  },
+  "homepage": "https://github.com/myq1991/netkitty/tree/main/packages/analysis#readme",
+  "bugs": "https://github.com/myq1991/netkitty/issues"
 }
