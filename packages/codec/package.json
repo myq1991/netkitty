@@ -106,7 +106,10 @@
     "kerberos",
     "wireguard",
     "gtp",
-    "smb"
+    "smb",
+    "slp",
+    "srvloc",
+    "service-location"
   ],
   "author": "alex.ma",
   "license": "MIT",

@@ -4,7 +4,7 @@
 
 # @netkitty/codec
 
-schema 驱动的协议编解码器,负责把报文各层协议头在字节和结构之间来回转换——覆盖**188 种协议**,贯穿整个
+schema 驱动的协议编解码器,负责把报文各层协议头在字节和结构之间来回转换——覆盖**189 种协议**,贯穿整个
 协议栈。每一个协议头都是一份**可执行的 JSON Schema**,
 同一份声明同时充当字段树、字节级编解码逻辑、输入校验器,以及界面所需的表单元数据。它的设计取向是从一个
 图形化的报文编辑器(可编程的 Wireshark)倒推出来的,而不是追求吞吐的解析器。纯 TypeScript,不依赖任何
@@ -143,7 +143,7 @@ decode 处理器按先进先出执行(内层语义依赖外层上下文,例如 T
 
 ## 内置协议头
 
-默认注册了 188 个协议头(`raw` 是强制兜底)。向 `new Codec(customCodecs)` 传入自定义类可覆盖同 id 的内置头或新增协议头。
+默认注册了 189 个协议头(`raw` 是强制兜底)。向 `new Codec(customCodecs)` 传入自定义类可覆盖同 id 的内置头或新增协议头。
 
 | id               | name                                                |
 | ---------------- | --------------------------------------------------- |
@@ -295,6 +295,7 @@ decode 处理器按先进先出执行(内层语义依赖外层上下文,例如 T
 | `skinny`         | Skinny Client Control Protocol                      |
 | `slmp`           | SeamLess Message Protocol                           |
 | `slp`            | Service Location Protocol                           |
+| `slpv1`          | Service Location Protocol Version 1                 |
 | `smb1`           | SMB1                                                |
 | `smb2`           | SMB2                                                |
 | `smpp`           | Short Message Peer-to-Peer                          |

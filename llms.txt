@@ -29,7 +29,7 @@ const {packet} = await codec.encode(layers)   // re-emits the original bytes
 Key exports: `Codec` (`decode`, `encode`, `dissect`, `summary`, `CODEC_SCHEMAS`), `BaseHeader` (extend to add
 a protocol), `RawData`, and byte helpers (`HexToBuffer`, `BufferToHex`, `BufferToNumber`, `NumberToBuffer`,
 `IPToBuffer`, `BufferToIP`, …). Custom codecs passed to `new Codec(customCodecs)` replace built-ins by
-`PROTOCOL_ID`. Supports 188 protocols incl. industrial/OT: Modbus, DNP3, IEC 104, IEC 61850 (GOOSE/SV/MMS),
+`PROTOCOL_ID`. Supports 189 protocols incl. industrial/OT: Modbus, DNP3, IEC 104, IEC 61850 (GOOSE/SV/MMS),
 S7comm, EtherNet/IP (CIP), PROFINET, BACnet, OPC UA, EtherCAT, POWERLINK, HART-IP, Omron FINS, SLMP, CODESYS.
 
 ### netkitty/pcap — @netkitty/pcap (Node)

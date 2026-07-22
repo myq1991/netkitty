@@ -4,7 +4,7 @@
 
 # @netkitty/codec
 
-Schema-driven protocol codec for encoding and decoding packet headers — **188 protocols** across the
+Schema-driven protocol codec for encoding and decoding packet headers — **189 protocols** across the
 whole stack. Every header is one **executable JSON Schema** that
 is at once the field tree, the byte-level codec, the input validator, and the form metadata a UI needs.
 It is designed backwards from a GUI packet editor — a programmable Wireshark — rather than a
@@ -153,7 +153,7 @@ describe and validate which layer may follow which.
 
 ## Built-in headers
 
-188 protocol headers are registered by default; `raw` is the forced catch-all. Pass custom classes to `new Codec(customCodecs)` to override a built-in with the same id or add new ones.
+189 protocol headers are registered by default; `raw` is the forced catch-all. Pass custom classes to `new Codec(customCodecs)` to override a built-in with the same id or add new ones.
 
 | id               | name                                                |
 | ---------------- | --------------------------------------------------- |
@@ -305,6 +305,7 @@ describe and validate which layer may follow which.
 | `skinny`         | Skinny Client Control Protocol                      |
 | `slmp`           | SeamLess Message Protocol                           |
 | `slp`            | Service Location Protocol                           |
+| `slpv1`          | Service Location Protocol Version 1                 |
 | `smb1`           | SMB1                                                |
 | `smb2`           | SMB2                                                |
 | `smpp`           | Short Message Peer-to-Peer                          |
