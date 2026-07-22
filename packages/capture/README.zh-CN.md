@@ -11,7 +11,7 @@
 
 ```bash
 npm i @netkitty/capture
-# 或者用聚合包:import ... from 'netkitty/network'
+# 或者用聚合包:import ... from 'netkitty/capture'
 ```
 
 本包带有原生插件。**项目绝不发布预编译二进制**——插件会在你本机安装时用 node-gyp 从源码现场编译

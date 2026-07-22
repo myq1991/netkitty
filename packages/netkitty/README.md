@@ -22,18 +22,15 @@ npm i netkitty
 | Import from | Backed by | What it gives you |
 | --- | --- | --- |
 | `netkitty/codec` | [`@netkitty/codec`](../codec) | schema-driven `Codec` — decode bytes into protocol layers and encode them back |
-| `netkitty/codec/header` | [`@netkitty/codec`](../codec) | the built-in protocol header classes (Ethernet, IPv4/6, TCP/UDP, ARP, TLS, GOOSE/SV, IEC 104, …) |
-| `netkitty/helper` | [`@netkitty/codec`](../codec) | pure Buffer / Hex / Number / IP / BER conversion helpers used by the header codecs |
 | `netkitty/pcap` | [`@netkitty/pcap`](../pcap) + [`@netkitty/pcap-core`](../pcap-core) | streaming `PcapReader`/`PcapWriter` and the pcap/pcapng parser (`PcapParser`, plus the browser-safe `PcapParserCore`) |
 | `netkitty/analysis` | [`@netkitty/analysis`](../analysis) | `Analysis` — streaming, cross-packet analysis over a capture file (conversations, endpoints, TCP streams) |
-| `netkitty/network` | [`@netkitty/capture`](../capture) | live packet capture over libpcap/Npcap |
+| `netkitty/capture` | [`@netkitty/capture`](../capture) | live packet capture over libpcap/Npcap |
 | `netkitty/iface` | [`@netkitty/iface`](../iface) | read-only enumeration of host network interfaces, addresses and tx/rx stats |
 | `netkitty/replay` | [`@netkitty/replay`](../replay) | replay pcap/pcapng/cap at recorded timing (or a target rate) and generate traffic |
 
-The mapping is stable: `netkitty/codec`, `netkitty/codec/header` and `netkitty/helper` all resolve into
-`@netkitty/codec` (the codec, its header classes, and its conversion helpers respectively); the other
-subpaths each front a single package. Follow a link above for the full API of the package behind each
-subpath.
+The mapping is stable: `netkitty/codec` re-exports the whole `@netkitty/codec` package (the Codec
+engine, the built-in header classes, and the conversion helpers); the other subpaths each front a
+single package. Follow a link above for the full API of the package behind each subpath.
 
 ## Examples
 
@@ -79,11 +76,11 @@ await analysis.close()
 
 ## Native versus pure-TypeScript subpaths
 
-- **Native subpaths** — `netkitty/network` (`@netkitty/capture`), `netkitty/iface` and `netkitty/replay`
+- **Native subpaths** — `netkitty/capture` (`@netkitty/capture`), `netkitty/iface` and `netkitty/replay`
   — ship a native addon. There are **no prebuilt binaries**: the addon is compiled from source on your
   machine at install time via `node-gyp`, so you need a working C/C++ toolchain (and, for capture/replay,
   libpcap on macOS/Linux or Npcap on Windows). These subpaths are Node.js only.
-- **Pure-TypeScript subpaths** — `netkitty/codec`, `netkitty/codec/header` and `netkitty/helper`
+- **Pure-TypeScript subpaths** — `netkitty/codec`
   (`@netkitty/codec`) and the parser core inside `netkitty/pcap` (`@netkitty/pcap-core`) — touch nothing
   but in-memory buffers and run unchanged in **node and the browser**. `netkitty/analysis` runs in both
   environments too (it does the heavy work in a worker). `netkitty/pcap`'s streaming `PcapReader`/

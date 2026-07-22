@@ -14,7 +14,7 @@ throughput dissector. Pure TypeScript, no native dependencies: it only ever touc
 ```bash
 npm i @netkitty/codec
 # or use the aggregate package: import {Codec} from 'netkitty/codec'
-#   protocol header classes live under netkitty/codec/header, helpers under netkitty/helper
+#   protocol header classes and conversion helpers are all re-exported from netkitty/codec
 ```
 
 ## Quick start

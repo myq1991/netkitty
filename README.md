@@ -12,11 +12,11 @@ generation. Ships as one aggregate package (`netkitty`) over a workspaces monore
 
 | Package | Import via | What it does | Runtime |
 | --- | --- | --- | --- |
-| [`@netkitty/codec`](./packages/codec) | `netkitty/codec`, `netkitty/codec/header`, `netkitty/helper` | Schema-driven encode/decode of 188 packet headers — Ethernet/VLAN/ARP, IPv4/6, TCP/UDP/SCTP, TLS, DNS/DHCP/HTTP, and industrial/OT protocols (GOOSE/SV, IEC 104, Modbus, DNP3, S7comm, MMS, CMS, …) | node + browser |
+| [`@netkitty/codec`](./packages/codec) | `netkitty/codec` | Schema-driven encode/decode of 188 packet headers — Ethernet/VLAN/ARP, IPv4/6, TCP/UDP/SCTP, TLS, DNS/DHCP/HTTP, and industrial/OT protocols (GOOSE/SV, IEC 104, Modbus, DNP3, S7comm, MMS, CMS, …) | node + browser |
 | [`@netkitty/pcap-core`](./packages/pcap-core) | (core of `netkitty/pcap`) | Pure-buffer pcap/pcapng parsing and generation, no Node deps | node + browser |
 | [`@netkitty/pcap`](./packages/pcap) | `netkitty/pcap` | Node streaming pcap/pcapng read / write / parse | node |
 | [`@netkitty/analysis`](./packages/analysis) | `netkitty/analysis` | Streaming, Wireshark-style cross-packet analysis over a worker | node + browser |
-| [`@netkitty/capture`](./packages/capture) | `netkitty/network` | Live capture over libpcap/Npcap (native addon) | node |
+| [`@netkitty/capture`](./packages/capture) | `netkitty/capture` | Live capture over libpcap/Npcap (native addon) | node |
 | [`@netkitty/iface`](./packages/iface) | `netkitty/iface` | Read-only interface enumeration, addresses and tx/rx stats (native addon) | node |
 | [`@netkitty/replay`](./packages/replay) | `netkitty/replay` | Replay pcap at recorded timing, or generate traffic (native addon) | node |
 | [`netkitty`](./packages/netkitty) | — | Aggregate package re-exporting all of the above by subpath | node |

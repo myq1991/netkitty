@@ -5,9 +5,9 @@
   "main": "dist/codec.js",
   "types": "dist/codec.d.ts",
   "exports": {
-    "./network": {
-      "types": "./dist/network.d.ts",
-      "require": "./dist/network.js"
+    "./capture": {
+      "types": "./dist/capture.d.ts",
+      "require": "./dist/capture.js"
     },
     "./pcap": {
       "types": "./dist/pcap.d.ts",
@@ -16,14 +16,6 @@
     "./codec": {
       "types": "./dist/codec.d.ts",
       "require": "./dist/codec.js"
-    },
-    "./codec/header": {
-      "types": "./dist/codec-header.d.ts",
-      "require": "./dist/codec-header.js"
-    },
-    "./helper": {
-      "types": "./dist/helper.d.ts",
-      "require": "./dist/helper.js"
     },
     "./analysis": {
       "types": "./dist/analysis.d.ts",

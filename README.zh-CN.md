@@ -11,11 +11,11 @@ monorepo 里,你也可以单独安装其中任意一个。
 
 | 子包 | 从这里导入 | 做什么 | 运行环境 |
 | --- | --- | --- | --- |
-| [`@netkitty/codec`](./packages/codec) | `netkitty/codec`、`netkitty/codec/header`、`netkitty/helper` | schema 驱动地编解码报文头(Ethernet、VLAN、ARP、IPv4/6、TCP/UDP、ICMP/ICMPv6、TLS、GOOSE/SV、IEC 104) | Node + 浏览器 |
+| [`@netkitty/codec`](./packages/codec) | `netkitty/codec` | schema 驱动地编解码 188 种报文头——Ethernet/VLAN/ARP、IPv4/6、TCP/UDP/SCTP、TLS、DNS/DHCP/HTTP,以及工控/OT 协议(GOOSE/SV、IEC 104、Modbus、DNP3、S7comm、MMS、CMS…) | Node + 浏览器 |
 | [`@netkitty/pcap-core`](./packages/pcap-core) | (`netkitty/pcap` 的内核) | 纯字节的 pcap/pcapng 解析与生成,不依赖 Node | Node + 浏览器 |
 | [`@netkitty/pcap`](./packages/pcap) | `netkitty/pcap` | Node 端流式读 / 写 / 解析 pcap/pcapng | Node |
 | [`@netkitty/analysis`](./packages/analysis) | `netkitty/analysis` | 在工作线程里做流式的、类似 Wireshark 的跨包分析 | Node + 浏览器 |
-| [`@netkitty/capture`](./packages/capture) | `netkitty/network` | 基于 libpcap/Npcap 的实时抓包(原生插件) | Node |
+| [`@netkitty/capture`](./packages/capture) | `netkitty/capture` | 基于 libpcap/Npcap 的实时抓包(原生插件) | Node |
 | [`@netkitty/iface`](./packages/iface) | `netkitty/iface` | 只读枚举网卡、地址与收发统计(原生插件) | Node |
 | [`@netkitty/replay`](./packages/replay) | `netkitty/replay` | 按录制时序重放 pcap,或生成流量(原生插件) | Node |
 | [`netkitty`](./packages/netkitty) | — | 聚合包,通过子路径重新导出上面全部子包 | Node |

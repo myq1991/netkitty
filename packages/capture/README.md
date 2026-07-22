@@ -12,7 +12,7 @@ Each packet is also written to a temporary pcap file as it arrives, and `saveTo(
 
 ```bash
 npm i @netkitty/capture
-# or use the aggregate package: import ... from 'netkitty/network'
+# or use the aggregate package: import ... from 'netkitty/capture'
 ```
 
 This package ships a native addon. **No prebuilt binaries are published** — it is compiled from source
