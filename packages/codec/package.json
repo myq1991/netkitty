@@ -1,6 +1,6 @@
 {
   "name": "@netkitty/codec",
-  "version": "0.0.35",
+  "version": "1.0.0",
   "description": "Schema-driven packet codec: encode/decode 180+ network and industrial (OT/ICS/SCADA) protocol headers — TCP/IP, TLS, HTTP/2, DNS, MQTT, plus Modbus, DNP3, IEC 61850 (GOOSE/SV/MMS), IEC 104, S7comm, OPC UA, PROFINET, EtherCAT, BACnet and more.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
