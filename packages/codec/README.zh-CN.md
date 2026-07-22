@@ -4,11 +4,19 @@
 
 # @netkitty/codec
 
-schema 驱动的协议编解码器,负责把报文各层协议头在字节和结构之间来回转换——涵盖 Ethernet、IPv4/6、
-TCP/UDP、ARP、TLS、GOOSE/SV(IEC 61850)、IEC 104 等。每一个协议头都是一份**可执行的 JSON Schema**,
+schema 驱动的协议编解码器,负责把报文各层协议头在字节和结构之间来回转换——覆盖**188 种协议**,贯穿整个
+协议栈。每一个协议头都是一份**可执行的 JSON Schema**,
 同一份声明同时充当字段树、字节级编解码逻辑、输入校验器,以及界面所需的表单元数据。它的设计取向是从一个
 图形化的报文编辑器(可编程的 Wireshark)倒推出来的,而不是追求吞吐的解析器。纯 TypeScript,不依赖任何
 原生模块:全程只操作内存里的 `Buffer`,因此**在 Node 和浏览器里都能原样运行**。
+
+**协议覆盖**贯穿链路层与网络层(Ethernet、VLAN/802.1Q、ARP、IPv4/IPv6、ICMP/ICMPv6、MPLS、GRE、VXLAN、
+GENEVE)、传输层(TCP、UDP、SCTP、DCCP、QUIC),以及主流应用层(HTTP、HTTP/2、TLS/DTLS、DNS/mDNS、
+DHCP/DHCPv6、MQTT/MQTT-SN、CoAP、AMQP、Kafka、MongoDB、MySQL、PostgreSQL、Redis、SSH、LDAP、Kerberos、
+SNMP、NTP、PTP、SIP/RTP/RTCP、RTSP、SMB、NFS、RADIUS、Diameter、WireGuard、GTP)。而它真正的差异化在于一整套
+**工业 / OT / SCADA** 协议:Modbus(TCP/UDP)、DNP3、IEC 104、IEC 61850(GOOSE、Sampled Values、MMS、
+R-GOOSE)、S7comm、OPC UA(含 PubSub)、PROFINET RT、EtherCAT、EtherNet/IP、BACnet/IP、POWERLINK、
+HART-IP、Omron FINS、SLMP、CODESYS、C37.118、SercosIII、GE-SRTP。
 
 > English docs: [README.md](./README.md)
 

@@ -4,12 +4,21 @@
 
 # @netkitty/codec
 
-Schema-driven protocol codec for encoding and decoding packet headers — Ethernet, IPv4/6, TCP/UDP,
-ARP, TLS, GOOSE/SV (IEC 61850), IEC 104 and more. Every header is one **executable JSON Schema** that
+Schema-driven protocol codec for encoding and decoding packet headers — **188 protocols** across the
+whole stack. Every header is one **executable JSON Schema** that
 is at once the field tree, the byte-level codec, the input validator, and the form metadata a UI needs.
 It is designed backwards from a GUI packet editor — a programmable Wireshark — rather than a
 throughput dissector. Pure TypeScript, no native dependencies: it only ever touches an in-memory
 `Buffer`, so it runs unchanged in **node and the browser**.
+
+**Protocol coverage** spans link and network layers (Ethernet, VLAN/802.1Q, ARP, IPv4/IPv6,
+ICMP/ICMPv6, MPLS, GRE, VXLAN, GENEVE), transport (TCP, UDP, SCTP, DCCP, QUIC), and the mainstream
+application layer (HTTP, HTTP/2, TLS/DTLS, DNS/mDNS, DHCP/DHCPv6, MQTT/MQTT-SN, CoAP, AMQP, Kafka,
+MongoDB, MySQL, PostgreSQL, Redis, SSH, LDAP, Kerberos, SNMP, NTP, PTP, SIP/RTP/RTCP, RTSP, SMB, NFS,
+RADIUS, Diameter, WireGuard, GTP). Its main differentiator is a deep bench of **industrial / OT /
+SCADA** protocols: Modbus (TCP/UDP), DNP3, IEC 104, IEC 61850 (GOOSE, Sampled Values, MMS, R-GOOSE),
+S7comm, OPC UA (incl. PubSub), PROFINET RT, EtherCAT, EtherNet/IP, BACnet/IP, POWERLINK, HART-IP,
+Omron FINS, SLMP, CODESYS, C37.118, SercosIII and GE-SRTP.
 
 > 中文文档见 [README.zh-CN.md](./README.zh-CN.md)。
 
