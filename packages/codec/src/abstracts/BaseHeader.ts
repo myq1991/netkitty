@@ -217,7 +217,11 @@ export abstract class BaseHeader {
      * Entire packet buffer data getter
      */
     public get packet(): Buffer {
-        return this.codecData.packet
+        //Expose only the logical bytes. When physical === logical (the decode path never grows the
+        //buffer) return it directly with zero allocation; only slice a view when encode left headroom.
+        const buffer: Buffer = this.codecData.packet
+        const length: number | undefined = this.codecData.packetLength
+        return (length === undefined || length === buffer.length) ? buffer : buffer.subarray(0, length)
     }
 
     /**
@@ -226,6 +230,7 @@ export abstract class BaseHeader {
      */
     public set packet(packet: Buffer) {
         this.codecData.packet = packet
+        this.codecData.packetLength = packet.length
     }
 
     /**
@@ -349,11 +354,22 @@ export abstract class BaseHeader {
     #readBytes(offset: number, length: number, expandBufferLength: boolean, changeHeaderLength: boolean): Buffer {
         const packetOffset: number = this.getPacketOffset(offset)
         let readEndPos: number = packetOffset + length
-        if (this.packet.length < readEndPos) {
+        const codecData: CodecData = this.codecData
+        const logicalLength: number = codecData.packetLength ?? codecData.packet.length
+        if (logicalLength < readEndPos) {
             if (expandBufferLength) {
-                this.packet = Buffer.concat([this.packet, Buffer.alloc(readEndPos - this.packet.length, 0)])
+                if (codecData.packet.length < readEndPos) {
+                    //Amortized doubling: a run of small field writes grows the buffer O(log n) times
+                    //instead of reallocating + copying the whole packet on every write (O(n^2)). Only the
+                    //logical bytes are copied forward; the headroom stays zero-filled from Buffer.alloc.
+                    const capacity: number = Math.max(readEndPos, codecData.packet.length * 2)
+                    const grown: Buffer = Buffer.alloc(capacity, 0)
+                    codecData.packet.copy(grown, 0, 0, logicalLength)
+                    codecData.packet = grown
+                }
+                codecData.packetLength = readEndPos
             } else {
-                readEndPos = this.packet.length
+                readEndPos = logicalLength
             }
         }
         const headerLength: number = readEndPos - this.startPos
@@ -370,7 +386,10 @@ export abstract class BaseHeader {
                 this.#byteRanges.set(this.#currentFieldPath, {offset: packetOffset, length: length})
             }
         }
-        return this.packet.subarray(packetOffset, packetOffset + length)
+        //Clamp the returned view to readEndPos (which the branches above already clamped to the logical
+        //length on a non-expanding out-of-range read), so encode-time forward reads past the write
+        //high-water mark stay truncated exactly as before rather than exposing zero-filled headroom.
+        return this.codecData.packet.subarray(packetOffset, readEndPos)
     }
 
     /**
@@ -394,7 +413,7 @@ export abstract class BaseHeader {
         const packetOffset: number = this.getPacketOffset(offset)
         const writeEndPos: number = packetOffset + buffer.length
         this.#readBytes(offset, buffer.length, true, true)
-        this.packet.fill(buffer, packetOffset, writeEndPos)
+        this.codecData.packet.fill(buffer, packetOffset, writeEndPos)
     }
 
     /**
@@ -789,5 +808,14 @@ export abstract class BaseHeader {
             }
             postEncodeHandler = postSelfEncodeHandlers.shift()
         }
+        //Encode grows `packet` with headroom (amortized doubling). Restore it to the exact logical
+        //length so every reader of codecData.packet — packet-level post handlers, the encode result,
+        //and single-layer callers — sees no trailing headroom. subarray is a view (no copy); a
+        //following layer simply re-grows from here.
+        const encodedLength: number | undefined = this.codecData.packetLength
+        if (encodedLength !== undefined && encodedLength < this.codecData.packet.length) {
+            this.codecData.packet = this.codecData.packet.subarray(0, encodedLength)
+        }
+        this.codecData.packetLength = undefined
     }
 }

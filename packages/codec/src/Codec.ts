@@ -391,7 +391,7 @@ export class Codec {
             postEncodeHandler = postEncodeHandlers.shift()
         }
         return {
-            packet: codecData.packet,
+            packet: codecData.packetLength === undefined ? codecData.packet : codecData.packet.subarray(0, codecData.packetLength),
             errors: errors
         }
     }
