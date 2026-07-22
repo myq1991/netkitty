@@ -29,7 +29,7 @@
     "skipLibCheck": true,
     "allowArbitraryExtensions": true,
     "isolatedModules": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "outDir": "dist",
     "rootDir": "src",
   },
