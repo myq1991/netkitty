@@ -1,0 +1,61 @@
+[
+  {
+    "id": "eth",
+    "data": {
+      "dmac": "01:00:5e:00:01:3c",
+      "smac": "54:ee:75:a5:87:eb",
+      "etherType": "0800"
+    },
+    "errors": []
+  },
+  {
+    "id": "ipv4",
+    "data": {
+      "version": 4,
+      "hdrLen": 20,
+      "dsfield": {
+        "dscp": 0,
+        "ecn": 0
+      },
+      "length": 72,
+      "id": 609,
+      "flags": {
+        "rb": 0,
+        "df": 1,
+        "mf": 0
+      },
+      "fragOffset": 0,
+      "ttl": 4,
+      "protocol": 17,
+      "checksum": 53852,
+      "sip": "192.168.0.3",
+      "dip": "224.0.1.60"
+    },
+    "errors": []
+  },
+  {
+    "id": "udp",
+    "data": {
+      "srcport": 53271,
+      "dstport": 427,
+      "length": 52,
+      "checksum": 41517
+    },
+    "errors": []
+  },
+  {
+    "id": "slpv1",
+    "data": {
+      "version": 1,
+      "functionId": 6,
+      "length": 44,
+      "flags": 0,
+      "dialect": 0,
+      "languageCode": "656e",
+      "charEncoding": 3,
+      "xid": 16403,
+      "body": "00000018736572766963653a782d68706e702d646973636f7665723a00000000"
+    },
+    "errors": []
+  }
+]

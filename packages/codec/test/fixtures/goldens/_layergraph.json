@@ -174,6 +174,7 @@
       "gesrtp",
       "pcworx",
       "slp",
+      "slpv1",
       "nfs",
       "cms",
       "tls-alert",
@@ -254,6 +255,7 @@
       "megaco",
       "modbusudp",
       "slp",
+      "slpv1",
       "teredo",
       "wsdiscovery",
       "nfs",
@@ -785,6 +787,9 @@
       "raw"
     ],
     "slp": [
+      "raw"
+    ],
+    "slpv1": [
       "raw"
     ],
     "teredo": [
@@ -1524,6 +1529,10 @@
         "field": "dstport",
         "value": 427
       },
+      "slpv1": {
+        "field": "dstport",
+        "value": 427
+      },
       "nfs": {
         "field": "dstport",
         "value": 2049
@@ -1832,6 +1841,10 @@
         "value": 502
       },
       "slp": {
+        "field": "dstport",
+        "value": 427
+      },
+      "slpv1": {
         "field": "dstport",
         "value": 427
       },
@@ -2627,6 +2640,9 @@
       "raw": null
     },
     "slp": {
+      "raw": null
+    },
+    "slpv1": {
       "raw": null
     },
     "teredo": {
