@@ -4,6 +4,20 @@ import {ProtocolJSONSchema} from '../schema/ProtocolJSONSchema'
 import {UInt16ToHex} from '../helper/NumberToHex'
 import {StringContentEncodingEnum} from '../lib/StringContentEncodingEnum'
 
+/**
+ * Ethernet II — the DIX/Ethernet II MAC frame header, the usual L2 root of a captured packet. This codec
+ * decodes the 14-octet header: a 6-octet Destination MAC (`dmac`, offset 0) and 6-octet Source MAC
+ * (`smac`, offset 6), both formatted as colon-separated lowercase hex, and a 16-bit EtherType
+ * (`etherType`, offset 12, kept as a 4-hex string e.g. "0800"). The EtherType is published as a demux
+ * key (namespace `ethertype`) so the next layer (IPv4/IPv6/ARP/VLAN/GOOSE/SV…) is selected by it.
+ *
+ * As the link-layer root it registers `linktype:1` (DLT_EN10MB) so decode(packet, 1) dispatches here, and
+ * `heuristicFallback` keeps Ethernet the default root: match() returns true when there is no parent. When
+ * there IS a parent it only claims the payload of tunnels that carry a bare inner Ethernet frame —
+ * unconditionally for TRILL / VXLAN / NVGRE / MPLS / QinQ, and for GENEVE / GRE only when their Protocol
+ * Type is 0x6558 (Transparent Ethernet Bridging); other GENEVE/GRE payloads route elsewhere rather than
+ * being mislabeled as a fabricated Ethernet layer.
+ */
 export class EthernetII extends BaseHeader {
 
     static #schemaCache: ProtocolJSONSchema | undefined

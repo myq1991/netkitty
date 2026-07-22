@@ -7,6 +7,21 @@ import {CodecModule} from '../types/CodecModule'
 import {UInt8ToBuffer} from '../helper/NumberToBuffer'
 
 
+/**
+ * IEC 60870-5-104 S-format APCI — the "Supervisory" frame of IEC 104, which rides on TCP port 2404. Every
+ * IEC 104 APDU begins with a 6-octet APCI: an 8-bit Start byte (`startByte`, offset 0, always 0x68 / 104),
+ * an 8-bit APDU Length (`apduLength`, offset 1, the octet count that follows), and a 4-octet Control Field
+ * (`controlField`, offset 2, kept verbatim as hex — the authoritative bytes). This codec covers the
+ * S-format APDU, which carries no ASDU and exists only to acknowledge received I-frames: it additionally
+ * exposes, read-only, the 15-bit Receive Sequence Number N(R) (`rxSequence`, decoded from control octets
+ * 3-4 as a little-endian value right-shifted by 1) and an `apciType` label derived from the control-format
+ * bits (set to "S-Format").
+ *
+ * `rxSequence` and `apciType` are display projections over the same bytes; `controlField` stays the encode
+ * authority, so a captured frame round-trips byte-for-byte. In the heuristic chain (`heuristicFallback`),
+ * match() requires a TCP peer on port 2404, a Start byte of 104, and the control format bits to select
+ * S-format.
+ */
 export class IEC104_S_Frame extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

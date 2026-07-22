@@ -4,6 +4,21 @@ import {DemuxProducer} from '../types/DemuxProducer'
 import {UInt16ToHex} from '../helper/NumberToHex'
 import {BufferToHex} from '../helper/BufferToHex'
 
+/**
+ * HSR — High-availability Seamless Redundancy (IEC 62439-3), an L2 redundancy tag carried with EtherType
+ * 0x892f. This codec decodes the 6-octet HSR tag: a 4-bit Path / network id (`path`, top nibble of the
+ * first 2 octets) and a 12-bit LSDU Size (`lsduSize`, the low 12 bits) packed into the same 2-octet
+ * window, a 16-bit Sequence Number (`seqNr`, offset 2), and the 16-bit original EtherType of the carried
+ * frame (`etherType`, offset 4, a lowercase 4-hex string). `path` and `lsduSize` overlay disjoint bit
+ * ranges so their two encode closures write the shared window without clobbering each other; `lsduSize`
+ * is a plain read/write value and is NOT used to bound the carried frame (the inner protocol self-bounds).
+ *
+ * The trailing field is deliberately named `etherType` and stored exactly like VLAN/Ethernet, and is
+ * published as an `ethertype` demux key, so L2 children (GOOSE, SV, VLAN, ARP…) discriminate on it
+ * normally. match() mirrors VLAN: it fires whenever the carrying layer's EtherType is 0x892f — directly
+ * on Ethernet, inside a VLAN, or nested in another HSR tag — provided at least the 6 tag octets are
+ * present.
+ */
 export class HSR extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

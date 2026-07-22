@@ -48,6 +48,19 @@ enum Description_type {
     code_255 = 'Unknown (255)',
 }
 
+/**
+ * TLS Alert protocol — a TLS/SSL record carrying an alert, over TCP (heuristically, port 443). This codec
+ * decodes the 5-octet TLS record header followed by the 2-octet alert body: an 8-bit Content Type
+ * (`contentType`, offset 0, = 21 for Alert), a 16-bit legacy Version (`version`, offset 1, mapped to the
+ * labels SSL3.0 / TLS1.0 / TLS1.1 / TLS1.2 / TLS1.3 for 0x0300-0x0304, else "0"), a 16-bit record Length
+ * (`length`, offset 3), then the AlertLevel (`levelType`, offset 5; 1 Warning, 2 Fatal, else the numeric
+ * value) and the AlertDescription (`descriptionType`, offset 6; mapped to a named string for each defined
+ * code — Close notify, Handshake failure, Bad certificate, … — else the numeric value).
+ *
+ * The Version, level and description are decoded to friendly labels and re-encoded back to their numeric
+ * on-wire form, so a well-formed alert round-trips. In the heuristic chain (`heuristicFallback`), match()
+ * requires a Content Type of 21 and a recognized legacy Version (0x0300-0x0304).
+ */
 export class TLS_Alert extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

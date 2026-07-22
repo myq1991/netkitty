@@ -7,6 +7,22 @@ import {CodecModule} from '../types/CodecModule'
 import {UInt32ToBuffer, UInt8ToBuffer} from '../helper/NumberToBuffer'
 
 
+/**
+ * IEC 60870-5-104 U-format APCI — the "Unnumbered" control frame of IEC 104, which rides on TCP port 2404.
+ * Like every IEC 104 APDU it begins with a 6-octet APCI: an 8-bit Start byte (`startByte`, offset 0,
+ * always 0x68 / 104), an 8-bit APDU Length (`apduLength`, offset 1), and a 4-octet Control Field
+ * (`controlField`, offset 2, kept verbatim as hex — the encode authority). U-format frames carry no ASDU
+ * and no sequence numbers; they signal link control. This codec decodes an `apciType` label by matching
+ * the whole 4-octet control field to one of the six defined U functions — Test Frame Activation
+ * (43000000) / Confirmation (83000000), Stop Data Transfer Activation (13000000) / Confirmation
+ * (23000000), and Start Data Transfer Activation (07000000) / Confirmation (0b000000) — and records an
+ * error while keeping the raw hex for any other value.
+ *
+ * On encode a recognized `apciType` label writes back its fixed 4-octet control word, else the verbatim
+ * hex is re-emitted, so a captured frame round-trips byte-for-byte. In the heuristic chain
+ * (`heuristicFallback`), match() requires a TCP peer on port 2404, a Start byte of 104, and the control
+ * format bits to select U-format.
+ */
 export class IEC104_U_Frame extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

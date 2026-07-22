@@ -9,6 +9,22 @@ import {BufferToIPv6} from '../helper/BufferToIP'
 import {IPv6ToBuffer} from '../helper/IPToBuffer'
 import {CodecModule} from '../types/CodecModule'
 
+/**
+ * IPv6 — Internet Protocol version 6 (RFC 8200), carried on Ethernet with EtherType 0x86dd. This codec
+ * decodes the 40-octet fixed header: a 4-bit Version (`version`, offset 0), an 8-bit Traffic Class split
+ * into a 6-bit DSCP (`tclass.dscp`) and 2-bit ECN (`tclass.ecn`), a 20-bit Flow Label (`flow`), a 16-bit
+ * Payload Length (`plen`, offset 4), an 8-bit Next Header (`nxt`, offset 6), an 8-bit Hop Limit (`hllm`,
+ * offset 7), and the 16-octet Source (`sip`, offset 8) and Destination (`dip`, offset 24) addresses. It
+ * stops at the fixed header: `nxt` is published as an `ipproto` demux key, so extension headers and the
+ * upper-layer protocol (TCP/UDP/ICMPv6/OSPF…) are decoded by the next module.
+ *
+ * Payload Length is honor-else-derive: a supplied value is written as-is, but when it is 0 on encode a
+ * post-packet-encode handler sums the byte length of this header and everything after it, subtracts the
+ * 40-octet header, and writes the result (falling back to 0 when it exceeds 65535, as a Hop-by-Hop Jumbo
+ * Payload would). match() accepts the normal `ethertype:86dd` path, and — being in the heuristic chain —
+ * also an IPv6 payload inside a bare-IP GTP-U tunnel (parent id `gtp` with a version nibble of 6) or a
+ * GENEVE/GRE tunnel whose Protocol Type is 0x86dd.
+ */
 export class IPv6 extends BaseHeader {
 
     public SCHEMA: ProtocolJSONSchema = {

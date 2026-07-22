@@ -13,6 +13,19 @@ enum TLSver {
     TLS_1_3 = 'TLS1.3',
 }
 
+/**
+ * TLS Application Data protocol — a TLS/SSL record carrying encrypted application payload, over TCP
+ * (heuristically, port 443). This codec decodes the 5-octet TLS record header plus its body: an 8-bit
+ * Content Type (`contentType`, offset 0, = 23 / 0x17 for Application Data), a 16-bit legacy Version
+ * (`version`, offset 1, mapped to the labels SSL3.0 / TLS1.0 / TLS1.1 / TLS1.2 / TLS1.3 for 0x0300-0x0304,
+ * else "0"), a 16-bit record Length (`length`, offset 3), and the ciphertext body (`appData`, offset 5,
+ * `length` octets).
+ *
+ * The body is encrypted and opaque, so it is kept verbatim as `appData` hex (byte-perfect) and never
+ * sub-decoded; the Length is honored as given. A well-formed record round-trips byte-for-byte. In the
+ * heuristic chain (`heuristicFallback`), match() requires a Content Type of 0x17 and a recognized legacy
+ * Version (0x0300-0x0304).
+ */
 export class TLS_ApplicationData extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

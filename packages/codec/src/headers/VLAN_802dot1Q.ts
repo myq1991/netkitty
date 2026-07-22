@@ -4,6 +4,18 @@ import {DemuxProducer} from '../types/DemuxProducer'
 import {UInt16ToHex} from '../helper/NumberToHex'
 import {BufferToHex} from '../helper/BufferToHex'
 
+/**
+ * VLAN 802.1Q — the IEEE 802.1Q VLAN tag, selected when the carrying layer's EtherType is the TPID 0x8100.
+ * This codec decodes the 4-octet tag that follows the TPID: the 2-octet Tag Control Information split into
+ * a 3-bit Priority / PCP (`priority`, top bits of offset 0), a 1-bit Drop Eligible Indicator (`dei`,
+ * boolean) and a 12-bit VLAN ID (`id`, the low 12 bits), followed by the 16-bit EtherType of the
+ * encapsulated frame (`etherType`, offset 2, a lowercase 4-hex string).
+ *
+ * The trailing `etherType` is published as an `ethertype` demux key so the tagged inner protocol
+ * (IPv4/IPv6/ARP, another VLAN for QinQ, GOOSE, SV…) is selected exactly as it would be off bare Ethernet.
+ * match() fires whenever the parent's EtherType is 0x8100, regardless of which layer carries it, so it
+ * handles both single- and stacked-tag frames.
+ */
 export class VLAN_802dot1Q extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

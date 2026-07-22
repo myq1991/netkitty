@@ -13,6 +13,22 @@ enum TLSver {
     TLS_1_3 = 'TLS1.3',
 }
 
+/**
+ * TLS Heartbeat protocol (RFC 6520) — a TLS/SSL record carrying a heartbeat, over TCP (heuristically, port
+ * 443). This codec decodes the 5-octet TLS record header plus the HeartbeatMessage: an 8-bit Content Type
+ * (`contentType`, offset 0, = 24 / 0x18 for Heartbeat), a 16-bit legacy Version (`version`, offset 1,
+ * mapped to the labels SSL3.0 / TLS1.0 / TLS1.1 / TLS1.2 / TLS1.3 for 0x0300-0x0304, else 0), a 16-bit
+ * record Length (`length`, offset 3), then the HeartbeatMessageType (`heartbeatType`, offset 5; 1
+ * HeartbeatRequest, 2 HeartbeatResponse, else the numeric value), a 16-bit Payload Length (`payloadLength`,
+ * offset 6), the payload (`payloadMessage`, offset 8, `payloadLength` octets, kept verbatim as hex) and
+ * the trailing random Padding (`padding`, hex).
+ *
+ * Per RFC 6520 §4 the padding is at least 16 octets and fills the record after the type and payload, so its
+ * length is derived as recordLength - 3 - payloadLength and preserved for a byte-exact re-encode. The
+ * payload and padding are kept verbatim and lengths are honored as given, so a well-formed record
+ * round-trips byte-for-byte. In the heuristic chain (`heuristicFallback`), match() requires a Content Type
+ * of 0x18 and a recognized legacy Version (0x0300-0x0304).
+ */
 export class TLS_Heartbeat extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

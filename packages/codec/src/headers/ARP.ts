@@ -9,6 +9,22 @@ import {UInt16ToBuffer, UInt8ToBuffer} from '../helper/NumberToBuffer'
 import {BufferToIPv4} from '../helper/BufferToIP'
 import {IPv4ToBuffer} from '../helper/IPToBuffer'
 
+/**
+ * ARP — Address Resolution Protocol (RFC 826), carried directly on Ethernet with EtherType 0x0806.
+ * This codec decodes the classic 28-octet IPv4-over-Ethernet ARP packet, whose wire layout is: a 16-bit
+ * Hardware Type (`hardware.type`, offset 0), a 16-bit Protocol Type (`protocol.type`, offset 2, kept as a
+ * 4-hex string e.g. "0800"), an 8-bit Hardware Address Length (`hardware.size`, offset 4), an 8-bit
+ * Protocol Address Length (`protocol.size`, offset 5), a 16-bit Opcode (offset 6; 1 request, 2 reply,
+ * 3 RARP request, 4 RARP reply — other values are flagged as an error but kept), then the four address
+ * fields: Sender MAC (`sender.mac`, 6 octets, offset 8) and Sender IPv4 (`sender.ipv4`, 4 octets, offset
+ * 14), Target MAC (`target.mac`, 6 octets, offset 18) and Target IPv4 (`target.ipv4`, 4 octets, offset
+ * 24). The schema groups the two `hardware`/`protocol` sub-objects and two `sender`/`target` sub-objects
+ * for the UI, but each field reads its own fixed offset, so the on-wire interleaving is preserved.
+ *
+ * The 6-octet MAC and 4-octet IPv4 widths are fixed here (Ethernet + IPv4 ARP), independent of the
+ * declared hardware/protocol sizes. Values are range-clamped rather than rejected. match() keys purely
+ * on the parent's EtherType being 0x0806.
+ */
 export class ARP extends BaseHeader {
 
     public SCHEMA: ProtocolJSONSchema = {

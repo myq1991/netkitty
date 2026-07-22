@@ -13,6 +13,18 @@ enum TLSver {
     TLS_1_3 = 'TLS1.3',
 }
 
+/**
+ * TLS ChangeCipherSpec protocol — a TLS/SSL record signaling the switch to the negotiated cipher, over TCP
+ * (heuristically, port 443). This codec decodes the 5-octet TLS record header plus its body: an 8-bit
+ * Content Type (`contentType`, offset 0, = 20 / 0x14 for ChangeCipherSpec), a 16-bit legacy Version
+ * (`version`, offset 1, mapped to the labels SSL3.0 / TLS1.0 / TLS1.1 / TLS1.2 / TLS1.3 for 0x0300-0x0304,
+ * else "0"), a 16-bit record Length (`length`, offset 3), and the message body
+ * (`change_cipher_spec_message`, offset 5, `length` octets — canonically the single byte 0x01).
+ *
+ * The body is kept verbatim as hex (byte-perfect) and the Length is honored as given, so a well-formed
+ * record round-trips byte-for-byte. In the heuristic chain (`heuristicFallback`), match() requires a
+ * Content Type of 0x14 and a recognized legacy Version (0x0300-0x0304).
+ */
 export class TLS_ChangeCipherSpec extends BaseHeader {
     public SCHEMA: ProtocolJSONSchema = {
         type: 'object',

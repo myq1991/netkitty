@@ -6,6 +6,24 @@ import {IPv4ToBuffer} from '../helper/IPToBuffer'
 import {BufferToHex} from '../helper/BufferToHex'
 import {DemuxProducer} from '../types/DemuxProducer'
 
+/**
+ * OSPF — Open Shortest Path First (OSPFv2, RFC 2328), carried directly on IP as protocol 89. This codec
+ * decodes the 24-octet common header: an 8-bit Version (`version`, offset 0), an 8-bit Message Type
+ * (`type`, offset 1; 1 Hello, 2 Database Description, 3 LS Request, 4 LS Update, 5 LS Ack), a 16-bit
+ * Packet Length (`packetLength`, offset 2), the Source Router ID (`routerId`, IPv4, offset 4), the Area
+ * ID (`areaId`, IPv4, offset 8), a 16-bit Checksum (`checksum`, offset 12, honored verbatim and never
+ * recomputed so a captured packet round-trips), a 16-bit Auth Type (`auType`, offset 14) and the 8-octet
+ * Authentication field (`auth`, hex, offset 16).
+ *
+ * For a Hello (type 1) the body is decoded field-by-field: Network Mask (offset 24), 16-bit Hello Interval
+ * (offset 28), 8-bit Options (offset 30), 8-bit Router Priority (offset 31), 32-bit Router Dead Interval
+ * (offset 32), Designated and Backup Designated Routers (IPv4, offsets 36 and 40), then the Active
+ * Neighbors list (4-octet Router IDs from offset 44 onward). For all other types the payload is kept
+ * verbatim as `rawBody` hex from offset 24. Both are bounded by min(Packet Length, the bytes the IP layer
+ * below actually made available) and never below the 24-octet header, so a lying length field can't read
+ * past the real IP payload. match() fires on IPv4 protocol 89 or IPv6 Next Header 89 with a full common
+ * header present.
+ */
 export class OSPF extends BaseHeader {
 
     /**
