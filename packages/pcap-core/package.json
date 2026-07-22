@@ -1,7 +1,7 @@
 {
   "name": "@netkitty/pcap-core",
   "version": "0.0.35",
-  "description": "Browser-safe pcap/pcapng buffer parsing and generation",
+  "description": "Browser-safe, zero-dependency pcap / pcapng / .cap / tcpdump buffer parser and generator — format auto-detected by magic number (classic libpcap in both endiannesses and microsecond/nanosecond variants, plus pcapng)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -26,8 +26,14 @@
     "netkitty",
     "pcap",
     "pcapng",
+    "cap",
+    "tcpdump",
+    "libpcap",
     "parser",
-    "wireshark"
+    "wireshark",
+    "packet-capture",
+    "capture-file",
+    "browser"
   ],
   "author": "alex.ma",
   "license": "MIT",

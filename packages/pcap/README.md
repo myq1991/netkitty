@@ -78,9 +78,18 @@ await reader.stop()    // or reader.close() to also remove all listeners
 
 ## Key concepts
 
-- **Format-agnostic.** The reader does not care whether the file is pcap or pcapng; `@netkitty/pcap-core`
-  auto-detects the format from the magic number and handles both byte orders, the µs and ns classic-pcap
-  variants, and pcapng section/interface/packet blocks. `reader.parser.format` exposes the detected
+- **Format-agnostic, detected by content.** The reader does not care whether the file is pcap or pcapng;
+  `@netkitty/pcap-core` auto-detects the format from the **magic number** (not the file extension) and
+  handles:
+  - **classic libpcap** — all four variants: big- and little-endian × microsecond and nanosecond
+    timestamps (`a1b2c3d4` / `d4c3b2a1` / `a1b23c4d` / `4d3cb2a1`). This is the format written by tcpdump,
+    Wireshark and libpcap, whatever the extension — `.pcap`, `.cap`, `.dump`, or none at all.
+  - **pcapng** — section header / interface description / (simple) enhanced packet blocks, with per-interface
+    `if_tsresol` timestamp resolution (`0a0d0d0a`).
+
+  Because detection is by content, a mislabelled or extensionless file still parses. Conversely, a `.cap`
+  that is *not* libpcap (e.g. a Microsoft Network Monitor capture, a different magic) is **rejected with a
+  clear `unknown magic number` error rather than mis-parsed**. `reader.parser.format` exposes the detected
   `PcapFileFormat` (`'pcap' | 'pcapng'`).
 - **Read the bytes by info, not by guesswork.** `readPacketData(info)` seeks to the parser-reported
   `packetOffset` and reads exactly `packetLength` bytes, so it is correct for every format. The older

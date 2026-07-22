@@ -1,7 +1,7 @@
 {
   "name": "@netkitty/pcap",
   "version": "0.0.35",
-  "description": "Node.js streaming pcap/pcapng file reading, writing and parsing",
+  "description": "Node.js streaming read / write / parse of pcap, pcapng and .cap / tcpdump capture files — format auto-detected by magic number (classic libpcap in both endiannesses and microsecond/nanosecond variants, plus pcapng)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -26,7 +26,14 @@
     "netkitty",
     "pcap",
     "pcapng",
-    "wireshark"
+    "cap",
+    "tcpdump",
+    "libpcap",
+    "wireshark",
+    "packet-capture",
+    "capture-file",
+    "network",
+    "parser"
   ],
   "author": "alex.ma",
   "license": "MIT",
