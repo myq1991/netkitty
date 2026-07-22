@@ -14,6 +14,10 @@ export {
  */
 export {type IPcapPacketInfo} from './interfaces/IPcapPacketInfo'
 /**
+ * Transparent decompression of compressed capture files
+ */
+export {Lz4FrameDecompress} from './Lz4FrameDecompress'
+/**
  * PCAP file buffer generation
  */
 export type {GeneratePCAPInputPacket, GeneratePCAPPacket} from './PCAPGenerator'

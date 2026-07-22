@@ -1,9 +1,10 @@
 import EventEmitter from 'events'
-import {FileHandle, FileReadResult, open} from 'node:fs/promises'
+import {gunzipSync} from 'node:zlib'
+import {FileHandle, FileReadResult, open, readFile} from 'node:fs/promises'
 import {ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './PcapParser'
-import {IPcapPacketInfo} from '@netkitty/pcap-core'
+import {IPcapPacketInfo, Lz4FrameDecompress} from '@netkitty/pcap-core'
 
 export interface IPcapReaderOptions {
     filename: string
@@ -35,6 +36,10 @@ export class PcapReader extends EventEmitter {
     protected readDone: boolean = false
 
     protected readBufferFileHandle: FileHandle | null = null
+
+    protected decompressed: Buffer | null = null
+
+    protected decompressError: Error | null = null
 
     protected onPacket?: (pcapPacketInfo: IPcapPacketInfo) => Promise<void> | void
 
@@ -144,6 +149,28 @@ export class PcapReader extends EventEmitter {
      * @protected
      */
     protected async readBuffer(): Promise<boolean> {
+        if (this.decompressed) {
+            if (this.offset >= this.decompressed.length) return true
+            const end: number = Math.min(this.offset + this.chunkSize, this.decompressed.length)
+            const data: Buffer = Buffer.from(this.decompressed.subarray(this.offset, end))
+            this.offset = end
+            //an in-memory source has no async I/O to pace it, so honor stream backpressure explicitly —
+            //otherwise the whole buffer floods the parser at once and 'done' races ahead of parsing.
+            //Resolve on 'close' too, so a concurrent stop()/close() tearing down the stream can't deadlock
+            //this wait against stop() awaiting 'done'.
+            if (!this.writeStream.write(data)) {
+                await new Promise<void>((resolve: () => void): void => {
+                    const settle: () => void = (): void => {
+                        this.writeStream.off('drain', settle)
+                        this.writeStream.off('close', settle)
+                        resolve()
+                    }
+                    this.writeStream.once('drain', settle)
+                    this.writeStream.once('close', settle)
+                })
+            }
+            return false
+        }
         const readBufferFileHandle: FileHandle = await this.initReadBufferFileHandle()
         try {
             const result: FileReadResult<Buffer> = await readBufferFileHandle.read({
@@ -222,6 +249,10 @@ export class PcapReader extends EventEmitter {
      */
     public async readPacketData(pcapPacketInfo: IPcapPacketInfo): Promise<Buffer> {
         if (pcapPacketInfo.packetLength <= 0) return Buffer.from([])
+        if (this.decompressed) {
+            const start: number = pcapPacketInfo.packetOffset
+            return Buffer.from(this.decompressed.subarray(start, start + pcapPacketInfo.packetLength))
+        }
         const fileHandle: FileHandle = await this.initReadPacketFileHandle()
         try {
             const result: FileReadResult<Buffer> = await fileHandle.read({
@@ -257,13 +288,67 @@ export class PcapReader extends EventEmitter {
     }
 
     /**
+     * Detect a compressed capture file by its leading magic bytes and, if compressed, decompress the
+     * whole file into memory so both the streaming parse and readPacketData() serve the decompressed
+     * bytes (the parser reports offsets into the decompressed stream, not the on-disk compressed file).
+     * gzip (1f 8b) is handled by node:zlib; LZ4 frame (04 22 4d 18) by the pure-JS Lz4FrameDecompress.
+     * Anything else leaves decompressed null and the file is streamed straight from disk as before.
+     * @protected
+     */
+    protected async loadCompressedSource(): Promise<void> {
+        this.decompressed = null
+        this.decompressError = null
+        let magic: Buffer
+        try {
+            const fileHandle: FileHandle = await open(this.filename, 'r')
+            try {
+                const result: FileReadResult<Buffer> = await fileHandle.read({
+                    buffer: Buffer.alloc(4),
+                    offset: 0,
+                    length: 4,
+                    position: 0
+                })
+                magic = result.buffer.subarray(0, result.bytesRead)
+            } finally {
+                await fileHandle.close()
+            }
+        } catch {
+            return //unreadable/missing file — let the normal read path surface it as it did before
+        }
+        const isGzip: boolean = magic.length >= 2 && magic[0] === 0x1f && magic[1] === 0x8b
+        const isLz4: boolean = magic.length >= 4 && magic.readUInt32BE(0) === 0x04224d18
+        if (!isGzip && !isLz4) return
+        try {
+            const fileData: Buffer = await readFile(this.filename)
+            this.decompressed = isGzip ? gunzipSync(fileData) : Lz4FrameDecompress(fileData)
+        } catch (err) {
+            //corrupt/truncated compressed capture — record it so start() can surface a clean 'error'
+            //event instead of rejecting, matching how an unknown magic number is handled
+            this.decompressed = null
+            this.decompressError = err as Error
+        }
+    }
+
+    /**
      * Start reading pcap
      */
     public async start(): Promise<void> {
         await this.reset()
+        await this.loadCompressedSource()
         this.emit('start')
         if (this.onStart) await this.onStart()
-        if (this.watch) {
+        if (this.decompressError) {
+            const err: Error = this.decompressError
+            this.emit('error', err)
+            if (this.onError) this.onError(err)
+            this.readDone = true
+            this.emit('done')
+            if (this.onDone) await this.onDone()
+            return
+        }
+        //a compressed source is a whole-file snapshot decompressed up front, so it can't be tailed —
+        //watch mode would idle forever; read it straight through to 'done' instead
+        if (this.watch && !this.decompressed) {
             this.continualRead()
         } else {
             this.straightRead()

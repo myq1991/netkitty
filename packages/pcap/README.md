@@ -91,6 +91,13 @@ await reader.stop()    // or reader.close() to also remove all listeners
   that is *not* libpcap (e.g. a Microsoft Network Monitor capture, a different magic) is **rejected with a
   clear `unknown magic number` error rather than mis-parsed**. `reader.parser.format` exposes the detected
   `PcapFileFormat` (`'pcap' | 'pcapng'`).
+- **Transparent decompression.** A capture compressed with **gzip** (`.pcap.gz` / `.pcapng.gz`, magic
+  `1f 8b`) or **LZ4** frame format (`.pcap.lz4`, magic `04 22 4d 18`) is decompressed on the fly — the
+  reader detects the compression magic, inflates the whole file, and both the streaming parse and
+  `readPacketData()` are served from the decompressed bytes, so a compressed capture reads back exactly
+  like its plain original. gzip uses Node's built-in `zlib`; LZ4 uses the dependency-free pure-JS
+  `Lz4FrameDecompress` from [`@netkitty/pcap-core`](../pcap-core). (zstd is not yet handled; decompress it
+  first, e.g. `zstd -d capture.pcapng.zst`.)
 - **Read the bytes by info, not by guesswork.** `readPacketData(info)` seeks to the parser-reported
   `packetOffset` and reads exactly `packetLength` bytes, so it is correct for every format. The older
   `readPacket(offset, length)` is **deprecated** — it assumes a fixed 16-byte classic-pcap record header
@@ -146,5 +153,6 @@ The streaming shell used internally by `PcapReader`; you can also drive it direc
 
 ### Re-exported from [`@netkitty/pcap-core`](../pcap-core)
 
-`IPcapPacketInfo`, `PcapFileFormat`, and the classic-pcap byte generators `GeneratePCAP`,
-`GeneratePCAPHeader`, `GeneratePCAPData` (with `GeneratePCAPInputPacket` / `GeneratePCAPPacket`).
+`IPcapPacketInfo`, `PcapFileFormat`, the classic-pcap byte generators `GeneratePCAP`,
+`GeneratePCAPHeader`, `GeneratePCAPData` (with `GeneratePCAPInputPacket` / `GeneratePCAPPacket`), and the
+pure-JS `Lz4FrameDecompress` used for transparent `.lz4` reading.
