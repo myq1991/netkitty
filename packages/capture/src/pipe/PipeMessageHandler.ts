@@ -3,8 +3,8 @@ import {PipeMessage, PipeMessageType} from './PipeMessage'
 import EventEmitter from 'events'
 import {PipeClient} from './PipeClient'
 import {PipeClientSocket} from './PipeClientSocket'
-import {UnknownPipeMessageTypeError} from '../../errors/UnknownPipeMessageTypeError'
-import {ActionNotFoundError} from '../../errors/ActionNotFoundError'
+import {UnknownPipeMessageTypeError} from '../errors/UnknownPipeMessageTypeError'
+import {ActionNotFoundError} from '../errors/ActionNotFoundError'
 
 export class PipeMessageHandler extends EventEmitter {
 

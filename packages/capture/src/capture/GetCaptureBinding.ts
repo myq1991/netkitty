@@ -1,7 +1,7 @@
-import {GetBinding} from '../../GetBinding'
+import {GetBinding} from '../GetBinding'
 import path from 'node:path'
 import * as os from 'node:os'
-import {NpcapLoadError} from '../../../errors/NpcapLoadError'
+import {NpcapLoadError} from '../errors/NpcapLoadError'
 
 let binding: any
 

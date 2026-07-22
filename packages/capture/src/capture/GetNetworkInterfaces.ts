@@ -1,5 +1,5 @@
 import {INetworkInterface} from './interfaces/INetworkInterface'
-import {GetCaptureBinding} from './lib/GetCaptureBinding'
+import {GetCaptureBinding} from './GetCaptureBinding'
 import sortArray from 'sort-array'
 
 /**

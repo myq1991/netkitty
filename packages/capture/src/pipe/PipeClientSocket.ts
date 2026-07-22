@@ -2,7 +2,7 @@ import EventEmitter from 'events'
 import {MessageConnection} from 'socket-ipc'
 import {PipeMessage, PipeMessageType} from './PipeMessage'
 import {PipeMessageHandler} from './PipeMessageHandler'
-import {SocketDownError} from '../../errors/SocketDownError'
+import {SocketDownError} from '../errors/SocketDownError'
 
 export interface IPipeClientSocketOptions {
     id: string

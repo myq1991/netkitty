@@ -1,4 +1,4 @@
-import {BindingCapture} from '../lib/BindingCapture'
+import {BindingCapture} from '../BindingCapture'
 import {PipeClient} from '../../pipe/PipeClient'
 import {PcapWriter, IPcapPacketInfo} from '@netkitty/pcap'
 

@@ -8,7 +8,7 @@
  *
  * Default device: en0
  */
-import {Capture} from '../../src/lib/capture/Capture'
+import {Capture} from '../../src/capture/Capture'
 import {PcapReader} from '@netkitty/pcap'
 
 const device: string = process.argv[2] ? process.argv[2] : 'en0'

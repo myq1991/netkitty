@@ -1,6 +1,6 @@
-import {IBindingCapture} from '../interfaces/IBindingCapture'
+import {IBindingCapture} from './interfaces/IBindingCapture'
 import {GetCaptureBindingClass} from './GetCaptureBindingClass'
-import {IBindingCaptureOptions} from '../interfaces/IBindingCaptureOptions'
+import {IBindingCaptureOptions} from './interfaces/IBindingCaptureOptions'
 
 const BindingCaptureClass: IBindingCapture = GetCaptureBindingClass()
 
