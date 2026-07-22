@@ -10,6 +10,7 @@
     "build": "lerna run build",
     "test": "lerna run test",
     "test:only": "lerna run test:only",
+    "bump": "lerna version",
     "release": "npm run build && lerna publish from-package"
   },
   "repository": {

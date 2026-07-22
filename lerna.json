@@ -4,5 +4,12 @@
   "npmClient": "npm",
   "packages": [
     "packages/*"
-  ]
+  ],
+  "command": {
+    "version": {
+      "conventionalCommits": true,
+      "push": false,
+      "message": "chore(release): version packages"
+    }
+  }
 }

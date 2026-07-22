@@ -13,7 +13,8 @@
   "files": [
     "dist",
     "README.md",
-    "README.zh-CN.md"
+    "README.zh-CN.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "clean": "shx rm -rf ./dist ./dist-test",
