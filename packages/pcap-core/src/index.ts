@@ -24,3 +24,11 @@ export type {GeneratePCAPInputPacket, GeneratePCAPPacket} from './PCAPGenerator'
 export {GeneratePCAPHeader} from './PCAPGenerator'
 export {GeneratePCAPData} from './PCAPGenerator'
 export {GeneratePCAP} from './PCAPGenerator'
+/**
+ * pcapng file buffer generation
+ */
+export type {GeneratePcapngInputPacket, GeneratePcapngPacket, GeneratePcapngOptions} from './PcapngGenerator'
+export {GeneratePcapngSectionHeader} from './PcapngGenerator'
+export {GeneratePcapngInterfaceDescription} from './PcapngGenerator'
+export {GeneratePcapngEnhancedPacket} from './PcapngGenerator'
+export {GeneratePcapng} from './PcapngGenerator'

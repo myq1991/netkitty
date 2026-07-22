@@ -129,10 +129,11 @@ await reader.stop()    // or reader.close() to also remove all listeners
 
 ### `new PcapWriter(options)`
 
-| option              | type      | default | meaning                                                          |
-| ------------------- | --------- | ------- | ---------------------------------------------------------------- |
-| `filename`          | `string`  | —       | output path; created (with header) or appended if it exists      |
-| `includePacketData` | `boolean` | `true`  | include the raw bytes as base64 in the emitted `packet` info     |
+| option              | type                  | default  | meaning                                                          |
+| ------------------- | --------------------- | -------- | ---------------------------------------------------------------- |
+| `filename`          | `string`              | —        | output path; created (with header) or appended if it exists      |
+| `format`            | `'pcap' \| 'pcapng'`  | `'pcap'` | output format; `'pcapng'` writes SHB + IDB then one EPB per frame |
+| `includePacketData` | `boolean`             | `true`   | include the raw bytes as base64 in the emitted `packet` info     |
 
 Set `includePacketData: false` when consumers only need metadata — it skips the per-packet base64
 encoding; the bytes are still written to the file.
@@ -154,5 +155,8 @@ The streaming shell used internally by `PcapReader`; you can also drive it direc
 ### Re-exported from [`@netkitty/pcap-core`](../pcap-core)
 
 `IPcapPacketInfo`, `PcapFileFormat`, the classic-pcap byte generators `GeneratePCAP`,
-`GeneratePCAPHeader`, `GeneratePCAPData` (with `GeneratePCAPInputPacket` / `GeneratePCAPPacket`), and the
-pure-JS `Lz4FrameDecompress` used for transparent `.lz4` reading.
+`GeneratePCAPHeader`, `GeneratePCAPData` (with `GeneratePCAPInputPacket` / `GeneratePCAPPacket`), the
+pcapng byte generators `GeneratePcapng`, `GeneratePcapngSectionHeader`,
+`GeneratePcapngInterfaceDescription`, `GeneratePcapngEnhancedPacket` (with `GeneratePcapngInputPacket` /
+`GeneratePcapngPacket` / `GeneratePcapngOptions`), and the pure-JS `Lz4FrameDecompress` used for
+transparent `.lz4` reading.

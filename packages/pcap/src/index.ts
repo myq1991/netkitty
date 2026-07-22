@@ -19,5 +19,13 @@ export {
     type GeneratePCAPPacket,
     GeneratePCAPHeader,
     GeneratePCAPData,
-    GeneratePCAP
+    GeneratePCAP,
+    type GeneratePcapngInputPacket,
+    type GeneratePcapngPacket,
+    type GeneratePcapngOptions,
+    GeneratePcapngSectionHeader,
+    GeneratePcapngInterfaceDescription,
+    GeneratePcapngEnhancedPacket,
+    GeneratePcapng,
+    Lz4FrameDecompress
 } from '@netkitty/pcap-core'

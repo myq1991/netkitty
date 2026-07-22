@@ -1,7 +1,7 @@
 {
   "name": "@netkitty/pcap-core",
   "version": "0.0.35",
-  "description": "Browser-safe, zero-dependency pcap / pcapng / .cap / tcpdump buffer parser and generator — format auto-detected by magic number (classic libpcap in both endiannesses and microsecond/nanosecond variants, plus pcapng) — plus a pure-JS LZ4 frame decompressor",
+  "description": "Browser-safe, zero-dependency pcap / pcapng / .cap / tcpdump buffer parser and pcap + pcapng generator — format auto-detected by magic number (classic libpcap in both endiannesses and microsecond/nanosecond variants, plus pcapng) — plus a pure-JS LZ4 frame decompressor",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

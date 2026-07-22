@@ -1,9 +1,28 @@
 import EventEmitter from 'events'
 import {createWriteStream, existsSync, statSync, WriteStream} from 'node:fs'
-import {GeneratePCAPData, GeneratePCAPHeader, IPcapPacketInfo} from '@netkitty/pcap-core'
+import {
+    GeneratePCAPData,
+    GeneratePCAPHeader,
+    GeneratePcapngEnhancedPacket,
+    GeneratePcapngInterfaceDescription,
+    GeneratePcapngSectionHeader,
+    IPcapPacketInfo
+} from '@netkitty/pcap-core'
+
+export type PcapWriterFormat = 'pcap' | 'pcapng'
+
+//classic pcap record header is 16 bytes; a pcapng Enhanced Packet Block header (block type..original
+//length, before the packet data) is 28 bytes
+const PCAP_RECORD_HEADER_LENGTH: number = 16
+const PCAPNG_EPB_HEADER_LENGTH: number = 28
 
 export interface IPcapWriterOptions {
     filename: string
+    /**
+     * Output capture-file format. Default 'pcap' (classic libpcap). 'pcapng' writes a Section Header
+     * Block + Interface Description Block up front, then one Enhanced Packet Block per frame.
+     */
+    format?: PcapWriterFormat
     /**
      * Include the raw packet bytes (base64) in the emitted `packet` event info. Default true. Set false
      * when the consumer only needs metadata — skips the per-packet base64 encoding, and the bytes stay
@@ -26,6 +45,8 @@ export class PcapWriter extends EventEmitter {
 
     protected readonly includePacketData: boolean
 
+    protected readonly format: PcapWriterFormat
+
     public get wroteCount(): number {
         return this.index
     }
@@ -33,10 +54,15 @@ export class PcapWriter extends EventEmitter {
     constructor(options: IPcapWriterOptions) {
         super()
         this.filename = options.filename
+        this.format = options.format === 'pcapng' ? 'pcapng' : 'pcap'
         this.includePacketData = options.includePacketData !== false
         if (!existsSync(this.filename)) {
             this.writeStream = createWriteStream(this.filename, {autoClose: false, flags: 'w'})
-            const header: Buffer = GeneratePCAPHeader()
+            //pcapng opens with a Section Header Block + one Interface Description Block; classic pcap with
+            //its 24-byte global header
+            const header: Buffer = this.format === 'pcapng'
+                ? Buffer.concat([GeneratePcapngSectionHeader(), GeneratePcapngInterfaceDescription()])
+                : GeneratePCAPHeader()
             this.writeStream.write(header)
             this.offset += header.length
         } else {
@@ -56,17 +82,14 @@ export class PcapWriter extends EventEmitter {
         this.index += 1
         const startOffset: number = this.offset
         const packetLength: number = packet.length
-        const pcapData: Buffer = GeneratePCAPData({
-            buffer: packet,
-            timestamp: Date.now(),
-            microsecond: {
-                seconds: seconds,
-                microseconds: microseconds
-            }
-        })
+        //pcapng puts padding + a trailing length after the packet data, so the data is not at the end of
+        //the record; derive packetOffset from the fixed front header length instead of from the tail
+        const recordHeaderLength: number = this.format === 'pcapng' ? PCAPNG_EPB_HEADER_LENGTH : PCAP_RECORD_HEADER_LENGTH
+        const pcapData: Buffer = this.format === 'pcapng'
+            ? GeneratePcapngEnhancedPacket({buffer: packet, microsecond: {seconds: seconds, microseconds: microseconds}})
+            : GeneratePCAPData({buffer: packet, timestamp: Date.now(), microsecond: {seconds: seconds, microseconds: microseconds}})
         this.offset += pcapData.length
-        const packetOffset: number = this.offset - packetLength
-        const recordHeaderLength: number = packetOffset - startOffset
+        const packetOffset: number = startOffset + recordHeaderLength
         const wrotePacketInfo: IPcapPacketInfo = {
             index: this.index,
             offset: startOffset,
