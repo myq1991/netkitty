@@ -20,20 +20,13 @@
   "author": "alex.ma",
   "license": "MIT",
   "devDependencies": {
-    "@types/json-schema": "^7.0.15",
     "@types/node": "^22.13.10",
-    "@types/node-tlv": "^1.5.4",
-    "@types/sort-array": "^4.1.2",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
-    "electron": "^35.0.1",
     "eslint": "^8.56.0",
-    "inquirer": "^12.5.0",
     "lerna": "^9.0.7",
-    "reflect-metadata": "^0.2.2",
     "release-it": "^19.0.4",
     "shx": "^0.3.4",
-    "tslib": "^2.8.1",
     "typescript": "^5.8.2"
   }
 }
