@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
 </p>
 
-# netkitty
+# NetKitty
 
 A network toolkit for Node.js (and the browser, where it can be): live packet capture, pcap/pcapng
 reading and writing, a schema-driven protocol codec that both **decodes and encodes** packet headers,

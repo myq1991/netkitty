@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
 </p>
 
-# netkitty
+# NetKitty
 
 一套面向 Node.js(在可行处也面向浏览器)的网络工具集:实时抓包、pcap/pcapng 读写、一个**既能解码也
 能编码**报文头的 schema 驱动编解码器、流式的跨包分析、只读的网卡枚举,以及数据包重放与流量生成。它以
