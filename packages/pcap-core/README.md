@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/pcap-core
 
 A pure-buffer pcap/pcapng parsing state machine and generator — **zero node dependencies,

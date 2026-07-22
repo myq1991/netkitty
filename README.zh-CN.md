@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # netkitty
 
 一套面向 Node.js(在可行处也面向浏览器)的网络工具集:实时抓包、pcap/pcapng 读写、一个**既能解码也

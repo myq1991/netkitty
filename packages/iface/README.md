@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/iface
 
 Read-only network interface enumeration — a small native addon that lists **every** interface on the

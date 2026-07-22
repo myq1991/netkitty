@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/iface
 
 只读的网络接口枚举——一个小巧的原生插件,能列出主机上的**每一个**接口,包括 Node 自带的

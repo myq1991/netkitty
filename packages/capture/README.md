@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/capture
 
 Live network packet capture built on a native addon over **libpcap (macOS/Linux) / Npcap (Windows)**.

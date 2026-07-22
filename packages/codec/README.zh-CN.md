@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/codec
 
 schema 驱动的协议编解码器,负责把报文各层协议头在字节和结构之间来回转换——涵盖 Ethernet、IPv4/6、

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/capture
 
 基于原生插件的实时网络抓包,底层用 **libpcap(macOS/Linux)/ Npcap(Windows)**。对外的 `Capture` 类

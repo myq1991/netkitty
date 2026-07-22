@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/codec
 
 Schema-driven protocol codec for encoding and decoding packet headers — Ethernet, IPv4/6, TCP/UDP,

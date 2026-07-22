@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/pcap
 
 Streaming read/write/parse of capture files for Node.js — pcap, pcapng, and classic `.cap`/tcpdump

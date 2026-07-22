@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/pcap
 
 在 Node.js 端流式地读取、写入和解析抓包文件——支持 pcap、pcapng,以及经典的 `.cap`/tcpdump 输出,全程

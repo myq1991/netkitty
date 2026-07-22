@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/pcap-core
 
 一个只处理内存字节的 pcap/pcapng 解析状态机与生成器——**不依赖任何 node 模块、可以安全地在浏览器里

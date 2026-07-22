@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/replay
 
 基于原生插件的报文重放与流量生成——把帧从真实网卡发出去,既可以**精准复现录制时的帧间时序**(精准重

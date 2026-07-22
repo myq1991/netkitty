@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
+</p>
+
 # @netkitty/analysis
 
 对抓包文件做流式的跨包分析——一个可编程的、类似 Wireshark 的 pcap/pcapng 入口。同一个 `Analysis` 类
