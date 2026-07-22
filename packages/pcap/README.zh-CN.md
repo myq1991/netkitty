@@ -50,7 +50,8 @@ await reader.start()   // 一直读到末尾,然后触发 'done'
 ### 写入抓包
 
 `PcapWriter` 会新建一个经典 pcap 文件(先写好全局头),或者往已存在的文件后面追加,再用 `write()` 把
-每一帧流式写出。传入帧的字节,以及拆成整秒和不足一秒的微秒余数两部分的抓包时间戳。
+每一帧流式写出。传入帧的字节,以及拆成整秒和不足一秒的微秒余数两部分的抓包时间戳。传 `format: 'pcapng'`
+就改成写 pcapng(先写段头 + 接口描述块,再每帧一个增强型包块)。
 
 ```ts
 import {PcapWriter} from '@netkitty/pcap'

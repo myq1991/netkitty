@@ -4,8 +4,8 @@
 
 # @netkitty/pcap-core
 
-A pure-buffer pcap/pcapng parsing state machine and generator — **zero node dependencies,
-browser-safe** (Buffer only, no `node:fs`/`events`/`node:util`). It delivers results through
+A pure-buffer pcap/pcapng parsing state machine, generator, and LZ4 decompressor — **zero node
+dependencies, browser-safe** (Buffer only, no `node:fs`/`events`/`node:util`). It delivers results through
 **injected callbacks instead of an EventEmitter**: you construct it with a handler bag, feed it bytes
 with `write(chunk)`, and it drains its state machine synchronously, calling you back for each header
 and packet.
@@ -98,7 +98,37 @@ const alsoAFile: Buffer = Buffer.concat(chunks)
 `GeneratePCAP` accepts `frameBase64Data` plus either a `timestamp` (milliseconds) or an explicit
 `microsecond: {seconds, microseconds}`; `GeneratePCAPData` takes the same but with a raw `buffer`
 instead of base64. The output round-trips: feed it back into `PcapParserCore` and you get your frames
-returned.
+returned. Timestamps are clamped to safe values (a negative/NaN/fractional value never throws) and
+microsecond overflow carries into seconds.
+
+### Generate pcapng
+
+`GeneratePcapng` produces a **pcapng** file instead — a Section Header Block, one Interface Description
+Block, then one Enhanced Packet Block per frame (little-endian, microsecond timestamps). It takes the
+same `frameBase64Data` + `timestamp`/`microsecond` inputs as `GeneratePCAP`, plus an optional
+`{linkLayerType, snapshotLength}`. The piecewise `GeneratePcapngSectionHeader` /
+`GeneratePcapngInterfaceDescription` / `GeneratePcapngEnhancedPacket` let you assemble it block by block.
+
+```ts
+import {GeneratePcapng} from '@netkitty/pcap-core'
+
+const pcapng: Buffer = GeneratePcapng([
+  {frameBase64Data: base64Frame, microsecond: {seconds: 1_700_000_000, microseconds: 123_456}}
+], {linkLayerType: 1})   // 1 = Ethernet
+```
+
+## Decompress LZ4
+
+`Lz4FrameDecompress(buffer)` decompresses an **LZ4 frame-format** buffer (magic `04 22 4d 18`) back to
+its original bytes — a dependency-free, browser-safe pure-JS decoder (decompress only). It is what
+[`@netkitty/pcap`](../pcap) uses to read `.lz4`-compressed captures transparently; hold the bytes
+yourself and you can decompress, then parse, in two lines.
+
+```ts
+import {Lz4FrameDecompress, PcapParserCore} from '@netkitty/pcap-core'
+
+const raw: Buffer = Lz4FrameDecompress(lz4Bytes)   // then feed `raw` to PcapParserCore as usual
+```
 
 ## Key concepts
 
@@ -119,8 +149,9 @@ returned.
 
 ## Formats supported
 
-- Classic pcap 2.x, both endiannesses, microsecond and nanosecond timestamp variants
-- pcapng: Section Header (SHB), Interface Description (IDB, including `if_tsresol`), Enhanced Packet
-  (EPB), Simple Packet (SPB), obsolete Packet Block; other block types are skipped
-
-Generation currently emits classic pcap 2.4.
+- **Parse:** classic pcap 2.x (both endiannesses, microsecond and nanosecond timestamp variants) and
+  pcapng — Section Header (SHB), Interface Description (IDB, including `if_tsresol`), Enhanced Packet
+  (EPB), Simple Packet (SPB), obsolete Packet Block; other block types are skipped. LZ4 frame-format
+  buffers can be decompressed first with `Lz4FrameDecompress`.
+- **Generate:** classic pcap 2.4 (`GeneratePCAP`) and pcapng (`GeneratePcapng`), both microsecond
+  resolution.

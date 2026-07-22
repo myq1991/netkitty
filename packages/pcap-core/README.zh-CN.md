@@ -4,8 +4,8 @@
 
 # @netkitty/pcap-core
 
-一个只处理内存字节的 pcap/pcapng 解析状态机与生成器——**不依赖任何 node 模块、可以安全地在浏览器里
-运行**(全程只用 Buffer,不碰 `node:fs`、`events`、`node:util`)。它不靠 EventEmitter,而是靠
+一个只处理内存字节的 pcap/pcapng 解析状态机、生成器与 LZ4 解压器——**不依赖任何 node 模块、可以安全地
+在浏览器里运行**(全程只用 Buffer,不碰 `node:fs`、`events`、`node:util`)。它不靠 EventEmitter,而是靠
 **注入回调**来交付结果:你用一组回调把它构造出来,再用 `write(chunk)` 把字节喂进去,它就会同步地驱动
 内部状态机,每解析出一个头或一个包就回调你一次。
 
@@ -94,7 +94,36 @@ const alsoAFile: Buffer = Buffer.concat(chunks)
 
 `GeneratePCAP` 接收 `frameBase64Data`,外加 `timestamp`(毫秒)或明确的
 `microsecond: {seconds, microseconds}` 二者之一;`GeneratePCAPData` 参数相同,只是把 base64 换成
-原始的 `buffer`。生成的结果可以原样往返:再喂回 `PcapParserCore`,就能把这些帧原封不动地取回来。
+原始的 `buffer`。生成的结果可以原样往返:再喂回 `PcapParserCore`,就能把这些帧原封不动地取回来。时间戳
+会被夹到安全范围(负数/NaN/小数都不会抛异常),微秒溢出会进位到秒。
+
+### 生成 pcapng
+
+`GeneratePcapng` 则生成一个 **pcapng** 文件——一个段头块(SHB)、一个接口描述块(IDB),然后每帧一个
+增强型包块(EPB)(小端、微秒时间戳)。它接收和 `GeneratePCAP` 一样的 `frameBase64Data` +
+`timestamp`/`microsecond` 输入,外加可选的 `{linkLayerType, snapshotLength}`。拆开的
+`GeneratePcapngSectionHeader` / `GeneratePcapngInterfaceDescription` / `GeneratePcapngEnhancedPacket`
+让你按块自己拼。
+
+```ts
+import {GeneratePcapng} from '@netkitty/pcap-core'
+
+const pcapng: Buffer = GeneratePcapng([
+  {frameBase64Data: base64Frame, microsecond: {seconds: 1_700_000_000, microseconds: 123_456}}
+], {linkLayerType: 1})   // 1 = 以太网
+```
+
+## 解压 LZ4
+
+`Lz4FrameDecompress(buffer)` 把一个 **LZ4 frame 格式**的缓冲(魔数 `04 22 4d 18`)解回原始字节——一个
+零依赖、浏览器安全的纯 JS 解码器(只解压)。[`@netkitty/pcap`](../pcap) 就是用它来透明读取 `.lz4`
+压缩抓包的;如果你自己手里有字节,两行就能先解压再解析。
+
+```ts
+import {Lz4FrameDecompress, PcapParserCore} from '@netkitty/pcap-core'
+
+const raw: Buffer = Lz4FrameDecompress(lz4Bytes)   // 再把 `raw` 照常喂给 PcapParserCore
+```
 
 ## 关键概念
 
@@ -111,8 +140,7 @@ const alsoAFile: Buffer = Buffer.concat(chunks)
 
 ## 支持的格式
 
-- 经典 pcap 2.x,两种字节序,微秒和纳秒两种时间戳变体
-- pcapng:段头块(SHB)、接口描述块(IDB,含 `if_tsresol`)、增强型包块(EPB)、简单包块(SPB)、
-  过时的包块;其余块类型一律跳过
-
-生成目前输出经典 pcap 2.4。
+- **解析:** 经典 pcap 2.x(两种字节序,微秒和纳秒两种时间戳变体)和 pcapng——段头块(SHB)、接口
+  描述块(IDB,含 `if_tsresol`)、增强型包块(EPB)、简单包块(SPB)、过时的包块;其余块类型一律跳过。
+  LZ4 frame 格式的缓冲可以先用 `Lz4FrameDecompress` 解压。
+- **生成:** 经典 pcap 2.4(`GeneratePCAP`)和 pcapng(`GeneratePcapng`),都是微秒精度。

@@ -52,7 +52,9 @@ available as the `packet` event if you prefer listeners over the callback.
 
 `PcapWriter` creates a classic-pcap file (writing the global header up front) or appends to one that
 already exists, and streams each frame out with `write()`. Pass the frame bytes and the capture
-timestamp split into whole seconds and the sub-second remainder in microseconds.
+timestamp split into whole seconds and the sub-second remainder in microseconds. Pass `format: 'pcapng'`
+to write pcapng instead (a Section Header + Interface Description block up front, then one Enhanced
+Packet Block per frame).
 
 ```ts
 import {PcapWriter} from '@netkitty/pcap'
