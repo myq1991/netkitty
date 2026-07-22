@@ -1,9 +1,9 @@
 /**
  * Read-only network interface information.
  */
-export {list} from './lib/list'
+export {list} from './list'
 export type {
     INetworkInterfaceInfo,
     INetworkInterfaceAddress,
     INetworkInterfaceCounters
-} from './lib/interfaces/INetworkInterfaceInfo'
+} from './interfaces/INetworkInterfaceInfo'

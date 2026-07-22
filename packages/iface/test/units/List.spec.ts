@@ -2,7 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert'
 import os from 'node:os'
 import {list} from '../../src/index'
-import {INetworkInterfaceInfo} from '../../src/lib/interfaces/INetworkInterfaceInfo'
+import {INetworkInterfaceInfo} from '../../src/interfaces/INetworkInterfaceInfo'
 
 test('list: every interface has the expected structure', (): void => {
     const ifaces: INetworkInterfaceInfo[] = list()
