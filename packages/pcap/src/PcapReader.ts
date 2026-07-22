@@ -4,7 +4,7 @@ import {FileHandle, FileReadResult, open, readFile} from 'node:fs/promises'
 import {ReadStream, WriteStream} from 'node:fs'
 import DuplexPair from 'duplexpair'
 import {PcapParser} from './PcapParser'
-import {IPcapPacketInfo, Lz4FrameDecompress} from '@netkitty/pcap-core'
+import {IPcapPacketInfo, Lz4FrameDecompress, PcapFileFormat} from '@netkitty/pcap-core'
 
 export interface IPcapReaderOptions {
     filename: string
@@ -53,6 +53,24 @@ export class PcapReader extends EventEmitter {
 
     protected paused: boolean = false
 
+    //serialize async onPacket callbacks: a chunk yields many packets synchronously, so their onPacket
+    //handlers must run one-at-a-time in packet order (not concurrently, which would reorder the caller's
+    //work). pendingOnPacket keeps the read paused until the queued batch drains.
+    protected onPacketChain: Promise<void> = Promise.resolve()
+
+    protected pendingOnPacket: number = 0
+
+    //latched on the first onPacket throw: emit 'error' once, then stop invoking the handler (so a later
+    //packet can't emit 'error' a second time to a consumed one-shot listener and crash the process)
+    protected onPacketErrored: boolean = false
+
+    /**
+     * The detected capture-file format ('pcap' | 'pcapng'), or null before the first bytes are parsed
+     */
+    public get format(): PcapFileFormat | null {
+        return this.parser ? this.parser.format : null
+    }
+
     protected get readStream(): ReadStream {
         return this.duplexPair.socket2
     }
@@ -99,13 +117,26 @@ export class PcapReader extends EventEmitter {
         this.duplexPair = new DuplexPair()
         this.parser = PcapParser.parse(this.readStream)
         this.parser
-            .on('packet', async (pcapPacketInfo: IPcapPacketInfo): Promise<void> => {
+            .on('packet', (pcapPacketInfo: IPcapPacketInfo): void => {
                 this.index = pcapPacketInfo.index
                 this.emit('packet', pcapPacketInfo)
                 if (this.onPacket) {
+                    //append to the serial chain so onPacket runs in packet order, never concurrently
+                    this.pendingOnPacket += 1
                     this.pauseRead()
-                    await this.onPacket(pcapPacketInfo)
-                    this.resumeRead()
+                    this.onPacketChain = this.onPacketChain.then(async (): Promise<void> => {
+                        if (!this.onPacketErrored) {
+                            try {
+                                await this.onPacket!(pcapPacketInfo)
+                            } catch (err) {
+                                this.onPacketErrored = true
+                                this.emit('error', err as Error)
+                                if (this.onError) this.onError(err as Error)
+                            }
+                        }
+                        this.pendingOnPacket -= 1
+                        if (this.pendingOnPacket === 0) this.resumeRead()
+                    })
                 }
             })
             .on('error', (err: Error): void => {
@@ -124,6 +155,9 @@ export class PcapReader extends EventEmitter {
         this.index = 0
         this.offset = 0
         this.paused = false
+        this.onPacketChain = Promise.resolve()
+        this.pendingOnPacket = 0
+        this.onPacketErrored = false
         this.initReader()
     }
 
@@ -212,6 +246,7 @@ export class PcapReader extends EventEmitter {
             await this.readBufferFileHandle?.close()
             this.readBufferFileHandle = null
             this.readDone = true
+            await this.onPacketChain   //let the last queued onPacket batch finish before signalling done
             this.emit('done')
             if (this.onDone) await this.onDone()
         })
@@ -237,6 +272,7 @@ export class PcapReader extends EventEmitter {
             if (!stopped) await this.stop()
             await this.readBufferFileHandle?.close()
             this.readBufferFileHandle = null
+            await this.onPacketChain   //let the last queued onPacket batch finish before signalling done
             this.emit('done')
             if (this.onDone) await this.onDone()
         })

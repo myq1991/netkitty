@@ -11,6 +11,19 @@ export {PcapWriter, type IPcapWriterOptions} from './PcapWriter'
  */
 export {PcapParser, type PcapFileFormat} from './PcapParser'
 /**
+ * PCAP stream editing (rewrite / patch-in-place + composable transforms)
+ */
+export {
+    PcapEdit,
+    type PcapEditPacket,
+    type PcapEditAction,
+    type PcapEditHandler,
+    type PcapEditContext,
+    type PcapEditTransform,
+    type IPcapRewriteOptions,
+    type IPcapRewriteResult
+} from './PcapEdit'
+/**
  * Types and buffer helpers re-exported from the browser-safe core
  */
 export {

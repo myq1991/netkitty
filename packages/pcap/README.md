@@ -82,6 +82,51 @@ await reader.start()   // never resolves to 'done' on its own — stops when you
 await reader.stop()    // or reader.close() to also remove all listeners
 ```
 
+### Edit a capture
+
+`PcapEdit.rewrite` streams every packet of a capture through a handler and writes the result to a new
+file — reading handles pcap/pcapng and gzip/LZ4 transparently, and you choose the output format. The
+handler returns one of: nothing (keep), `null`/`false` (drop), a `Buffer` (replace the bytes), a
+`{frame?, seconds?, microseconds?}` (change fields), or an array (expand into several packets).
+
+```ts
+import {PcapEdit} from '@netkitty/pcap'
+
+const {read, written} = await PcapEdit.rewrite({
+  input: 'in.pcapng.gz',                                     // pcap/pcapng, gzip/lz4 — all handled
+  output: 'out.pcap',
+  onPacket: (frame, info) => {
+    if (isNoise(frame)) return null                          // drop
+    return {frame: anonymize(frame), seconds: info.seconds - 3600}   // replace bytes + retime
+  }
+})
+```
+
+Common edits are prebuilt as composable transforms — combine them with `PcapEdit.chain(...)`:
+
+```ts
+await PcapEdit.rewrite({
+  input: 'in.pcap', output: 'out.pcap',
+  onPacket: PcapEdit.chain(
+    PcapEdit.setSourceMac('00:11:22:33:44:55'),
+    PcapEdit.setDestinationMac('aa:bb:cc:dd:ee:ff'),
+    PcapEdit.constantInterval(1000),   // space packets 1 ms apart
+  )
+})
+```
+
+- **Retiming:** `shiftTime(seconds, microseconds)`, `setStartTime(seconds, microseconds)`,
+  `scaleTime(factor)`, `constantInterval(microseconds)`.
+- **Ethernet MAC:** `setSourceMac(mac)`, `setDestinationMac(mac)`, `swapMac()` (assume an Ethernet link layer).
+- **`truncate(maxBytes)`** to shorten frames.
+
+For field-aware edits (IP addresses, ports, checksums) decode the frame with
+[`@netkitty/codec`](../codec) inside the handler, edit the fields, re-encode, and return the bytes — `pcap`
+deliberately stays free of the codec dependency.
+
+`PcapEdit.patchInPlace(file, info, frame)` overwrites one packet's bytes **without rewriting the file** —
+valid only when the replacement is the same length as the original packet and the file is uncompressed.
+
 ## Key concepts
 
 - **Format-agnostic, detected by content.** The reader does not care whether the file is pcap or pcapng;
@@ -95,7 +140,7 @@ await reader.stop()    // or reader.close() to also remove all listeners
 
   Because detection is by content, a mislabelled or extensionless file still parses. Conversely, a `.cap`
   that is *not* libpcap (e.g. a Microsoft Network Monitor capture, a different magic) is **rejected with a
-  clear `unknown magic number` error rather than mis-parsed**. `reader.parser.format` exposes the detected
+  clear `unknown magic number` error rather than mis-parsed**. `reader.format` exposes the detected
   `PcapFileFormat` (`'pcap' | 'pcapng'`).
 - **Transparent decompression.** A capture compressed with **gzip** (`.pcap.gz` / `.pcapng.gz`, magic
   `1f 8b`) or **LZ4** frame format (`.pcap.lz4`, magic `04 22 4d 18`) is decompressed on the fly — the
