@@ -7,7 +7,7 @@ import path from 'node:path'
 import {randomInt} from 'crypto'
 import {cp} from 'node:fs/promises'
 import EventEmitter from 'events'
-import {DeviceNotFoundError} from '../errors/DeviceNotFoundError'
+import {CaptureDeviceNotFoundError} from '../errors/CaptureDeviceNotFoundError'
 import {tmpdir} from 'node:os'
 import {IPcapPacketInfo, GeneratePCAPHeader} from '@netkitty/pcap'
 import {captureHost, ICaptureSessionConfig} from './CaptureHost'
@@ -67,7 +67,7 @@ export class Capture extends EventEmitter {
             captureHost.setWorkerModule(options.workerModule)
         } else {
             //Use the built-in host worker: verify the capture device exists.
-            if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.#device).length) throw new DeviceNotFoundError(`Device ${this.#device} not found`)
+            if (!GetNetworkInterfaces().filter((availableDevice: INetworkInterface): boolean => availableDevice.name === this.#device).length) throw new CaptureDeviceNotFoundError(`Device ${this.#device} not found`)
         }
         this.#temporaryFilename = options.temporaryFilename ? options.temporaryFilename : GetDeviceCaptureTemporaryFilename(this.#device, this.#tmpDir)
         this.cleanTemporaryFile()

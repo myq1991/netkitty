@@ -4,6 +4,7 @@ import path from 'node:path'
 import {PcapReader} from './PcapReader'
 import {PcapWriter, PcapWriterFormat} from './PcapWriter'
 import {IPcapPacketInfo} from '@netkitty/pcap-core'
+import {PcapEditArgumentError, PcapEditStateError, PcapPatchLengthError, PcapInvalidMacError} from './errors'
 
 /**
  * A per-packet edit result. Bare fields default to the original packet's value, so `{seconds: 0}` retimes
@@ -176,7 +177,7 @@ export class PcapEdit {
         produce: (frame: Buffer, info: IPcapPacketInfo) => Promise<PcapEditContext[]> | PcapEditContext[]
     }): Promise<IPcapRewriteResult> {
         if (path.resolve(options.input) === path.resolve(options.output)) {
-            throw new Error('PcapEdit: input and output must be different files; write to a temp file, then rename, to edit in place')
+            throw new PcapEditStateError('PcapEdit: input and output must be different files; write to a temp file, then rename, to edit in place')
         }
         //always a fresh file — PcapWriter would otherwise append to an existing output
         if (existsSync(options.output)) await rm(options.output)
@@ -234,14 +235,14 @@ export class PcapEdit {
         const from: number = range ? range.from : 1
         const to: number = range && range.to !== undefined ? range.to : Number.POSITIVE_INFINITY
         if (range) {
-            if (!Number.isInteger(range.from) || range.from < 1) throw new Error('PcapEdit.retime: range.from must be a 1-based integer')
-            if (range.to !== undefined && (!Number.isInteger(range.to) || range.to < range.from)) throw new Error('PcapEdit.retime: range.to must be an integer >= range.from')
-            if (edit.type === 'setStart') throw new Error('PcapEdit.retime: a range is not supported for the setStart edit')
+            if (!Number.isInteger(range.from) || range.from < 1) throw new PcapEditArgumentError('PcapEdit.retime: range.from must be a 1-based integer')
+            if (range.to !== undefined && (!Number.isInteger(range.to) || range.to < range.from)) throw new PcapEditArgumentError('PcapEdit.retime: range.to must be an integer >= range.from')
+            if (edit.type === 'setStart') throw new PcapEditArgumentError('PcapEdit.retime: a range is not supported for the setStart edit')
         }
         const intervalMicros: number = edit.type === 'constantInterval' ? Math.max(0, Math.floor(edit.interval * PcapEdit.unitMicros(edit.unit))) : 0
         const shiftMicros: number = edit.type === 'shift' ? Math.round(edit.delta * PcapEdit.unitMicros(edit.unit)) : 0
         const startMicros: number = edit.type === 'setStart' ? edit.seconds * MICROS_PER_SECOND + (edit.microseconds ?? 0) : 0
-        if (edit.type === 'scale' && !(Number.isFinite(edit.factor) && edit.factor >= 0)) throw new Error('PcapEdit.retime: scale factor must be a finite number >= 0')
+        if (edit.type === 'scale' && !(Number.isFinite(edit.factor) && edit.factor >= 0)) throw new PcapEditArgumentError('PcapEdit.retime: scale factor must be a finite number >= 0')
 
         let anchor: number | null = null //working micros of the first in-range frame (scale/constantInterval)
         let inRangeIndex: number = 0
@@ -293,7 +294,7 @@ export class PcapEdit {
      */
     public static async patchInPlace(filename: string, info: IPcapPacketInfo, frame: Buffer): Promise<void> {
         if (frame.length !== info.packetLength) {
-            throw new Error(`PcapEdit.patchInPlace: replacement must be the same length (packet is ${info.packetLength} bytes, got ${frame.length}); use rewrite() for length-changing edits`)
+            throw new PcapPatchLengthError(`PcapEdit.patchInPlace: replacement must be the same length (packet is ${info.packetLength} bytes, got ${frame.length}); use rewrite() for length-changing edits`)
         }
         const fileHandle: FileHandle = await open(filename, 'r+')
         try {
@@ -302,7 +303,7 @@ export class PcapEdit {
             const isGzip: boolean = head.bytesRead >= 2 && magic[0] === 0x1f && magic[1] === 0x8b
             const isLz4: boolean = head.bytesRead >= 4 && magic.readUInt32BE(0) === 0x04224d18
             if (isGzip || isLz4) {
-                throw new Error('PcapEdit.patchInPlace: cannot patch a compressed capture in place; rewrite() to an uncompressed file instead')
+                throw new PcapEditStateError('PcapEdit.patchInPlace: cannot patch a compressed capture in place; rewrite() to an uncompressed file instead')
             }
             await fileHandle.write(frame, 0, frame.length, info.packetOffset)
         } finally {
@@ -415,7 +416,7 @@ export class PcapEdit {
 
     private static unitMicros(unit: TimeUnit | undefined): number {
         const factor: number | undefined = UNIT_MICROS[unit ?? 'us']
-        if (factor === undefined) throw new Error(`PcapEdit: unknown time unit '${unit}' (expected 'us' | 'ms' | 's' | 'min')`)
+        if (factor === undefined) throw new PcapEditArgumentError(`PcapEdit: unknown time unit '${unit}' (expected 'us' | 'ms' | 's' | 'min')`)
         return factor
     }
 
@@ -432,7 +433,7 @@ export class PcapEdit {
     private static parseMac(mac: string): Buffer {
         const parts: number[] = mac.split(/[:-]/).map((hex: string): number => parseInt(hex, 16))
         if (parts.length !== 6 || parts.some((byte: number): boolean => Number.isNaN(byte) || byte < 0 || byte > 255)) {
-            throw new Error(`PcapEdit: invalid MAC address '${mac}' (expected six hex octets like 00:11:22:33:44:55)`)
+            throw new PcapInvalidMacError(`PcapEdit: invalid MAC address '${mac}' (expected six hex octets like 00:11:22:33:44:55)`)
         }
         return Buffer.from(parts)
     }

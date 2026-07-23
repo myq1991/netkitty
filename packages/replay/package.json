@@ -59,6 +59,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@netkitty/errors": "^1.1.0",
     "@netkitty/pcap": "^1.1.0",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4"

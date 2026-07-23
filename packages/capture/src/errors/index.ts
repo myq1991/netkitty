@@ -1,0 +1,5 @@
+export {CaptureDeviceNotFoundError} from './CaptureDeviceNotFoundError'
+export {CaptureNpcapLoadError} from './CaptureNpcapLoadError'
+export {CaptureSocketDownError} from './CaptureSocketDownError'
+export {CaptureUnknownPipeMessageTypeError} from './CaptureUnknownPipeMessageTypeError'
+export {CaptureActionNotFoundError} from './CaptureActionNotFoundError'

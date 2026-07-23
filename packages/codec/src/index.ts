@@ -118,3 +118,7 @@ export {
     UInt64ToHex,
     UInt8ToHex
 } from './helper/NumberToHex'
+/**
+ * Error classes (all extend NetKittyError)
+ */
+export * from './errors'

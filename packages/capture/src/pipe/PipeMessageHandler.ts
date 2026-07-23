@@ -3,8 +3,8 @@ import {PipeMessage, PipeMessageType} from './PipeMessage'
 import EventEmitter from 'events'
 import {PipeClient} from './PipeClient'
 import {PipeClientSocket} from './PipeClientSocket'
-import {UnknownPipeMessageTypeError} from '../errors/UnknownPipeMessageTypeError'
-import {ActionNotFoundError} from '../errors/ActionNotFoundError'
+import {CaptureUnknownPipeMessageTypeError} from '../errors/CaptureUnknownPipeMessageTypeError'
+import {CaptureActionNotFoundError} from '../errors/CaptureActionNotFoundError'
 
 export class PipeMessageHandler extends EventEmitter {
 
@@ -61,7 +61,7 @@ export class PipeMessageHandler extends EventEmitter {
                         })
                 } else {
                     pipeMessage.type = PipeMessageType.RESPONSE_ERR
-                    const actionNotFoundError: ActionNotFoundError = new ActionNotFoundError(`Action ${actionName} not found`)
+                    const actionNotFoundError: CaptureActionNotFoundError = new CaptureActionNotFoundError(`Action ${actionName} not found`)
                     pipeMessage.payload = {
                         message: actionNotFoundError.message,
                         errno: actionNotFoundError.errno,
@@ -84,7 +84,7 @@ export class PipeMessageHandler extends EventEmitter {
             }
                 break
             default: {
-                this.#owner.emit('error', new UnknownPipeMessageTypeError(`Unknown pipe message type ${pipeMessage.type}`))
+                this.#owner.emit('error', new CaptureUnknownPipeMessageTypeError(`Unknown pipe message type ${pipeMessage.type}`))
             }
         }
     }

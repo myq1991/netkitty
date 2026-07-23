@@ -11,3 +11,7 @@ export {Capture} from './capture/Capture'
  */
 export {type INetworkInterface} from './capture/interfaces/INetworkInterface'
 export {type ICaptureOptions, type CaptureEmitMode} from './capture/interfaces/ICaptureOptions'
+/**
+ * Error classes (all extend NetKittyError)
+ */
+export * from './errors'

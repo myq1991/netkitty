@@ -56,6 +56,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@netkitty/errors": "^1.1.0",
     "@netkitty/pcap-core": "^1.1.0",
     "duplexpair": "^1.0.2"
   },

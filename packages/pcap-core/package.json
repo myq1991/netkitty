@@ -55,6 +55,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@netkitty/errors": "^1.1.0",
     "bignumber.js": "^9.1.2"
   },
   "repository": {

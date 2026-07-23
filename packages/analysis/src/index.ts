@@ -29,3 +29,8 @@ export type {RttSample, TcpStreamDiagnostic} from './reducers/TcpStreamReducer'
 export {reduceReducer, groupByReducer} from './reducers/ReducerFactories'
 export {parseFilter, matchesFilter, matchesIndexed, indexableEval} from './filter/FilterExpression'
 export type {FilterExpression, FilterPredicate} from './filter/FilterExpression'
+
+/**
+ * Error classes (all extend NetKittyError)
+ */
+export * from './errors'

@@ -11,6 +11,10 @@ export {replayFile} from './replayFile'
 export type {IReplayOptions, ReplayMode, ReplayPrecision} from './interfaces/IReplayOptions'
 export type {IReplayFrame} from './interfaces/IReplayFrame'
 export type {IReplayProgress} from './interfaces/IReplayProgress'
+/**
+ * Error classes (all extend NetKittyError)
+ */
+export * from './errors'
 
 /**
  * Whether the pcap send path is available. On Windows this loads wpcap.dll and returns false when Npcap

@@ -32,3 +32,7 @@ export {GeneratePcapngSectionHeader} from './PcapngGenerator'
 export {GeneratePcapngInterfaceDescription} from './PcapngGenerator'
 export {GeneratePcapngEnhancedPacket} from './PcapngGenerator'
 export {GeneratePcapng} from './PcapngGenerator'
+/**
+ * Error classes (all extend NetKittyError)
+ */
+export * from './errors'

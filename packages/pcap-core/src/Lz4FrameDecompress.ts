@@ -9,6 +9,8 @@
  * match-offset ends the block, and every loop strictly advances. DictID and skippable frames are not
  * supported.
  */
+import {PcapLz4FrameError} from './errors'
+
 const LZ4_FRAME_MAGIC: number = 0x184d2204
 const BLOCK_MAX_SIZE: Record<number, number> = {4: 65536, 5: 262144, 6: 1048576, 7: 4194304}
 
@@ -22,12 +24,12 @@ const BLOCK_MAX_SIZE: Record<number, number> = {4: 65536, 5: 262144, 6: 1048576,
  */
 export function Lz4FrameDecompress(input: Buffer): Buffer {
     if (input.length < 7 || input.readUInt32LE(0) !== LZ4_FRAME_MAGIC) {
-        throw new Error('not an LZ4 frame (bad magic number)')
+        throw new PcapLz4FrameError('not an LZ4 frame (bad magic number)')
     }
     let pos: number = 4
     const flg: number = input[pos++]
     const bd: number = input[pos++]
-    if ((flg >> 6) !== 0x01) throw new Error(`unsupported LZ4 frame version: ${flg >> 6}`)
+    if ((flg >> 6) !== 0x01) throw new PcapLz4FrameError(`unsupported LZ4 frame version: ${flg >> 6}`)
     const contentSizePresent: boolean = ((flg >> 3) & 1) === 1
     const dictIdPresent: boolean = (flg & 1) === 1
     const blockChecksum: boolean = ((flg >> 4) & 1) === 1

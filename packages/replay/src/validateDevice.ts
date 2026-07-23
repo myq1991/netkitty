@@ -1,3 +1,5 @@
+import {ReplayDeviceNotFoundError} from './errors'
+
 /**
  * Best-effort device pre-check. If @netkitty/iface is installed, verify the named interface exists and
  * throw a helpful error (listing what is available) when it does not. If @netkitty/iface is absent, the
@@ -14,6 +16,6 @@ export function validateDevice(device: string): void {
         return
     }
     if (names && !names.includes(device)) {
-        throw new Error(`network interface "${device}" not found. Available interfaces: ${names.join(', ')}`)
+        throw new ReplayDeviceNotFoundError(`network interface "${device}" not found. Available interfaces: ${names.join(', ')}`)
     }
 }

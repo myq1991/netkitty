@@ -47,3 +47,7 @@ export {
     GeneratePcapng,
     Lz4FrameDecompress
 } from '@netkitty/pcap-core'
+/**
+ * Error classes (all extend NetKittyError)
+ */
+export * from './errors'
