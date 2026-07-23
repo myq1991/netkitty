@@ -12,6 +12,9 @@ export const ErrorCode = {
     E_SOCKET_DOWN: {errno: 1003, code: 'E_SOCKET_DOWN'},
     E_UNKNOWN_PIPE_MESSAGE_TYPE: {errno: 1004, code: 'E_UNKNOWN_PIPE_MESSAGE_TYPE'},
     E_ACTION_NOT_FOUND: {errno: 1005, code: 'E_ACTION_NOT_FOUND'},
+    E_CAPTURE_ARGUMENT: {errno: 1006, code: 'E_CAPTURE_ARGUMENT'},
+    E_CAPTURE_OPEN: {errno: 1007, code: 'E_CAPTURE_OPEN'},
+    E_CAPTURE_FILTER: {errno: 1008, code: 'E_CAPTURE_FILTER'},
     //codec (2000s)
     E_NO_AVAILABLE_CODEC: {errno: 2000, code: 'E_NO_AVAILABLE_CODEC'},
     E_CODEC_SCHEMA_VALIDATE: {errno: 2001, code: 'E_CODEC_SCHEMA_VALIDATE'},

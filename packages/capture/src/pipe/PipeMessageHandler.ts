@@ -5,6 +5,7 @@ import {PipeClient} from './PipeClient'
 import {PipeClientSocket} from './PipeClientSocket'
 import {CaptureUnknownPipeMessageTypeError} from '../errors/CaptureUnknownPipeMessageTypeError'
 import {CaptureActionNotFoundError} from '../errors/CaptureActionNotFoundError'
+import {CaptureErrorFromPayload} from '../errors/CaptureErrorFromPayload'
 
 export class PipeMessageHandler extends EventEmitter {
 
@@ -76,11 +77,8 @@ export class PipeMessageHandler extends EventEmitter {
             }
                 break
             case PipeMessageType.RESPONSE_ERR: {
-                const responseError: NodeJS.ErrnoException = new Error()
-                responseError.message = pipeMessage.payload.message
-                responseError.errno = pipeMessage.payload.errno
-                responseError.code = pipeMessage.payload.code
-                this.#owner.emit(pipeMessage.messageId, responseError)
+                //Rebuild the error from its code so the main process catches a NetKittyError subclass, not a bare Error.
+                this.#owner.emit(pipeMessage.messageId, CaptureErrorFromPayload(pipeMessage.payload))
             }
                 break
             default: {
