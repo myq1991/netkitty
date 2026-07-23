@@ -2,6 +2,12 @@
   <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/@netkitty/iface"><img src="https://img.shields.io/npm/v/@netkitty/iface?style=flat-square&labelColor=162032&color=2979ff&logo=npm&logoColor=white" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@netkitty/iface"><img src="https://img.shields.io/npm/dm/@netkitty/iface?style=flat-square&labelColor=162032&color=22c55e&logo=npm&logoColor=white" alt="npm downloads"></a>
+  <a href="https://github.com/myq1991/netkitty/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@netkitty/iface?style=flat-square&labelColor=162032&color=2979ff" alt="license"></a>
+</p>
+
 # @netkitty/iface
 
 只读的网络接口枚举——一个小巧的原生插件,能列出主机上的**每一个**接口,包括 Node 自带的

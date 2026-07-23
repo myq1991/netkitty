@@ -2,6 +2,12 @@
   <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/netkitty"><img src="https://img.shields.io/npm/v/netkitty?style=flat-square&labelColor=162032&color=2979ff&logo=npm&logoColor=white" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/netkitty"><img src="https://img.shields.io/npm/dm/netkitty?style=flat-square&labelColor=162032&color=22c55e&logo=npm&logoColor=white" alt="npm downloads"></a>
+  <a href="https://github.com/myq1991/netkitty/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/netkitty?style=flat-square&labelColor=162032&color=2979ff" alt="license"></a>
+</p>
+
 # netkitty
 
 The aggregate network toolkit — one package that re-exports the whole netkitty family through stable

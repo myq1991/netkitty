@@ -2,6 +2,12 @@
   <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/@netkitty/codec"><img src="https://img.shields.io/npm/v/@netkitty/codec?style=flat-square&labelColor=162032&color=2979ff&logo=npm&logoColor=white" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@netkitty/codec"><img src="https://img.shields.io/npm/dm/@netkitty/codec?style=flat-square&labelColor=162032&color=22c55e&logo=npm&logoColor=white" alt="npm downloads"></a>
+  <a href="https://github.com/myq1991/netkitty/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@netkitty/codec?style=flat-square&labelColor=162032&color=2979ff" alt="license"></a>
+</p>
+
 # @netkitty/codec
 
 schema 驱动的协议编解码器,负责把报文各层协议头在字节和结构之间来回转换——覆盖**189 种协议**,贯穿整个

@@ -2,6 +2,12 @@
   <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/netkitty"><img src="https://img.shields.io/npm/v/netkitty?style=flat-square&labelColor=162032&color=2979ff&logo=npm&logoColor=white" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/netkitty"><img src="https://img.shields.io/npm/dm/netkitty?style=flat-square&labelColor=162032&color=22c55e&logo=npm&logoColor=white" alt="npm downloads"></a>
+  <a href="https://github.com/myq1991/netkitty/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/netkitty?style=flat-square&labelColor=162032&color=2979ff" alt="license"></a>
+</p>
+
 # netkitty
 
 网络工具集的聚合包——一个包就把整个 netkitty 家族通过稳定的子路径重新导出:schema 驱动的协议

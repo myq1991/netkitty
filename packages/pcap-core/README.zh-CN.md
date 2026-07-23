@@ -2,6 +2,12 @@
   <img src="https://raw.githubusercontent.com/myq1991/netkitty/main/assets/NetKittyLogo.webp" alt="NetKitty" width="180">
 </p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/@netkitty/pcap-core"><img src="https://img.shields.io/npm/v/@netkitty/pcap-core?style=flat-square&labelColor=162032&color=2979ff&logo=npm&logoColor=white" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@netkitty/pcap-core"><img src="https://img.shields.io/npm/dm/@netkitty/pcap-core?style=flat-square&labelColor=162032&color=22c55e&logo=npm&logoColor=white" alt="npm downloads"></a>
+  <a href="https://github.com/myq1991/netkitty/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@netkitty/pcap-core?style=flat-square&labelColor=162032&color=2979ff" alt="license"></a>
+</p>
+
 # @netkitty/pcap-core
 
 一个只处理内存字节的 pcap/pcapng 解析状态机、生成器与 LZ4 解压器——**不依赖任何 node 模块、可以安全地
