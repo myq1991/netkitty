@@ -1,6 +1,6 @@
 {
   "name": "@netkitty/analysis",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Streaming cross-packet network analysis over the netkitty codec: TCP stream reassembly, flow tracking and Wireshark-style follow-stream, off a worker.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -51,9 +51,9 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@netkitty/codec": "^1.1.0",
-    "@netkitty/errors": "^1.1.0",
-    "@netkitty/pcap-core": "^1.1.0"
+    "@netkitty/codec": "^1.2.0",
+    "@netkitty/errors": "^1.2.0",
+    "@netkitty/pcap-core": "^1.2.0"
   },
   "repository": {
     "type": "git",

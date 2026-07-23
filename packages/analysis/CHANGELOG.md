@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/myq1991/netkitty/compare/@netkitty/analysis@1.1.0...@netkitty/analysis@1.2.0) (2026-07-23)
+
+
+### Features
+
+* **errors:** route pcap-core/pcap/analysis/replay/capture errors through NetKittyError ([19b0888](https://github.com/myq1991/netkitty/commit/19b08886f490afaeec3620745e545eb2446b4f83))
+
+
+
+
+
 # 1.1.0 (2026-07-22)
 
 

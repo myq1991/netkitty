@@ -1,6 +1,6 @@
 {
   "name": "@netkitty/capture",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Live network packet capture (sniffer) over libpcap/Npcap via a native Node.js addon.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -60,14 +60,14 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@netkitty/pcap": "^1.1.0",
+    "@netkitty/errors": "^1.2.0",
+    "@netkitty/pcap": "^1.2.0",
     "is-electron": "^2.2.2",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4",
     "socket-ipc": "^4.0.2",
     "sort-array": "^5.0.0",
-    "xpipe": "^1.0.8",
-    "@netkitty/errors": "^1.1.0"
+    "xpipe": "^1.0.8"
   },
   "repository": {
     "type": "git",

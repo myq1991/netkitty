@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/myq1991/netkitty/compare/netkitty@1.1.0...netkitty@1.2.0) (2026-07-23)
+
+
+### Features
+
+* **errors:** add @netkitty/errors — shared NetKittyError base + ErrorCode ([d5a3405](https://github.com/myq1991/netkitty/commit/d5a3405ee1f812ac92ed3d32478c1bece9bdbd89))
+
+
+
+
+
 # 1.1.0 (2026-07-22)
 
 

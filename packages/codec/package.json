@@ -1,6 +1,6 @@
 {
   "name": "@netkitty/codec",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Schema-driven packet codec: encode/decode 180+ network and industrial (OT/ICS/SCADA) protocol headers — TCP/IP, TLS, HTTP/2, DNS, MQTT, plus Modbus, DNP3, IEC 61850 (GOOSE/SV/MMS), IEC 104, S7comm, OPC UA, PROFINET, EtherCAT, BACnet and more.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -118,11 +118,11 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
+    "@netkitty/errors": "^1.2.0",
     "ajv": "^8.20.0",
     "ip-address": "^10.0.1",
     "json-schema": "^0.4.0",
-    "node-tlv": "^1.5.14",
-    "@netkitty/errors": "^1.1.0"
+    "node-tlv": "^1.5.14"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15",

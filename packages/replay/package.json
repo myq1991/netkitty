@@ -1,6 +1,6 @@
 {
   "name": "@netkitty/replay",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Packet replay and traffic generation over a native addon — replays pcap/pcapng/cap at recorded inter-frame timing (or topspeed/mbps/pps) on the fastest per-platform send backend (Linux PF_PACKET, BSD/macOS BPF, Windows Npcap)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -59,8 +59,8 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@netkitty/errors": "^1.1.0",
-    "@netkitty/pcap": "^1.1.0",
+    "@netkitty/errors": "^1.2.0",
+    "@netkitty/pcap": "^1.2.0",
     "node-addon-api": "^8.3.1",
     "node-gyp-build": "^4.8.4"
   },
