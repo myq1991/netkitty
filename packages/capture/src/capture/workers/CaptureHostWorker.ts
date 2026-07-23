@@ -1,7 +1,9 @@
 import {BindingCapture} from '../BindingCapture'
 import {PipeClient} from '../../pipe/PipeClient'
 import {PcapWriter, IPcapPacketInfo} from '@netkitty/pcap'
-import {CaptureArgumentError, CaptureOpenError, CaptureFilterError} from '../../errors'
+import {CaptureArgumentError} from '../../errors/CaptureArgumentError'
+import {CaptureOpenError} from '../../errors/CaptureOpenError'
+import {CaptureFilterError} from '../../errors/CaptureFilterError'
 
 interface ISession {
     binding: BindingCapture

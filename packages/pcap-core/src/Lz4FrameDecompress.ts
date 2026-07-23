@@ -9,7 +9,7 @@
  * match-offset ends the block, and every loop strictly advances. DictID and skippable frames are not
  * supported.
  */
-import {PcapLz4FrameError} from './errors'
+import {PcapLz4FrameError} from './errors/PcapLz4FrameError'
 
 const LZ4_FRAME_MAGIC: number = 0x184d2204
 const BLOCK_MAX_SIZE: Record<number, number> = {4: 65536, 5: 262144, 6: 1048576, 7: 4194304}

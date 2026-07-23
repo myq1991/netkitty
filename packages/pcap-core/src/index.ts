@@ -35,4 +35,4 @@ export {GeneratePcapng} from './PcapngGenerator'
 /**
  * Error classes (all extend NetKittyError)
  */
-export * from './errors'
+export {PcapLz4FrameError} from './errors/PcapLz4FrameError'

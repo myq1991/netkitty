@@ -1,4 +1,4 @@
-import {ReplayDeviceNotFoundError} from './errors'
+import {ReplayDeviceNotFoundError} from './errors/ReplayDeviceNotFoundError'
 
 /**
  * Best-effort device pre-check. If @netkitty/iface is installed, verify the named interface exists and

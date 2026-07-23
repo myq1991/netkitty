@@ -33,4 +33,4 @@ export type {FilterExpression, FilterPredicate} from './filter/FilterExpression'
 /**
  * Error classes (all extend NetKittyError)
  */
-export * from './errors'
+export {AnalysisStateError} from './errors/AnalysisStateError'

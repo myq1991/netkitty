@@ -121,4 +121,4 @@ export {
 /**
  * Error classes (all extend NetKittyError)
  */
-export * from './errors'
+export {CodecSchemaValidateError} from './errors/CodecSchemaValidateError'

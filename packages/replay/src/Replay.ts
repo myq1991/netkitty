@@ -4,7 +4,7 @@ import {IReplayOptions} from './interfaces/IReplayOptions'
 import {IReplayFrame} from './interfaces/IReplayFrame'
 import {IReplayProgress} from './interfaces/IReplayProgress'
 import {validateDevice} from './validateDevice'
-import {ReplaySendError} from './errors'
+import {ReplaySendError} from './errors/ReplaySendError'
 
 /**
  * Replays a set of frames to one interface, paced per {@link IReplayOptions}. The whole send loop runs

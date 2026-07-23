@@ -8,7 +8,7 @@ import {IAnalysisReducer} from './interfaces/IAnalysisReducer'
 import {IWorkerChannel} from './interfaces/IWorkerChannel'
 import {ConversationSummary} from './reducers/ConversationsReducer'
 import {EndpointSummary} from './reducers/EndpointsReducer'
-import {AnalysisStateError} from './errors'
+import {AnalysisStateError} from './errors/AnalysisStateError'
 
 //How many frames to pull per replay batch — bounds memory and back-pressures the worker naturally.
 const REPLAY_BATCH: number = 512

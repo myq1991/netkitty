@@ -50,4 +50,7 @@ export {
 /**
  * Error classes (all extend NetKittyError)
  */
-export * from './errors'
+export {PcapEditArgumentError} from './errors/PcapEditArgumentError'
+export {PcapEditStateError} from './errors/PcapEditStateError'
+export {PcapPatchLengthError} from './errors/PcapPatchLengthError'
+export {PcapInvalidMacError} from './errors/PcapInvalidMacError'

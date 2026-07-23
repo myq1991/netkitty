@@ -14,4 +14,11 @@ export {type ICaptureOptions, type CaptureEmitMode} from './capture/interfaces/I
 /**
  * Error classes (all extend NetKittyError)
  */
-export * from './errors'
+export {CaptureDeviceNotFoundError} from './errors/CaptureDeviceNotFoundError'
+export {CaptureNpcapLoadError} from './errors/CaptureNpcapLoadError'
+export {CaptureSocketDownError} from './errors/CaptureSocketDownError'
+export {CaptureUnknownPipeMessageTypeError} from './errors/CaptureUnknownPipeMessageTypeError'
+export {CaptureActionNotFoundError} from './errors/CaptureActionNotFoundError'
+export {CaptureArgumentError} from './errors/CaptureArgumentError'
+export {CaptureOpenError} from './errors/CaptureOpenError'
+export {CaptureFilterError} from './errors/CaptureFilterError'

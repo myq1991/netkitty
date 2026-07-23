@@ -4,7 +4,10 @@ import path from 'node:path'
 import {PcapReader} from './PcapReader'
 import {PcapWriter, PcapWriterFormat} from './PcapWriter'
 import {IPcapPacketInfo} from '@netkitty/pcap-core'
-import {PcapEditArgumentError, PcapEditStateError, PcapPatchLengthError, PcapInvalidMacError} from './errors'
+import {PcapEditArgumentError} from './errors/PcapEditArgumentError'
+import {PcapEditStateError} from './errors/PcapEditStateError'
+import {PcapPatchLengthError} from './errors/PcapPatchLengthError'
+import {PcapInvalidMacError} from './errors/PcapInvalidMacError'
 
 /**
  * A per-packet edit result. Bare fields default to the original packet's value, so `{seconds: 0}` retimes
