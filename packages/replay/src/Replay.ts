@@ -4,6 +4,7 @@ import {IReplayOptions} from './interfaces/IReplayOptions'
 import {IReplayFrame} from './interfaces/IReplayFrame'
 import {IReplayProgress} from './interfaces/IReplayProgress'
 import {validateDevice} from './validateDevice'
+import {ReplaySendError} from './errors'
 
 /**
  * Replays a set of frames to one interface, paced per {@link IReplayOptions}. The whole send loop runs
@@ -70,6 +71,12 @@ export class Replay extends EventEmitter {
             if (event === 'done' || event === 'error') {
                 this.#finished = true
                 this.#started = false
+            }
+            if (event === 'error') {
+                //Wrap the native send-thread error so callers can catch it as a NetKittyError.
+                const message: string = payload instanceof Error ? payload.message : String(payload)
+                this.emit('error', new ReplaySendError(message))
+                return
             }
             this.emit(event, payload)
         }

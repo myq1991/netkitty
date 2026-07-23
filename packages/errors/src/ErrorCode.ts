@@ -12,9 +12,6 @@ export const ErrorCode = {
     E_SOCKET_DOWN: {errno: 1003, code: 'E_SOCKET_DOWN'},
     E_UNKNOWN_PIPE_MESSAGE_TYPE: {errno: 1004, code: 'E_UNKNOWN_PIPE_MESSAGE_TYPE'},
     E_ACTION_NOT_FOUND: {errno: 1005, code: 'E_ACTION_NOT_FOUND'},
-    E_CAPTURE_ARGUMENT: {errno: 1006, code: 'E_CAPTURE_ARGUMENT'},
-    E_CAPTURE_OPEN: {errno: 1007, code: 'E_CAPTURE_OPEN'},
-    E_CAPTURE_FILTER: {errno: 1008, code: 'E_CAPTURE_FILTER'},
     //codec (2000s)
     E_NO_AVAILABLE_CODEC: {errno: 2000, code: 'E_NO_AVAILABLE_CODEC'},
     E_CODEC_SCHEMA_VALIDATE: {errno: 2001, code: 'E_CODEC_SCHEMA_VALIDATE'},
@@ -28,6 +25,5 @@ export const ErrorCode = {
     E_ANALYSIS_STATE: {errno: 4000, code: 'E_ANALYSIS_STATE'},
     //replay (5000s)
     E_REPLAY_DEVICE_NOT_FOUND: {errno: 5000, code: 'E_REPLAY_DEVICE_NOT_FOUND'},
-    E_REPLAY_ARGUMENT: {errno: 5001, code: 'E_REPLAY_ARGUMENT'},
-    E_REPLAY_SEND: {errno: 5002, code: 'E_REPLAY_SEND'}
+    E_REPLAY_SEND: {errno: 5001, code: 'E_REPLAY_SEND'}
 } as const
