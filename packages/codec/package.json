@@ -121,7 +121,8 @@
     "ajv": "^8.20.0",
     "ip-address": "^10.0.1",
     "json-schema": "^0.4.0",
-    "node-tlv": "^1.5.14"
+    "node-tlv": "^1.5.14",
+    "@netkitty/errors": "^1.1.0"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15",

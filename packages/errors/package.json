@@ -1,0 +1,54 @@
+{
+  "name": "@netkitty/errors",
+  "version": "1.1.0",
+  "description": "Shared error primitives for the netkitty packages — the NetKittyError base class every package's errors extend, plus a central error-code registry. Pure JS, zero dependencies, browser-safe.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "clean": "shx rm -rf ./dist ./dist-test",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "build:test": "tsc -p tsconfig.test.json",
+    "test": "npm run build:test && node --test \"dist-test/**/*.spec.js\"",
+    "test:only": "node --test \"dist-test/**/*.spec.js\""
+  },
+  "keywords": [
+    "netkitty",
+    "error",
+    "errors",
+    "base-error",
+    "error-class",
+    "error-code",
+    "exception",
+    "nodejs"
+  ],
+  "author": "alex.ma",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "shx": "^0.3.4",
+    "typescript": "^5.8.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myq1991/netkitty.git",
+    "directory": "packages/errors"
+  },
+  "homepage": "https://github.com/myq1991/netkitty/tree/main/packages/errors#readme",
+  "bugs": "https://github.com/myq1991/netkitty/issues"
+}
